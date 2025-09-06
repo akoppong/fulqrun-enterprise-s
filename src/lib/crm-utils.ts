@@ -56,7 +56,7 @@ export const getMEDDPICCScore = (meddpicc: any): number => {
     meddpicc.decisionCriteria,
     meddpicc.decisionProcess,
     meddpicc.paperProcess,
-    meddpicc.implicate Pain,
+    meddpicc.implicatePain,
     meddpicc.champion
   ];
   
