@@ -1,12 +1,18 @@
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { DashboardView } from './Dashboard';
 import { 
   FunnelSimple, 
   Target, 
   AddressBook, 
   ChartLine,
-  Building2
+  Building2,
+  TrendingUp,
+  DollarSign,
+  GraduationCap,
+  Plugs,
+  Brain
 } from '@phosphor-icons/react';
 
 interface SidebarProps {
@@ -22,33 +28,115 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
       label: 'Pipeline',
       icon: FunnelSimple,
       description: 'PEAK methodology pipeline',
-      roles: ['rep', 'manager', 'admin']
+      roles: ['rep', 'manager', 'admin'],
+      category: 'core'
     },
     {
       id: 'opportunities' as DashboardView,
       label: 'Opportunities',
       icon: Target,
       description: 'MEDDPICC qualification',
-      roles: ['rep', 'manager', 'admin']
+      roles: ['rep', 'manager', 'admin'],
+      category: 'core'
     },
     {
       id: 'contacts' as DashboardView,
       label: 'Contacts',
       icon: AddressBook,
       description: 'Customer relationships',
-      roles: ['rep', 'manager', 'admin']
+      roles: ['rep', 'manager', 'admin'],
+      category: 'core'
     },
     {
       id: 'analytics' as DashboardView,
       label: 'Analytics',
       icon: ChartLine,
       description: 'Performance insights',
-      roles: ['manager', 'admin']
+      roles: ['manager', 'admin'],
+      category: 'core'
+    },
+    {
+      id: 'cstpv' as DashboardView,
+      label: 'CSTPV Dashboard',
+      icon: TrendingUp,
+      description: 'AI-powered metrics',
+      roles: ['rep', 'manager', 'admin'],
+      category: 'advanced',
+      isNew: true
+    },
+    {
+      id: 'financial' as DashboardView,
+      label: 'Financial',
+      icon: DollarSign,
+      description: 'Revenue & POS tracking',
+      roles: ['rep', 'manager', 'admin'],
+      category: 'advanced',
+      isNew: true
+    },
+    {
+      id: 'learning' as DashboardView,
+      label: 'Learning',
+      icon: GraduationCap,
+      description: 'Certifications & training',
+      roles: ['rep', 'manager', 'admin'],
+      category: 'advanced',
+      isNew: true
+    },
+    {
+      id: 'integrations' as DashboardView,
+      label: 'Integrations',
+      icon: Plugs,
+      description: 'Connect external tools',
+      roles: ['manager', 'admin'],
+      category: 'advanced',
+      isNew: true
     }
   ];
 
   const availableItems = navigationItems.filter(item => 
     item.roles.includes(userRole)
+  );
+
+  const coreItems = availableItems.filter(item => item.category === 'core');
+  const advancedItems = availableItems.filter(item => item.category === 'advanced');
+
+  const renderNavSection = (items: typeof availableItems, title: string) => (
+    <div className="space-y-2">
+      <div className="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+        {title}
+      </div>
+      {items.map((item) => {
+        const Icon = item.icon;
+        const isActive = currentView === item.id;
+        
+        return (
+          <Button
+            key={item.id}
+            variant={isActive ? 'default' : 'ghost'}
+            className={cn(
+              'w-full justify-start h-auto p-3',
+              isActive && 'bg-primary text-primary-foreground'
+            )}
+            onClick={() => onViewChange(item.id)}
+          >
+            <div className="flex items-center gap-3 w-full">
+              <Icon size={20} />
+              <div className="text-left flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">{item.label}</span>
+                  {item.isNew && (
+                    <Badge className="text-xs bg-accent text-accent-foreground">
+                      New
+                    </Badge>
+                  )}
+                </div>
+                <div className="text-xs opacity-75">{item.description}</div>
+              </div>
+            </div>
+          </Button>
+        );
+      })}
+    </div>
   );
 
   return (
@@ -60,43 +148,27 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
           </div>
           <div>
             <h2 className="font-bold text-lg">FulQrun</h2>
-            <p className="text-xs text-muted-foreground">Enterprise CRM</p>
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-muted-foreground">Enterprise CRM</p>
+              <Badge className="text-xs bg-accent/20 text-accent-foreground">
+                v2.0
+              </Badge>
+            </div>
           </div>
         </div>
       </div>
       
-      <nav className="flex-1 p-4">
-        <div className="space-y-2">
-          {availableItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = currentView === item.id;
-            
-            return (
-              <Button
-                key={item.id}
-                variant={isActive ? 'default' : 'ghost'}
-                className={cn(
-                  'w-full justify-start h-auto p-3',
-                  isActive && 'bg-primary text-primary-foreground'
-                )}
-                onClick={() => onViewChange(item.id)}
-              >
-                <div className="flex items-center gap-3 w-full">
-                  <Icon size={20} />
-                  <div className="text-left">
-                    <div className="font-medium">{item.label}</div>
-                    <div className="text-xs opacity-75">{item.description}</div>
-                  </div>
-                </div>
-              </Button>
-            );
-          })}
-        </div>
+      <nav className="flex-1 p-4 space-y-6 overflow-y-auto">
+        {renderNavSection(coreItems, 'Core Features')}
+        {advancedItems.length > 0 && renderNavSection(advancedItems, 'Advanced Features')}
       </nav>
       
       <div className="p-4 border-t">
         <div className="text-xs text-muted-foreground">
-          <div className="font-medium mb-1">PEAK Methodology</div>
+          <div className="font-medium mb-1 flex items-center gap-2">
+            <Brain size={12} />
+            PEAK + AI-Powered
+          </div>
           <div>Prospect → Engage → Acquire → Keep</div>
         </div>
       </div>

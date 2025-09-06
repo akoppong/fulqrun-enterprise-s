@@ -39,6 +39,12 @@ export interface MEDDPICC {
   implicatePain: string; // What pain are we addressing?
   champion: string; // Who is actively selling for us?
   score: number; // 0-100 qualification score
+  aiHints?: {
+    metricsHints: string[];
+    championHints: string[];
+    riskFactors: string[];
+  };
+  lastAiAnalysis?: Date;
 }
 
 export interface Opportunity {
@@ -55,6 +61,20 @@ export interface Opportunity {
   meddpicc: MEDDPICC;
   createdAt: Date;
   updatedAt: Date;
+  aiInsights?: {
+    riskScore: number; // 0-100, higher = more risk
+    nextBestActions: string[];
+    predictedCloseDate?: Date;
+    confidenceLevel: 'low' | 'medium' | 'high';
+    competitorAnalysis?: string;
+    lastAiUpdate?: Date;
+  };
+  workflowStatus?: {
+    currentWorkflow: string;
+    completedSteps: string[];
+    nextSteps: string[];
+    automationTriggers: string[];
+  };
 }
 
 export interface PipelineMetrics {
@@ -99,3 +119,190 @@ export const PEAK_STAGES: { value: PeakStage; label: string; description: string
     color: 'bg-green-100 text-green-800'
   }
 ];
+
+// Phase 2 Types - Advanced Features
+
+export interface WorkflowTemplate {
+  id: string;
+  name: string;
+  description: string;
+  stage: PeakStage;
+  steps: WorkflowStep[];
+  automationRules: AutomationRule[];
+  createdBy: string;
+  createdAt: Date;
+  isActive: boolean;
+}
+
+export interface WorkflowStep {
+  id: string;
+  name: string;
+  description: string;
+  type: 'manual' | 'automated' | 'approval';
+  assignedRole?: string;
+  dueInDays: number;
+  dependencies: string[];
+  completionCriteria: string;
+  resources: WorkflowResource[];
+}
+
+export interface WorkflowResource {
+  id: string;
+  name: string;
+  type: 'document' | 'template' | 'checklist' | 'video' | 'link';
+  url?: string;
+  content?: string;
+  sharepointPath?: string;
+}
+
+export interface AutomationRule {
+  id: string;
+  trigger: string;
+  conditions: string[];
+  actions: AutomationAction[];
+  isActive: boolean;
+}
+
+export interface AutomationAction {
+  type: 'email' | 'task' | 'notification' | 'field_update' | 'integration';
+  parameters: Record<string, any>;
+}
+
+export interface FinancialData {
+  id: string;
+  opportunityId: string;
+  revenue: number;
+  costs: number;
+  margin: number;
+  recurringRevenue: number;
+  paymentTerms: string;
+  invoiceStatus: 'pending' | 'sent' | 'paid' | 'overdue';
+  inventoryItems?: InventoryItem[];
+  posTransactions?: POSTransaction[];
+}
+
+export interface InventoryItem {
+  id: string;
+  sku: string;
+  name: string;
+  category: string;
+  quantity: number;
+  unitPrice: number;
+  supplier: string;
+  lastRestocked: Date;
+}
+
+export interface POSTransaction {
+  id: string;
+  transactionId: string;
+  amount: number;
+  paymentMethod: string;
+  timestamp: Date;
+  items: string[];
+  customerId?: string;
+}
+
+export interface PerformanceMetrics {
+  userId: string;
+  period: string;
+  cstpv: {
+    close: number; // Win rate percentage
+    size: number; // Average deal size
+    time: number; // Average sales cycle days
+    probability: number; // Pipeline probability
+    value: number; // Total pipeline value
+  };
+  activityMetrics: {
+    calls: number;
+    emails: number;
+    meetings: number;
+    demos: number;
+  };
+  kpis: {
+    quota: number;
+    achieved: number;
+    attainment: number;
+    ranking: number;
+  };
+}
+
+export interface Integration {
+  id: string;
+  name: string;
+  type: 'slack' | 'docusign' | 'gong' | 'chorus' | 'stripe' | 'quickbooks';
+  isActive: boolean;
+  credentials: Record<string, string>;
+  lastSync?: Date;
+  syncStatus: 'connected' | 'error' | 'syncing' | 'disconnected';
+  configuration: Record<string, any>;
+}
+
+export interface LearningModule {
+  id: string;
+  title: string;
+  description: string;
+  category: 'peak' | 'meddpicc' | 'product' | 'sales_skills' | 'compliance';
+  level: 'beginner' | 'intermediate' | 'advanced';
+  duration: number; // minutes
+  content: LearningContent[];
+  quiz?: Quiz;
+  certification?: Certification;
+  isRequired: boolean;
+}
+
+export interface LearningContent {
+  id: string;
+  type: 'video' | 'article' | 'interactive' | 'checklist';
+  title: string;
+  content: string;
+  duration?: number;
+  resources: string[];
+}
+
+export interface Quiz {
+  id: string;
+  questions: QuizQuestion[];
+  passingScore: number;
+  timeLimit?: number;
+}
+
+export interface QuizQuestion {
+  id: string;
+  question: string;
+  type: 'multiple_choice' | 'true_false' | 'short_answer';
+  options?: string[];
+  correctAnswer: string;
+  explanation: string;
+}
+
+export interface Certification {
+  id: string;
+  name: string;
+  description: string;
+  requirements: string[];
+  validityPeriod: number; // days
+  badge: string;
+}
+
+export interface UserProgress {
+  userId: string;
+  moduleId: string;
+  status: 'not_started' | 'in_progress' | 'completed' | 'certified';
+  progress: number; // 0-100
+  lastAccessed: Date;
+  completedAt?: Date;
+  certificationDate?: Date;
+  quizAttempts: number;
+  quizScore?: number;
+}
+
+export interface ComplianceLog {
+  id: string;
+  userId: string;
+  action: string;
+  resource: string;
+  timestamp: Date;
+  details: Record<string, any>;
+  regulation: 'gdpr' | 'hipaa' | 'sox' | 'general';
+  level: 'info' | 'warning' | 'critical';
+}
