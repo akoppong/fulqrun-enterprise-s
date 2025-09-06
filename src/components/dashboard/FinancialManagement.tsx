@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Progress } from '@/components/ui/progress';
 import { 
   DollarSign, 
   TrendingUp, 
@@ -19,7 +20,13 @@ import {
   Calendar,
   AlertCircle,
   CheckCircle,
-  Clock
+  Clock,
+  Activity,
+  Target,
+  BarChart,
+  TrendUp,
+  Eye,
+  Zap
 } from '@phosphor-icons/react';
 import { useKV } from '@github/spark/hooks';
 import { FinancialData, InventoryItem, POSTransaction, Opportunity } from '@/lib/types';
@@ -28,6 +35,26 @@ import { toast } from 'sonner';
 interface FinancialManagementProps {
   opportunities: Opportunity[];
   currentUserId: string;
+}
+
+// Real-time financial metrics interface
+interface RealtimeMetrics {
+  currentRevenue: number;
+  dailyGrowth: number;
+  monthlyRecurring: number;
+  conversionRate: number;
+  averageDealSize: number;
+  forecastAccuracy: number;
+  revenueTarget: number;
+  timeToClose: number; // in days
+}
+
+// Enhanced financial data with real-time tracking
+interface EnhancedFinancialData extends FinancialData {
+  lastUpdated: Date;
+  revenueGrowth: number;
+  dealVelocity: number;
+  riskScore: number;
 }
 
 // Utility functions to convert stored data back to proper Date objects
@@ -49,6 +76,17 @@ export function FinancialManagement({ opportunities, currentUserId }: FinancialM
   const [financialData, setFinancialData] = useKV<FinancialData[]>('financial-data', []);
   const [rawInventory, setRawInventory] = useKV<InventoryItem[]>('inventory-items', []);
   const [rawPosTransactions, setRawPosTransactions] = useKV<POSTransaction[]>('pos-transactions', []);
+  const [realtimeMetrics, setRealtimeMetrics] = useKV<RealtimeMetrics>('realtime-metrics', {
+    currentRevenue: 0,
+    dailyGrowth: 0,
+    monthlyRecurring: 0,
+    conversionRate: 0,
+    averageDealSize: 0,
+    forecastAccuracy: 0,
+    revenueTarget: 1000000,
+    timeToClose: 45
+  });
+  const [isRealTimeEnabled, setIsRealTimeEnabled] = useKV('realtime-enabled', true);
   
   // Convert stored data to ensure proper Date objects
   const inventory = convertInventoryDates(rawInventory);
@@ -70,6 +108,42 @@ export function FinancialManagement({ opportunities, currentUserId }: FinancialM
   const [selectedPeriod, setSelectedPeriod] = useState('current-month');
   const [newInventoryDialog, setNewInventoryDialog] = useState(false);
   const [newPOSDialog, setNewPOSDialog] = useState(false);
+
+  // Real-time metrics update effect
+  useEffect(() => {
+    if (!isRealTimeEnabled) return;
+
+    const updateRealtimeMetrics = () => {
+      const totalRevenue = calculateTotalRevenue();
+      const closedOpportunities = opportunities.filter(opp => opp.stage === 'keep');
+      const totalOpportunities = opportunities.length;
+      const avgDealSize = totalOpportunities > 0 ? totalRevenue / totalOpportunities : 0;
+      const conversionRate = totalOpportunities > 0 ? (closedOpportunities.length / totalOpportunities) * 100 : 0;
+      
+      // Simulate real-time growth calculation
+      const currentTime = Date.now();
+      const dailyGrowthRate = Math.sin(currentTime / 10000000) * 5 + 3; // Simulated growth between -2% and 8%
+      
+      setRealtimeMetrics(prev => ({
+        ...prev,
+        currentRevenue: totalRevenue,
+        dailyGrowth: dailyGrowthRate,
+        monthlyRecurring: calculateRecurringRevenue(),
+        conversionRate,
+        averageDealSize: avgDealSize,
+        forecastAccuracy: 85 + Math.random() * 10, // Simulated accuracy between 85-95%
+        timeToClose: 30 + Math.random() * 30 // Simulated time to close between 30-60 days
+      }));
+    };
+
+    // Update metrics immediately
+    updateRealtimeMetrics();
+
+    // Set up real-time updates every 5 seconds
+    const interval = setInterval(updateRealtimeMetrics, 5000);
+
+    return () => clearInterval(interval);
+  }, [opportunities, financialData, isRealTimeEnabled]);
 
   // Initialize demo data
   useEffect(() => {
