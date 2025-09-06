@@ -164,8 +164,32 @@ export interface AutomationRule {
 }
 
 export interface AutomationAction {
-  type: 'email' | 'task' | 'notification' | 'field_update' | 'integration';
+  type: 'email' | 'task' | 'notification' | 'field_update' | 'integration' | 'webhook' | 'delay' | 'conditional';
   parameters: Record<string, any>;
+  delay?: number; // minutes
+  condition?: string;
+}
+
+export interface WorkflowExecution {
+  id: string;
+  workflowId: string;
+  opportunityId: string;
+  status: 'running' | 'completed' | 'failed' | 'paused';
+  currentStep: number;
+  startedAt: Date;
+  completedAt?: Date;
+  executedBy: string;
+  results: ExecutionResult[];
+}
+
+export interface ExecutionResult {
+  stepId: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'failed' | 'skipped';
+  startedAt: Date;
+  completedAt?: Date;
+  output?: any;
+  error?: string;
+  assignedTo?: string;
 }
 
 export interface FinancialData {
