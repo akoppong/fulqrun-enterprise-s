@@ -30,10 +30,43 @@ interface FinancialManagementProps {
   currentUserId: string;
 }
 
+// Utility functions to convert stored data back to proper Date objects
+const convertInventoryDates = (items: InventoryItem[]): InventoryItem[] => {
+  return items.map(item => ({
+    ...item,
+    lastRestocked: new Date(item.lastRestocked)
+  }));
+};
+
+const convertTransactionDates = (transactions: POSTransaction[]): POSTransaction[] => {
+  return transactions.map(transaction => ({
+    ...transaction,
+    timestamp: new Date(transaction.timestamp)
+  }));
+};
+
 export function FinancialManagement({ opportunities, currentUserId }: FinancialManagementProps) {
   const [financialData, setFinancialData] = useKV<FinancialData[]>('financial-data', []);
-  const [inventory, setInventory] = useKV<InventoryItem[]>('inventory-items', []);
-  const [posTransactions, setPosTransactions] = useKV<POSTransaction[]>('pos-transactions', []);
+  const [rawInventory, setRawInventory] = useKV<InventoryItem[]>('inventory-items', []);
+  const [rawPosTransactions, setRawPosTransactions] = useKV<POSTransaction[]>('pos-transactions', []);
+  
+  // Convert stored data to ensure proper Date objects
+  const inventory = convertInventoryDates(rawInventory);
+  const posTransactions = convertTransactionDates(rawPosTransactions);
+  const setInventory = (items: InventoryItem[] | ((prev: InventoryItem[]) => InventoryItem[])) => {
+    if (typeof items === 'function') {
+      setRawInventory(prev => items(convertInventoryDates(prev)));
+    } else {
+      setRawInventory(items);
+    }
+  };
+  const setPosTransactions = (transactions: POSTransaction[] | ((prev: POSTransaction[]) => POSTransaction[])) => {
+    if (typeof transactions === 'function') {
+      setRawPosTransactions(prev => transactions(convertTransactionDates(prev)));
+    } else {
+      setRawPosTransactions(transactions);
+    }
+  };
   const [selectedPeriod, setSelectedPeriod] = useState('current-month');
   const [newInventoryDialog, setNewInventoryDialog] = useState(false);
   const [newPOSDialog, setNewPOSDialog] = useState(false);
@@ -114,7 +147,7 @@ export function FinancialManagement({ opportunities, currentUserId }: FinancialM
       }));
       setFinancialData(demoFinancialData);
     }
-  }, [opportunities, financialData, inventory, posTransactions, setFinancialData, setInventory, setPosTransactions]);
+  }, [opportunities, financialData, rawInventory, rawPosTransactions, setFinancialData, setRawInventory, setRawPosTransactions]);
 
   const calculateTotalRevenue = () => {
     return financialData.reduce((sum, fd) => sum + fd.revenue, 0);
