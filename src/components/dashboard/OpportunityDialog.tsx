@@ -476,14 +476,23 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
                         <div>
                           <h4 className="font-semibold mb-2">Next Best Actions</h4>
                           <div className="space-y-2">
-                            {aiInsights.nextBestActions?.map((action: string, index: number) => (
+                            {Array.isArray(aiInsights.nextBestActions) ? aiInsights.nextBestActions.map((action: string, index: number) => (
                               <div key={index} className="flex items-start gap-2 p-2 bg-muted/50 rounded">
                                 <div className="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm flex-shrink-0">
                                   {index + 1}
                                 </div>
                                 <span className="text-sm">{action}</span>
                               </div>
-                            ))}
+                            )) : aiInsights.nextBestActions ? (
+                              <div className="flex items-start gap-2 p-2 bg-muted/50 rounded">
+                                <div className="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm flex-shrink-0">
+                                  1
+                                </div>
+                                <span className="text-sm">{aiInsights.nextBestActions}</span>
+                              </div>
+                            ) : (
+                              <div className="text-sm text-muted-foreground">No actions available</div>
+                            )}
                           </div>
                         </div>
                       </div>
