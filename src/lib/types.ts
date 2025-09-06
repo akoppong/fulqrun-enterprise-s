@@ -306,3 +306,121 @@ export interface ComplianceLog {
   regulation: 'gdpr' | 'hipaa' | 'sox' | 'general';
   level: 'info' | 'warning' | 'critical';
 }
+
+// KPI Targets and Goal Tracking Types
+export interface KPITarget {
+  id: string;
+  name: string;
+  description: string;
+  type: 'revenue' | 'conversion' | 'volume' | 'time' | 'quality' | 'custom';
+  category: 'financial' | 'sales' | 'marketing' | 'operational' | 'customer';
+  targetValue: number;
+  currentValue: number;
+  unit: string; // e.g., '$', '%', 'deals', 'days', 'score'
+  period: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+  startDate: Date;
+  endDate: Date;
+  ownerId: string;
+  teamId?: string;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  status: 'not_started' | 'in_progress' | 'at_risk' | 'achieved' | 'exceeded' | 'failed';
+  automationRules: KPIAutomationRule[];
+  milestones: KPIMilestone[];
+  createdAt: Date;
+  updatedAt: Date;
+  lastCalculated?: Date;
+}
+
+export interface KPIAutomationRule {
+  id: string;
+  trigger: 'threshold_reached' | 'time_based' | 'manual' | 'opportunity_closed' | 'deal_stage_change';
+  conditions: {
+    field: string;
+    operator: 'equals' | 'greater_than' | 'less_than' | 'between' | 'contains';
+    value: any;
+  }[];
+  actions: {
+    type: 'update_kpi' | 'send_notification' | 'create_task' | 'trigger_workflow' | 'escalate';
+    parameters: Record<string, any>;
+  }[];
+  isActive: boolean;
+}
+
+export interface KPIMilestone {
+  id: string;
+  name: string;
+  targetValue: number;
+  targetDate: Date;
+  achieved: boolean;
+  achievedDate?: Date;
+  reward?: string;
+  description?: string;
+}
+
+export interface GoalTrackingEntry {
+  id: string;
+  kpiId: string;
+  value: number;
+  timestamp: Date;
+  source: 'manual' | 'automated' | 'integration' | 'calculated';
+  metadata: Record<string, any>;
+  notes?: string;
+  updatedBy: string;
+}
+
+export interface KPIDashboard {
+  id: string;
+  name: string;
+  description: string;
+  ownerId: string;
+  kpiIds: string[];
+  layout: DashboardLayout[];
+  filters: DashboardFilter[];
+  refreshInterval: number; // in seconds
+  isPublic: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface DashboardLayout {
+  kpiId: string;
+  position: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+  chartType: 'line' | 'bar' | 'gauge' | 'number' | 'progress' | 'trend';
+  displayOptions: Record<string, any>;
+}
+
+export interface DashboardFilter {
+  field: string;
+  operator: string;
+  value: any;
+  label: string;
+}
+
+export interface KPIAnalytics {
+  kpiId: string;
+  period: string;
+  trend: 'up' | 'down' | 'stable';
+  trendPercentage: number;
+  variance: number; // difference from target
+  forecast: {
+    projectedValue: number;
+    confidenceLevel: number;
+    projectionDate: Date;
+  };
+  insights: KPIInsight[];
+  recommendations: string[];
+  lastAnalyzed: Date;
+}
+
+export interface KPIInsight {
+  type: 'positive' | 'negative' | 'neutral' | 'warning';
+  message: string;
+  impact: 'low' | 'medium' | 'high';
+  actionRequired: boolean;
+  suggestedActions?: string[];
+}

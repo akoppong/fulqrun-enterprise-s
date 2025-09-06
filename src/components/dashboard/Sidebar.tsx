@@ -12,7 +12,8 @@ import {
   DollarSign,
   GraduationCap,
   Plugs,
-  Brain
+  Brain,
+  Crosshair
 } from '@phosphor-icons/react';
 
 interface SidebarProps {
@@ -69,6 +70,15 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
       label: 'Financial',
       icon: DollarSign,
       description: 'Revenue & POS tracking',
+      roles: ['rep', 'manager', 'admin'],
+      category: 'advanced',
+      isNew: true
+    },
+    {
+      id: 'kpi-targets' as DashboardView,
+      label: 'KPI Targets',
+      icon: Crosshair,
+      description: 'Goal tracking & KPIs',
       roles: ['rep', 'manager', 'admin'],
       category: 'advanced',
       isNew: true

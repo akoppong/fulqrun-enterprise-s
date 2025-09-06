@@ -9,6 +9,7 @@ import { ContactsView } from './ContactsView';
 import { AnalyticsView } from './AnalyticsView';
 import { CSTPVDashboard } from './CSTPVDashboard';
 import { FinancialManagement } from './FinancialManagement';
+import { KPITargetsView } from './KPITargetsView';
 import { LearningPlatform } from './LearningPlatform';
 import { FinancialAlerts } from './FinancialAlerts';
 
@@ -17,7 +18,7 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
-export type DashboardView = 'pipeline' | 'opportunities' | 'contacts' | 'analytics' | 'cstpv' | 'financial' | 'learning' | 'integrations';
+export type DashboardView = 'pipeline' | 'opportunities' | 'contacts' | 'analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'learning' | 'integrations';
 
 export function Dashboard({ user, onLogout }: DashboardProps) {
   const [currentView, setCurrentView] = useState<DashboardView>('pipeline');
@@ -80,6 +81,13 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
           <FinancialManagement 
             opportunities={opportunities}
             currentUserId={user.id}
+          />
+        );
+      case 'kpi-targets':
+        return (
+          <KPITargetsView
+            opportunities={opportunities}
+            currentUser={user}
           />
         );
       case 'learning':
