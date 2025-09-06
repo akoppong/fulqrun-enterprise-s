@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, Opportunity, Contact, Company } from '@/lib/types';
+import { User, Opportunity, Contact, Company, KPITarget } from '@/lib/types';
 import { useKV } from '@github/spark/hooks';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
@@ -11,6 +11,7 @@ import { CSTPVDashboard } from './CSTPVDashboard';
 import { FinancialManagement } from './FinancialManagement';
 import { KPITargetsView } from './KPITargetsView';
 import { LearningPlatform } from './LearningPlatform';
+import { KPIDashboardBuilder } from './KPIDashboardBuilder';
 import { FinancialAlerts } from './FinancialAlerts';
 
 interface DashboardProps {
@@ -18,7 +19,7 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
-export type DashboardView = 'pipeline' | 'opportunities' | 'contacts' | 'analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'learning' | 'integrations';
+export type DashboardView = 'pipeline' | 'opportunities' | 'contacts' | 'analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'learning' | 'integrations';
 
 export function Dashboard({ user, onLogout }: DashboardProps) {
   const [currentView, setCurrentView] = useState<DashboardView>('pipeline');
@@ -26,6 +27,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
   const [contacts, setContacts] = useKV<Contact[]>('contacts', []);
   const [companies, setCompanies] = useKV<Company[]>('companies', []);
   const [allUsers, setAllUsers] = useKV<User[]>('all-users', []);
+  const [kpiTargets, setKpiTargets] = useKV<KPITarget[]>('kpi-targets', []);
 
   // Initialize demo users data
   useEffect(() => {
@@ -88,6 +90,13 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
           <KPITargetsView
             opportunities={opportunities}
             currentUser={user}
+          />
+        );
+      case 'kpi-builder':
+        return (
+          <KPIDashboardBuilder
+            currentUser={user}
+            kpiTargets={kpiTargets}
           />
         );
       case 'learning':

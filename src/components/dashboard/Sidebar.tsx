@@ -13,7 +13,8 @@ import {
   GraduationCap,
   Plugs,
   Brain,
-  Crosshair
+  Crosshair,
+  GridNine
 } from '@phosphor-icons/react';
 
 interface SidebarProps {
@@ -79,6 +80,15 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
       label: 'KPI Targets',
       icon: Crosshair,
       description: 'Goal tracking & KPIs',
+      roles: ['rep', 'manager', 'admin'],
+      category: 'advanced',
+      isNew: true
+    },
+    {
+      id: 'kpi-builder' as DashboardView,
+      label: 'Dashboard Builder',
+      icon: GridNine,
+      description: 'Custom KPI dashboards',
       roles: ['rep', 'manager', 'admin'],
       category: 'advanced',
       isNew: true
