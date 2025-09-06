@@ -235,6 +235,33 @@ export function FinancialManagement({ opportunities, currentUserId }: FinancialM
     return financialData.reduce((sum, fd) => sum + fd.recurringRevenue, 0);
   };
 
+  const calculateRevenueGrowth = () => {
+    // Calculate growth rate based on closed opportunities over time
+    const closedOpportunities = opportunities.filter(opp => opp.stage === 'keep');
+    const totalClosed = closedOpportunities.length;
+    const avgGrowth = totalClosed > 0 ? realtimeMetrics.dailyGrowth : 0;
+    return avgGrowth;
+  };
+
+  const getRevenueProgress = () => {
+    const current = realtimeMetrics.currentRevenue;
+    const target = realtimeMetrics.revenueTarget;
+    return Math.min((current / target) * 100, 100);
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  const formatPercentage = (value: number) => {
+    return `${value.toFixed(1)}%`;
+  };
+
   const getInvoiceStatusColor = (status: string) => {
     switch (status) {
       case 'paid': return 'bg-green-100 text-green-800';
@@ -278,12 +305,31 @@ export function FinancialManagement({ opportunities, currentUserId }: FinancialM
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Financial Management</h2>
+          <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+            Financial Management 
+            {isRealTimeEnabled && (
+              <div className="flex items-center gap-2">
+                <Zap className="h-5 w-5 text-green-500" />
+                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                  <Activity className="h-3 w-3 mr-1" />
+                  Real-time
+                </Badge>
+              </div>
+            )}
+          </h2>
           <p className="text-muted-foreground">
-            Revenue tracking, inventory management, and point-of-sale operations
+            Real-time revenue tracking, inventory management, and financial analytics
           </p>
         </div>
         <div className="flex items-center space-x-2">
+          <Button
+            variant={isRealTimeEnabled ? "default" : "outline"}
+            size="sm"
+            onClick={() => setIsRealTimeEnabled(!isRealTimeEnabled)}
+          >
+            <Activity className="h-4 w-4 mr-2" />
+            Real-time {isRealTimeEnabled ? 'ON' : 'OFF'}
+          </Button>
           <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
             <SelectTrigger className="w-40">
               <SelectValue />
@@ -298,7 +344,49 @@ export function FinancialManagement({ opportunities, currentUserId }: FinancialM
         </div>
       </div>
 
-      {/* Financial KPI Cards */}
+      {/* Real-time Revenue Dashboard */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <Card className="md:col-span-2 lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5" />
+              Revenue Target Progress
+            </CardTitle>
+            <CardDescription>
+              Current: {formatCurrency(realtimeMetrics.currentRevenue)} / Target: {formatCurrency(realtimeMetrics.revenueTarget)}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <Progress value={getRevenueProgress()} className="h-3" />
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">{formatPercentage(getRevenueProgress())} complete</span>
+                <span className="text-muted-foreground">
+                  {formatCurrency(realtimeMetrics.revenueTarget - realtimeMetrics.currentRevenue)} remaining
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Live Revenue Growth</CardTitle>
+            <TrendUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {formatPercentage(realtimeMetrics.dailyGrowth)}
+            </div>
+            <p className="text-xs text-green-600 flex items-center gap-1">
+              <TrendingUp size={12} />
+              Daily growth rate
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Enhanced Financial KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -306,69 +394,173 @@ export function FinancialManagement({ opportunities, currentUserId }: FinancialM
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${calculateTotalRevenue().toLocaleString()}</div>
-            <p className="text-xs text-green-600 flex items-center gap-1">
-              <TrendingUp size={12} />
-              +12.5% from last period
+            <div className="text-2xl font-bold">{formatCurrency(realtimeMetrics.currentRevenue)}</div>
+            <p className={`text-xs flex items-center gap-1 ${realtimeMetrics.dailyGrowth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {realtimeMetrics.dailyGrowth >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+              {formatPercentage(Math.abs(realtimeMetrics.dailyGrowth))} from yesterday
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Gross Margin</CardTitle>
+            <CardTitle className="text-sm font-medium">Avg Deal Size</CardTitle>
+            <BarChart className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(realtimeMetrics.averageDealSize)}</div>
+            <p className="text-xs text-blue-600 flex items-center gap-1">
+              <Target size={12} />
+              {Math.round(realtimeMetrics.timeToClose)} days to close
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${calculateTotalMargin().toLocaleString()}</div>
+            <div className="text-2xl font-bold">{formatPercentage(realtimeMetrics.conversionRate)}</div>
             <p className="text-xs text-green-600 flex items-center gap-1">
-              <TrendingUp size={12} />
-              +8.2% from last period
+              <CheckCircle size={12} />
+              {formatPercentage(realtimeMetrics.forecastAccuracy)} forecast accuracy
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Recurring Revenue</CardTitle>
+            <CardTitle className="text-sm font-medium">Monthly Recurring</CardTitle>
             <Receipt className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${calculateRecurringRevenue().toLocaleString()}</div>
+            <div className="text-2xl font-bold">{formatCurrency(realtimeMetrics.monthlyRecurring)}</div>
             <p className="text-xs text-blue-600 flex items-center gap-1">
-              <TrendingUp size={12} />
-              Monthly recurring
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">POS Transactions</CardTitle>
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{posTransactions.length}</div>
-            <p className="text-xs text-muted-foreground">
-              ${posTransactions.reduce((sum, t) => sum + t.amount, 0).toLocaleString()} total
+              <Activity size={12} />
+              Predictable revenue
             </p>
           </CardContent>
         </Card>
       </div>
 
-      <Tabs defaultValue="revenue" className="space-y-4">
+      <Tabs defaultValue="realtime" className="space-y-4">
         <TabsList>
+          <TabsTrigger value="realtime">Real-time Analytics</TabsTrigger>
           <TabsTrigger value="revenue">Revenue Tracking</TabsTrigger>
           <TabsTrigger value="inventory">Inventory</TabsTrigger>
           <TabsTrigger value="pos">Point of Sale</TabsTrigger>
           <TabsTrigger value="invoicing">Invoicing</TabsTrigger>
         </TabsList>
 
+        <TabsContent value="realtime" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Eye className="h-5 w-5" />
+                  Revenue Pipeline Health
+                </CardTitle>
+                <CardDescription>Real-time view of your revenue pipeline</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {['Prospect', 'Engage', 'Acquire', 'Keep'].map((stage, index) => {
+                    const stageOpportunities = opportunities.filter(opp => {
+                      const stageMap = { 'prospect': 0, 'engage': 1, 'acquire': 2, 'keep': 3 };
+                      return stageMap[opp.stage as keyof typeof stageMap] === index;
+                    });
+                    const stageValue = stageOpportunities.reduce((sum, opp) => sum + opp.value, 0);
+                    const stagePercentage = realtimeMetrics.currentRevenue > 0 ? (stageValue / realtimeMetrics.currentRevenue) * 100 : 0;
+                    
+                    return (
+                      <div key={stage} className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="font-medium">{stage}</span>
+                          <span>{formatCurrency(stageValue)} ({stageOpportunities.length} deals)</span>
+                        </div>
+                        <Progress value={Math.min(stagePercentage, 100)} className="h-2" />
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5" />
+                  Live Metrics Dashboard
+                </CardTitle>
+                <CardDescription>Key performance indicators updating in real-time</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center p-4 bg-green-50 rounded-lg">
+                    <div className="text-2xl font-bold text-green-700">{formatPercentage(realtimeMetrics.forecastAccuracy)}</div>
+                    <div className="text-sm text-green-600">Forecast Accuracy</div>
+                  </div>
+                  <div className="text-center p-4 bg-blue-50 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-700">{Math.round(realtimeMetrics.timeToClose)}d</div>
+                    <div className="text-sm text-blue-600">Avg. Time to Close</div>
+                  </div>
+                  <div className="text-center p-4 bg-purple-50 rounded-lg">
+                    <div className="text-2xl font-bold text-purple-700">{formatCurrency(realtimeMetrics.averageDealSize)}</div>
+                    <div className="text-sm text-purple-600">Avg. Deal Size</div>
+                  </div>
+                  <div className="text-center p-4 bg-orange-50 rounded-lg">
+                    <div className="text-2xl font-bold text-orange-700">{formatPercentage(realtimeMetrics.conversionRate)}</div>
+                    <div className="text-sm text-orange-600">Conversion Rate</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Revenue Velocity Tracker</CardTitle>
+              <CardDescription>Track how quickly revenue is being generated across your pipeline</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Daily Revenue Velocity</span>
+                  <Badge variant="outline" className="bg-green-50">
+                    {formatCurrency(realtimeMetrics.currentRevenue / 30)} per day
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Weekly Projection</span>
+                  <span className="text-sm">{formatCurrency(realtimeMetrics.currentRevenue / 30 * 7)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Monthly Projection</span>
+                  <span className="text-sm font-semibold">{formatCurrency(realtimeMetrics.currentRevenue / 30 * 30)}</span>
+                </div>
+                {isRealTimeEnabled && (
+                  <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                    <div className="flex items-center gap-2 text-blue-700">
+                      <Activity className="h-4 w-4" />
+                      <span className="text-sm font-medium">Real-time updates enabled</span>
+                    </div>
+                    <p className="text-xs text-blue-600 mt-1">
+                      Metrics refresh every 5 seconds with live pipeline data
+                    </p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="revenue" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Revenue by Opportunity</CardTitle>
-              <CardDescription>Financial breakdown of your sales opportunities</CardDescription>
+              <CardDescription>Financial breakdown of your sales opportunities with real-time tracking</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
@@ -379,24 +571,32 @@ export function FinancialManagement({ opportunities, currentUserId }: FinancialM
                     <TableHead>Costs</TableHead>
                     <TableHead>Margin</TableHead>
                     <TableHead>Recurring</TableHead>
+                    <TableHead>Growth</TableHead>
                     <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {financialData.map((fd) => {
                     const opp = opportunities.find(o => o.id === fd.opportunityId);
+                    const growthRate = calculateRevenueGrowth();
                     return (
                       <TableRow key={fd.id}>
                         <TableCell className="font-medium">
                           {opp?.title || 'Unknown Opportunity'}
                         </TableCell>
-                        <TableCell>${fd.revenue.toLocaleString()}</TableCell>
-                        <TableCell>${fd.costs.toLocaleString()}</TableCell>
+                        <TableCell className="font-medium">{formatCurrency(fd.revenue)}</TableCell>
+                        <TableCell>{formatCurrency(fd.costs)}</TableCell>
                         <TableCell className="text-green-600 font-medium">
-                          ${fd.margin.toLocaleString()}
+                          {formatCurrency(fd.margin)}
                         </TableCell>
                         <TableCell>
-                          {fd.recurringRevenue > 0 ? `$${fd.recurringRevenue.toLocaleString()}` : '-'}
+                          {fd.recurringRevenue > 0 ? formatCurrency(fd.recurringRevenue) : '-'}
+                        </TableCell>
+                        <TableCell>
+                          <div className={`flex items-center gap-1 ${growthRate >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {growthRate >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+                            {formatPercentage(Math.abs(growthRate))}
+                          </div>
                         </TableCell>
                         <TableCell>
                           <Badge className={getInvoiceStatusColor(fd.invoiceStatus)}>
@@ -433,7 +633,7 @@ export function FinancialManagement({ opportunities, currentUserId }: FinancialM
                   </div>
                   <div>
                     <div className="text-2xl font-bold">
-                      ${inventory.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0).toLocaleString()}
+                      {formatCurrency(inventory.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0))}
                     </div>
                     <div className="text-xs text-muted-foreground">Total Value</div>
                   </div>
@@ -544,9 +744,9 @@ export function FinancialManagement({ opportunities, currentUserId }: FinancialM
                           {item.quantity}
                         </span>
                       </TableCell>
-                      <TableCell>${item.unitPrice.toLocaleString()}</TableCell>
+                      <TableCell>{formatCurrency(item.unitPrice)}</TableCell>
                       <TableCell className="font-medium">
-                        ${(item.quantity * item.unitPrice).toLocaleString()}
+                        {formatCurrency(item.quantity * item.unitPrice)}
                       </TableCell>
                       <TableCell>{item.supplier}</TableCell>
                     </TableRow>
@@ -651,7 +851,7 @@ export function FinancialManagement({ opportunities, currentUserId }: FinancialM
                       <TableCell className="font-medium">{transaction.transactionId}</TableCell>
                       <TableCell>{transaction.timestamp.toLocaleDateString()}</TableCell>
                       <TableCell className="font-medium text-green-600">
-                        ${transaction.amount.toLocaleString()}
+                        {formatCurrency(transaction.amount)}
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline">{transaction.paymentMethod}</Badge>
@@ -692,7 +892,7 @@ export function FinancialManagement({ opportunities, currentUserId }: FinancialM
                           {opp?.title || 'Unknown Opportunity'}
                         </TableCell>
                         <TableCell className="font-medium">
-                          ${fd.revenue.toLocaleString()}
+                          {formatCurrency(fd.revenue)}
                         </TableCell>
                         <TableCell>{fd.paymentTerms}</TableCell>
                         <TableCell>

@@ -10,6 +10,7 @@ import { AnalyticsView } from './AnalyticsView';
 import { CSTPVDashboard } from './CSTPVDashboard';
 import { FinancialManagement } from './FinancialManagement';
 import { LearningPlatform } from './LearningPlatform';
+import { FinancialAlerts } from './FinancialAlerts';
 
 interface DashboardProps {
   user: User;
@@ -118,6 +119,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
           {renderView()}
         </main>
       </div>
+      <FinancialAlerts opportunities={opportunities} />
     </div>
   );
 }

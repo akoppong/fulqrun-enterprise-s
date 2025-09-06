@@ -7,6 +7,8 @@ import { formatCurrency } from '@/lib/crm-utils';
 import { Plus, TrendUp } from '@phosphor-icons/react';
 import { useState } from 'react';
 import { OpportunityDialog } from './OpportunityDialog';
+import { RealtimeFinancialWidget } from './RealtimeFinancialWidget';
+import { FinancialSummary } from './FinancialSummary';
 
 export function PipelineView() {
   const [opportunities, setOpportunities] = useKV<Opportunity[]>('opportunities', []);
@@ -92,6 +94,35 @@ export function PipelineView() {
           </Button>
         </div>
       </div>
+
+      {/* Financial Dashboard Integration */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <RealtimeFinancialWidget opportunities={opportunities} />
+        <FinancialSummary opportunities={opportunities} />
+      </div>
+
+      {/* Pipeline Stage Overview */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Pipeline Overview</CardTitle>
+          <CardDescription>PEAK methodology-driven sales process</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {PEAK_STAGES.map((stage) => {
+              const stageOpportunities = getOpportunitiesByStage(stage.value);
+              const stageValue = getStageValue(stage.value);
+              return (
+                <div key={stage.value} className="text-center p-4 border rounded-lg">
+                  <div className="text-2xl font-bold mb-1">{stageOpportunities.length}</div>
+                  <div className="text-sm text-muted-foreground mb-2">{stage.label}</div>
+                  <div className="text-sm font-medium text-primary">{formatCurrency(stageValue)}</div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {PEAK_STAGES.map((stage) => {
