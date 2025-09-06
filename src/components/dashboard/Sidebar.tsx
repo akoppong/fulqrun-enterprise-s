@@ -14,7 +14,8 @@ import {
   Plugs,
   Brain,
   Crosshair,
-  GridNine
+  GridNine,
+  Workflow
 } from '@phosphor-icons/react';
 
 interface SidebarProps {
@@ -99,6 +100,15 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
       icon: GraduationCap,
       description: 'Certifications & training',
       roles: ['rep', 'manager', 'admin'],
+      category: 'advanced',
+      isNew: true
+    },
+    {
+      id: 'workflows' as DashboardView,
+      label: 'Workflows',
+      icon: Workflow,
+      description: 'Pipeline automation',
+      roles: ['manager', 'admin'],
       category: 'advanced',
       isNew: true
     },

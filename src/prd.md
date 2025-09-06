@@ -31,6 +31,18 @@
 - **CSTPV Performance Metrics**: Close rate, Size, Time, Probability, Value tracking
 - **AI-Powered Insights**: Predictive analytics and automated recommendations
 
+### **NEW: Custom Pipeline Stage Automation Workflows**
+- **Visual Workflow Builder**: Drag-and-drop interface for creating custom automation workflows
+- **Stage-Specific Automation**: Trigger workflows when opportunities move between PEAK stages
+- **Multi-Step Processes**: Manual tasks, automated actions, and approval steps in sequence
+- **Smart Dependencies**: Configure step dependencies and conditional logic
+- **Real-time Execution Monitoring**: Track workflow progress with detailed status updates
+- **Template Library**: Pre-built workflows for common sales processes
+- **Role-Based Assignment**: Assign tasks to specific team members or roles
+- **Integration Actions**: Automate emails, notifications, field updates, and external integrations
+- **Workflow Analytics**: Track completion rates, bottlenecks, and performance metrics
+- **Pause/Resume Controls**: Manage long-running workflows with full execution control
+
 ### **NEW: Custom KPI Targets & Automated Goal Tracking**
 - **Flexible KPI Definition**: Create custom targets for revenue, conversion, volume, time, quality metrics
 - **Automated Progress Tracking**: Real-time updates based on opportunity data and manual entries

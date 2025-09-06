@@ -13,13 +13,14 @@ import { KPITargetsView } from './KPITargetsView';
 import { LearningPlatform } from './LearningPlatform';
 import { KPIDashboardBuilder } from './KPIDashboardBuilder';
 import { FinancialAlerts } from './FinancialAlerts';
+import { WorkflowAutomation } from '../workflows/WorkflowAutomation';
 
 interface DashboardProps {
   user: User;
   onLogout: () => void;
 }
 
-export type DashboardView = 'pipeline' | 'opportunities' | 'contacts' | 'analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'learning' | 'integrations';
+export type DashboardView = 'pipeline' | 'opportunities' | 'contacts' | 'analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'learning' | 'integrations' | 'workflows';
 
 export function Dashboard({ user, onLogout }: DashboardProps) {
   const [currentView, setCurrentView] = useState<DashboardView>('pipeline');
@@ -118,6 +119,8 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
             </div>
           </div>
         );
+      case 'workflows':
+        return <WorkflowAutomation className="max-w-7xl" />;
       default:
         return <PipelineView />;
     }
