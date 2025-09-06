@@ -355,12 +355,19 @@ export function CSTPVDashboard({ opportunities, currentUser, allUsers = [] }: CS
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
-                    {aiInsights.strengths?.map((strength: string, index: number) => (
+                    {Array.isArray(aiInsights.strengths) ? aiInsights.strengths.map((strength: string, index: number) => (
                       <li key={index} className="flex items-start gap-2">
                         <Badge variant="secondary" className="mt-0.5">✓</Badge>
                         <span className="text-sm">{strength}</span>
                       </li>
-                    ))}
+                    )) : aiInsights.strengths ? (
+                      <li className="flex items-start gap-2">
+                        <Badge variant="secondary" className="mt-0.5">✓</Badge>
+                        <span className="text-sm">{aiInsights.strengths}</span>
+                      </li>
+                    ) : (
+                      <li className="text-sm text-muted-foreground">No strengths identified</li>
+                    )}
                   </ul>
                 </CardContent>
               </Card>
@@ -374,12 +381,19 @@ export function CSTPVDashboard({ opportunities, currentUser, allUsers = [] }: CS
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
-                    {aiInsights.improvements?.map((improvement: string, index: number) => (
+                    {Array.isArray(aiInsights.improvements) ? aiInsights.improvements.map((improvement: string, index: number) => (
                       <li key={index} className="flex items-start gap-2">
                         <Badge variant="outline" className="mt-0.5">!</Badge>
                         <span className="text-sm">{improvement}</span>
                       </li>
-                    ))}
+                    )) : aiInsights.improvements ? (
+                      <li className="flex items-start gap-2">
+                        <Badge variant="outline" className="mt-0.5">!</Badge>
+                        <span className="text-sm">{aiInsights.improvements}</span>
+                      </li>
+                    ) : (
+                      <li className="text-sm text-muted-foreground">No improvements identified</li>
+                    )}
                   </ul>
                 </CardContent>
               </Card>
@@ -390,14 +404,23 @@ export function CSTPVDashboard({ opportunities, currentUser, allUsers = [] }: CS
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-3">
-                    {aiInsights.recommendations?.map((rec: string, index: number) => (
+                    {Array.isArray(aiInsights.recommendations) ? aiInsights.recommendations.map((rec: string, index: number) => (
                       <li key={index} className="flex items-start gap-3">
                         <div className="flex-shrink-0 w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
                           {index + 1}
                         </div>
                         <span className="text-sm">{rec}</span>
                       </li>
-                    ))}
+                    )) : aiInsights.recommendations ? (
+                      <li className="flex items-start gap-3">
+                        <div className="flex-shrink-0 w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
+                          1
+                        </div>
+                        <span className="text-sm">{aiInsights.recommendations}</span>
+                      </li>
+                    ) : (
+                      <li className="text-sm text-muted-foreground">No recommendations available</li>
+                    )}
                   </ul>
                 </CardContent>
               </Card>

@@ -127,23 +127,31 @@ export class AIService {
     }, {} as Record<string, number>)}
     
     Provide insights on:
-    1. Performance strengths
-    2. Areas for improvement
-    3. Specific recommendations
-    4. Benchmarking context
+    1. Performance strengths (return as array of strings)
+    2. Areas for improvement (return as array of strings)
+    3. Specific recommendations (return as array of strings)
+    4. Benchmarking context (return as string)
     
-    Return as JSON: {strengths, improvements, recommendations, benchmark}
+    Return as JSON: {strengths: ["strength1", "strength2"], improvements: ["improvement1", "improvement2"], recommendations: ["rec1", "rec2"], benchmark: "benchmark text"}
     `;
 
     try {
       const response = await spark.llm(prompt, 'gpt-4o', true);
-      return JSON.parse(response);
+      const parsed = JSON.parse(response);
+      
+      // Ensure all fields are properly formatted
+      return {
+        strengths: Array.isArray(parsed.strengths) ? parsed.strengths : [parsed.strengths].filter(Boolean),
+        improvements: Array.isArray(parsed.improvements) ? parsed.improvements : [parsed.improvements].filter(Boolean),
+        recommendations: Array.isArray(parsed.recommendations) ? parsed.recommendations : [parsed.recommendations].filter(Boolean),
+        benchmark: parsed.benchmark || 'Review industry standards for your sector'
+      };
     } catch (error) {
       console.error('Performance analysis error:', error);
       return {
-        strengths: ['Active pipeline management'],
-        improvements: ['Qualification consistency'],
-        recommendations: ['Focus on MEDDPICC completion'],
+        strengths: ['Active pipeline management', 'Consistent follow-up practices'],
+        improvements: ['Qualification consistency', 'Deal size optimization'],
+        recommendations: ['Focus on MEDDPICC completion', 'Improve champion development', 'Accelerate decision processes'],
         benchmark: 'Review industry standards for your sector'
       };
     }
