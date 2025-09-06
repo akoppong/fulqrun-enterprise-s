@@ -1,6 +1,6 @@
 import { useKV } from '@github/spark/hooks';
 import { Opportunity, PEAK_STAGES } from '@/lib/types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/crm-utils';
