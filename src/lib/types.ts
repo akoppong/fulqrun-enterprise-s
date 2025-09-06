@@ -36,7 +36,7 @@ export interface MEDDPICC {
   decisionCriteria: string; // What criteria will they use to decide?
   decisionProcess: string; // How will they make the decision?
   paperProcess: string; // What's the approval/procurement process?
-  implicate Pain: string; // What pain are we addressing?
+  implicatePain: string; // What pain are we addressing?
   champion: string; // Who is actively selling for us?
   score: number; // 0-100 qualification score
 }
