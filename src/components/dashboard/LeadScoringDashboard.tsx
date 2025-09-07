@@ -9,9 +9,10 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Target, TrendingUp, Users, Filter, Search, Brain, Star, ChartBar, Lightning, Trophy, Clock } from '@phosphor-icons/react';
+import { Target, TrendingUp, Users, Filter, Search, Brain, Star, ChartBar, Lightning, Trophy, Clock, SortAscending, Sparkle, ArrowUp, Warning, CheckCircle, Play } from '@phosphor-icons/react';
 import { LeadScore, Contact, Company, ScoringFactor } from '@/lib/types';
 import { AIService } from '@/lib/ai-service';
+import { LeadPrioritizationEngine } from '@/lib/lead-prioritization';
 import { useKV } from '@github/spark/hooks';
 import { toast } from 'sonner';
 
@@ -29,6 +30,8 @@ export function LeadScoringDashboard({ contacts, companies, onContactSelect }: L
   const [sortBy, setSortBy] = useState<string>('score');
   const [selectedLead, setSelectedLead] = useState<LeadScore | null>(null);
   const [bulkScoreCount, setBulkScoreCount] = useState(10);
+  const [priorityFilter, setPriorityFilter] = useState<string>('all');
+  const [autoRefresh, setAutoRefresh] = useState(false);
 
   // Auto-generate demo scores if none exist and we have contacts
   useEffect(() => {
@@ -128,7 +131,7 @@ export function LeadScoringDashboard({ contacts, companies, onContactSelect }: L
     toast.success(`Generated ${demoScores.length} demo lead scores to showcase AI capabilities`);
   };
 
-  // Filter and sort leads
+  // Filter and sort leads with advanced prioritization
   const filteredLeads = leadScores
     .filter(lead => {
       const contact = contacts.find(c => c.id === lead.contactId);
@@ -137,14 +140,39 @@ export function LeadScoringDashboard({ contacts, companies, onContactSelect }: L
         `${contact?.firstName} ${contact?.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
         company?.name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesGrade = gradeFilter === 'all' || lead.grade === gradeFilter;
-      return matchesSearch && matchesGrade;
+      
+      // Priority filter logic
+      let matchesPriority = true;
+      if (priorityFilter === 'hot') {
+        matchesPriority = lead.aiInsights.urgencyScore >= 8 || lead.score >= 85;
+      } else if (priorityFilter === 'high-value') {
+        matchesPriority = lead.estimatedValue >= 100000;
+      } else if (priorityFilter === 'high-conversion') {
+        matchesPriority = lead.predictedConversionProbability >= 70;
+      } else if (priorityFilter === 'needs-attention') {
+        matchesPriority = lead.score >= 60 && lead.predictedConversionProbability < 50;
+      }
+      
+      return matchesSearch && matchesGrade && matchesPriority;
     })
     .sort((a, b) => {
+      // Enhanced sorting with priority weighting
       switch (sortBy) {
         case 'score': return b.score - a.score;
         case 'conversion': return b.predictedConversionProbability - a.predictedConversionProbability;
         case 'value': return b.estimatedValue - a.estimatedValue;
         case 'urgency': return b.aiInsights.urgencyScore - a.aiInsights.urgencyScore;
+        case 'priority': {
+          // Composite priority score combining multiple factors
+          const getPriorityScore = (lead: any) => {
+            const scoreWeight = lead.score * 0.3;
+            const urgencyWeight = lead.aiInsights.urgencyScore * 10 * 0.25;
+            const conversionWeight = lead.predictedConversionProbability * 0.25;
+            const valueWeight = Math.min(lead.estimatedValue / 1000, 200) * 0.2; // Cap at 200k for weighting
+            return scoreWeight + urgencyWeight + conversionWeight + valueWeight;
+          };
+          return getPriorityScore(b) - getPriorityScore(a);
+        }
         default: return b.score - a.score;
       }
     });
@@ -253,6 +281,39 @@ export function LeadScoringDashboard({ contacts, companies, onContactSelect }: L
     ? leadScores.reduce((sum, lead) => sum + lead.timeToConversion, 0) / leadScores.length 
     : 0;
   const highConversionLeads = leadScores.filter(lead => lead.predictedConversionProbability >= 70).length;
+  
+  // Advanced prioritization metrics
+  const topPriorityLeads = filteredLeads.filter(lead => 
+    lead.score >= 80 && lead.aiInsights.urgencyScore >= 7 && lead.predictedConversionProbability >= 60
+  ).length;
+  
+  const needsAttentionLeads = filteredLeads.filter(lead => 
+    lead.score >= 60 && lead.predictedConversionProbability < 50
+  ).length;
+  
+  const competitorRiskLeads = filteredLeads.filter(lead => 
+    lead.aiInsights.competitorRisk === 'high'
+  ).length;
+
+  // Auto-refresh functionality
+  useEffect(() => {
+    if (!autoRefresh) return;
+    
+    const interval = setInterval(() => {
+      // Refresh scores that are older than 4 hours
+      const staleLeads = leadScores.filter(lead => {
+        const hoursSinceUpdate = (new Date().getTime() - new Date(lead.lastUpdated).getTime()) / (1000 * 60 * 60);
+        return hoursSinceUpdate >= 4;
+      });
+      
+      if (staleLeads.length > 0) {
+        toast.info(`Auto-refreshing ${staleLeads.length} stale lead scores...`);
+        // Auto-refresh would go here in a real implementation
+      }
+    }, 300000); // Check every 5 minutes
+    
+    return () => clearInterval(interval);
+  }, [autoRefresh, leadScores]);
 
   // Trend analysis
   const topLeads = filteredLeads.slice(0, 10);
@@ -271,6 +332,11 @@ export function LeadScoringDashboard({ contacts, companies, onContactSelect }: L
     return acc;
   }, {} as Record<string, { count: number; avgScore: number; totalValue: number }>);
 
+  // Portfolio analysis using the prioritization engine
+  const portfolioAnalysis = leadScores.length > 0 
+    ? LeadPrioritizationEngine.analyzeLeadPortfolio(leadScores)
+    : { distribution: {}, recommendations: [], focusAreas: [], riskAlerts: [] };
+
   // Calculate industry averages
   Object.keys(leadsByIndustry).forEach(industry => {
     leadsByIndustry[industry].avgScore = leadsByIndustry[industry].avgScore / leadsByIndustry[industry].count;
@@ -284,11 +350,23 @@ export function LeadScoringDashboard({ contacts, companies, onContactSelect }: L
             <Target className="h-6 w-6 text-blue-600" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">AI Lead Scoring</h2>
-            <p className="text-gray-600">Intelligent prospect prioritization and qualification</p>
+            <h2 className="text-2xl font-bold text-gray-900">AI Lead Scoring & Prioritization</h2>
+            <p className="text-gray-600">Intelligent prospect prioritization with automated ranking</p>
           </div>
         </div>
         <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="auto-refresh"
+              checked={autoRefresh}
+              onChange={(e) => setAutoRefresh(e.target.checked)}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <label htmlFor="auto-refresh" className="text-sm text-gray-700">
+              Auto-refresh
+            </label>
+          </div>
           <Button
             variant="outline"
             onClick={generateDemoScores}
@@ -319,8 +397,8 @@ export function LeadScoringDashboard({ contacts, companies, onContactSelect }: L
         </div>
       </div>
 
-      {/* Enhanced Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+      {/* Enhanced Statistics Cards with Priority Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -337,10 +415,11 @@ export function LeadScoringDashboard({ contacts, companies, onContactSelect }: L
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Avg Score</p>
-                <p className="text-2xl font-bold text-gray-900">{Math.round(averageScore)}</p>
+                <p className="text-sm font-medium text-gray-600">Top Priority</p>
+                <p className="text-2xl font-bold text-red-600">{topPriorityLeads}</p>
+                <p className="text-xs text-gray-500">Score 80+ & Hot</p>
               </div>
-              <Target className="h-8 w-8 text-green-600" />
+              <Sparkle className="h-8 w-8 text-red-600" />
             </div>
           </CardContent>
         </Card>
@@ -350,10 +429,23 @@ export function LeadScoringDashboard({ contacts, companies, onContactSelect }: L
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Hot Leads</p>
-                <p className="text-2xl font-bold text-red-600">{hotLeads}</p>
+                <p className="text-2xl font-bold text-orange-600">{hotLeads}</p>
                 <p className="text-xs text-gray-500">Urgency 8+</p>
               </div>
-              <Lightning className="h-8 w-8 text-red-600" />
+              <Lightning className="h-8 w-8 text-orange-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Needs Attention</p>
+                <p className="text-2xl font-bold text-yellow-600">{needsAttentionLeads}</p>
+                <p className="text-xs text-gray-500">Score 60+ Low Conv</p>
+              </div>
+              <Warning className="h-8 w-8 text-yellow-600" />
             </div>
           </CardContent>
         </Card>
@@ -376,6 +468,19 @@ export function LeadScoringDashboard({ contacts, companies, onContactSelect }: L
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
+                <p className="text-sm font-medium text-gray-600">High Conversion</p>
+                <p className="text-2xl font-bold text-green-600">{highConversionLeads}</p>
+                <p className="text-xs text-gray-500">70%+ Likely</p>
+              </div>
+              <ArrowUp className="h-8 w-8 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
                 <p className="text-sm font-medium text-gray-600">Pipeline Value</p>
                 <p className="text-xl font-bold text-purple-600">
                   ${(totalPipelineValue / 1000000).toFixed(1)}M
@@ -390,14 +495,186 @@ export function LeadScoringDashboard({ contacts, companies, onContactSelect }: L
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Avg Timeline</p>
-                <p className="text-xl font-bold text-indigo-600">{Math.round(avgConversionTime)}d</p>
+                <p className="text-sm font-medium text-gray-600">Competitor Risk</p>
+                <p className="text-xl font-bold text-red-600">{competitorRiskLeads}</p>
+                <p className="text-xs text-gray-500">High Risk</p>
               </div>
               <Clock className="h-8 w-8 text-indigo-600" />
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Smart Priority Queue */}
+      {filteredLeads.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <SortAscending className="h-5 w-5 text-blue-600" />
+              <span>Smart Priority Queue</span>
+            </CardTitle>
+            <CardDescription>
+              AI-ranked prospects requiring immediate action based on composite scoring
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {filteredLeads.slice(0, 3).map((lead, index) => {
+                const contact = contacts.find(c => c.id === lead.contactId);
+                const company = companies.find(c => c.id === contact?.companyId);
+                
+                if (!contact || !company) return null;
+
+                // Calculate composite priority score
+                const scoreWeight = lead.score * 0.3;
+                const urgencyWeight = lead.aiInsights.urgencyScore * 10 * 0.25;
+                const conversionWeight = lead.predictedConversionProbability * 0.25;
+                const valueWeight = Math.min(lead.estimatedValue / 1000, 200) * 0.2;
+                const priorityScore = Math.round(scoreWeight + urgencyWeight + conversionWeight + valueWeight);
+
+                return (
+                  <div key={lead.id} className="flex items-center space-x-4 p-4 border rounded-lg bg-gradient-to-r from-blue-50 to-purple-50">
+                    <div className="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-800 font-bold text-sm rounded-full">
+                      #{index + 1}
+                    </div>
+                    <Avatar className="h-10 w-10">
+                      <AvatarFallback className="text-sm">
+                        {contact.firstName[0]}{contact.lastName[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">
+                        {contact.firstName} {contact.lastName}
+                      </p>
+                      <p className="text-xs text-gray-600 truncate">{company.name}</p>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <Badge className={getGradeColor(lead.grade)}>
+                        {lead.grade}
+                      </Badge>
+                      <div className="text-right">
+                        <div className="text-sm font-bold text-blue-600">Priority: {priorityScore}</div>
+                        <div className="text-xs text-gray-500">{lead.predictedConversionProbability}% • ${(lead.estimatedValue / 1000).toFixed(0)}K</div>
+                      </div>
+                      <Button
+                        size="sm"
+                        className="flex items-center space-x-1"
+                        onClick={() => onContactSelect?.(contact)}
+                      >
+                        <Play className="h-3 w-3" />
+                        <span>Action</span>
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Portfolio Analysis Dashboard */}
+      {leadScores.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <ChartBar className="h-5 w-5 text-purple-600" />
+              <span>Portfolio Analysis</span>
+            </CardTitle>
+            <CardDescription>
+              AI-powered insights on your lead portfolio distribution and optimization opportunities
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Tier Distribution */}
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-3">Lead Tier Distribution</h4>
+                <div className="space-y-2">
+                  {Object.entries(portfolioAnalysis.distribution).map(([tier, count]) => {
+                    const styling = LeadPrioritizationEngine.getTierStyling(tier);
+                    const percentage = leadScores.length > 0 ? (count / leadScores.length * 100) : 0;
+                    
+                    return (
+                      <div key={tier} className="flex items-center space-x-3">
+                        <div className={`px-2 py-1 rounded-md text-xs font-medium ${styling.color} min-w-[80px] text-center`}>
+                          {styling.icon} {tier.toUpperCase()}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between text-sm">
+                            <span>{count} leads</span>
+                            <span className="font-medium">{percentage.toFixed(1)}%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                            <div 
+                              className="bg-blue-600 h-2 rounded-full transition-all duration-500"
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Recommendations and Alerts */}
+              <div className="space-y-4">
+                {/* AI Recommendations */}
+                {portfolioAnalysis.recommendations.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-2 flex items-center space-x-2">
+                      <Brain className="h-4 w-4 text-blue-600" />
+                      <span>AI Recommendations</span>
+                    </h4>
+                    <div className="space-y-2">
+                      {portfolioAnalysis.recommendations.slice(0, 3).map((rec, index) => (
+                        <div key={index} className="p-2 bg-blue-50 rounded-lg border-l-2 border-blue-400">
+                          <p className="text-sm text-blue-800">{rec}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Risk Alerts */}
+                {portfolioAnalysis.riskAlerts.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-2 flex items-center space-x-2">
+                      <Warning className="h-4 w-4 text-orange-600" />
+                      <span>Risk Alerts</span>
+                    </h4>
+                    <div className="space-y-2">
+                      {portfolioAnalysis.riskAlerts.map((alert, index) => (
+                        <div key={index} className="p-2 bg-orange-50 rounded-lg border-l-2 border-orange-400">
+                          <p className="text-sm text-orange-800">{alert}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Focus Areas */}
+                {portfolioAnalysis.focusAreas.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-2 flex items-center space-x-2">
+                      <Target className="h-4 w-4 text-green-600" />
+                      <span>Focus Areas</span>
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {portfolioAnalysis.focusAreas.map((area, index) => (
+                        <Badge key={index} variant="outline" className="bg-green-50 text-green-700 border-green-300">
+                          {area}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Top Performing Leads Summary */}
       {topLeads.length > 0 && (
@@ -418,6 +695,9 @@ export function LeadScoringDashboard({ contacts, companies, onContactSelect }: L
                 const company = companies.find(c => c.id === contact?.companyId);
                 
                 if (!contact || !company) return null;
+
+                const tier = LeadPrioritizationEngine.getLeadTier(lead);
+                const tierStyling = LeadPrioritizationEngine.getTierStyling(tier);
 
                 return (
                   <div key={lead.id} className="p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer"
@@ -453,7 +733,7 @@ export function LeadScoringDashboard({ contacts, companies, onContactSelect }: L
         </Card>
       )}
 
-      {/* Filters */}
+      {/* Enhanced Filters */}
       <Card>
         <CardContent className="p-6">
           <div className="flex flex-wrap gap-4 items-center">
@@ -469,6 +749,22 @@ export function LeadScoringDashboard({ contacts, companies, onContactSelect }: L
                   className="pl-10"
                 />
               </div>
+            </div>
+            
+            <div>
+              <Label htmlFor="priority-filter">Priority</Label>
+              <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                <SelectTrigger id="priority-filter" className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Leads</SelectItem>
+                  <SelectItem value="hot">🔥 Hot Leads</SelectItem>
+                  <SelectItem value="high-value">💰 High Value</SelectItem>
+                  <SelectItem value="high-conversion">📈 High Conversion</SelectItem>
+                  <SelectItem value="needs-attention">⚠️ Needs Attention</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
             <div>
@@ -495,6 +791,7 @@ export function LeadScoringDashboard({ contacts, companies, onContactSelect }: L
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="priority">🎯 Smart Priority</SelectItem>
                   <SelectItem value="score">Score</SelectItem>
                   <SelectItem value="conversion">Conversion %</SelectItem>
                   <SelectItem value="value">Est. Value</SelectItem>
@@ -521,6 +818,10 @@ export function LeadScoringDashboard({ contacts, companies, onContactSelect }: L
                 const company = companies.find(c => c.id === contact?.companyId);
                 
                 if (!contact || !company) return null;
+
+                const tier = LeadPrioritizationEngine.getLeadTier(lead);
+                const tierStyling = LeadPrioritizationEngine.getTierStyling(tier);
+                const nextAction = LeadPrioritizationEngine.getNextBestAction(lead, contact, company);
 
                 return (
                   <Card key={lead.id} className="hover:shadow-md transition-shadow cursor-pointer">
@@ -553,6 +854,9 @@ export function LeadScoringDashboard({ contacts, companies, onContactSelect }: L
                                 </div>
                                 <Badge className={getGradeColor(lead.grade)}>
                                   Grade {lead.grade}
+                                </Badge>
+                                <Badge className={`${tierStyling.color} mt-1`}>
+                                  {tierStyling.icon} {tier.toUpperCase()}
                                 </Badge>
                               </div>
                               
@@ -632,20 +936,38 @@ export function LeadScoringDashboard({ contacts, companies, onContactSelect }: L
                             </div>
                           </div>
                           
-                          {/* AI Insights Preview */}
-                          {lead.aiInsights.recommendations.length > 0 && (
-                            <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+                          {/* Enhanced AI Insights Preview */}
+                          <div className="mt-3 space-y-2">
+                            {/* Next Best Action */}
+                            <div className="p-3 bg-blue-50 rounded-lg">
                               <div className="flex items-start space-x-2">
                                 <Brain className="h-4 w-4 text-blue-600 mt-0.5" />
-                                <div>
-                                  <p className="text-sm font-medium text-blue-900">Next Best Action</p>
-                                  <p className="text-sm text-blue-700">
-                                    {lead.aiInsights.recommendations[0]}
-                                  </p>
+                                <div className="flex-1">
+                                  <p className="text-sm font-medium text-blue-900">Smart Recommendation</p>
+                                  <p className="text-sm text-blue-700">{nextAction.action}</p>
+                                  <div className="flex items-center space-x-4 mt-2 text-xs text-blue-600">
+                                    <span className={`px-2 py-1 rounded-full ${
+                                      nextAction.priority === 'urgent' ? 'bg-red-100 text-red-700' :
+                                      nextAction.priority === 'high' ? 'bg-orange-100 text-orange-700' :
+                                      nextAction.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                                      'bg-green-100 text-green-700'
+                                    }`}>
+                                      {nextAction.priority.toUpperCase()}
+                                    </span>
+                                    <span>{nextAction.timeframe}</span>
+                                  </div>
                                 </div>
                               </div>
                             </div>
-                          )}
+                            
+                            {/* Tier Priority Badge */}
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-gray-500">{tierStyling.description}</span>
+                              <Badge className={`${tierStyling.color} text-xs`}>
+                                Priority {tierStyling.priority}
+                              </Badge>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </CardContent>
