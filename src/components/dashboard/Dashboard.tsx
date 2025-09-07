@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { User, Opportunity, Contact, Company, KPITarget } from '@/lib/types';
+import { DemoDataGenerator } from '@/lib/demo-data';
 import { useKV } from '@github/spark/hooks';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
@@ -14,13 +15,16 @@ import { LearningPlatform } from './LearningPlatform';
 import { KPIDashboardBuilder } from './KPIDashboardBuilder';
 import { FinancialAlerts } from './FinancialAlerts';
 import { WorkflowAutomation } from '../workflows/WorkflowAutomation';
+import { AIInsightsView } from './AIInsightsView';
+import { LeadScoringDashboard } from './LeadScoringDashboard';
+import { DealRiskDashboard } from './DealRiskDashboard';
 
 interface DashboardProps {
   user: User;
   onLogout: () => void;
 }
 
-export type DashboardView = 'pipeline' | 'opportunities' | 'contacts' | 'analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'learning' | 'integrations' | 'workflows';
+export type DashboardView = 'pipeline' | 'opportunities' | 'contacts' | 'analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk';
 
 export function Dashboard({ user, onLogout }: DashboardProps) {
   const [currentView, setCurrentView] = useState<DashboardView>('pipeline');
@@ -60,6 +64,21 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
       setAllUsers(demoUsers);
     }
   }, [allUsers, user, setAllUsers]);
+
+  // Initialize demo CRM data for AI features
+  useEffect(() => {
+    const initializeDemoData = async () => {
+      if (companies.length === 0 || contacts.length === 0 || opportunities.length === 0) {
+        const demoData = await DemoDataGenerator.initializeDemoData();
+        
+        if (companies.length === 0) setCompanies(demoData.companies);
+        if (contacts.length === 0) setContacts(demoData.contacts);
+        if (opportunities.length === 0) setOpportunities(demoData.opportunities);
+      }
+    };
+    
+    initializeDemoData();
+  }, [companies, contacts, opportunities, setCompanies, setContacts, setOpportunities]);
 
   const renderView = () => {
     switch (currentView) {
@@ -121,6 +140,29 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
         );
       case 'workflows':
         return <WorkflowAutomation className="max-w-7xl" />;
+      case 'ai-insights':
+        return (
+          <AIInsightsView
+            opportunities={opportunities}
+            contacts={contacts}
+            companies={companies}
+          />
+        );
+      case 'lead-scoring':
+        return (
+          <LeadScoringDashboard
+            contacts={contacts}
+            companies={companies}
+          />
+        );
+      case 'deal-risk':
+        return (
+          <DealRiskDashboard
+            opportunities={opportunities}
+            contacts={contacts}
+            companies={companies}
+          />
+        );
       default:
         return <PipelineView />;
     }

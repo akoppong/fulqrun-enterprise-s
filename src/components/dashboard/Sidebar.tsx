@@ -15,7 +15,9 @@ import {
   Brain,
   Crosshair,
   GridNine,
-  Workflow
+  Workflow,
+  Shield,
+  Star
 } from '@phosphor-icons/react';
 
 interface SidebarProps {
@@ -113,6 +115,36 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
       isNew: true
     },
     {
+      id: 'ai-insights' as DashboardView,
+      label: 'AI Insights',
+      icon: Brain,
+      description: 'AI-powered analytics',
+      roles: ['rep', 'manager', 'admin'],
+      category: 'ai',
+      isNew: true,
+      isAI: true
+    },
+    {
+      id: 'lead-scoring' as DashboardView,
+      label: 'Lead Scoring',
+      icon: Star,
+      description: 'AI lead qualification',
+      roles: ['rep', 'manager', 'admin'],
+      category: 'ai',
+      isNew: true,
+      isAI: true
+    },
+    {
+      id: 'deal-risk' as DashboardView,
+      label: 'Risk Assessment',
+      icon: Shield,
+      description: 'AI risk analysis',
+      roles: ['rep', 'manager', 'admin'],
+      category: 'ai',
+      isNew: true,
+      isAI: true
+    },
+    {
       id: 'integrations' as DashboardView,
       label: 'Integrations',
       icon: Plugs,
@@ -129,6 +161,7 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
 
   const coreItems = availableItems.filter(item => item.category === 'core');
   const advancedItems = availableItems.filter(item => item.category === 'advanced');
+  const aiItems = availableItems.filter(item => item.category === 'ai');
 
   const renderNavSection = (items: typeof availableItems, title: string) => (
     <div className="space-y-2">
@@ -157,6 +190,11 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
                   {item.isNew && (
                     <Badge className="text-xs bg-accent text-accent-foreground">
                       New
+                    </Badge>
+                  )}
+                  {(item as any).isAI && (
+                    <Badge className="text-xs bg-purple-100 text-purple-800">
+                      AI
                     </Badge>
                   )}
                 </div>
@@ -190,6 +228,7 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
       
       <nav className="flex-1 p-4 space-y-6 overflow-y-auto">
         {renderNavSection(coreItems, 'Core Features')}
+        {aiItems.length > 0 && renderNavSection(aiItems, 'AI-Powered Features')}
         {advancedItems.length > 0 && renderNavSection(advancedItems, 'Advanced Features')}
       </nav>
       

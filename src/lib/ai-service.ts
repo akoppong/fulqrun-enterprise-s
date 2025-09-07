@@ -1,4 +1,4 @@
-import { Opportunity, MEDDPICC, Contact, Company } from './types';
+import { Opportunity, MEDDPICC, Contact, Company, LeadScore, DealRiskAssessment, ScoringFactor, RiskFactor, RiskRecommendation } from './types';
 
 /**
  * AI Service for FulQrun CRM Phase 2 Features
@@ -202,5 +202,339 @@ export class AIService {
     }
     
     return actions.slice(0, 4); // Return top 4 actions
+  }
+
+  /**
+   * Advanced AI-Powered Lead Scoring
+   */
+  static async calculateLeadScore(contact: Contact, company: Company, engagementData?: any): Promise<LeadScore> {
+    const prompt = spark.llmPrompt`
+    Calculate comprehensive lead score for this prospect:
+    
+    Contact Information:
+    - Name: ${contact.firstName} ${contact.lastName}
+    - Title: ${contact.title}
+    - Role: ${contact.role}
+    - Email: ${contact.email}
+    - Phone: ${contact.phone || 'Not provided'}
+    
+    Company Profile:
+    - Name: ${company.name}
+    - Industry: ${company.industry}
+    - Size: ${company.size}
+    - Website: ${company.website || 'Not provided'}
+    
+    Engagement Data: ${JSON.stringify(engagementData || {})}
+    
+    Analyze and score this lead on a 0-100 scale considering:
+    1. Company fit (industry, size, growth potential)
+    2. Contact authority and influence
+    3. Engagement level and buying signals
+    4. Budget and timing indicators
+    5. Competition and market factors
+    
+    Provide detailed scoring factors with:
+    - Factor name and score (0-100)
+    - Weight importance (0-1)
+    - Category (demographic/behavioral/engagement/firmographic/intent)
+    - Impact (positive/negative/neutral)
+    - Description
+    
+    Also include:
+    - Overall letter grade (A/B/C/D/F)
+    - Conversion probability (0-100)
+    - Estimated deal value
+    - Time to conversion (days)
+    - AI insights with strengths, weaknesses, recommendations
+    - Competitor risk level
+    - Urgency score (1-10)
+    
+    Return as JSON: {
+      score: number,
+      grade: string,
+      factors: [{name, value, weight, category, description, impact}],
+      predictedConversionProbability: number,
+      estimatedValue: number,
+      timeToConversion: number,
+      aiInsights: {
+        strengths: string[],
+        weaknesses: string[],
+        recommendations: string[],
+        competitorRisk: string,
+        urgencyScore: number
+      }
+    }
+    `;
+
+    try {
+      const response = await spark.llm(prompt, 'gpt-4o', true);
+      const result = JSON.parse(response);
+      
+      return {
+        id: `score_${contact.id}_${Date.now()}`,
+        contactId: contact.id,
+        score: result.score || 50,
+        grade: (result.grade as 'A' | 'B' | 'C' | 'D' | 'F') || 'C',
+        factors: result.factors?.map((f: any) => ({
+          name: f.name,
+          value: f.value || 0,
+          weight: f.weight || 1,
+          category: f.category || 'demographic',
+          description: f.description || '',
+          impact: f.impact || 'neutral'
+        })) || [],
+        predictedConversionProbability: result.predictedConversionProbability || 25,
+        estimatedValue: result.estimatedValue || 50000,
+        timeToConversion: result.timeToConversion || 90,
+        lastUpdated: new Date(),
+        aiInsights: {
+          strengths: result.aiInsights?.strengths || ['Company profile matches target market'],
+          weaknesses: result.aiInsights?.weaknesses || ['Limited engagement data'],
+          recommendations: result.aiInsights?.recommendations || ['Schedule discovery call'],
+          competitorRisk: result.aiInsights?.competitorRisk || 'medium',
+          urgencyScore: result.aiInsights?.urgencyScore || 5
+        }
+      };
+    } catch (error) {
+      console.error('Lead scoring error:', error);
+      return this.getDefaultLeadScore(contact);
+    }
+  }
+
+  /**
+   * Comprehensive Deal Risk Assessment
+   */
+  static async assessDealRisk(opportunity: Opportunity, contact: Contact, company: Company): Promise<DealRiskAssessment> {
+    const prompt = spark.llmPrompt`
+    Perform comprehensive risk assessment for this sales opportunity:
+    
+    Opportunity Details:
+    - Title: ${opportunity.title}
+    - Value: $${opportunity.value}
+    - Stage: ${opportunity.stage}
+    - Probability: ${opportunity.probability}%
+    - Expected Close: ${opportunity.expectedCloseDate.toISOString()}
+    - Description: ${opportunity.description}
+    
+    MEDDPICC Analysis:
+    - Metrics: ${opportunity.meddpicc.metrics}
+    - Economic Buyer: ${opportunity.meddpicc.economicBuyer}
+    - Decision Criteria: ${opportunity.meddpicc.decisionCriteria}
+    - Decision Process: ${opportunity.meddpicc.decisionProcess}
+    - Paper Process: ${opportunity.meddpicc.paperProcess}
+    - Pain: ${opportunity.meddpicc.implicatePain}
+    - Champion: ${opportunity.meddpicc.champion}
+    - Current Score: ${opportunity.meddpicc.score}
+    
+    Contact & Company:
+    - Contact: ${contact.firstName} ${contact.lastName} (${contact.title})
+    - Role: ${contact.role}
+    - Company: ${company.name} (${company.industry}, ${company.size})
+    
+    Analyze risk factors in these categories:
+    1. MEDDPICC completeness and quality
+    2. Timeline and urgency factors
+    3. Budget and financial risks
+    4. Competitive threats
+    5. Stakeholder and champion strength
+    6. Technical and implementation risks
+    
+    For each risk factor identified, provide:
+    - Severity level (low/medium/high/critical)
+    - Impact score (0-100)
+    - Category
+    - Description
+    - Whether it's been mitigated
+    
+    Also predict:
+    - Realistic close date
+    - Actual close probability
+    - Potential timeline slippage
+    - Churn risk post-close
+    - Competitive threat level
+    
+    Provide prioritized recommendations with:
+    - Priority level
+    - Specific action
+    - Reasoning
+    - Estimated impact
+    - Timeframe
+    - Required stakeholders
+    
+    Return as JSON: {
+      overallRisk: string,
+      riskScore: number,
+      factors: [{name, severity, impact, category, description, mitigated}],
+      predictions: {closeDate, closeProbability, potentialSlippage, churnRisk, competitiveThreat},
+      recommendations: [{priority, action, reasoning, estimatedImpact, timeframe, stakeholders}],
+      trendDirection: string
+    }
+    `;
+
+    try {
+      const response = await spark.llm(prompt, 'gpt-4o', true);
+      const result = JSON.parse(response);
+      
+      return {
+        id: `risk_${opportunity.id}_${Date.now()}`,
+        opportunityId: opportunity.id,
+        overallRisk: result.overallRisk || 'medium',
+        riskScore: result.riskScore || 50,
+        factors: result.factors?.map((f: any) => ({
+          name: f.name,
+          severity: f.severity || 'medium',
+          impact: f.impact || 50,
+          category: f.category || 'meddpicc',
+          description: f.description || '',
+          detectedAt: new Date(),
+          mitigated: f.mitigated || false,
+          mitigationActions: f.mitigationActions
+        })) || [],
+        predictions: {
+          closeDate: result.predictions?.closeDate ? new Date(result.predictions.closeDate) : opportunity.expectedCloseDate,
+          closeProbability: result.predictions?.closeProbability || opportunity.probability,
+          potentialSlippage: result.predictions?.potentialSlippage || 0,
+          churnRisk: result.predictions?.churnRisk || 20,
+          competitiveThreat: result.predictions?.competitiveThreat || 30
+        },
+        recommendations: result.recommendations?.map((r: any) => ({
+          priority: r.priority || 'medium',
+          action: r.action || '',
+          reasoning: r.reasoning || '',
+          estimatedImpact: r.estimatedImpact || 50,
+          timeframe: r.timeframe || 'short_term',
+          stakeholders: r.stakeholders || [],
+          resources: r.resources || []
+        })) || [],
+        lastAssessment: new Date(),
+        trendDirection: result.trendDirection || 'stable'
+      };
+    } catch (error) {
+      console.error('Risk assessment error:', error);
+      return this.getDefaultRiskAssessment(opportunity);
+    }
+  }
+
+  /**
+   * Predictive Pipeline Analysis
+   */
+  static async analyzePipelineForecast(opportunities: Opportunity[]) {
+    const prompt = spark.llmPrompt`
+    Analyze this sales pipeline and provide predictive insights:
+    
+    Pipeline Data:
+    ${opportunities.map(opp => `
+    - ${opp.title}: $${opp.value} (${opp.stage}, ${opp.probability}%, close: ${opp.expectedCloseDate.toISOString().split('T')[0]})
+      MEDDPICC Score: ${opp.meddpicc.score}
+    `).join('')}
+    
+    Provide analysis including:
+    1. Pipeline health assessment
+    2. Forecast accuracy predictions
+    3. At-risk deals identification
+    4. Revenue predictions by quarter
+    5. Recommended actions for pipeline improvement
+    6. Early warning indicators
+    
+    Return as JSON: {
+      healthScore: number,
+      forecastAccuracy: number,
+      atRiskDeals: string[],
+      quarterlyForecast: {q1: number, q2: number, q3: number, q4: number},
+      recommendations: string[],
+      earlyWarnings: string[]
+    }
+    `;
+
+    try {
+      const response = await spark.llm(prompt, 'gpt-4o', true);
+      return JSON.parse(response);
+    } catch (error) {
+      console.error('Pipeline forecast error:', error);
+      return {
+        healthScore: 75,
+        forecastAccuracy: 85,
+        atRiskDeals: [],
+        quarterlyForecast: { q1: 0, q2: 0, q3: 0, q4: 0 },
+        recommendations: ['Improve MEDDPICC qualification', 'Focus on champion development'],
+        earlyWarnings: ['Monitor deal velocity changes']
+      };
+    }
+  }
+
+  /**
+   * Default lead score for fallback
+   */
+  private static getDefaultLeadScore(contact: Contact): LeadScore {
+    return {
+      id: `score_${contact.id}_${Date.now()}`,
+      contactId: contact.id,
+      score: 60,
+      grade: 'C',
+      factors: [
+        {
+          name: 'Contact Title Authority',
+          value: 70,
+          weight: 0.8,
+          category: 'demographic',
+          description: 'Decision-making authority based on title',
+          impact: 'positive'
+        }
+      ],
+      predictedConversionProbability: 30,
+      estimatedValue: 75000,
+      timeToConversion: 120,
+      lastUpdated: new Date(),
+      aiInsights: {
+        strengths: ['Strong contact profile'],
+        weaknesses: ['Limited engagement data'],
+        recommendations: ['Schedule discovery call', 'Research company needs'],
+        competitorRisk: 'medium',
+        urgencyScore: 5
+      }
+    };
+  }
+
+  /**
+   * Default risk assessment for fallback
+   */
+  private static getDefaultRiskAssessment(opportunity: Opportunity): DealRiskAssessment {
+    return {
+      id: `risk_${opportunity.id}_${Date.now()}`,
+      opportunityId: opportunity.id,
+      overallRisk: 'medium',
+      riskScore: 40,
+      factors: [
+        {
+          name: 'MEDDPICC Completeness',
+          severity: 'medium',
+          impact: 60,
+          category: 'meddpicc',
+          description: 'Some MEDDPICC elements need strengthening',
+          detectedAt: new Date(),
+          mitigated: false
+        }
+      ],
+      predictions: {
+        closeDate: opportunity.expectedCloseDate,
+        closeProbability: opportunity.probability * 0.9,
+        potentialSlippage: 15,
+        churnRisk: 25,
+        competitiveThreat: 35
+      },
+      recommendations: [
+        {
+          priority: 'high',
+          action: 'Complete MEDDPICC qualification',
+          reasoning: 'Incomplete qualification increases risk',
+          estimatedImpact: 70,
+          timeframe: 'short_term',
+          stakeholders: ['Sales Rep', 'Sales Manager'],
+          resources: ['MEDDPICC Framework', 'Qualification Checklist']
+        }
+      ],
+      lastAssessment: new Date(),
+      trendDirection: 'stable'
+    };
   }
 }

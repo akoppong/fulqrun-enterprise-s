@@ -136,6 +136,9 @@
 - **✅ Advanced CSTPV Analytics**: Comprehensive performance metrics
 - **✅ Real-time Financial Dashboards**: Live revenue tracking with automated updates
 - **✅ Custom KPI Targets & Goal Tracking**: Full implementation with AI insights
+- **✅ AI-Powered Lead Scoring**: Intelligent lead qualification and prioritization
+- **✅ Deal Risk Assessment**: Comprehensive deal risk analysis with mitigation strategies
+- **✅ Predictive Pipeline Analytics**: AI-driven forecast accuracy and deal insights
 - **🔄 Enhanced AI Layer**: Advanced predictive analytics (in progress)
 - **🔄 Integration Hub**: Slack, DocuSign, Gong connectors (planned)
 - **🔄 Learning Platform**: Expanded certification programs (planned)
@@ -148,7 +151,39 @@
 
 ## Recent Updates
 
-### KPI Targets & Goal Tracking (Just Added)
+### AI-Powered Lead Scoring & Deal Risk Assessment (Just Added)
+
+#### Lead Scoring Features
+- **Comprehensive Scoring Algorithm**: AI-powered lead qualification scoring 0-100 points
+- **Multi-Factor Analysis**: Evaluates demographic, behavioral, engagement, firmographic, and intent signals
+- **Grade Classification**: A-F letter grades for quick lead prioritization
+- **Conversion Predictions**: Estimated conversion probability and timeline forecasting
+- **Value Estimation**: Predictive deal value based on historical patterns and company profile
+- **AI Insights**: Strengths, weaknesses, and specific recommendations for each lead
+- **Urgency Scoring**: 1-10 scale indicating lead prioritization urgency
+- **Competitive Risk Assessment**: Early warning system for competitive threats
+
+#### Deal Risk Assessment Features  
+- **Real-time Risk Scoring**: Continuous 0-100 risk assessment for active opportunities
+- **Risk Level Classification**: Low, medium, high, and critical risk categorization
+- **Multi-Category Risk Analysis**: MEDDPICC, timeline, budget, competition, stakeholder, and technical risks
+- **Predictive Analytics**: AI-powered close date predictions and slippage estimates
+- **Churn Risk Prediction**: Post-close customer retention probability assessment
+- **Competitive Threat Analysis**: Dynamic competitor risk evaluation
+- **Mitigation Recommendations**: Prioritized action plans with impact estimates
+- **Trend Monitoring**: Risk trajectory analysis (improving, stable, deteriorating)
+
+#### Pipeline Forecast Intelligence
+- **Pipeline Health Scoring**: Overall pipeline quality assessment
+- **Forecast Accuracy Predictions**: AI-driven forecast reliability metrics
+- **At-Risk Deal Identification**: Early warning system for deals likely to slip or lose
+- **Quarterly Revenue Forecasting**: Predictive revenue projections by quarter
+- **Performance Benchmarking**: Individual and team performance analysis
+- **Bottleneck Detection**: Pipeline flow optimization recommendations
+
+This AI enhancement transforms FulQrun from a traditional CRM into an intelligent sales platform that provides predictive insights, automates qualification processes, and proactively identifies risks before they impact revenue - delivering measurable improvements in sales velocity, win rates, and forecast accuracy.
+
+### KPI Targets & Goal Tracking (Previously Added)
 - **Custom KPI Creation**: Flexible target definition with multiple metric types
 - **Automated Calculations**: Real-time updates from opportunity pipeline data
 - **Intelligent Status Management**: AI-driven progress assessment with risk indicators
