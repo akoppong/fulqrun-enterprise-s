@@ -161,7 +161,7 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
           
           <form onSubmit={handleSubmit} className="space-y-6">
             <Tabs defaultValue="basic" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-3 mb-6">
                 <TabsTrigger value="basic">Basic Information</TabsTrigger>
                 <TabsTrigger value="meddpicc" className="flex items-center gap-2">
                   MEDDPICC
@@ -175,14 +175,15 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
                 </TabsTrigger>
               </TabsList>
               
-              <TabsContent value="basic" className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+              <TabsContent value="basic" className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="title">Opportunity Title</Label>
                     <Input
                       id="title"
                       value={formData.title || ''}
                       onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                      placeholder="Enter opportunity title"
                       required
                     />
                   </div>
@@ -193,12 +194,13 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
                       type="number"
                       value={formData.value || 0}
                       onChange={(e) => setFormData(prev => ({ ...prev, value: Number(e.target.value) }))}
+                      placeholder="0"
                       required
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="company">Company</Label>
                     <Select 
@@ -245,11 +247,13 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
                     id="description"
                     value={formData.description || ''}
                     onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Enter opportunity description"
                     rows={3}
+                    className="resize-none"
                   />
                 </div>
                 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="stage">PEAK Stage</Label>
                     <Select 
@@ -262,7 +266,10 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
                       <SelectContent>
                         {PEAK_STAGES.map((stage) => (
                           <SelectItem key={stage.value} value={stage.value}>
-                            {stage.label} - {stage.description}
+                            <div className="flex flex-col items-start">
+                              <span className="font-medium">{stage.label}</span>
+                              <span className="text-xs text-muted-foreground">{stage.description}</span>
+                            </div>
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -278,6 +285,7 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
                       max="100"
                       value={formData.probability || 25}
                       onChange={(e) => setFormData(prev => ({ ...prev, probability: Number(e.target.value) }))}
+                      placeholder="25"
                     />
                   </div>
                   
@@ -296,7 +304,7 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
                 </div>
               </TabsContent>
               
-              <TabsContent value="meddpicc" className="space-y-4">
+              <TabsContent value="meddpicc" className="space-y-6">
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
@@ -317,14 +325,14 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
                     <CardDescription>
                       Complete each section to improve your qualification score
                     </CardDescription>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4 mt-4">
                       <Progress value={currentScore} className="flex-1" />
                       <Badge variant={currentScore >= 70 ? 'default' : currentScore >= 40 ? 'secondary' : 'destructive'}>
                         {currentScore}%
                       </Badge>
                     </div>
                   </CardHeader>
-                  <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <CardContent className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="metrics">Metrics</Label>
                       <Textarea
@@ -332,7 +340,8 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
                         placeholder="What economic impact can we measure?"
                         value={formData.meddpicc?.metrics || ''}
                         onChange={(e) => updateMEDDPICCField('metrics', e.target.value)}
-                        rows={2}
+                        rows={3}
+                        className="resize-none"
                       />
                     </div>
                     
@@ -343,7 +352,8 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
                         placeholder="Who has the economic authority to buy?"
                         value={formData.meddpicc?.economicBuyer || ''}
                         onChange={(e) => updateMEDDPICCField('economicBuyer', e.target.value)}
-                        rows={2}
+                        rows={3}
+                        className="resize-none"
                       />
                     </div>
                     
@@ -354,7 +364,8 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
                         placeholder="What criteria will they use to decide?"
                         value={formData.meddpicc?.decisionCriteria || ''}
                         onChange={(e) => updateMEDDPICCField('decisionCriteria', e.target.value)}
-                        rows={2}
+                        rows={3}
+                        className="resize-none"
                       />
                     </div>
                     
@@ -365,7 +376,8 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
                         placeholder="How will they make the decision?"
                         value={formData.meddpicc?.decisionProcess || ''}
                         onChange={(e) => updateMEDDPICCField('decisionProcess', e.target.value)}
-                        rows={2}
+                        rows={3}
+                        className="resize-none"
                       />
                     </div>
                     
@@ -376,7 +388,8 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
                         placeholder="What's the approval/procurement process?"
                         value={formData.meddpicc?.paperProcess || ''}
                         onChange={(e) => updateMEDDPICCField('paperProcess', e.target.value)}
-                        rows={2}
+                        rows={3}
+                        className="resize-none"
                       />
                     </div>
                     
@@ -387,25 +400,27 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
                         placeholder="What pain are we addressing?"
                         value={formData.meddpicc?.implicatePain || ''}
                         onChange={(e) => updateMEDDPICCField('implicatePain', e.target.value)}
-                        rows={2}
+                        rows={3}
+                        className="resize-none"
                       />
                     </div>
                     
-                    <div className="space-y-2 md:col-span-2">
+                    <div className="space-y-2 lg:col-span-2">
                       <Label htmlFor="champion">Champion</Label>
                       <Textarea
                         id="champion"
                         placeholder="Who is actively selling for us internally?"
                         value={formData.meddpicc?.champion || ''}
                         onChange={(e) => updateMEDDPICCField('champion', e.target.value)}
-                        rows={2}
+                        rows={3}
+                        className="resize-none"
                       />
                     </div>
                   </CardContent>
                 </Card>
               </TabsContent>
 
-              <TabsContent value="ai-insights" className="space-y-4">
+              <TabsContent value="ai-insights" className="space-y-6">
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
@@ -429,7 +444,7 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
                   </CardHeader>
                   <CardContent>
                     {aiInsights ? (
-                      <div className="space-y-4">
+                      <div className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <Card>
                             <CardHeader className="pb-2">
@@ -474,21 +489,21 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
                         </div>
                         
                         <div>
-                          <h4 className="font-semibold mb-2">Next Best Actions</h4>
-                          <div className="space-y-2">
+                          <h4 className="font-semibold mb-3">Next Best Actions</h4>
+                          <div className="space-y-3">
                             {Array.isArray(aiInsights.nextBestActions) ? aiInsights.nextBestActions.map((action: string, index: number) => (
-                              <div key={index} className="flex items-start gap-2 p-2 bg-muted/50 rounded">
-                                <div className="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm flex-shrink-0">
+                              <div key={index} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+                                <div className="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm flex-shrink-0 mt-0.5">
                                   {index + 1}
                                 </div>
-                                <span className="text-sm">{action}</span>
+                                <span className="text-sm leading-relaxed">{action}</span>
                               </div>
                             )) : aiInsights.nextBestActions ? (
-                              <div className="flex items-start gap-2 p-2 bg-muted/50 rounded">
-                                <div className="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm flex-shrink-0">
+                              <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+                                <div className="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm flex-shrink-0 mt-0.5">
                                   1
                                 </div>
-                                <span className="text-sm">{aiInsights.nextBestActions}</span>
+                                <span className="text-sm leading-relaxed">{aiInsights.nextBestActions}</span>
                               </div>
                             ) : (
                               <div className="text-sm text-muted-foreground">No actions available</div>
@@ -497,8 +512,9 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
                         </div>
                       </div>
                     ) : (
-                      <div className="text-center py-8 text-muted-foreground">
-                        Generate AI insights to get recommendations and risk analysis
+                      <div className="text-center py-12 text-muted-foreground">
+                        <Brain className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                        <p>Generate AI insights to get recommendations and risk analysis</p>
                       </div>
                     )}
                   </CardContent>
@@ -506,7 +522,7 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
               </TabsContent>
             </Tabs>
             
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-3 pt-4 border-t">
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
               </Button>
