@@ -56,18 +56,18 @@ export interface Opportunity {
   value: number;
   stage: 'prospect' | 'engage' | 'acquire' | 'keep';
   probability: number;
-  expectedCloseDate: Date;
+  expectedCloseDate: string; // ISO date string for reliable serialization
   ownerId: string;
   meddpicc: MEDDPICC;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string; // ISO date string for reliable serialization
+  updatedAt: string; // ISO date string for reliable serialization
   aiInsights?: {
     riskScore: number; // 0-100, higher = more risk
     nextBestActions: string[];
-    predictedCloseDate?: Date;
+    predictedCloseDate?: string; // ISO date string for reliable serialization
     confidenceLevel: 'low' | 'medium' | 'high';
     competitorAnalysis?: string;
-    lastAiUpdate?: Date;
+    lastAiUpdate?: string; // ISO date string for reliable serialization
   };
   workflowStatus?: {
     currentWorkflow: string;
@@ -213,7 +213,7 @@ export interface InventoryItem {
   quantity: number;
   unitPrice: number;
   supplier: string;
-  lastRestocked: Date;
+  lastRestocked: string; // ISO date string for reliable serialization
 }
 
 export interface POSTransaction {
@@ -221,7 +221,7 @@ export interface POSTransaction {
   transactionId: string;
   amount: number;
   paymentMethod: string;
-  timestamp: Date;
+  timestamp: string; // ISO date string for reliable serialization
   items: string[];
   customerId?: string;
 }
@@ -313,9 +313,9 @@ export interface UserProgress {
   moduleId: string;
   status: 'not_started' | 'in_progress' | 'completed' | 'certified';
   progress: number; // 0-100
-  lastAccessed: Date;
-  completedAt?: Date;
-  certificationDate?: Date;
+  lastAccessed: string; // ISO date string for reliable serialization
+  completedAt?: string; // ISO date string for reliable serialization
+  certificationDate?: string; // ISO date string for reliable serialization
   quizAttempts: number;
   quizScore?: number;
 }
@@ -325,7 +325,7 @@ export interface ComplianceLog {
   userId: string;
   action: string;
   resource: string;
-  timestamp: Date;
+  timestamp: string; // ISO date string for reliable serialization
   details: Record<string, any>;
   regulation: 'gdpr' | 'hipaa' | 'sox' | 'general';
   level: 'info' | 'warning' | 'critical';
@@ -374,9 +374,9 @@ export interface KPIMilestone {
   id: string;
   name: string;
   targetValue: number;
-  targetDate: Date;
+  targetDate: string; // ISO date string for reliable serialization
   achieved: boolean;
-  achievedDate?: Date;
+  achievedDate?: string; // ISO date string for reliable serialization
   reward?: string;
   description?: string;
 }
@@ -385,7 +385,7 @@ export interface GoalTrackingEntry {
   id: string;
   kpiId: string;
   value: number;
-  timestamp: Date;
+  timestamp: string; // ISO date string for reliable serialization
   source: 'manual' | 'automated' | 'integration' | 'calculated';
   metadata: Record<string, any>;
   notes?: string;
@@ -402,8 +402,8 @@ export interface KPIDashboard {
   filters: DashboardFilter[];
   refreshInterval: number; // in seconds
   isPublic: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string; // ISO date string for reliable serialization
+  updatedAt: string; // ISO date string for reliable serialization
 }
 
 export interface DashboardLayout {
@@ -485,14 +485,14 @@ export interface DealRiskAssessment {
   riskScore: number; // 0-100
   factors: RiskFactor[];
   predictions: {
-    closeDate: Date;
+    closeDate: string; // ISO date string for reliable serialization
     closeProbability: number;
     potentialSlippage: number; // days
     churnRisk: number; // 0-100
     competitiveThreat: number; // 0-100
   };
   recommendations: RiskRecommendation[];
-  lastAssessment: Date;
+  lastAssessment: string; // ISO date string for reliable serialization
   trendDirection: 'improving' | 'stable' | 'deteriorating';
 }
 

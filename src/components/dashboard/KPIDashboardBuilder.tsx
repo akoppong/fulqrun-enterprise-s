@@ -332,7 +332,7 @@ export function KPIDashboardBuilder({ currentUser, kpiTargets }: KPIDashboardBui
               <CardContent onClick={() => setSelectedDashboard(dashboard)}>
                 <p className="text-sm text-muted-foreground mb-2">{dashboard.description}</p>
                 <p className="text-xs text-muted-foreground">
-                  {dashboard.kpiIds.length} widgets • Updated {dashboard.updatedAt.toLocaleDateString()}
+                  {dashboard.kpiIds.length} widgets • Updated {new Date(dashboard.updatedAt).toLocaleDateString()}
                 </p>
               </CardContent>
             </Card>

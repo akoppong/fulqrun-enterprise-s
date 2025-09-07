@@ -452,15 +452,15 @@ export function DealRiskDashboard({ opportunities, contacts, companies, onOpport
                         <div className="flex items-center justify-between">
                           <div>
                             <span className="text-sm text-gray-600">Original Close Date</span>
-                            <p className="font-medium">{opp.expectedCloseDate.toLocaleDateString()}</p>
+                            <p className="font-medium">{new Date(opp.expectedCloseDate).toLocaleDateString()}</p>
                           </div>
                           <div>
                             <span className="text-sm text-gray-600">Predicted Close Date</span>
-                            <p className="font-medium">{assessment.predictions.closeDate.toLocaleDateString()}</p>
+                            <p className="font-medium">{new Date(assessment.predictions.closeDate).toLocaleDateString()}</p>
                           </div>
                           <div>
                             <span className="text-sm text-gray-600">Last Assessment</span>
-                            <p className="font-medium">{assessment.lastAssessment.toLocaleDateString()}</p>
+                            <p className="font-medium">{new Date(assessment.lastAssessment).toLocaleDateString()}</p>
                           </div>
                         </div>
                       </div>

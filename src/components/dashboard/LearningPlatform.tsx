@@ -575,13 +575,13 @@ export function LearningPlatform({ currentUser, allUsers = [] }: LearningPlatfor
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span>Earned:</span>
-                          <span>{progress.certificationDate?.toLocaleDateString()}</span>
+                          <span>{progress.certificationDate ? new Date(progress.certificationDate).toLocaleDateString() : 'N/A'}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Valid Until:</span>
                           <span>
                             {progress.certificationDate && 
-                              new Date(progress.certificationDate.getTime() + module.certification.validityPeriod * 24 * 60 * 60 * 1000)
+                              new Date(new Date(progress.certificationDate).getTime() + module.certification.validityPeriod * 24 * 60 * 60 * 1000)
                                 .toLocaleDateString()
                             }
                           </span>

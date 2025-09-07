@@ -467,7 +467,7 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
                             </CardHeader>
                             <CardContent>
                               <div className="text-sm text-muted-foreground">
-                                {aiInsights.lastAiUpdate?.toLocaleDateString()}
+                                {aiInsights.lastAiUpdate ? new Date(aiInsights.lastAiUpdate).toLocaleDateString() : 'Never'}
                               </div>
                             </CardContent>
                           </Card>

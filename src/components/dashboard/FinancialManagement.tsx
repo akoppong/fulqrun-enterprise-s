@@ -849,7 +849,7 @@ export function FinancialManagement({ opportunities, currentUserId }: FinancialM
                   {posTransactions.map((transaction) => (
                     <TableRow key={transaction.id}>
                       <TableCell className="font-medium">{transaction.transactionId}</TableCell>
-                      <TableCell>{transaction.timestamp.toLocaleDateString()}</TableCell>
+                      <TableCell>{new Date(transaction.timestamp).toLocaleDateString()}</TableCell>
                       <TableCell className="font-medium text-green-600">
                         {formatCurrency(transaction.amount)}
                       </TableCell>

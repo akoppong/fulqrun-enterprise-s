@@ -22,7 +22,7 @@ interface QuickMetrics {
   todayRevenue: number;
   weeklyGrowth: number;
   pipelineVelocity: number;
-  lastUpdated: Date;
+  lastUpdated: string; // Store as ISO string for reliable serialization
 }
 
 export function RealtimeFinancialWidget({ opportunities, className }: RealtimeFinancialWidgetProps) {
@@ -30,7 +30,7 @@ export function RealtimeFinancialWidget({ opportunities, className }: RealtimeFi
     todayRevenue: 0,
     weeklyGrowth: 0,
     pipelineVelocity: 0,
-    lastUpdated: new Date()
+    lastUpdated: new Date().toISOString()
   });
   const [isLive, setIsLive] = useState(true);
 
@@ -48,7 +48,7 @@ export function RealtimeFinancialWidget({ opportunities, className }: RealtimeFi
         todayRevenue: todayBase * realtimeVariation,
         weeklyGrowth: 5 + Math.sin(currentTime / 8000000) * 3, // 2-8% growth
         pipelineVelocity: closedDeals.length > 0 ? totalRevenue / closedDeals.length * 0.1 : 0,
-        lastUpdated: new Date()
+        lastUpdated: new Date().toISOString()
       });
     };
 
@@ -102,7 +102,7 @@ export function RealtimeFinancialWidget({ opportunities, className }: RealtimeFi
           </div>
         </div>
         <CardDescription>
-          Real-time financial metrics • Updated {quickMetrics.lastUpdated.toLocaleTimeString()}
+          Real-time financial metrics • Updated {new Date(quickMetrics.lastUpdated).toLocaleTimeString()}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

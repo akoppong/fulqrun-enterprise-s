@@ -791,8 +791,8 @@ export function KPITargetsView({ opportunities, currentUser }: KPITargetsViewPro
                           </div>
                           <div className="text-xs text-muted-foreground">
                             {milestone.achieved 
-                              ? `Achieved: ${milestone.achievedDate?.toLocaleDateString()}`
-                              : `Due: ${milestone.targetDate.toLocaleDateString()}`
+                              ? `Achieved: ${milestone.achievedDate ? new Date(milestone.achievedDate).toLocaleDateString() : 'Unknown'}`
+                              : `Due: ${new Date(milestone.targetDate).toLocaleDateString()}`
                             }
                           </div>
                         </div>
