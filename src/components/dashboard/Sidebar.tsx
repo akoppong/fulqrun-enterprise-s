@@ -18,7 +18,8 @@ import {
   Workflow,
   Shield,
   Star,
-  FloppyDisk
+  FloppyDisk,
+  TestTube
 } from '@phosphor-icons/react';
 
 interface SidebarProps {
