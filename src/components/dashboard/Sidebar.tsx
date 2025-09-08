@@ -163,6 +163,15 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
       roles: ['rep', 'manager', 'admin'],
       category: 'advanced',
       isNew: true
+    },
+    {
+      id: 'autosave-test' as DashboardView,
+      label: 'Auto-Save Tests',
+      icon: TestTube,
+      description: 'Test auto-save functionality',
+      roles: ['rep', 'manager', 'admin'],
+      category: 'advanced',
+      isNew: true
     }
   ];
 
