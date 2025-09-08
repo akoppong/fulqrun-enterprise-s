@@ -192,6 +192,15 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
       roles: ['rep', 'manager', 'admin'],
       category: 'advanced',
       isNew: true
+    },
+    {
+      id: 'field-testing' as DashboardView,
+      label: 'Field Type Lab',
+      icon: TestTube,
+      description: 'Comprehensive field validation testing',
+      roles: ['rep', 'manager', 'admin'],
+      category: 'advanced',
+      isNew: true
     }
   ];
 

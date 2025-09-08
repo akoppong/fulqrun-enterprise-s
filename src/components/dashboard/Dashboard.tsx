@@ -2,6 +2,7 @@ import { AutoSaveDemo } from './AutoSaveDemo';
 import { AutoSaveTestRunner } from './AutoSaveTestRunner';
 import { AutoSaveTesting } from './AutoSaveTesting';
 import { AutoSaveInteractiveDemo } from './AutoSaveInteractiveDemo';
+import { FieldTypeTestingLab } from './FieldTypeTestingLab';
 import { useState, useEffect } from 'react';
 import { User, Opportunity, Contact, Company, KPITarget } from '@/lib/types';
 import { DemoDataGenerator } from '@/lib/demo-data';
@@ -28,7 +29,7 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
-export type DashboardView = 'pipeline' | 'opportunities' | 'contacts' | 'analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'autosave-demo' | 'autosave-test' | 'autosave-manual' | 'autosave-interactive';
+export type DashboardView = 'pipeline' | 'opportunities' | 'contacts' | 'analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'autosave-demo' | 'autosave-test' | 'autosave-manual' | 'autosave-interactive' | 'field-testing';
 
 export function Dashboard({ user, onLogout }: DashboardProps) {
   const [currentView, setCurrentView] = useState<DashboardView>('pipeline');
@@ -175,6 +176,8 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
         return <AutoSaveTesting />;
       case 'autosave-interactive':
         return <AutoSaveInteractiveDemo />;
+      case 'field-testing':
+        return <FieldTypeTestingLab />;
       default:
         return <PipelineView />;
     }
