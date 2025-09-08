@@ -20,7 +20,8 @@ import {
   Star,
   FloppyDisk,
   TestTube,
-  ClipboardList
+  ClipboardList,
+  MagicWand
 } from '@phosphor-icons/react';
 
 interface SidebarProps {
@@ -153,6 +154,15 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
       icon: Plugs,
       description: 'Connect external tools',
       roles: ['manager', 'admin'],
+      category: 'advanced',
+      isNew: true
+    },
+    {
+      id: 'autosave-interactive' as DashboardView,
+      label: 'Interactive Demo',
+      icon: MagicWand,
+      description: 'Comprehensive auto-save testing',
+      roles: ['rep', 'manager', 'admin'],
       category: 'advanced',
       isNew: true
     },

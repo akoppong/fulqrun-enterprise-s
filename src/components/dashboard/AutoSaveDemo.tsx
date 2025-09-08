@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AutoSaveIndicator } from '@/components/ui/auto-save-indicator';
 import { useAutoSave } from '@/hooks/use-auto-save';
-import { FloppyDisk, CheckCircle, Trash } from '@phosphor-icons/react';
+import { FloppyDisk, CheckCircle, Trash, Info } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 
 interface FormData {
@@ -144,103 +144,136 @@ export function AutoSaveDemo() {
         </CardHeader>
         
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Task Title *</Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => updateField('title', e.target.value)}
-                  placeholder="Enter task title"
-                  required
-                />
-              </div>
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Basic Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-foreground border-b pb-2">
+                Basic Information
+              </h3>
               
-              <div className="space-y-2">
-                <Label htmlFor="category">Category</Label>
-                <Select value={formData.category} onValueChange={(value) => updateField('category', value)}>
-                  <SelectTrigger id="category">
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="development">Development</SelectItem>
-                    <SelectItem value="design">Design</SelectItem>
-                    <SelectItem value="testing">Testing</SelectItem>
-                    <SelectItem value="documentation">Documentation</SelectItem>
-                    <SelectItem value="meeting">Meeting</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="title" className="text-sm font-medium">Task Title *</Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => updateField('title', e.target.value)}
+                    placeholder="Enter task title"
+                    required
+                    className="h-11"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="category" className="text-sm font-medium">Category</Label>
+                  <Select value={formData.category} onValueChange={(value) => updateField('category', value)}>
+                    <SelectTrigger id="category" className="h-11">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="development">Development</SelectItem>
+                      <SelectItem value="design">Design</SelectItem>
+                      <SelectItem value="testing">Testing</SelectItem>
+                      <SelectItem value="documentation">Documentation</SelectItem>
+                      <SelectItem value="meeting">Meeting</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => updateField('description', e.target.value)}
-                placeholder="Describe the task in detail..."
-                rows={4}
-                className="resize-none"
-              />
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="priority">Priority</Label>
-                <Select value={formData.priority} onValueChange={(value) => updateField('priority', value)}>
-                  <SelectTrigger id="priority">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="urgent">Urgent</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            {/* Task Details */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-foreground border-b pb-2">
+                Task Details
+              </h3>
               
               <div className="space-y-2">
-                <Label htmlFor="dueDate">Due Date</Label>
-                <Input
-                  id="dueDate"
-                  type="date"
-                  value={formData.dueDate}
-                  onChange={(e) => updateField('dueDate', e.target.value)}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="assignee">Assignee</Label>
-                <Input
-                  id="assignee"
-                  value={formData.assignee}
-                  onChange={(e) => updateField('assignee', e.target.value)}
-                  placeholder="Enter assignee name"
+                <Label htmlFor="description" className="text-sm font-medium">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => updateField('description', e.target.value)}
+                  placeholder="Describe the task in detail..."
+                  rows={4}
+                  className="resize-none min-h-[100px]"
                 />
               </div>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="notes">Additional Notes</Label>
-              <Textarea
-                id="notes"
-                value={formData.notes}
-                onChange={(e) => updateField('notes', e.target.value)}
-                placeholder="Any additional notes or comments..."
-                rows={3}
-                className="resize-none"
-              />
+            {/* Assignment & Scheduling */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-foreground border-b pb-2">
+                Assignment & Scheduling
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="priority" className="text-sm font-medium">Priority Level</Label>
+                  <Select value={formData.priority} onValueChange={(value) => updateField('priority', value)}>
+                    <SelectTrigger id="priority" className="h-11">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">🟢 Low Priority</SelectItem>
+                      <SelectItem value="medium">🟡 Medium Priority</SelectItem>
+                      <SelectItem value="high">🟠 High Priority</SelectItem>
+                      <SelectItem value="urgent">🔴 Urgent</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="dueDate" className="text-sm font-medium">Due Date</Label>
+                  <Input
+                    id="dueDate"
+                    type="date"
+                    value={formData.dueDate}
+                    onChange={(e) => updateField('dueDate', e.target.value)}
+                    className="h-11"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="assignee" className="text-sm font-medium">Assignee</Label>
+                  <Input
+                    id="assignee"
+                    value={formData.assignee}
+                    onChange={(e) => updateField('assignee', e.target.value)}
+                    placeholder="Enter assignee name"
+                    className="h-11"
+                  />
+                </div>
+              </div>
             </div>
             
-            <div className="flex justify-between items-center pt-4 border-t">
-              <div className="text-sm text-muted-foreground">
+            {/* Additional Notes */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-foreground border-b pb-2">
+                Additional Notes
+              </h3>
+              
+              <div className="space-y-2">
+                <Label htmlFor="notes" className="text-sm font-medium">Notes & Comments</Label>
+                <Textarea
+                  id="notes"
+                  value={formData.notes}
+                  onChange={(e) => updateField('notes', e.target.value)}
+                  placeholder="Any additional notes or comments..."
+                  rows={3}
+                  className="resize-none min-h-[80px]"
+                />
+              </div>
+            </div>
+            
+            {/* Form Actions */}
+            <div className="flex justify-between items-center pt-6 border-t border-border">
+              <div className="text-sm text-muted-foreground flex items-center gap-2">
                 {autoSave.hasDraft && (
-                  <span className="text-blue-600">
-                    💾 Draft available - changes saved automatically
-                  </span>
+                  <div className="flex items-center gap-2 text-blue-600">
+                    <FloppyDisk size={16} />
+                    <span>Draft saved automatically</span>
+                  </div>
                 )}
               </div>
               
@@ -250,12 +283,17 @@ export function AutoSaveDemo() {
                   variant="outline"
                   onClick={handleReset}
                   disabled={!hasUnsavedChanges && !autoSave.hasDraft}
+                  className="h-11 px-6"
                 >
                   <Trash size={16} className="mr-2" />
-                  Reset
+                  Reset Form
                 </Button>
                 
-                <Button type="submit" disabled={!formData.title}>
+                <Button 
+                  type="submit" 
+                  disabled={!formData.title}
+                  className="h-11 px-6"
+                >
                   <CheckCircle size={16} className="mr-2" />
                   Submit Task
                 </Button>
@@ -268,18 +306,70 @@ export function AutoSaveDemo() {
       {/* Instructions Card */}
       <Card>
         <CardHeader>
-          <CardTitle>Auto-Save Instructions</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Info size={20} />
+            How to Test Auto-Save
+          </CardTitle>
         </CardHeader>
-        <CardContent className="text-sm text-muted-foreground space-y-2">
-          <p><strong>How it works:</strong></p>
-          <ul className="list-disc list-inside space-y-1 ml-4">
-            <li>Changes are automatically saved every 2 seconds as you type</li>
-            <li>The status indicator shows current save state</li>
-            <li>Refresh the page to see draft restoration in action</li>
-            <li>Click "Save now" to manually trigger an immediate save</li>
-            <li>Click "Clear draft" to remove the saved draft</li>
-            <li>Submitting the form automatically clears the draft</li>
-          </ul>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <h4 className="font-semibold text-sm">🔄 Auto-Save Features</h4>
+              <ul className="text-sm text-muted-foreground space-y-2">
+                <li className="flex items-start gap-2">
+                  <span className="text-green-600 mt-0.5">•</span>
+                  Changes are automatically saved every 2 seconds
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-600 mt-0.5">•</span>
+                  Status indicator shows current save state
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-600 mt-0.5">•</span>
+                  Drafts persist between browser sessions
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-600 mt-0.5">•</span>
+                  Manual save option available
+                </li>
+              </ul>
+            </div>
+            
+            <div className="space-y-3">
+              <h4 className="font-semibold text-sm">🧪 Testing Steps</h4>
+              <ol className="text-sm text-muted-foreground space-y-2">
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-600 font-mono">1.</span>
+                  Fill out some form fields above
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-600 font-mono">2.</span>
+                  Watch the auto-save indicator change
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-600 font-mono">3.</span>
+                  Refresh the page to test draft restoration
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-600 font-mono">4.</span>
+                  Try the "Interactive Demo" for advanced testing
+                </li>
+              </ol>
+            </div>
+          </div>
+          
+          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-start gap-3">
+              <FloppyDisk size={20} className="text-blue-600 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-blue-900">Pro Tip</p>
+                <p className="text-sm text-blue-700">
+                  For comprehensive testing with multiple field types, check out the "Interactive Demo" 
+                  in the sidebar which includes advanced scenarios and real-time test results.
+                </p>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
