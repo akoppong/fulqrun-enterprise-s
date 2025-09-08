@@ -1345,9 +1345,9 @@ export function FieldTypeTestingLab() {
                         {testResults.slice(-20).reverse().map((result, index) => (
                           <div 
                             key={index} 
-                            className={`flex items-center justify-between p-2 rounded text-sm ${
+                            className={`flex items-center justify-between p-2 rounded text-sm border ${
                               result.passed ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
-                            } border`}
+                            }`}
                           >
                             <div className="flex items-center gap-2">
                               {result.passed ? (
