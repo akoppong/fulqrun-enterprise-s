@@ -19,7 +19,8 @@ import {
   Shield,
   Star,
   FloppyDisk,
-  TestTube
+  TestTube,
+  ClipboardList
 } from '@phosphor-icons/react';
 
 interface SidebarProps {
@@ -169,6 +170,15 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
       label: 'Auto-Save Tests',
       icon: TestTube,
       description: 'Test auto-save functionality',
+      roles: ['rep', 'manager', 'admin'],
+      category: 'advanced',
+      isNew: true
+    },
+    {
+      id: 'autosave-manual' as DashboardView,
+      label: 'Manual Testing',
+      icon: ClipboardList,
+      description: 'Step-by-step auto-save testing',
       roles: ['rep', 'manager', 'admin'],
       category: 'advanced',
       isNew: true
