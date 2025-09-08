@@ -548,3 +548,171 @@ export interface PredictionResult {
   factors: string[];
   recommendation: string;
 }
+
+// Advanced Pipeline Management Types
+export interface PipelineStage {
+  id: string;
+  name: string;
+  description: string;
+  position: number;
+  color: string;
+  probability: number;
+  isDefault: boolean;
+  automationRules: StageAutomationRule[];
+  requiredFields: string[];
+  exitCriteria: string[];
+  workflows: string[]; // workflow template IDs
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface StageAutomationRule {
+  id: string;
+  name: string;
+  trigger: 'stage_entry' | 'stage_exit' | 'time_in_stage' | 'field_change' | 'manual';
+  conditions: AutomationCondition[];
+  actions: AutomationAction[];
+  delay?: number; // minutes
+  isActive: boolean;
+}
+
+export interface AutomationCondition {
+  field: string;
+  operator: 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'contains' | 'not_contains' | 'is_empty' | 'is_not_empty';
+  value: any;
+  logicalOperator?: 'AND' | 'OR';
+}
+
+export interface PipelineConfiguration {
+  id: string;
+  name: string;
+  description: string;
+  stages: PipelineStage[];
+  defaultProbabilities: Record<string, number>;
+  salesCycleTargets: Record<string, number>; // days per stage
+  conversionTargets: Record<string, number>; // conversion % between stages
+  isActive: boolean;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface DealMovement {
+  id: string;
+  opportunityId: string;
+  fromStage: string;
+  toStage: string;
+  reason?: string;
+  timestamp: Date;
+  userId: string;
+  automatedMove: boolean;
+  probability: number;
+  value: number;
+}
+
+export interface StageMetrics {
+  stageId: string;
+  stageName: string;
+  totalOpportunities: number;
+  totalValue: number;
+  averageTimeInStage: number;
+  conversionRate: number;
+  averageDealSize: number;
+  velocityTrend: 'up' | 'down' | 'stable';
+  bottleneckScore: number; // 0-100, higher means more bottleneck
+  period: string;
+}
+
+export interface PipelineAnalytics {
+  pipelineId: string;
+  period: string;
+  totalOpportunities: number;
+  totalValue: number;
+  averageSalesCycle: number;
+  overallConversionRate: number;
+  stageMetrics: StageMetrics[];
+  bottleneckAnalysis: BottleneckAnalysis[];
+  forecastAccuracy: number;
+  recommendedActions: PipelineRecommendation[];
+  generatedAt: Date;
+}
+
+export interface BottleneckAnalysis {
+  stageId: string;
+  stageName: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  impact: number; // 0-100
+  causes: string[];
+  recommendations: string[];
+  affectedDeals: number;
+  potentialRevenueLoss: number;
+}
+
+export interface PipelineRecommendation {
+  type: 'process' | 'training' | 'automation' | 'resource' | 'structure';
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  title: string;
+  description: string;
+  estimatedImpact: number;
+  implementation: string[];
+  metrics: string[];
+}
+
+export interface WorkflowAutomation {
+  id: string;
+  name: string;
+  description: string;
+  trigger: WorkflowTrigger;
+  conditions: WorkflowCondition[];
+  actions: WorkflowAction[];
+  isActive: boolean;
+  executionCount: number;
+  lastExecuted?: Date;
+  createdBy: string;
+  createdAt: Date;
+}
+
+export interface WorkflowTrigger {
+  type: 'deal_created' | 'stage_changed' | 'value_changed' | 'date_reached' | 'field_updated' | 'manual' | 'scheduled';
+  configuration: Record<string, any>;
+}
+
+export interface WorkflowCondition {
+  field: string;
+  operator: string;
+  value: any;
+  logicalOperator?: 'AND' | 'OR';
+}
+
+export interface WorkflowAction {
+  type: 'move_stage' | 'update_field' | 'create_task' | 'send_email' | 'notify_user' | 'webhook' | 'create_opportunity' | 'update_probability';
+  configuration: Record<string, any>;
+  delay?: number; // minutes
+  conditions?: WorkflowCondition[];
+}
+
+export interface PipelineReport {
+  id: string;
+  name: string;
+  type: 'conversion_funnel' | 'velocity_analysis' | 'bottleneck_report' | 'forecast_accuracy' | 'stage_performance';
+  filters: ReportFilter[];
+  data: Record<string, any>;
+  visualizations: ReportVisualization[];
+  generatedAt: Date;
+  generatedBy: string;
+  period: string;
+}
+
+export interface ReportFilter {
+  field: string;
+  operator: string;
+  value: any;
+  label: string;
+}
+
+export interface ReportVisualization {
+  type: 'bar_chart' | 'line_chart' | 'funnel' | 'gauge' | 'table' | 'heatmap';
+  title: string;
+  data: any;
+  configuration: Record<string, any>;
+}

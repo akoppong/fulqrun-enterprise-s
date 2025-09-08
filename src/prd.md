@@ -31,17 +31,31 @@
 - **CSTPV Performance Metrics**: Close rate, Size, Time, Probability, Value tracking
 - **AI-Powered Insights**: Predictive analytics and automated recommendations
 
-### **NEW: Custom Pipeline Stage Automation Workflows**
-- **Visual Workflow Builder**: Drag-and-drop interface for creating custom automation workflows
-- **Stage-Specific Automation**: Trigger workflows when opportunities move between PEAK stages
-- **Multi-Step Processes**: Manual tasks, automated actions, and approval steps in sequence
-- **Smart Dependencies**: Configure step dependencies and conditional logic
-- **Real-time Execution Monitoring**: Track workflow progress with detailed status updates
-- **Template Library**: Pre-built workflows for common sales processes
-- **Role-Based Assignment**: Assign tasks to specific team members or roles
-- **Integration Actions**: Automate emails, notifications, field updates, and external integrations
-- **Workflow Analytics**: Track completion rates, bottlenecks, and performance metrics
-- **Pause/Resume Controls**: Manage long-running workflows with full execution control
+### **NEW: Advanced Pipeline Management**
+- **Visual Pipeline Builder**: Drag-and-drop interface for customizing sales pipeline stages
+- **Custom Stage Configuration**: Define stage names, probabilities, colors, and requirements
+- **Deal Movement Tracking**: Complete audit trail of all deal stage changes
+- **Real-time Pipeline Analytics**: Live bottleneck detection and performance metrics
+- **Stage Automation Rules**: Automatically move deals based on conditions and criteria
+- **Pipeline Performance Metrics**: Conversion rates, velocity analysis, and forecasting
+- **Workflow Integration**: Connect custom workflows to pipeline stage changes
+
+### **NEW: Workflow Automation Engine**
+- **Visual Workflow Designer**: Create complex automation workflows with triggers and actions  
+- **Multi-Trigger Support**: Deal created, stage changed, value updated, date-based triggers
+- **Smart Conditions**: Complex conditional logic with AND/OR operators
+- **Action Library**: Move stages, update fields, create tasks, send emails, notify users
+- **Execution Monitoring**: Real-time workflow execution status and performance tracking
+- **Template Workflows**: Pre-built automation templates for common sales scenarios
+- **Success Analytics**: Track automation effectiveness and optimization opportunities
+
+### **NEW: Enhanced Deal Management**
+- **Drag-and-Drop Pipeline**: Intuitive visual deal management across pipeline stages
+- **Deal Risk Assessment**: AI-powered risk scoring with actionable recommendations
+- **MEDDPICC Integration**: Built-in qualification scoring with visual progress indicators
+- **Smart Deal Cards**: Rich deal information with owner, timeline, and risk indicators
+- **Bulk Operations**: Move multiple deals simultaneously with workflow triggers
+- **Deal Movement History**: Complete audit trail with timestamps and reasons
 
 ### **NEW: Custom KPI Targets & Automated Goal Tracking**
 - **Flexible KPI Definition**: Create custom targets for revenue, conversion, volume, time, quality metrics

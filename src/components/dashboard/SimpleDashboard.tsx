@@ -1,7 +1,19 @@
+import { useState } from 'react';
 import { User } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AdvancedPipelineManagement } from '../pipeline/AdvancedPipelineManagement';
+import { Dashboard } from './Dashboard';
+import { 
+  BarChart3, 
+  Target, 
+  Users, 
+  TrendingUp,
+  Home,
+  Settings
+} from '@phosphor-icons/react';
 
 interface SimpleDashboardProps {
   user: User;
@@ -9,6 +21,8 @@ interface SimpleDashboardProps {
 }
 
 export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
+  const [activeTab, setActiveTab] = useState('overview');
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card p-4">
@@ -30,54 +44,140 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
       </header>
 
       <main className="p-6 max-w-7xl mx-auto">
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card>
-            <CardHeader>
-              <CardTitle>Pipeline Overview</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">$124,500</p>
-              <p className="text-sm text-muted-foreground">Total Pipeline Value</p>
-            </CardContent>
-          </Card>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="overview" className="flex items-center gap-2">
+              <Home size={16} />
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="pipeline" className="flex items-center gap-2">
+              <Target size={16} />
+              Advanced Pipeline
+            </TabsTrigger>
+            <TabsTrigger value="full-crm" className="flex items-center gap-2">
+              <BarChart3 size={16} />
+              Full CRM
+            </TabsTrigger>
+          </TabsList>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Active Opportunities</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">23</p>
-              <p className="text-sm text-muted-foreground">In Progress</p>
-            </CardContent>
-          </Card>
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Pipeline Value</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">$124,500</div>
+                  <p className="text-xs text-muted-foreground">
+                    +20.1% from last month
+                  </p>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>This Month</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">$45,200</p>
-              <p className="text-sm text-muted-foreground">Closed Won</p>
-            </CardContent>
-          </Card>
-        </div>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Active Deals</CardTitle>
+                  <Target className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">23</div>
+                  <p className="text-xs text-muted-foreground">
+                    +5 new this week
+                  </p>
+                </CardContent>
+              </Card>
 
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Welcome to FulQrun CRM</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground mb-4">
-              Your enterprise sales platform is ready. This simplified dashboard is loading successfully.
-              The full CRM features are available once all components are properly loaded.
-            </p>
-            <div className="flex gap-2">
-              <Button>View Pipeline</Button>
-              <Button variant="outline">Add Opportunity</Button>
-              <Button variant="outline">View Reports</Button>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
+                  <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">73%</div>
+                  <p className="text-xs text-muted-foreground">
+                    +2% from last month
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Avg. Sales Cycle</CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">28d</div>
+                  <p className="text-xs text-muted-foreground">
+                    -3 days improvement
+                  </p>
+                </CardContent>
+              </Card>
             </div>
-          </CardContent>
-        </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Welcome to FulQrun CRM</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <p className="text-muted-foreground">
+                    Your enterprise sales platform with advanced pipeline management is now ready. 
+                    Choose from the powerful features below to get started.
+                  </p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow" 
+                          onClick={() => setActiveTab('pipeline')}>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-blue-100 rounded-lg">
+                          <Target size={20} className="text-blue-600" />
+                        </div>
+                        <h3 className="font-semibold">Advanced Pipeline</h3>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Drag-and-drop deal management with workflow automation and analytics
+                      </p>
+                    </Card>
+
+                    <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow"
+                          onClick={() => setActiveTab('full-crm')}>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-green-100 rounded-lg">
+                          <BarChart3 size={20} className="text-green-600" />
+                        </div>
+                        <h3 className="font-semibold">Full CRM Suite</h3>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Complete CRM with contacts, companies, analytics and AI insights
+                      </p>
+                    </Card>
+
+                    <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow opacity-75">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-purple-100 rounded-lg">
+                          <Settings size={20} className="text-purple-600" />
+                        </div>
+                        <h3 className="font-semibold">Enterprise Features</h3>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Advanced reporting, team management, and integrations
+                      </p>
+                    </Card>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="pipeline" className="space-y-6">
+            <AdvancedPipelineManagement />
+          </TabsContent>
+
+          <TabsContent value="full-crm" className="space-y-6">
+            <Dashboard user={user} />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
