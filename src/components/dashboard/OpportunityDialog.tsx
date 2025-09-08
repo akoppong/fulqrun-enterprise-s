@@ -13,6 +13,8 @@ import { Opportunity, PEAK_STAGES, Company, Contact, MEDDPICC } from '@/lib/type
 import { getMEDDPICCScore } from '@/lib/crm-utils';
 import { AIService } from '@/lib/ai-service';
 import { EnhancedMEDDPICCDialog } from './EnhancedMEDDPICCDialog';
+import { AutoSaveIndicator } from '@/components/ui/auto-save-indicator';
+import { useAutoSave } from '@/hooks/use-auto-save';
 import { Target, TrendUp, Brain, Lightbulb } from '@phosphor-icons/react';
 import { useKV } from '@github/spark/hooks';
 import { toast } from 'sonner';
@@ -30,6 +32,7 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
   const [meddpicDialog, setMeddpicDialog] = useState(false);
   const [aiInsights, setAiInsights] = useState<any>(null);
   const [generatingInsights, setGeneratingInsights] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   
   const [formData, setFormData] = useState<Partial<Opportunity>>({
     title: '',
@@ -52,35 +55,89 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
     }
   });
 
+  // Auto-save functionality
+  const autoSave = useAutoSave({
+    key: opportunity?.id ? `opportunity_${opportunity.id}` : 'opportunity_new',
+    data: formData,
+    enabled: isOpen,
+    excludeFields: ['expectedCloseDate'], // Exclude date object from auto-save
+    onSave: () => {
+      setHasUnsavedChanges(false);
+    },
+    onLoad: (savedData) => {
+      if (savedData && !opportunity) {
+        // Only auto-load for new opportunities, not when editing existing ones
+        setFormData({
+          ...savedData,
+          expectedCloseDate: savedData.expectedCloseDate ? new Date(savedData.expectedCloseDate) : new Date()
+        });
+        toast.info('Draft restored from auto-save');
+      }
+    }
+  });
+
   useEffect(() => {
     if (opportunity) {
       setFormData({
         ...opportunity,
         expectedCloseDate: new Date(opportunity.expectedCloseDate)
       });
+      setHasUnsavedChanges(false);
     } else {
-      setFormData({
-        title: '',
-        description: '',
-        value: 0,
-        stage: 'prospect',
-        probability: 25,
-        expectedCloseDate: new Date(),
-        companyId: '',
-        contactId: '',
-        meddpicc: {
-          metrics: '',
-          economicBuyer: '',
-          decisionCriteria: '',
-          decisionProcess: '',
-          paperProcess: '',
-          implicatePain: '',
-          champion: '',
-          score: 0
-        }
-      });
+      // Check for auto-saved draft for new opportunities
+      if (autoSave.hasDraft && !formData.title) {
+        // Draft will be loaded via autoSave.onLoad callback
+      } else {
+        setFormData({
+          title: '',
+          description: '',
+          value: 0,
+          stage: 'prospect',
+          probability: 25,
+          expectedCloseDate: new Date(),
+          companyId: '',
+          contactId: '',
+          meddpicc: {
+            metrics: '',
+            economicBuyer: '',
+            decisionCriteria: '',
+            decisionProcess: '',
+            paperProcess: '',
+            implicatePain: '',
+            champion: '',
+            score: 0
+          }
+        });
+      }
+      setHasUnsavedChanges(false);
     }
   }, [opportunity, isOpen]);
+
+  // Track changes to enable unsaved changes indicator
+  useEffect(() => {
+    setHasUnsavedChanges(true);
+  }, [formData]);
+
+  // Show draft restoration dialog for new opportunities
+  useEffect(() => {
+    if (isOpen && !opportunity && autoSave.hasDraft) {
+      setTimeout(() => {
+        const shouldRestore = window.confirm(
+          'A saved draft was found. Would you like to restore it and continue where you left off?'
+        );
+        
+        if (shouldRestore && autoSave.savedDraft) {
+          setFormData({
+            ...autoSave.savedDraft,
+            expectedCloseDate: autoSave.savedDraft.expectedCloseDate 
+              ? new Date(autoSave.savedDraft.expectedCloseDate) 
+              : new Date()
+          });
+          toast.success('Draft restored successfully');
+        }
+      }, 100);
+    }
+  }, [isOpen, opportunity, autoSave.hasDraft, autoSave.savedDraft]);
 
   const generateAIInsights = async () => {
     if (!formData.companyId || !formData.contactId) {
@@ -127,6 +184,20 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
         lastAiUpdate: new Date()
       }
     });
+
+    // Clear the draft after successful save
+    autoSave.clearDraft();
+    setHasUnsavedChanges(false);
+  };
+
+  const handleClose = () => {
+    if (hasUnsavedChanges && (formData.title || formData.description)) {
+      const shouldDiscard = window.confirm(
+        'You have unsaved changes. Are you sure you want to close? Your changes will be auto-saved as a draft.'
+      );
+      if (!shouldDiscard) return;
+    }
+    onClose();
   };
 
   const updateMEDDPICCField = (field: string, value: string) => {
@@ -150,13 +221,26 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
+      <Dialog open={isOpen} onOpenChange={handleClose}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Target size={24} className="text-primary" />
-              {opportunity ? 'Edit Opportunity' : 'Create New Opportunity'}
-            </DialogTitle>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="flex items-center gap-2">
+                <Target size={24} className="text-primary" />
+                {opportunity ? 'Edit Opportunity' : 'Create New Opportunity'}
+              </DialogTitle>
+              
+              {/* Auto-save indicator */}
+              <AutoSaveIndicator
+                enabled={isOpen}
+                lastSaved={autoSave.lastSaved}
+                hasUnsavedChanges={hasUnsavedChanges}
+                onSaveNow={autoSave.saveNow}
+                onClearDraft={autoSave.clearDraft}
+                hasDraft={autoSave.hasDraft && !opportunity}
+                className="text-sm"
+              />
+            </div>
           </DialogHeader>
           
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -523,7 +607,7 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
             </Tabs>
             
             <div className="flex justify-end gap-3 pt-4 border-t">
-              <Button type="button" variant="outline" onClick={onClose}>
+              <Button type="button" variant="outline" onClick={handleClose}>
                 Cancel
               </Button>
               <Button type="submit">

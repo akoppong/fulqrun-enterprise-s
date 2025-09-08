@@ -6,9 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
+import { AddInventoryDialog, AddPOSTransactionDialog } from './FinancialDialogs';
 import { 
   DollarSign, 
   TrendingUp, 
@@ -641,80 +641,16 @@ export function FinancialManagement({ opportunities, currentUserId }: FinancialM
               </CardContent>
             </Card>
             
-            <Dialog open={newInventoryDialog} onOpenChange={setNewInventoryDialog}>
-              <DialogTrigger asChild>
-                <Button className="ml-4">
-                  <Package className="mr-2 h-4 w-4" />
-                  Add Item
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add Inventory Item</DialogTitle>
-                  <DialogDescription>Add a new product or service to inventory</DialogDescription>
-                </DialogHeader>
-                <form onSubmit={(e) => {
-                  e.preventDefault();
-                  const formData = new FormData(e.currentTarget);
-                  addInventoryItem({
-                    sku: formData.get('sku') as string,
-                    name: formData.get('name') as string,
-                    category: formData.get('category') as string,
-                    quantity: parseInt(formData.get('quantity') as string),
-                    unitPrice: parseFloat(formData.get('unitPrice') as string),
-                    supplier: formData.get('supplier') as string,
-                    lastRestocked: new Date()
-                  });
-                }} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="sku">SKU</Label>
-                      <Input id="sku" name="sku" required />
-                    </div>
-                    <div>
-                      <Label htmlFor="name">Product Name</Label>
-                      <Input id="name" name="name" required />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="category">Category</Label>
-                      <Select name="category" required>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Software">Software</SelectItem>
-                          <SelectItem value="Services">Services</SelectItem>
-                          <SelectItem value="Support">Support</SelectItem>
-                          <SelectItem value="Hardware">Hardware</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="supplier">Supplier</Label>
-                      <Input id="supplier" name="supplier" required />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="quantity">Quantity</Label>
-                      <Input id="quantity" name="quantity" type="number" required />
-                    </div>
-                    <div>
-                      <Label htmlFor="unitPrice">Unit Price</Label>
-                      <Input id="unitPrice" name="unitPrice" type="number" step="0.01" required />
-                    </div>
-                  </div>
-                  <div className="flex justify-end space-x-2">
-                    <Button type="button" variant="outline" onClick={() => setNewInventoryDialog(false)}>
-                      Cancel
-                    </Button>
-                    <Button type="submit">Add Item</Button>
-                  </div>
-                </form>
-              </DialogContent>
-            </Dialog>
+            <Button className="ml-4" onClick={() => setNewInventoryDialog(true)}>
+              <Package className="mr-2 h-4 w-4" />
+              Add Item
+            </Button>
+            
+            <AddInventoryDialog
+              open={newInventoryDialog}
+              onOpenChange={setNewInventoryDialog}
+              onSave={addInventoryItem}
+            />
           </div>
 
           <Card>
@@ -764,72 +700,16 @@ export function FinancialManagement({ opportunities, currentUserId }: FinancialM
               <p className="text-muted-foreground">Recent sales transactions and payments</p>
             </div>
             
-            <Dialog open={newPOSDialog} onOpenChange={setNewPOSDialog}>
-              <DialogTrigger asChild>
-                <Button>
-                  <ShoppingCart className="mr-2 h-4 w-4" />
-                  New Transaction
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Record POS Transaction</DialogTitle>
-                  <DialogDescription>Record a new point of sale transaction</DialogDescription>
-                </DialogHeader>
-                <form onSubmit={(e) => {
-                  e.preventDefault();
-                  const formData = new FormData(e.currentTarget);
-                  addPOSTransaction({
-                    transactionId: formData.get('transactionId') as string,
-                    amount: parseFloat(formData.get('amount') as string),
-                    paymentMethod: formData.get('paymentMethod') as string,
-                    items: (formData.get('items') as string).split(','),
-                    customerId: formData.get('customerId') as string
-                  });
-                }} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="transactionId">Transaction ID</Label>
-                      <Input id="transactionId" name="transactionId" required />
-                    </div>
-                    <div>
-                      <Label htmlFor="amount">Amount</Label>
-                      <Input id="amount" name="amount" type="number" step="0.01" required />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="paymentMethod">Payment Method</Label>
-                      <Select name="paymentMethod" required>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select payment method" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Credit Card">Credit Card</SelectItem>
-                          <SelectItem value="ACH Transfer">ACH Transfer</SelectItem>
-                          <SelectItem value="Check">Check</SelectItem>
-                          <SelectItem value="Cash">Cash</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="customerId">Customer ID</Label>
-                      <Input id="customerId" name="customerId" />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="items">Items (comma-separated SKUs)</Label>
-                    <Input id="items" name="items" placeholder="PROD-001, SERV-001" required />
-                  </div>
-                  <div className="flex justify-end space-x-2">
-                    <Button type="button" variant="outline" onClick={() => setNewPOSDialog(false)}>
-                      Cancel
-                    </Button>
-                    <Button type="submit">Record Transaction</Button>
-                  </div>
-                </form>
-              </DialogContent>
-            </Dialog>
+            <Button onClick={() => setNewPOSDialog(true)}>
+              <ShoppingCart className="mr-2 h-4 w-4" />
+              New Transaction
+            </Button>
+            
+            <AddPOSTransactionDialog
+              open={newPOSDialog}
+              onOpenChange={setNewPOSDialog}
+              onSave={addPOSTransaction}
+            />
           </div>
 
           <Card>

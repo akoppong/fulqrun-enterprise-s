@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AutoSaveStatus } from '@/components/ui/auto-save-indicator';
+import { useAutoSave } from '@/hooks/use-auto-save';
 import { User } from '@/lib/types';
 import { Building2 } from '@phosphor-icons/react';
 
@@ -15,6 +17,28 @@ export function LoginForm({ onLogin }: LoginFormProps) {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<'rep' | 'manager' | 'admin'>('rep');
   const [loading, setLoading] = useState(false);
+
+  // Auto-save form data for convenience (less important for login)
+  const autoSave = useAutoSave({
+    key: 'login_form_draft',
+    data: { email, role },
+    enabled: true,
+    delay: 1000, // Shorter delay for login form
+    onLoad: (savedData) => {
+      if (savedData && savedData.email) {
+        setEmail(savedData.email);
+        setRole(savedData.role || 'rep');
+      }
+    }
+  });
+
+  // Load saved data on component mount
+  useEffect(() => {
+    if (autoSave.savedDraft) {
+      setEmail(autoSave.savedDraft.email || '');
+      setRole(autoSave.savedDraft.role || 'rep');
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,6 +52,10 @@ export function LoginForm({ onLogin }: LoginFormProps) {
         email,
         role
       };
+      
+      // Clear the draft after successful login
+      autoSave.clearDraft();
+      
       onLogin(user);
       setLoading(false);
     }, 1000);
@@ -71,9 +99,17 @@ export function LoginForm({ onLogin }: LoginFormProps) {
                 </SelectContent>
               </Select>
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Signing in...' : 'Sign In'}
-            </Button>
+            
+            <div className="flex items-center justify-between">
+              <AutoSaveStatus
+                enabled={true}
+                lastSaved={autoSave.lastSaved}
+                className="text-xs"
+              />
+              <Button type="submit" className="w-auto" disabled={loading}>
+                {loading ? 'Signing in...' : 'Sign In'}
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>

@@ -17,7 +17,8 @@ import {
   GridNine,
   Workflow,
   Shield,
-  Star
+  Star,
+  FloppyDisk
 } from '@phosphor-icons/react';
 
 interface SidebarProps {
@@ -150,6 +151,15 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
       icon: Plugs,
       description: 'Connect external tools',
       roles: ['manager', 'admin'],
+      category: 'advanced',
+      isNew: true
+    },
+    {
+      id: 'autosave-demo' as DashboardView,
+      label: 'Auto-Save Demo',
+      icon: FloppyDisk,
+      description: 'Form auto-save features',
+      roles: ['rep', 'manager', 'admin'],
       category: 'advanced',
       isNew: true
     }
