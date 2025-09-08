@@ -150,21 +150,8 @@ export function FieldTypeTestingLab() {
 
   // Load test data into form
   const loadTestData = (fieldType: string, testType: 'valid' | 'invalid' | 'edge') => {
-    const scenario = fieldTestScenarios.find(s => s.fieldType === fieldType);
-    if (!scenario) return;
-
-    let data;
-    switch (testType) {
-      case 'valid':
-        data = testDataGenerator.getRandomValidData(scenario);
-        break;
-      case 'invalid':
-        data = testDataGenerator.getRandomInvalidData(scenario);
-        break;
-      case 'edge':
-        data = testDataGenerator.getRandomEdgeData(scenario);
-        break;
-    }
+    // Use enhanced realistic data generator
+    const data = testDataGenerator.generateRealisticData(fieldType, testType);
 
     // Map field types to form fields
     const fieldMapping: Record<string, keyof FieldTestData> = {
@@ -181,8 +168,50 @@ export function FieldTypeTestingLab() {
     const formField = fieldMapping[fieldType];
     if (formField && data !== undefined) {
       updateField(formField, data);
-      toast.info(`Loaded ${testType} test data for ${fieldType}`);
+      toast.info(`Loaded ${testType} test data for ${fieldType}: ${JSON.stringify(data).slice(0, 50)}...`);
     }
+  };
+
+  // Load all fields with realistic test data
+  const loadAllTestData = (testType: 'valid' | 'invalid' | 'edge') => {
+    const fieldTypes = ['text', 'email', 'phone', 'password', 'url', 'number', 'currency', 'date'];
+    
+    fieldTypes.forEach(fieldType => {
+      loadTestData(fieldType, testType);
+    });
+    
+    toast.success(`Loaded ${testType} test data for all fields`);
+  };
+
+  // Stress test with bulk data generation
+  const runStressTest = async () => {
+    setIsRunningTests(true);
+    const fieldTypes = ['email', 'phone', 'password', 'url', 'number', 'currency', 'text', 'date'];
+    let totalTests = 0;
+    let passedTests = 0;
+
+    for (const fieldType of fieldTypes) {
+      setCurrentTestScenario(`Stress testing ${fieldType}`);
+      const bulkData = testDataGenerator.generateBulkTestData(fieldType, 50);
+      
+      // Test all generated data
+      for (const validData of bulkData.valid) {
+        const scenario = fieldTestScenarios.find(s => s.fieldType === fieldType);
+        if (scenario) {
+          const result = await testRunner.runTest(scenario, validData, 'valid');
+          totalTests++;
+          if (result.passed) passedTests++;
+        }
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    setTestResults(testRunner.getResults());
+    setIsRunningTests(false);
+    setCurrentTestScenario('');
+    
+    toast.success(`Stress test complete! ${passedTests}/${totalTests} tests passed (${((passedTests/totalTests) * 100).toFixed(1)}%)`);
   };
   const validateEmail = (email: string): ValidationResult => {
     if (!email) return { isValid: true, message: '', type: 'info' };
@@ -386,6 +415,18 @@ export function FieldTypeTestingLab() {
             </div>
           )}
           
+          <div className="flex gap-2">
+            <Button onClick={() => loadAllTestData('valid')} variant="outline" size="sm" className="text-green-600">
+              Load All Valid
+            </Button>
+            <Button onClick={() => loadAllTestData('invalid')} variant="outline" size="sm" className="text-red-600">
+              Load All Invalid
+            </Button>
+            <Button onClick={() => loadAllTestData('edge')} variant="outline" size="sm" className="text-yellow-600">
+              Load All Edge
+            </Button>
+          </div>
+          
           <Button onClick={resetForm} variant="outline" size="sm">
             <RotateCcw className="h-4 w-4 mr-2" />
             Reset Form
@@ -394,12 +435,13 @@ export function FieldTypeTestingLab() {
       </div>
 
       <Tabs defaultValue="text-fields" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="text-fields">Text Fields</TabsTrigger>
           <TabsTrigger value="numeric-fields">Numeric</TabsTrigger>
           <TabsTrigger value="selection-fields">Selection</TabsTrigger>
           <TabsTrigger value="date-time">Date/Time</TabsTrigger>
           <TabsTrigger value="advanced">Advanced</TabsTrigger>
+          <TabsTrigger value="playground">Live Playground</TabsTrigger>
           <TabsTrigger value="testing">Auto Testing</TabsTrigger>
         </TabsList>
 
@@ -891,6 +933,229 @@ export function FieldTypeTestingLab() {
             </CardContent>
           </Card>
         </TabsContent>
+        <TabsContent value="playground" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Live Testing Playground</CardTitle>
+              <CardDescription>
+                Interactive field testing with real-time feedback and instant data generation
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {fieldTestScenarios.map((scenario) => (
+                  <Card key={scenario.id} className="border-2 hover:border-primary/50 transition-colors">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm">{scenario.name}</CardTitle>
+                        <Badge variant="outline" className="text-xs">
+                          {scenario.fieldType}
+                        </Badge>
+                      </div>
+                      <CardDescription className="text-xs">
+                        {scenario.description}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="space-y-2">
+                        <Input
+                          placeholder={`Test ${scenario.fieldType} input...`}
+                          onChange={(e) => {
+                            const fieldMapping: Record<string, keyof FieldTestData> = {
+                              'email': 'emailField',
+                              'phone': 'phoneField',
+                              'password': 'passwordField',
+                              'number': 'numberField',
+                              'currency': 'currencyField',
+                              'url': 'urlField',
+                              'text': 'textField',
+                              'date': 'dateField'
+                            };
+                            const formField = fieldMapping[scenario.fieldType];
+                            if (formField) {
+                              updateField(formField, e.target.value);
+                            }
+                          }}
+                          className="text-sm"
+                        />
+                        
+                        <div className="grid grid-cols-3 gap-1">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="text-xs h-7 text-green-600 hover:bg-green-50"
+                            onClick={() => {
+                              const data = testDataGenerator.generateRealisticData(scenario.fieldType, 'valid');
+                              const fieldMapping: Record<string, keyof FieldTestData> = {
+                                'email': 'emailField',
+                                'phone': 'phoneField',
+                                'password': 'passwordField',
+                                'number': 'numberField',
+                                'currency': 'currencyField',
+                                'url': 'urlField',
+                                'text': 'textField',
+                                'date': 'dateField'
+                              };
+                              const formField = fieldMapping[scenario.fieldType];
+                              if (formField) {
+                                updateField(formField, data);
+                              }
+                            }}
+                          >
+                            ✓ Valid
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="text-xs h-7 text-red-600 hover:bg-red-50"
+                            onClick={() => {
+                              const data = testDataGenerator.generateRealisticData(scenario.fieldType, 'invalid');
+                              const fieldMapping: Record<string, keyof FieldTestData> = {
+                                'email': 'emailField',
+                                'phone': 'phoneField',
+                                'password': 'passwordField',
+                                'number': 'numberField',
+                                'currency': 'currencyField',
+                                'url': 'urlField',
+                                'text': 'textField',
+                                'date': 'dateField'
+                              };
+                              const formField = fieldMapping[scenario.fieldType];
+                              if (formField) {
+                                updateField(formField, data);
+                              }
+                            }}
+                          >
+                            ✗ Invalid
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="text-xs h-7 text-yellow-600 hover:bg-yellow-50"
+                            onClick={() => {
+                              const data = testDataGenerator.generateRealisticData(scenario.fieldType, 'edge');
+                              const fieldMapping: Record<string, keyof FieldTestData> = {
+                                'email': 'emailField',
+                                'phone': 'phoneField',
+                                'password': 'passwordField',
+                                'number': 'numberField',
+                                'currency': 'currencyField',
+                                'url': 'urlField',
+                                'text': 'textField',
+                                'date': 'dateField'
+                              };
+                              const formField = fieldMapping[scenario.fieldType];
+                              if (formField) {
+                                updateField(formField, data);
+                              }
+                            }}
+                          >
+                            ~ Edge
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      {/* Real-time validation display */}
+                      <div className="space-y-1">
+                        {(() => {
+                          const fieldMapping: Record<string, keyof FieldTestData> = {
+                            'email': 'emailField',
+                            'phone': 'phoneField',
+                            'password': 'passwordField',
+                            'number': 'numberField',
+                            'currency': 'currencyField',
+                            'url': 'urlField',
+                            'text': 'textField',
+                            'date': 'dateField'
+                          };
+                          const formField = fieldMapping[scenario.fieldType];
+                          const currentValue = formField ? formData[formField] : '';
+                          const validation = validationResults[formField || ''];
+                          
+                          if (validation && currentValue) {
+                            return (
+                              <div className={`text-xs p-2 rounded border ${
+                                validation.type === 'success' ? 'bg-green-50 border-green-200 text-green-700' :
+                                validation.type === 'warning' ? 'bg-yellow-50 border-yellow-200 text-yellow-700' :
+                                validation.type === 'error' ? 'bg-red-50 border-red-200 text-red-700' :
+                                'bg-blue-50 border-blue-200 text-blue-700'
+                              }`}>
+                                <div className="flex items-center gap-2">
+                                  {getValidationIcon(validation)}
+                                  <span className="font-medium">{validation.message}</span>
+                                </div>
+                                <div className="mt-1 opacity-75">
+                                  Current: {JSON.stringify(currentValue).slice(0, 30)}...
+                                </div>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
+                      </div>
+                      
+                      <div className="space-y-1 text-xs">
+                        <div className="font-medium text-muted-foreground">Expected Behavior:</div>
+                        <div className="text-muted-foreground">{scenario.expectedBehavior}</div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              
+              <Separator />
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card className="p-4">
+                  <div className="flex items-center gap-2">
+                    <TestTube className="h-5 w-5 text-blue-500" />
+                    <div>
+                      <div className="font-semibold">Interactive Tests</div>
+                      <div className="text-2xl font-bold">{fieldTestScenarios.length}</div>
+                      <div className="text-xs text-muted-foreground">Available scenarios</div>
+                    </div>
+                  </div>
+                </Card>
+                
+                <Card className="p-4">
+                  <div className="flex items-center gap-2">
+                    <Target className="h-5 w-5 text-green-500" />
+                    <div>
+                      <div className="font-semibold">Valid Fields</div>
+                      <div className="text-2xl font-bold text-green-600">
+                        {Object.values(validationResults).filter(r => r.isValid).length}
+                      </div>
+                      <div className="text-xs text-muted-foreground">Currently valid</div>
+                    </div>
+                  </div>
+                </Card>
+                
+                <Card className="p-4">
+                  <div className="flex items-center gap-2">
+                    <XCircle className="h-5 w-5 text-red-500" />
+                    <div>
+                      <div className="font-semibold">Invalid Fields</div>
+                      <div className="text-2xl font-bold text-red-600">
+                        {Object.values(validationResults).filter(r => !r.isValid).length}
+                      </div>
+                      <div className="text-xs text-muted-foreground">Need attention</div>
+                    </div>
+                  </div>
+                </Card>
+                
+                <Card className="p-4">
+                  <div className="flex items-center gap-2">
+                    <Zap className="h-5 w-5 text-purple-500" />
+                    <div>
+                      <div className="font-semibold">Real-time</div>
+                      <div className="text-2xl font-bold text-purple-600">{validationCount}</div>
+                      <div className="text-xs text-muted-foreground">Validations run</div>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            </CardContent>
+          </Card>
         <TabsContent value="testing" className="space-y-6">
           <Card>
             <CardHeader>
@@ -902,23 +1167,42 @@ export function FieldTypeTestingLab() {
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <Button 
-                    onClick={runAutomatedTests} 
-                    disabled={isRunningTests}
-                    className="flex items-center gap-2"
-                  >
-                    {isRunningTests ? (
-                      <>
-                        <Pause className="h-4 w-4" />
-                        Running Tests...
-                      </>
-                    ) : (
-                      <>
-                        <Play className="h-4 w-4" />
-                        Run All Tests
-                      </>
-                    )}
-                  </Button>
+                    <Button 
+                      onClick={runAutomatedTests} 
+                      disabled={isRunningTests}
+                      className="flex items-center gap-2"
+                    >
+                      {isRunningTests ? (
+                        <>
+                          <Pause className="h-4 w-4" />
+                          Running Tests...
+                        </>
+                      ) : (
+                        <>
+                          <Play className="h-4 w-4" />
+                          Run All Tests
+                        </>
+                      )}
+                    </Button>
+                    
+                    <Button 
+                      onClick={runStressTest} 
+                      disabled={isRunningTests}
+                      variant="outline"
+                      className="flex items-center gap-2"
+                    >
+                      {isRunningTests ? (
+                        <>
+                          <Pause className="h-4 w-4" />
+                          Stress Testing...
+                        </>
+                      ) : (
+                        <>
+                          <FlaskConical className="h-4 w-4" />
+                          Stress Test (50x each)
+                        </>
+                      )}
+                    </Button>
                   
                   <div className="flex items-center gap-2">
                     <Switch

@@ -203,6 +203,7 @@ export const fieldTestScenarios: TestScenario[] = [
   }
 ];
 
+// Advanced test data generator with realistic, dynamic data
 export const testDataGenerator = {
   getRandomValidData: (scenario: TestScenario) => {
     const validData = scenario.testData.valid;
@@ -218,6 +219,111 @@ export const testDataGenerator = {
     const edgeData = scenario.testData.edge;
     return edgeData[Math.floor(Math.random() * edgeData.length)];
   },
+
+  // Generate dynamic, realistic test data
+  generateRealisticData: (fieldType: string, dataType: 'valid' | 'invalid' | 'edge' = 'valid') => {
+    const now = new Date();
+    const companies = ['Apple', 'Microsoft', 'Google', 'Amazon', 'Tesla', 'Meta', 'Netflix', 'Adobe'];
+    const firstNames = ['John', 'Sarah', 'Mike', 'Emma', 'Alex', 'Lisa', 'David', 'Maria'];
+    const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis'];
+    const domains = ['gmail.com', 'outlook.com', 'yahoo.com', 'hotmail.com', 'company.com', 'business.org'];
+    
+    switch (fieldType) {
+      case 'email':
+        if (dataType === 'valid') {
+          const firstName = firstNames[Math.floor(Math.random() * firstNames.length)].toLowerCase();
+          const lastName = lastNames[Math.floor(Math.random() * lastNames.length)].toLowerCase();
+          const domain = domains[Math.floor(Math.random() * domains.length)];
+          return `${firstName}.${lastName}@${domain}`;
+        } else if (dataType === 'invalid') {
+          return ['@gmail.com', 'user@', 'invalid.email', 'user space@domain.com'][Math.floor(Math.random() * 4)];
+        } else {
+          return ['a@b.c', 'user@domain', 'test@localhost', ''][Math.floor(Math.random() * 4)];
+        }
+      
+      case 'phone':
+        if (dataType === 'valid') {
+          const formats = [
+            () => `+1${Math.floor(Math.random() * 900 + 100)}${Math.floor(Math.random() * 900 + 100)}${Math.floor(Math.random() * 9000 + 1000)}`,
+            () => `(${Math.floor(Math.random() * 900 + 100)}) ${Math.floor(Math.random() * 900 + 100)}-${Math.floor(Math.random() * 9000 + 1000)}`,
+            () => `${Math.floor(Math.random() * 900 + 100)}-${Math.floor(Math.random() * 900 + 100)}-${Math.floor(Math.random() * 9000 + 1000)}`
+          ];
+          return formats[Math.floor(Math.random() * formats.length)]();
+        } else if (dataType === 'invalid') {
+          return ['123', 'abc-def-ghij', '++1234567890', '(555) 123-45'][Math.floor(Math.random() * 4)];
+        } else {
+          return ['', '+1', '000-000-0000', '123456789012345'][Math.floor(Math.random() * 4)];
+        }
+      
+      case 'password':
+        if (dataType === 'valid') {
+          const strong = ['SecureP@ss123', 'MyStr0ng!Password', 'C0mplex#Pass99', 'Valid8ed@Password'];
+          return strong[Math.floor(Math.random() * strong.length)];
+        } else if (dataType === 'invalid') {
+          return ['weak', '12345678', 'password', 'Pass123'][Math.floor(Math.random() * 4)];
+        } else {
+          return ['', 'P@ss1', 'VeryLongPasswordThatMightExceedLimits123!@#$%^&*()'][Math.floor(Math.random() * 3)];
+        }
+      
+      case 'url':
+        if (dataType === 'valid') {
+          const company = companies[Math.floor(Math.random() * companies.length)].toLowerCase();
+          const tlds = ['.com', '.org', '.net', '.io', '.co'];
+          const tld = tlds[Math.floor(Math.random() * tlds.length)];
+          const paths = ['', '/products', '/about', '/contact', '/api/v1/data'];
+          const path = paths[Math.floor(Math.random() * paths.length)];
+          return `https://${company}${tld}${path}`;
+        } else if (dataType === 'invalid') {
+          return ['not-a-url', 'http://', 'ftp//invalid', 'https://invalid space.com'][Math.floor(Math.random() * 4)];
+        } else {
+          return ['', 'localhost:3000', 'https://192.168.1.1', 'file://local/path'][Math.floor(Math.random() * 4)];
+        }
+      
+      case 'number':
+        if (dataType === 'valid') {
+          return Math.floor(Math.random() * 1000000);
+        } else if (dataType === 'invalid') {
+          return [-Math.floor(Math.random() * 100), 1000001, 'abc', ''][Math.floor(Math.random() * 4)];
+        } else {
+          return [0, 0.5, 999999.99, '0'][Math.floor(Math.random() * 4)];
+        }
+      
+      case 'currency':
+        if (dataType === 'valid') {
+          return Math.round(Math.random() * 100000 * 100) / 100;
+        } else if (dataType === 'invalid') {
+          return [-Math.random() * 100, 'abc', '$100'][Math.floor(Math.random() * 3)];
+        } else {
+          return [0.001, 0.01, 1000000][Math.floor(Math.random() * 3)];
+        }
+      
+      case 'text':
+        if (dataType === 'valid') {
+          const phrases = [
+            `${firstNames[Math.floor(Math.random() * firstNames.length)]} from ${companies[Math.floor(Math.random() * companies.length)]}`,
+            `Project ${Math.floor(Math.random() * 1000)} - ${companies[Math.floor(Math.random() * companies.length)]} integration`,
+            `Meeting with ${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`,
+            'Product demo and technical discussion'
+          ];
+          return phrases[Math.floor(Math.random() * phrases.length)];
+        } else {
+          return ['', 'a', 'Text with émojis 🚀🎉', 'a'.repeat(500)][Math.floor(Math.random() * 4)];
+        }
+      
+      case 'date':
+        if (dataType === 'valid') {
+          const futureDate = new Date(now.getTime() + Math.random() * 365 * 24 * 60 * 60 * 1000);
+          return futureDate.toISOString().split('T')[0];
+        } else if (dataType === 'invalid') {
+          return ['2024-13-01', '2024-02-30', 'invalid-date'][Math.floor(Math.random() * 3)];
+        } else {
+          return ['1900-01-01', '2100-12-31', '2024-01-01'][Math.floor(Math.random() * 3)];
+        }
+      
+      default:
+        return '';
+    }
+  },
   
   generateTestSuite: () => {
     return fieldTestScenarios.map(scenario => ({
@@ -228,6 +334,25 @@ export const testDataGenerator = {
         ...scenario.testData.edge.map(data => ({ data, expected: 'edge', type: 'edge' as const }))
       ]
     }));
+  },
+
+  // Bulk generate test data for stress testing
+  generateBulkTestData: (fieldType: string, count: number = 100) => {
+    const results = {
+      valid: [] as any[],
+      invalid: [] as any[],
+      edge: [] as any[]
+    };
+
+    for (let i = 0; i < count; i++) {
+      results.valid.push(testDataGenerator.generateRealisticData(fieldType, 'valid'));
+      if (i < count / 2) {
+        results.invalid.push(testDataGenerator.generateRealisticData(fieldType, 'invalid'));
+        results.edge.push(testDataGenerator.generateRealisticData(fieldType, 'edge'));
+      }
+    }
+
+    return results;
   }
 };
 
