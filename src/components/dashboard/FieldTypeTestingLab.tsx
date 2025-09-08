@@ -1156,6 +1156,8 @@ export function FieldTypeTestingLab() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
         <TabsContent value="testing" className="space-y-6">
           <Card>
             <CardHeader>
