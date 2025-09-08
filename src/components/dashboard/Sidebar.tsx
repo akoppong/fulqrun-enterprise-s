@@ -201,6 +201,24 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
       roles: ['rep', 'manager', 'admin'],
       category: 'advanced',
       isNew: true
+    },
+    {
+      id: 'comprehensive-testing' as DashboardView,
+      label: 'Test Suite',
+      icon: Shield,
+      description: 'Advanced validation test suite with security',
+      roles: ['rep', 'manager', 'admin'],
+      category: 'advanced',
+      isNew: true
+    },
+    {
+      id: 'validation-demo' as DashboardView,
+      label: 'Demo Testing',
+      icon: MagicWand,
+      description: 'Interactive validation testing demonstration',
+      roles: ['rep', 'manager', 'admin'],
+      category: 'advanced',
+      isNew: true
     }
   ];
 

@@ -3,6 +3,8 @@ import { AutoSaveTestRunner } from './AutoSaveTestRunner';
 import { AutoSaveTesting } from './AutoSaveTesting';
 import { AutoSaveInteractiveDemo } from './AutoSaveInteractiveDemo';
 import { FieldTypeTestingLab } from './FieldTypeTestingLab';
+import { ComprehensiveValidationTestSuite } from './ComprehensiveValidationTestSuite';
+import { ValidationTestingDemo } from './ValidationTestingDemo';
 import { useState, useEffect } from 'react';
 import { User, Opportunity, Contact, Company, KPITarget } from '@/lib/types';
 import { DemoDataGenerator } from '@/lib/demo-data';
@@ -29,7 +31,7 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
-export type DashboardView = 'pipeline' | 'opportunities' | 'contacts' | 'analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'autosave-demo' | 'autosave-test' | 'autosave-manual' | 'autosave-interactive' | 'field-testing';
+export type DashboardView = 'pipeline' | 'opportunities' | 'contacts' | 'analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'autosave-demo' | 'autosave-test' | 'autosave-manual' | 'autosave-interactive' | 'field-testing' | 'comprehensive-testing' | 'validation-demo';
 
 export function Dashboard({ user, onLogout }: DashboardProps) {
   const [currentView, setCurrentView] = useState<DashboardView>('pipeline');
@@ -178,6 +180,10 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
         return <AutoSaveInteractiveDemo />;
       case 'field-testing':
         return <FieldTypeTestingLab />;
+      case 'comprehensive-testing':
+        return <ComprehensiveValidationTestSuite />;
+      case 'validation-demo':
+        return <ValidationTestingDemo />;
       default:
         return <PipelineView />;
     }
