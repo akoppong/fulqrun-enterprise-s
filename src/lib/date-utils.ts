@@ -1,5 +1,5 @@
 import { format, parse, isValid, parseISO, startOfDay, endOfDay, addDays, subDays, differenceInDays, differenceInHours, differenceInMinutes, formatDistanceToNow, isAfter, isBefore, isSameDay } from 'date-fns';
-import { zonedTimeToUtc, utcToZonedTime, format as formatTz } from 'date-fns-tz';
+import { toZonedTime, fromZonedTime, format as formatTz } from 'date-fns-tz';
 
 /**
  * Supported date formats for parsing and validation
@@ -90,7 +90,7 @@ export function formatDate(
   if (!parsedDate || !isValid(parsedDate)) return '';
 
   if (timezone) {
-    const zonedDate = utcToZonedTime(parsedDate, timezone);
+    const zonedDate = toZonedTime(parsedDate, timezone);
     return formatTz(zonedDate, formatStr, { timeZone: timezone });
   }
 
@@ -105,7 +105,7 @@ export function toUTC(date: Date | string, timezone?: string): Date | null {
   if (!parsedDate || !isValid(parsedDate)) return null;
 
   const tz = timezone || getLocalTimezone();
-  return zonedTimeToUtc(parsedDate, tz);
+  return fromZonedTime(parsedDate, tz);
 }
 
 /**
@@ -116,7 +116,7 @@ export function fromUTC(date: Date | string, timezone?: string): Date | null {
   if (!parsedDate || !isValid(parsedDate)) return null;
 
   const tz = timezone || getLocalTimezone();
-  return utcToZonedTime(parsedDate, tz);
+  return toZonedTime(parsedDate, tz);
 }
 
 /**
@@ -127,9 +127,9 @@ export function getStartOfDay(date: Date | string, timezone?: string): Date | nu
   if (!parsedDate || !isValid(parsedDate)) return null;
 
   if (timezone) {
-    const zonedDate = utcToZonedTime(parsedDate, timezone);
+    const zonedDate = toZonedTime(parsedDate, timezone);
     const startOfDayZoned = startOfDay(zonedDate);
-    return zonedTimeToUtc(startOfDayZoned, timezone);
+    return fromZonedTime(startOfDayZoned, timezone);
   }
 
   return startOfDay(parsedDate);
@@ -143,9 +143,9 @@ export function getEndOfDay(date: Date | string, timezone?: string): Date | null
   if (!parsedDate || !isValid(parsedDate)) return null;
 
   if (timezone) {
-    const zonedDate = utcToZonedTime(parsedDate, timezone);
+    const zonedDate = toZonedTime(parsedDate, timezone);
     const endOfDayZoned = endOfDay(zonedDate);
-    return zonedTimeToUtc(endOfDayZoned, timezone);
+    return fromZonedTime(endOfDayZoned, timezone);
   }
 
   return endOfDay(parsedDate);
@@ -378,7 +378,7 @@ export function formatDuration(startDate: Date | string, endDate: Date | string)
 export function getTimezoneOffset(timezone: string, date?: Date): number {
   const targetDate = date || new Date();
   const utcDate = new Date(targetDate.toISOString());
-  const zonedDate = utcToZonedTime(utcDate, timezone);
+  const zonedDate = toZonedTime(utcDate, timezone);
   
   return (zonedDate.getTime() - utcDate.getTime()) / (1000 * 60 * 60);
 }
@@ -391,7 +391,7 @@ export function toISOStringWithTimezone(date: Date | string, timezone?: string):
   if (!parsedDate || !isValid(parsedDate)) return '';
 
   if (timezone) {
-    const zonedDate = utcToZonedTime(parsedDate, timezone);
+    const zonedDate = toZonedTime(parsedDate, timezone);
     return formatTz(zonedDate, DATE_FORMATS.DATETIME_ISO, { timeZone: timezone });
   }
 
