@@ -39,8 +39,7 @@ import {
   Share,
   MoreHorizontal,
   Grid,
-  HardDrives,
-  Users
+  HardDrives
 } from '@phosphor-icons/react';
 
 interface SimpleDashboardProps {
