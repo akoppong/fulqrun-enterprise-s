@@ -399,9 +399,6 @@ export function PipelineBuilder({ onSave }: PipelineBuilderProps) {
   );
 }
 
-  );
-}
-
 interface SortableStageCardProps {
   stage: PipelineStage;
   onEdit: (stage: PipelineStage) => void;
