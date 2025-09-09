@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ThemeProvider } from 'next-themes';
 import { User } from './lib/types';
 import { LoginForm } from './components/auth/LoginForm';
 import { Dashboard } from './components/dashboard/Dashboard';
@@ -16,14 +17,16 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {!currentUser ? (
-        <LoginForm onLogin={handleLogin} />
-      ) : (
-        <Dashboard user={currentUser} onLogout={handleLogout} />
-      )}
-      <Toaster />
-    </div>
+    <ThemeProvider attribute="class" defaultTheme="light">
+      <div className="min-h-screen bg-background">
+        {!currentUser ? (
+          <LoginForm onLogin={handleLogin} />
+        ) : (
+          <Dashboard user={currentUser} onLogout={handleLogout} />
+        )}
+        <Toaster />
+      </div>
+    </ThemeProvider>
   );
 }
 
