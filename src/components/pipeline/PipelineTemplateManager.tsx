@@ -22,6 +22,10 @@ import {
   TrendUp
 } from '@phosphor-icons/react';
 
+interface PipelineTemplateManagerProps {
+  onPipelineSelect?: (pipeline: PipelineConfiguration) => void;
+}
+
 export function PipelineTemplateManager({ onPipelineSelect }: PipelineTemplateManagerProps) {
   const {
     allPipelines,
@@ -34,6 +38,7 @@ export function PipelineTemplateManager({ onPipelineSelect }: PipelineTemplateMa
   } = usePipelineConfigurations();
   
   const [activeTab, setActiveTab] = useState('templates');
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   const handleCreatePipeline = (templateId?: string) => {
     if (templateId) {
@@ -138,7 +143,7 @@ export function PipelineTemplateManager({ onPipelineSelect }: PipelineTemplateMa
                         {stage.name}
                       </Badge>
                     ))}
-                    {pipeline.stages.length > 3 && (
+                    )}
                       <Badge variant="outline" className="text-xs">
                         +{pipeline.stages.length - 3} more
                       </Badge>
