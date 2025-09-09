@@ -11,6 +11,7 @@ import { EnhancedMEDDPICCQualification } from '../pipeline/EnhancedMEDDPICCQuali
 import { IntegrationHub } from './IntegrationHub';
 import { EnhancedLearningPlatform } from './EnhancedLearningPlatform';
 import { Dashboard } from './Dashboard';
+import { AIQualificationDashboard, AILeadScoring, AIDealRiskAssessment, AIQualificationDemo } from '../ai-qualification';
 import { 
   BarChart3, 
   Target, 
@@ -21,7 +22,11 @@ import {
   Workflow,
   CheckCircle,
   Plug,
-  GraduationCap
+  GraduationCap,
+  Brain,
+  Star,
+  Shield,
+  Bot
 } from '@phosphor-icons/react';
 
 interface SimpleDashboardProps {
@@ -68,20 +73,40 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
 
       <main className="p-3 sm:p-4 lg:p-6 max-w-7xl mx-auto">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 lg:space-y-6">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1 h-auto">
+          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 lg:grid-cols-10 gap-1 h-auto">
             <TabsTrigger value="overview" className="flex items-center gap-2 p-3">
               <Home size={16} />
               <span className="hidden sm:inline">Overview</span>
             </TabsTrigger>
+            <TabsTrigger value="ai-demo" className="flex items-center gap-2 p-3">
+              <Bot size={16} />
+              <span className="hidden sm:inline">AI Demo</span>
+              <span className="sm:hidden">Demo</span>
+            </TabsTrigger>
             <TabsTrigger value="pipeline-builder" className="flex items-center gap-2 p-3">
               <Workflow size={16} />
-              <span className="hidden sm:inline">Pipeline Builder</span>
-              <span className="sm:hidden">Builder</span>
+              <span className="hidden sm:inline">Pipeline</span>
+              <span className="sm:hidden">Pipe</span>
             </TabsTrigger>
             <TabsTrigger value="meddpicc" className="flex items-center gap-2 p-3">
               <CheckCircle size={16} />
               <span className="hidden sm:inline">MEDDPICC</span>
               <span className="sm:hidden">Qual</span>
+            </TabsTrigger>
+            <TabsTrigger value="ai-qualification" className="flex items-center gap-2 p-3">
+              <Brain size={16} />
+              <span className="hidden sm:inline">AI Insights</span>
+              <span className="sm:hidden">AI</span>
+            </TabsTrigger>
+            <TabsTrigger value="ai-scoring" className="flex items-center gap-2 p-3">
+              <Star size={16} />
+              <span className="hidden sm:inline">Lead Scoring</span>
+              <span className="sm:hidden">Score</span>
+            </TabsTrigger>
+            <TabsTrigger value="ai-risk" className="flex items-center gap-2 p-3">
+              <Shield size={16} />
+              <span className="hidden sm:inline">Risk Analysis</span>
+              <span className="sm:hidden">Risk</span>
             </TabsTrigger>
             <TabsTrigger value="integrations" className="flex items-center gap-2 p-3">
               <Plug size={16} />
@@ -169,6 +194,19 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                     <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow" 
+                          onClick={() => setActiveTab('ai-demo')}>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-emerald-100 rounded-lg">
+                          <Bot size={20} className="text-emerald-600" />
+                        </div>
+                        <h3 className="font-semibold">AI Demo (New!)</h3>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Experience AI-powered qualification system with live demo
+                      </p>
+                    </Card>
+
+                    <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow" 
                           onClick={() => setActiveTab('pipeline-builder')}>
                       <div className="flex items-center gap-3 mb-2">
                         <div className="p-2 bg-blue-100 rounded-lg">
@@ -179,6 +217,7 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
                       <p className="text-sm text-muted-foreground">
                         Design custom sales pipelines with drag-and-drop automation
                       </p>
+                    </Card>
                     </Card>
 
                     <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow" 
@@ -191,6 +230,45 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
                       </div>
                       <p className="text-sm text-muted-foreground">
                         AI-powered deal qualification with intelligent insights
+                      </p>
+                    </Card>
+
+                    <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow" 
+                          onClick={() => setActiveTab('ai-qualification')}>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-emerald-100 rounded-lg">
+                          <Brain size={20} className="text-emerald-600" />
+                        </div>
+                        <h3 className="font-semibold">AI Qualification</h3>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Intelligent MEDDPICC analysis with AI insights
+                      </p>
+                    </Card>
+
+                    <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow" 
+                          onClick={() => setActiveTab('ai-scoring')}>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-orange-100 rounded-lg">
+                          <Star size={20} className="text-orange-600" />
+                        </div>
+                        <h3 className="font-semibold">AI Lead Scoring</h3>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Predictive lead scoring and prioritization
+                      </p>
+                    </Card>
+
+                    <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow" 
+                          onClick={() => setActiveTab('ai-risk')}>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-red-100 rounded-lg">
+                          <Shield size={20} className="text-red-600" />
+                        </div>
+                        <h3 className="font-semibold">Deal Risk Analysis</h3>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        AI-powered risk assessment and mitigation
                       </p>
                     </Card>
 
@@ -250,12 +328,28 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
             </Card>
           </TabsContent>
 
+          <TabsContent value="ai-demo" className="space-y-4 lg:space-y-6">
+            <AIQualificationDemo />
+          </TabsContent>
+
           <TabsContent value="pipeline-builder" className="space-y-4 lg:space-y-6">
             <AdvancedPipelineBuilder />
           </TabsContent>
 
           <TabsContent value="meddpicc" className="space-y-4 lg:space-y-6">
             <EnhancedMEDDPICCQualification opportunityId="demo-opp-1" />
+          </TabsContent>
+
+          <TabsContent value="ai-qualification" className="space-y-4 lg:space-y-6">
+            <AIQualificationDashboard />
+          </TabsContent>
+
+          <TabsContent value="ai-scoring" className="space-y-4 lg:space-y-6">
+            <AILeadScoring />
+          </TabsContent>
+
+          <TabsContent value="ai-risk" className="space-y-4 lg:space-y-6">
+            <AIDealRiskAssessment />
           </TabsContent>
 
           <TabsContent value="integrations" className="space-y-4 lg:space-y-6">

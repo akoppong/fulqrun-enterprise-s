@@ -11,7 +11,13 @@ import {
   Target,
   BarChart3,
   Building2,
-  X
+  X,
+  Brain,
+  Star,
+  Shield,
+  CheckCircle,
+  Workflow,
+  Bot
 } from '@phosphor-icons/react';
 
 interface MobileNavigationProps {
@@ -32,10 +38,45 @@ export function MobileNavigation({ activeTab, onTabChange, userName, userRole }:
       description: 'Dashboard overview and quick stats'
     },
     {
-      id: 'pipeline',
-      label: 'Advanced Pipeline',
-      icon: Target,
-      description: 'Drag-and-drop deal management with automation',
+      id: 'ai-demo',
+      label: 'AI Demo',
+      icon: Bot,
+      description: 'Interactive AI qualification system demo',
+      isNew: true
+    },
+    {
+      id: 'pipeline-builder',
+      label: 'Pipeline Builder',
+      icon: Workflow,
+      description: 'Design custom sales pipelines with automation',
+      isNew: true
+    },
+    {
+      id: 'meddpicc',
+      label: 'MEDDPICC',
+      icon: CheckCircle,
+      description: 'Enhanced deal qualification framework',
+      isNew: true
+    },
+    {
+      id: 'ai-qualification',
+      label: 'AI Qualification',
+      icon: Brain,
+      description: 'Intelligent MEDDPICC analysis with AI insights',
+      isNew: true
+    },
+    {
+      id: 'ai-scoring',
+      label: 'AI Lead Scoring',
+      icon: Star,
+      description: 'Predictive lead scoring and prioritization',
+      isNew: true
+    },
+    {
+      id: 'ai-risk',
+      label: 'Deal Risk Analysis',
+      icon: Shield,
+      description: 'AI-powered risk assessment and mitigation',
       isNew: true
     },
     {
