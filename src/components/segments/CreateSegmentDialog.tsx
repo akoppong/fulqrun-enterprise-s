@@ -1,17 +1,18 @@
 import { useState, useMemo } from 'react';
 import { CustomerSegment } from '@/lib/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { ValidatedInput } from '@/components/ui/validated-input';
+import { ValidatedForm } from '@/components/ui/validated-form';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { InputField, TextareaField, SelectField, FormSection, FormGrid } from '@/components/ui/form-fields';
-import { FormValidator, segmentValidationSchema } from '@/lib/validation';
-import { Plus, X, AlertTriangle } from '@phosphor-icons/react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { segmentValidationSchema } from '@/lib/validation';
+import { errorHandler } from '@/lib/error-handling';
+import { Plus, X, AlertTriangle, Info } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 
 interface CreateSegmentDialogProps {
@@ -42,7 +43,10 @@ const GEOGRAPHIES = [
 ];
 
 export function CreateSegmentDialog({ isOpen, onClose, onSubmit }: CreateSegmentDialogProps) {
-  const [formData, setFormData] = useState({
+  const [currentTab, setCurrentTab] = useState('basic');
+  const [newItem, setNewItem] = useState({ type: '', value: '' });
+
+  const initialFormData = {
     name: '',
     description: '',
     color: SEGMENT_COLORS[0],
@@ -76,126 +80,47 @@ export function CreateSegmentDialog({ isOpen, onClose, onSubmit }: CreateSegment
       contentLibrary: [],
       kpis: [] as string[]
     }
-  });
-
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
-  const [currentTab, setCurrentTab] = useState('basic');
-  const [newItem, setNewItem] = useState({ type: '', value: '' });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const validator = useMemo(() => new FormValidator(segmentValidationSchema), []);
-
-  // Validate specific field
-  const validateField = (field: string, value: any) => {
-    const fieldSchema = { [field]: segmentValidationSchema[field] };
-    const fieldValidator = new FormValidator(fieldSchema);
-    const result = fieldValidator.validate(formData);
-    
-    return result.errors.find(error => error.field === field)?.message || null;
   };
 
-  // Handle field changes with validation
-  const handleFieldChange = (field: string, value: any) => {
-    const keys = field.split('.');
-    let newFormData = { ...formData };
-    
-    // Handle nested updates
-    if (keys.length === 1) {
-      newFormData[keys[0] as keyof typeof formData] = value as any;
-    } else if (keys.length === 2) {
-      newFormData[keys[0] as keyof typeof formData] = {
-        ...(newFormData[keys[0] as keyof typeof formData] as any),
-        [keys[1]]: value
-      } as any;
-    } else if (keys.length === 3) {
-      newFormData[keys[0] as keyof typeof formData] = {
-        ...(newFormData[keys[0] as keyof typeof formData] as any),
-        [keys[1]]: {
-          ...(newFormData[keys[0] as keyof typeof formData] as any)[keys[1]],
-          [keys[2]]: value
-        }
-      } as any;
-    }
-
-    setFormData(newFormData);
-    setTouchedFields(prev => ({ ...prev, [field]: true }));
-
-    // Validate field if it has been touched
-    if (touchedFields[field]) {
-      const error = validateField(field, value);
-      setValidationErrors(prev => ({
-        ...prev,
-        [field]: error || ''
-      }));
-    }
-  };
-
-  // Handle field blur events
-  const handleFieldBlur = (field: string) => {
-    setTouchedFields(prev => ({ ...prev, [field]: true }));
-    const value = field.split('.').reduce((obj, key) => obj?.[key], formData);
-    const error = validateField(field, value);
-    setValidationErrors(prev => ({
-      ...prev,
-      [field]: error || ''
-    }));
-  };
-
-  // Check if current tab has errors
-  const getTabErrors = (tab: string) => {
-    const tabFields: Record<string, string[]> = {
-      basic: ['name', 'description'],
-      criteria: ['criteria.revenue.min', 'criteria.revenue.max'],
-      characteristics: ['characteristics.avgDealSize', 'characteristics.avgSalesCycle'],
-      strategy: ['strategy.touchpoints']
-    };
-
-    const fields = tabFields[tab] || [];
-    return fields.some(field => validationErrors[field]);
-  };
-
-  const hasFormErrors = () => {
-    const result = validator.validate(formData);
-    return !result.isValid;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validate entire form
-    const result = validator.validate(formData);
-    
-    if (!result.isValid) {
-      // Set all validation errors
-      const errorMap: Record<string, string> = {};
-      result.errors.forEach(error => {
-        errorMap[error.field] = error.message;
-      });
-      setValidationErrors(errorMap);
-
-      // Mark all fields as touched
-      const touchedMap: Record<string, boolean> = {};
-      Object.keys(segmentValidationSchema).forEach(field => {
-        touchedMap[field] = true;
-      });
-      setTouchedFields(touchedMap);
-
-      // Find first tab with errors and switch to it
-      const tabsWithErrors = ['basic', 'criteria', 'characteristics', 'strategy']
-        .filter(tab => getTabErrors(tab));
-      
-      if (tabsWithErrors.length > 0) {
-        setCurrentTab(tabsWithErrors[0]);
+  const handleFormSubmit = async (data: Record<string, any>, { setSubmitting, setError }: any) => {
+    try {
+      // Additional business logic validation
+      if (data.criteria?.revenue?.min && data.criteria?.revenue?.max && 
+          data.criteria.revenue.min >= data.criteria.revenue.max) {
+        setError('Minimum revenue must be less than maximum revenue');
+        return;
       }
 
-      toast.error(`Please fix ${result.errors.length} validation error${result.errors.length > 1 ? 's' : ''} before submitting`);
-      return;
-    }
+      if (data.criteria?.companySize?.min && data.criteria?.companySize?.max && 
+          data.criteria.companySize.min >= data.criteria.companySize.max) {
+        setError('Minimum company size must be less than maximum company size');
+        return;
+      }
 
-    // Additional business logic validation
-    if (formData.criteria.revenue.min && formData.criteria.revenue.max && 
-        formData.criteria.revenue.min >= formData.criteria.revenue.max) {
+      // Prepare segment data
+      const segment: Omit<CustomerSegment, 'id' | 'createdBy' | 'createdAt' | 'updatedAt'> = {
+        ...data,
+        // Ensure arrays are properly formatted
+        criteria: {
+          ...data.criteria,
+          industry: Array.isArray(data.criteria?.industry) ? data.criteria.industry : [],
+          geography: Array.isArray(data.criteria?.geography) ? data.criteria.geography : [],
+          businessModel: Array.isArray(data.criteria?.businessModel) ? data.criteria.businessModel : []
+        }
+      };
+
+      await onSubmit(segment);
+      
+      toast.success('Customer segment created successfully!', {
+        description: `"${data.name}" is now ready for customer assignment.`
+      });
+      
+      onClose();
+    } catch (error) {
+      errorHandler.handleError(error as Error, 'medium', { context: 'CreateSegment' });
+      setError('Failed to create segment. Please try again.');
+    }
+  };
       setValidationErrors(prev => ({
         ...prev,
         'criteria.revenue.min': 'Minimum revenue must be less than maximum revenue',
