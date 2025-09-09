@@ -90,7 +90,7 @@ export function PipelineAnalyticsDashboard() {
     stage: bottleneck.stageName,
     impact: bottleneck.impact,
     severity: bottleneck.severity,
-    deals: bottleneck.affectedDeals
+    opportunities: bottleneck.affectedDeals
   }));
 
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
@@ -144,7 +144,7 @@ export function PipelineAnalyticsDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Active Deals</p>
+                <p className="text-sm text-muted-foreground">Active Opportunities</p>
                 <p className="text-3xl font-bold">{analytics.totalOpportunities}</p>
                 <div className="flex items-center gap-1 mt-1">
                   <TrendUp size={16} className="text-green-600" />
@@ -196,9 +196,10 @@ export function PipelineAnalyticsDashboard() {
       </div>
 
       <Tabs defaultValue="conversion" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="conversion">Conversion Funnel</TabsTrigger>
           <TabsTrigger value="velocity">Stage Velocity</TabsTrigger>
+          <TabsTrigger value="enterprise">Enterprise Metrics</TabsTrigger>
           <TabsTrigger value="bottlenecks">Bottlenecks</TabsTrigger>
           <TabsTrigger value="trends">Trends</TabsTrigger>
           <TabsTrigger value="forecast">Forecast</TabsTrigger>
@@ -219,7 +220,7 @@ export function PipelineAnalyticsDashboard() {
                     <YAxis dataKey="name" type="category" width={100} />
                     <Tooltip 
                       formatter={(value: any, name: string) => {
-                        if (name === 'opportunities') return [value, 'Deals'];
+                        if (name === 'opportunities') return [value, 'Opportunities'];
                         if (name === 'value') return [formatCurrency(value), 'Value'];
                         return [value, name];
                       }}
@@ -273,9 +274,9 @@ export function PipelineAnalyticsDashboard() {
                   <thead>
                     <tr className="border-b bg-muted/30">
                       <th className="text-left p-4 font-semibold">Stage</th>
-                      <th className="text-right p-4 font-semibold">Active Deals</th>
+                      <th className="text-right p-4 font-semibold">Active Opportunities</th>
                       <th className="text-right p-4 font-semibold">Total Value</th>
-                      <th className="text-right p-4 font-semibold">Avg. Deal Size</th>
+                      <th className="text-right p-4 font-semibold">Avg. Opportunity Size</th>
                       <th className="text-center p-4 font-semibold">Conversion Rate</th>
                       <th className="text-right p-4 font-semibold">Avg. Time</th>
                       <th className="text-center p-4 font-semibold">Velocity Trend</th>
@@ -346,7 +347,7 @@ export function PipelineAnalyticsDashboard() {
             <CardHeader>
               <CardTitle>Stage Velocity Analysis</CardTitle>
               <p className="text-sm text-muted-foreground">
-                Time spent in each stage compared to targets • Lower is better for faster deals
+                Time spent in each stage compared to targets • Lower is better for faster opportunities
               </p>
             </CardHeader>
             <CardContent>
@@ -385,6 +386,363 @@ export function PipelineAnalyticsDashboard() {
                     {Math.round(((velocityData.reduce((acc, curr) => acc + curr.velocity, 0) / velocityData.reduce((acc, curr) => acc + curr.target, 0)) - 1) * 100)}%
                   </p>
                   <p className="text-sm text-muted-foreground">vs. Target</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="enterprise" className="space-y-6">
+          {/* Enterprise B2B Sales Metrics */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">MEDDPICC Qualification</CardTitle>
+                <p className="text-sm text-muted-foreground">Enterprise deal qualification scores</p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Metrics Identified</span>
+                    <div className="flex items-center gap-2">
+                      <Progress value={78} className="w-16 h-2" />
+                      <span className="text-sm font-medium">78%</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Economic Buyer Engaged</span>
+                    <div className="flex items-center gap-2">
+                      <Progress value={65} className="w-16 h-2" />
+                      <span className="text-sm font-medium">65%</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Decision Criteria Known</span>
+                    <div className="flex items-center gap-2">
+                      <Progress value={72} className="w-16 h-2" />
+                      <span className="text-sm font-medium">72%</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Decision Process Mapped</span>
+                    <div className="flex items-center gap-2">
+                      <Progress value={58} className="w-16 h-2" />
+                      <span className="text-sm font-medium">58%</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Paper Process Identified</span>
+                    <div className="flex items-center gap-2">
+                      <Progress value={42} className="w-16 h-2" />
+                      <span className="text-sm font-medium">42%</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Implicate the Pain</span>
+                    <div className="flex items-center gap-2">
+                      <Progress value={85} className="w-16 h-2" />
+                      <span className="text-sm font-medium">85%</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Champion Developed</span>
+                    <div className="flex items-center gap-2">
+                      <Progress value={69} className="w-16 h-2" />
+                      <span className="text-sm font-medium">69%</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="pt-3 mt-4 border-t">
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold">Overall MEDDPICC Score</span>
+                    <div className="flex items-center gap-2">
+                      <div className="text-2xl font-bold text-blue-600">67%</div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Enterprise Deal Complexity</CardTitle>
+                <p className="text-sm text-muted-foreground">Multi-stakeholder engagement analysis</p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-blue-600 mb-1">8.2</div>
+                    <p className="text-xs text-muted-foreground">Avg. Stakeholders per Deal</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-green-600 mb-1">4.1</div>
+                    <p className="text-xs text-muted-foreground">Avg. Decision Makers</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-orange-600 mb-1">12</div>
+                    <p className="text-xs text-muted-foreground">Avg. Touchpoints</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-purple-600 mb-1">67%</div>
+                    <p className="text-xs text-muted-foreground">Multi-dept Deals</p>
+                  </div>
+                </div>
+                <div className="space-y-3 pt-4 border-t">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">IT Decision Makers</span>
+                    <span className="text-sm font-medium">89%</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Financial Stakeholders</span>
+                    <span className="text-sm font-medium">76%</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Executive Sponsors</span>
+                    <span className="text-sm font-medium">52%</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">End User Champions</span>
+                    <span className="text-sm font-medium">81%</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Enterprise Risk Factors</CardTitle>
+                <p className="text-sm text-muted-foreground">Key risk indicators for large deals</p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-3 h-3 rounded-full bg-red-500 mt-1.5 flex-shrink-0"></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">Budget Authority Missing</p>
+                      <p className="text-xs text-muted-foreground">23% of opportunities lack confirmed budget holder</p>
+                    </div>
+                    <Badge variant="destructive" className="text-xs">High</Badge>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="w-3 h-3 rounded-full bg-orange-500 mt-1.5 flex-shrink-0"></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">Long Decision Timeline</p>
+                      <p className="text-xs text-muted-foreground">156 day avg cycle vs 90 day target</p>
+                    </div>
+                    <Badge variant="secondary" className="text-xs">Medium</Badge>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="w-3 h-3 rounded-full bg-yellow-500 mt-1.5 flex-shrink-0"></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">Competitive Pressure</p>
+                      <p className="text-xs text-muted-foreground">78% face 2+ competitors in evaluation</p>
+                    </div>
+                    <Badge variant="secondary" className="text-xs">Medium</Badge>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="w-3 h-3 rounded-full bg-blue-500 mt-1.5 flex-shrink-0"></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">Technical Complexity</p>
+                      <p className="text-xs text-muted-foreground">Custom integrations required for 45%</p>
+                    </div>
+                    <Badge variant="outline" className="text-xs">Low</Badge>
+                  </div>
+                </div>
+                
+                <div className="pt-4 mt-4 border-t">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Overall Risk Score</span>
+                    <div className="flex items-center gap-2">
+                      <Progress value={68} className="w-16 h-2" />
+                      <span className="text-sm font-medium text-orange-600">Medium</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Enterprise Stage Performance Breakdown */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Enterprise B2B Sales Stage Analysis</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Detailed performance metrics for complex enterprise sales cycles
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {/* Stage Performance Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Prospecting & Qualification */}
+                  <div className="border rounded-lg p-5 bg-gradient-to-br from-blue-50 to-blue-100/50">
+                    <h4 className="font-semibold text-lg mb-4 text-blue-900">Prospecting & Qualification</h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-sm">Active Opportunities</span>
+                        <span className="font-medium text-blue-700">45</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Total Value</span>
+                        <span className="font-medium text-blue-700">${formatCurrency(12850000).replace('$', '')}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Avg. Time in Stage</span>
+                        <span className="font-medium text-blue-700">18 days</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Qualification Score</span>
+                        <div className="flex items-center gap-2">
+                          <Progress value={72} className="w-12 h-2" />
+                          <span className="text-sm font-medium text-blue-700">72%</span>
+                        </div>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Next Stage Rate</span>
+                        <span className="font-medium text-green-600">68%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Needs Analysis & Demo */}
+                  <div className="border rounded-lg p-5 bg-gradient-to-br from-green-50 to-green-100/50">
+                    <h4 className="font-semibold text-lg mb-4 text-green-900">Needs Analysis & Demo</h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-sm">Active Opportunities</span>
+                        <span className="font-medium text-green-700">31</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Total Value</span>
+                        <span className="font-medium text-green-700">${formatCurrency(18420000).replace('$', '')}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Avg. Time in Stage</span>
+                        <span className="font-medium text-green-700">32 days</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Demo Completion</span>
+                        <div className="flex items-center gap-2">
+                          <Progress value={89} className="w-12 h-2" />
+                          <span className="text-sm font-medium text-green-700">89%</span>
+                        </div>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Technical Win Rate</span>
+                        <span className="font-medium text-green-600">84%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Proposal & Negotiation */}
+                  <div className="border rounded-lg p-5 bg-gradient-to-br from-orange-50 to-orange-100/50">
+                    <h4 className="font-semibold text-lg mb-4 text-orange-900">Proposal & Negotiation</h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-sm">Active Opportunities</span>
+                        <span className="font-medium text-orange-700">18</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Total Value</span>
+                        <span className="font-medium text-orange-700">${formatCurrency(22750000).replace('$', '')}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Avg. Time in Stage</span>
+                        <span className="font-medium text-orange-700">45 days</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Proposal Response</span>
+                        <div className="flex items-center gap-2">
+                          <Progress value={76} className="w-12 h-2" />
+                          <span className="text-sm font-medium text-orange-700">76%</span>
+                        </div>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Close Probability</span>
+                        <span className="font-medium text-green-600">71%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Enterprise KPIs Summary Table */}
+                <div className="border rounded-lg overflow-hidden">
+                  <div className="bg-muted/30 px-6 py-3 border-b">
+                    <h4 className="font-semibold">Enterprise Sales Performance KPIs</h4>
+                  </div>
+                  <div className="p-0">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b bg-muted/20">
+                          <th className="text-left p-4 font-medium">Metric</th>
+                          <th className="text-center p-4 font-medium">Current</th>
+                          <th className="text-center p-4 font-medium">Target</th>
+                          <th className="text-center p-4 font-medium">Performance</th>
+                          <th className="text-center p-4 font-medium">Trend</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="border-b hover:bg-muted/20">
+                          <td className="p-4 font-medium">Average Deal Size</td>
+                          <td className="text-center p-4">{formatCurrency(485000)}</td>
+                          <td className="text-center p-4">{formatCurrency(400000)}</td>
+                          <td className="text-center p-4">
+                            <Badge variant="default" className="bg-green-100 text-green-800">+21%</Badge>
+                          </td>
+                          <td className="text-center p-4">
+                            <TrendUp size={16} className="text-green-600 mx-auto" />
+                          </td>
+                        </tr>
+                        <tr className="border-b hover:bg-muted/20">
+                          <td className="p-4 font-medium">Enterprise Win Rate</td>
+                          <td className="text-center p-4">31%</td>
+                          <td className="text-center p-4">35%</td>
+                          <td className="text-center p-4">
+                            <Badge variant="secondary" className="bg-orange-100 text-orange-800">-11%</Badge>
+                          </td>
+                          <td className="text-center p-4">
+                            <TrendDown size={16} className="text-orange-600 mx-auto" />
+                          </td>
+                        </tr>
+                        <tr className="border-b hover:bg-muted/20">
+                          <td className="p-4 font-medium">Sales Cycle Length</td>
+                          <td className="text-center p-4">156 days</td>
+                          <td className="text-center p-4">120 days</td>
+                          <td className="text-center p-4">
+                            <Badge variant="secondary" className="bg-red-100 text-red-800">+30%</Badge>
+                          </td>
+                          <td className="text-center p-4">
+                            <TrendUp size={16} className="text-red-600 mx-auto" />
+                          </td>
+                        </tr>
+                        <tr className="border-b hover:bg-muted/20">
+                          <td className="p-4 font-medium">Pipeline Velocity</td>
+                          <td className="text-center p-4">{formatCurrency(3100)}/day</td>
+                          <td className="text-center p-4">{formatCurrency(4200)}/day</td>
+                          <td className="text-center p-4">
+                            <Badge variant="secondary" className="bg-orange-100 text-orange-800">-26%</Badge>
+                          </td>
+                          <td className="text-center p-4">
+                            <Activity size={16} className="text-orange-600 mx-auto" />
+                          </td>
+                        </tr>
+                        <tr className="hover:bg-muted/20">
+                          <td className="p-4 font-medium">MEDDPICC Compliance</td>
+                          <td className="text-center p-4">67%</td>
+                          <td className="text-center p-4">80%</td>
+                          <td className="text-center p-4">
+                            <Badge variant="secondary" className="bg-orange-100 text-orange-800">-16%</Badge>
+                          </td>
+                          <td className="text-center p-4">
+                            <TrendUp size={16} className="text-green-600 mx-auto" />
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -434,7 +792,7 @@ export function PipelineAnalyticsDashboard() {
                           </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground mb-3">
-                          <span className="font-medium">{bottleneck.affectedDeals}</span> deals affected • 
+                          <span className="font-medium">{bottleneck.affectedDeals}</span> opportunities affected • 
                           Impact: <span className="font-medium">{Math.round(bottleneck.impact)}</span>
                         </p>
                         <div className="space-y-1">
