@@ -239,14 +239,10 @@ class ErrorHandler {
 
   private showDetailedValidationErrors(errors: ValidationErrorDetail[]): void {
     const errorList = errors.map(error => `• ${error.field}: ${error.message}`).join('\n');
+    const description = `Please fix the following issues:\n\n${errorList}`;
     
     toast.error('Validation Errors', {
-      description: (
-        <div className="whitespace-pre-line text-sm">
-          <div className="font-medium mb-2">Please fix the following issues:</div>
-          <div className="text-xs opacity-90">{errorList}</div>
-        </div>
-      ),
+      description,
       duration: 10000
     });
   }

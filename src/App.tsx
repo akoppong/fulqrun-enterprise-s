@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ThemeProvider } from 'next-themes';
 import { User } from './lib/types';
-import { LoginForm } from './components/auth/LoginForm';
+import { SimpleLoginForm } from './components/auth/SimpleLoginForm';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { ValidationDemo } from './components/demo/ValidationDemo';
 import { Toaster } from './components/ui/sonner';
@@ -28,14 +28,14 @@ function App() {
     }
     
     if (!currentUser) {
-      return <LoginForm onLogin={handleLogin} />;
+      return <SimpleLoginForm onLogin={handleLogin} />;
     }
     
     return <Dashboard user={currentUser} onLogout={handleLogout} />;
   };
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="light">
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
       <div className="min-h-screen bg-background">
         {/* Demo Navigation */}
         {currentView !== 'login' && (
