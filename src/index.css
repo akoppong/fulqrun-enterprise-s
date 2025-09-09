@@ -2,7 +2,286 @@
 @import "tw-animate-css";
 @import './styles/dashboard.css';
 
-/* React Grid Layout Styles */
+/* Enhanced Layout System for Universal Sidebar */
+
+/* Main layout container */
+.main-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main-content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* Allow flex item to shrink */
+  transition: margin-left 300ms ease-in-out;
+}
+
+/* Sidebar transitions */
+.sidebar-transition {
+  transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Content area responsive padding */
+.content-area-padding {
+  padding: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .content-area-padding {
+    padding: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .content-area-padding {
+    padding: 2.5rem;
+  }
+}
+
+/* Sub-navigation improvements */
+.sub-navigation-bar {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgb(var(--border) / 0.5);
+}
+
+/* Enhanced button hover states */
+.nav-button-enhanced {
+  position: relative;
+  overflow: hidden;
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-button-enhanced::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 500ms ease;
+}
+
+.nav-button-enhanced:hover::before {
+  left: 100%;
+}
+
+.nav-button-enhanced:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgb(var(--primary) / 0.15);
+}
+
+.nav-button-enhanced:active {
+  transform: translateY(0);
+}
+
+/* Improved card hover effects */
+.interactive-card {
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  border: 1px solid rgb(var(--border));
+}
+
+.interactive-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgb(0 0 0 / 0.1);
+  border-color: rgb(var(--primary) / 0.3);
+}
+
+.interactive-card:active {
+  transform: translateY(0);
+}
+
+/* Enhanced focus states */
+.focus-enhanced:focus-visible {
+  outline: 2px solid rgb(var(--ring));
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgb(var(--ring) / 0.1);
+}
+
+/* Improved loading states */
+.content-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Badge enhancements */
+.enhanced-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 500;
+  letter-spacing: 0.025em;
+  border-radius: calc(var(--radius) * 0.75);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
+  backdrop-filter: blur(8px);
+}
+
+/* Sidebar collapsible enhancements */
+.sidebar-collapsed .sidebar-item-text {
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: all 200ms ease;
+}
+
+.sidebar-expanded .sidebar-item-text {
+  opacity: 1;
+  transform: translateX(0);
+  transition: all 200ms ease 100ms;
+}
+
+/* Sub-navigation scroll enhancements */
+.sub-nav-scroll {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.sub-nav-scroll::-webkit-scrollbar {
+  display: none; /* WebKit */
+}
+
+/* Content area scroll improvements */
+.content-scroll-area {
+  height: 100%;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+
+.content-scroll-area::-webkit-scrollbar {
+  width: 8px;
+}
+
+.content-scroll-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.content-scroll-area::-webkit-scrollbar-thumb {
+  background-color: rgb(var(--border));
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.content-scroll-area::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(var(--muted-foreground) / 0.5);
+}
+
+/* Enhanced animations for page transitions */
+.page-transition-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.page-transition-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms ease, transform 300ms ease;
+}
+
+.page-transition-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.page-transition-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+
+/* Header enhancements */
+.app-header {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgb(var(--border) / 0.5);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+/* Breadcrumb enhancements */
+.breadcrumb-enhanced {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgb(var(--border) / 0.3);
+  margin-bottom: 1rem;
+}
+
+.breadcrumb-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: rgb(var(--muted-foreground));
+  font-size: 0.875rem;
+  transition: color 150ms ease;
+}
+
+.breadcrumb-item:hover:not(.breadcrumb-current) {
+  color: rgb(var(--foreground));
+  cursor: pointer;
+}
+
+.breadcrumb-current {
+  color: rgb(var(--foreground));
+  font-weight: 500;
+}
+
+.breadcrumb-separator {
+  color: rgb(var(--muted-foreground) / 0.5);
+  margin: 0 0.5rem;
+}
+
+/* Action button groups */
+.action-button-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: rgb(var(--muted) / 0.5);
+  border-radius: calc(var(--radius) * 1.5);
+  backdrop-filter: blur(8px);
+}
+
+/* Mobile-specific enhancements */
+@media (max-width: 1024px) {
+  .main-content-area {
+    margin-left: 0 !important;
+  }
+  
+  .sub-navigation-bar {
+    padding: 1rem;
+  }
+  
+  .content-area-padding {
+    padding: 1rem;
+  }
+  
+  .action-button-group {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .app-header {
+    background: rgba(0, 0, 0, 0.95);
+  }
+  
+  .sub-navigation-bar {
+    background: rgba(0, 0, 0, 0.95);
+  }
+}
 .react-grid-layout {
   position: relative;
 }

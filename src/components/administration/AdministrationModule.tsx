@@ -48,10 +48,11 @@ import { SystemMonitoring } from './SystemMonitoring';
 interface AdministrationModuleProps {
   userRole: string;
   isOwner?: boolean;
+  initialView?: string;
 }
 
-export function AdministrationModule({ userRole, isOwner = false }: AdministrationModuleProps) {
-  const [activeSection, setActiveSection] = useState('overview');
+export function AdministrationModule({ userRole, isOwner = false, initialView = 'overview' }: AdministrationModuleProps) {
+  const [activeSection, setActiveSection] = useState(initialView);
 
   // Check if user has admin access
   const hasAdminAccess = isOwner || userRole === 'admin';

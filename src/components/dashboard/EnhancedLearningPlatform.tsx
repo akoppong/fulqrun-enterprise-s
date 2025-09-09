@@ -322,12 +322,12 @@ const defaultCourses: Course[] = [
   }
 ];
 
-export function EnhancedLearningPlatform() {
+export function EnhancedLearningPlatform({ initialTab = 'dashboard' }: { initialTab?: string } = {}) {
   const [courses, setCourses] = useKV<Course[]>('learning-courses', defaultCourses);
   const [userProgress, setUserProgress] = useKV<UserProgress[]>('user-progress', []);
   const [certifications, setCertifications] = useKV<Certification[]>('certifications', []);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedLevel, setSelectedLevel] = useState<string>('all');

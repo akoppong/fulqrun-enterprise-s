@@ -3,7 +3,9 @@ import { User } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { UniversalSidebar } from '../navigation/UniversalSidebar';
+import { SubNavigation } from '../navigation/SubNavigation';
+import { ContentArea, ContentContainer, ContentGrid, ContentCard, EmptyState } from '../layout/ContentArea';
 import { MobileNavigation } from '../navigation/MobileNavigation';
 import { EnhancedMEDDPICCQualification } from '../pipeline/EnhancedMEDDPICCQualification';
 import { EnhancedLearningPlatform } from './EnhancedLearningPlatform';
@@ -25,7 +27,14 @@ import {
   Star,
   Shield,
   Bot,
-  Wrench
+  Wrench,
+  Menu,
+  Plus,
+  RefreshCw,
+  Filter,
+  Download,
+  Share,
+  MoreHorizontal
 } from '@phosphor-icons/react';
 
 interface SimpleDashboardProps {
@@ -35,336 +44,509 @@ interface SimpleDashboardProps {
 
 export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
   const [activeTab, setActiveTab] = useState('overview');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // Navigation mappings for sub-items
+  const getSubNavigationItems = (mainTab: string) => {
+    const subNavMappings: Record<string, any[]> = {
+      'full-crm': [
+        { id: 'pipeline', label: 'Pipeline', description: 'Sales pipeline overview' },
+        { id: 'opportunities', label: 'Opportunities', description: 'Deal management' },
+        { id: 'contacts', label: 'Contacts', description: 'Contact management' },
+        { id: 'companies', label: 'Companies', description: 'Company profiles' },
+        { id: 'analytics', label: 'Analytics', description: 'Reports & insights' },
+      ],
+      'meddpicc': [
+        { id: 'meddpicc-form', label: 'Qualification Form', description: 'Complete assessment' },
+        { id: 'meddpicc-insights', label: 'AI Insights', description: 'Intelligent tips', isNew: true },
+      ],
+      'ai-qualification': [
+        { id: 'qualification-dashboard', label: 'Dashboard', description: 'AI-powered overview' },
+        { id: 'insights-engine', label: 'Insights Engine', description: 'Deep AI analysis' },
+      ],
+      'ai-scoring': [
+        { id: 'lead-scores', label: 'Lead Scores', description: 'AI-generated rankings' },
+        { id: 'scoring-model', label: 'Scoring Model', description: 'Configure parameters' },
+      ],
+      'ai-risk': [
+        { id: 'risk-dashboard', label: 'Risk Dashboard', description: 'Risk overview' },
+        { id: 'mitigation-plans', label: 'Mitigation Plans', description: 'Risk strategies' },
+      ],
+      'learning': [
+        { id: 'courses', label: 'Training Courses', description: 'PEAK & MEDDPICC training' },
+        { id: 'certifications', label: 'Certifications', description: 'Professional certs' },
+        { id: 'coaching', label: 'AI Coaching', description: 'Personalized coaching' },
+      ],
+      'administration': [
+        { id: 'pipeline-builder', label: 'Pipeline Builder', description: 'Custom design', isNew: true },
+        { id: 'integration-hub', label: 'Integration Hub', description: 'Connections', isNew: true },
+        { id: 'user-management', label: 'User Management', description: 'User roles' },
+        { id: 'system-settings', label: 'System Settings', description: 'Platform config' },
+      ],
+    };
+    
+    return subNavMappings[mainTab] || [];
+  };
+
+  const currentSubItems = getSubNavigationItems(activeTab);
+  const [activeSubTab, setActiveSubTab] = useState(
+    currentSubItems.length > 0 ? currentSubItems[0].id : ''
+  );
+
+  // Update sub-tab when main tab changes
+  const handleMainTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    const subItems = getSubNavigationItems(tabId);
+    setActiveSubTab(subItems.length > 0 ? subItems[0].id : '');
+  };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex">
       {/* Mobile Navigation */}
       <div className="lg:hidden">
         <MobileNavigation
           activeTab={activeTab}
-          onTabChange={setActiveTab}
+          onTabChange={handleMainTabChange}
           userName={user.name}
           userRole={user.role}
         />
       </div>
 
-      {/* Header */}
-      <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 p-4 mobile-header sticky top-0 z-40">
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div className="ml-16 lg:ml-0">
-            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold">FulQrun CRM v2.0</h1>
-            <p className="text-xs sm:text-sm text-muted-foreground">Phase 2: Advanced Pipeline & AI Integration Platform</p>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-4">
-            <div className="text-right hidden sm:block">
-              <p className="font-medium text-sm">{user.name}</p>
-              <Badge variant="secondary" className="text-xs">{user.role}</Badge>
-            </div>
-            <div className="text-right block sm:hidden">
-              <Badge variant="secondary" className="text-xs">{user.role}</Badge>
-            </div>
-            <Button onClick={onLogout} variant="outline" size="sm">
-              Logout
-            </Button>
-          </div>
-        </div>
-      </header>
+      {/* Universal Sidebar */}
+      <div className="hidden lg:block">
+        <UniversalSidebar
+          activeTab={activeTab}
+          onTabChange={handleMainTabChange}
+          userName={user.name}
+          userRole={user.role}
+          isCollapsed={sidebarCollapsed}
+        />
+      </div>
 
-      <main className="p-3 sm:p-4 lg:p-6 max-w-7xl mx-auto">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 lg:space-y-6">
-          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 lg:grid-cols-9 gap-1 h-auto">
-            <TabsTrigger value="overview" className="flex items-center gap-2 p-3">
-              <Home size={16} />
-              <span className="hidden sm:inline">Overview</span>
-            </TabsTrigger>
-            <TabsTrigger value="ai-demo" className="flex items-center gap-2 p-3">
-              <Bot size={16} />
-              <span className="hidden sm:inline">AI Demo</span>
-              <span className="sm:hidden">Demo</span>
-            </TabsTrigger>
-            <TabsTrigger value="meddpicc" className="flex items-center gap-2 p-3">
-              <CheckCircle size={16} />
-              <span className="hidden sm:inline">MEDDPICC</span>
-              <span className="sm:hidden">Qual</span>
-            </TabsTrigger>
-            <TabsTrigger value="ai-qualification" className="flex items-center gap-2 p-3">
-              <Brain size={16} />
-              <span className="hidden sm:inline">AI Insights</span>
-              <span className="sm:hidden">AI</span>
-            </TabsTrigger>
-            <TabsTrigger value="ai-scoring" className="flex items-center gap-2 p-3">
-              <Star size={16} />
-              <span className="hidden sm:inline">Lead Scoring</span>
-              <span className="sm:hidden">Score</span>
-            </TabsTrigger>
-            <TabsTrigger value="ai-risk" className="flex items-center gap-2 p-3">
-              <Shield size={16} />
-              <span className="hidden sm:inline">Risk Analysis</span>
-              <span className="sm:hidden">Risk</span>
-            </TabsTrigger>
-            <TabsTrigger value="learning" className="flex items-center gap-2 p-3">
-              <GraduationCap size={16} />
-              <span className="hidden sm:inline">Learning</span>
-              <span className="sm:hidden">Learn</span>
-            </TabsTrigger>
-            <TabsTrigger value="full-crm" className="flex items-center gap-2 p-3">
-              <BarChart3 size={16} />
-              <span className="hidden sm:inline">Full CRM</span>
-              <span className="sm:hidden">CRM</span>
-            </TabsTrigger>
-            <TabsTrigger value="administration" className="flex items-center gap-2 p-3">
-              <Wrench size={16} />
-              <span className="hidden sm:inline">Admin</span>
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-4 lg:space-y-6">
-            <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Pipeline Value</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">$124,500</div>
-                  <p className="text-xs text-muted-foreground">
-                    +20.1% from last month
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Active Deals</CardTitle>
-                  <Target className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">23</div>
-                  <p className="text-xs text-muted-foreground">
-                    +5 new this week
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
-                  <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">73%</div>
-                  <p className="text-xs text-muted-foreground">
-                    +2% from last month
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Avg. Sales Cycle</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">28d</div>
-                  <p className="text-xs text-muted-foreground">
-                    -3 days improvement
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Welcome to FulQrun CRM</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <p className="text-muted-foreground">
-                    FulQrun CRM Phase 2 is now complete! Your enterprise sales platform features advanced 
-                    pipeline building, AI-enhanced MEDDPICC qualification, integrated learning platform, 
-                    and connections to 10+ external tools. Ready for Phase 3 enterprise scaling.
-                  </p>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    <Card 
-                      className="p-4 cursor-pointer hover:shadow-md transition-shadow" 
-                      onClick={() => setActiveTab('ai-demo')}
-                    >
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-emerald-100 rounded-lg">
-                          <Bot size={20} className="text-emerald-600" />
-                        </div>
-                        <h3 className="font-semibold">AI Demo (New!)</h3>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        Experience AI-powered qualification system with live demo
-                      </p>
-                    </Card>
-
-                    <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow" 
-                          onClick={() => setActiveTab('administration')}>
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-blue-100 rounded-lg">
-                          <Workflow size={20} className="text-blue-600" />
-                        </div>
-                        <h3 className="font-semibold">Pipeline Builder</h3>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        Design custom sales pipelines with drag-and-drop automation (in Admin)
-                      </p>
-                    </Card>
-
-                    <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow" 
-                          onClick={() => setActiveTab('meddpicc')}>
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-purple-100 rounded-lg">
-                          <CheckCircle size={20} className="text-purple-600" />
-                        </div>
-                        <h3 className="font-semibold">MEDDPICC Enhanced</h3>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        AI-powered deal qualification with intelligent insights
-                      </p>
-                    </Card>
-
-                    <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow" 
-                          onClick={() => setActiveTab('ai-qualification')}>
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-emerald-100 rounded-lg">
-                          <Brain size={20} className="text-emerald-600" />
-                        </div>
-                        <h3 className="font-semibold">AI Qualification</h3>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        Intelligent MEDDPICC analysis with AI insights
-                      </p>
-                    </Card>
-
-                    <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow" 
-                          onClick={() => setActiveTab('ai-scoring')}>
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-orange-100 rounded-lg">
-                          <Star size={20} className="text-orange-600" />
-                        </div>
-                        <h3 className="font-semibold">AI Lead Scoring</h3>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        Predictive lead scoring and prioritization
-                      </p>
-                    </Card>
-
-                    <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow" 
-                          onClick={() => setActiveTab('ai-risk')}>
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-red-100 rounded-lg">
-                          <Shield size={20} className="text-red-600" />
-                        </div>
-                        <h3 className="font-semibold">Deal Risk Analysis</h3>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        AI-powered risk assessment and mitigation
-                      </p>
-                    </Card>
-
-                    <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow" 
-                          onClick={() => setActiveTab('administration')}>
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-green-100 rounded-lg">
-                          <Plug size={20} className="text-green-600" />
-                        </div>
-                        <h3 className="font-semibold">Integration Hub</h3>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        Connect Slack, DocuSign, Gong, and 10+ tools (in Admin)
-                      </p>
-                    </Card>
-
-                    <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow" 
-                          onClick={() => setActiveTab('learning')}>
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-yellow-100 rounded-lg">
-                          <GraduationCap size={20} className="text-yellow-600" />
-                        </div>
-                        <h3 className="font-semibold">Learning Platform</h3>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        PEAK & MEDDPICC certifications with AI coaching
-                      </p>
-                    </Card>
-
-                    <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow"
-                          onClick={() => setActiveTab('full-crm')}>
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-indigo-100 rounded-lg">
-                          <BarChart3 size={20} className="text-indigo-600" />
-                        </div>
-                        <h3 className="font-semibold">Full CRM Suite</h3>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        Complete CRM with contacts, companies, analytics and AI insights
-                      </p>
-                    </Card>
-
-                    <Card 
-                      className="p-4 cursor-pointer hover:shadow-md transition-shadow" 
-                      onClick={() => setActiveTab('administration')}
-                    >
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-red-100 rounded-lg">
-                          <Wrench size={20} className="text-red-600" />
-                        </div>
-                        <h3 className="font-semibold">Administration</h3>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        Enterprise settings, user management, and system configuration
-                      </p>
-                    </Card>
-                  </div>
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-h-screen">
+        {/* Header */}
+        <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 p-4 mobile-header sticky top-0 z-40">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="ml-16 lg:ml-0 flex items-center gap-4">
+                {/* Sidebar Toggle for Desktop */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                  className="hidden lg:flex"
+                >
+                  <Menu size={18} />
+                </Button>
+                
+                <div>
+                  <h1 className="text-lg sm:text-xl lg:text-2xl font-bold">FulQrun CRM v2.0</h1>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Phase 2: Advanced Pipeline & AI Integration Platform</p>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 sm:gap-4">
+              <div className="text-right hidden sm:block">
+                <p className="font-medium text-sm">{user.name}</p>
+                <Badge variant="secondary" className="text-xs">{user.role}</Badge>
+              </div>
+              <div className="text-right block sm:hidden">
+                <Badge variant="secondary" className="text-xs">{user.role}</Badge>
+              </div>
+              <Button onClick={onLogout} variant="outline" size="sm">
+                Logout
+              </Button>
+            </div>
+          </div>
+        </header>
 
-          <TabsContent value="ai-demo" className="space-y-4 lg:space-y-6">
-            <AIQualificationDemo />
-          </TabsContent>
+        {/* Sub Navigation */}
+        {currentSubItems.length > 0 && (
+          <SubNavigation
+            items={currentSubItems}
+            activeItem={activeSubTab}
+            onItemChange={setActiveSubTab}
+            title={getPageTitle(activeTab)}
+          />
+        )}
 
-
-
-          <TabsContent value="meddpicc" className="space-y-4 lg:space-y-6">
-            <EnhancedMEDDPICCQualification opportunityId="demo-opp-1" />
-          </TabsContent>
-
-          <TabsContent value="ai-qualification" className="space-y-4 lg:space-y-6">
-            <AIQualificationDashboard />
-          </TabsContent>
-
-          <TabsContent value="ai-scoring" className="space-y-4 lg:space-y-6">
-            <AILeadScoring />
-          </TabsContent>
-
-          <TabsContent value="ai-risk" className="space-y-4 lg:space-y-6">
-            <AIDealRiskAssessment />
-          </TabsContent>
-
-          <TabsContent value="learning" className="space-y-4 lg:space-y-6">
-            <EnhancedLearningPlatform />
-          </TabsContent>
-
-          <TabsContent value="administration" className="space-y-4 lg:space-y-6">
-            <AdministrationModule 
-              userRole={user.role} 
-              isOwner={user.email === 'admin@fulqrun.com'} 
-            />
-          </TabsContent>
-
-
-
-          <TabsContent value="full-crm" className="space-y-4 lg:space-y-6">
-            <Dashboard user={user} />
-          </TabsContent>
-        </Tabs>
-      </main>
+        {/* Content Area */}
+        <ContentArea
+          title={!currentSubItems.length ? getPageTitle(activeTab) : undefined}
+          description={getPageDescription(activeTab, activeSubTab)}
+          actions={getPageActions(activeTab, activeSubTab)}
+          className="flex-1"
+        >
+          <ContentContainer className="p-6 space-y-6">
+            {renderContent()}
+          </ContentContainer>
+        </ContentArea>
+      </div>
     </div>
   );
+
+  function getPageTitle(tab: string): string {
+    const titles: Record<string, string> = {
+      'overview': 'Dashboard Overview',
+      'ai-demo': 'AI Demonstration Center',
+      'full-crm': 'CRM Suite',
+      'meddpicc': 'MEDDPICC Qualification',
+      'ai-qualification': 'AI Qualification System',
+      'ai-scoring': 'AI Lead Scoring',
+      'ai-risk': 'Deal Risk Analysis',
+      'learning': 'Learning Platform',
+      'administration': 'System Administration',
+    };
+    return titles[tab] || 'FulQrun CRM';
+  }
+
+  function getPageDescription(mainTab: string, subTab: string): string {
+    const descriptions: Record<string, string> = {
+      'overview': 'Monitor your sales performance, pipeline health, and key metrics at a glance.',
+      'ai-demo': 'Experience the power of AI-driven sales qualification and insights.',
+      'full-crm': 'Complete customer relationship management with AI-enhanced features.',
+      'pipeline': 'Track and manage your sales pipeline with visual insights.',
+      'opportunities': 'Manage active deals and track progress through your sales process.',
+      'contacts': 'Maintain relationships with customers and prospects.',
+      'companies': 'Organize and track company information and engagement history.',
+      'analytics': 'Gain insights with comprehensive reports and data visualization.',
+      'meddpicc': 'Enhanced MEDDPICC qualification with AI-powered insights.',
+      'meddpicc-form': 'Complete MEDDPICC qualification assessment for deals.',
+      'meddpicc-insights': 'Get AI-generated tips and recommendations for better qualification.',
+      'ai-qualification': 'Intelligent analysis and insights for deal qualification.',
+      'qualification-dashboard': 'Overview of AI-powered qualification metrics.',
+      'insights-engine': 'Deep AI analysis and strategic recommendations.',
+      'ai-scoring': 'Predictive scoring to prioritize your highest-value prospects.',
+      'lead-scores': 'View and manage AI-generated lead priority rankings.',
+      'scoring-model': 'Configure and fine-tune your lead scoring parameters.',
+      'ai-risk': 'Identify and mitigate deal risks with AI-powered analysis.',
+      'risk-dashboard': 'Monitor deal risks and receive proactive alerts.',
+      'mitigation-plans': 'Develop and execute risk reduction strategies.',
+      'learning': 'Enhance your sales skills with PEAK and MEDDPICC training.',
+      'courses': 'Access comprehensive training courses and materials.',
+      'certifications': 'Earn professional certifications in sales methodologies.',
+      'coaching': 'Receive personalized AI-powered sales coaching.',
+      'administration': 'Enterprise-grade system configuration and management.',
+      'pipeline-builder': 'Design and customize sales pipelines with automation.',
+      'integration-hub': 'Connect with third-party tools and services.',
+      'user-management': 'Manage user accounts, roles, and permissions.',
+      'system-settings': 'Configure platform settings and preferences.',
+    };
+    return descriptions[subTab] || descriptions[mainTab] || '';
+  }
+
+  function getPageActions(mainTab: string, subTab: string) {
+    const commonActions = (
+      <div className="flex items-center gap-2">
+        <Button variant="outline" size="sm">
+          <RefreshCw size={16} />
+          Refresh
+        </Button>
+        <Button variant="outline" size="sm">
+          <Share size={16} />
+          Share
+        </Button>
+        <Button variant="outline" size="sm">
+          <MoreHorizontal size={16} />
+        </Button>
+      </div>
+    );
+
+    switch (mainTab) {
+      case 'overview':
+        return (
+          <div className="flex items-center gap-2">
+            <Button size="sm">
+              <Plus size={16} />
+              Quick Add
+            </Button>
+            {commonActions}
+          </div>
+        );
+      case 'full-crm':
+        return (
+          <div className="flex items-center gap-2">
+            <Button size="sm">
+              <Plus size={16} />
+              New {subTab === 'opportunities' ? 'Opportunity' : 
+                    subTab === 'contacts' ? 'Contact' : 
+                    subTab === 'companies' ? 'Company' : 'Record'}
+            </Button>
+            <Button variant="outline" size="sm">
+              <Filter size={16} />
+              Filter
+            </Button>
+            <Button variant="outline" size="sm">
+              <Download size={16} />
+              Export
+            </Button>
+          </div>
+        );
+      default:
+        return commonActions;
+    }
+  }
+
+  function renderContent() {
+    if (currentSubItems.length > 0) {
+      return renderSubContent(activeSubTab);
+    }
+
+    switch (activeTab) {
+      case 'overview':
+        return <OverviewContent />;
+      case 'ai-demo':
+        return <AIQualificationDemo />;
+      case 'full-crm':
+        return <Dashboard user={user} />;
+      case 'meddpicc':
+        return <EnhancedMEDDPICCQualification opportunityId="demo-opp-1" />;
+      case 'ai-qualification':
+        return <AIQualificationDashboard />;
+      case 'ai-scoring':
+        return <AILeadScoring />;
+      case 'ai-risk':
+        return <AIDealRiskAssessment />;
+      case 'learning':
+        return <EnhancedLearningPlatform />;
+      case 'administration':
+        return (
+          <AdministrationModule 
+            userRole={user.role} 
+            isOwner={user.email === 'admin@fulqrun.com'} 
+          />
+        );
+      default:
+        return <DefaultContent activeTab={activeTab} />;
+    }
+  }
+
+  function renderSubContent(subTab: string) {
+    switch (subTab) {
+      // CRM Sub-sections
+      case 'pipeline':
+      case 'opportunities':
+      case 'contacts':
+      case 'companies':
+      case 'analytics':
+        return <Dashboard user={user} initialView={subTab} />;
+      
+      // MEDDPICC Sub-sections
+      case 'meddpicc-form':
+        return <EnhancedMEDDPICCQualification opportunityId="demo-opp-1" />;
+      case 'meddpicc-insights':
+        return <MeddpiccInsightsContent />;
+      
+      // AI Qualification Sub-sections
+      case 'qualification-dashboard':
+        return <AIQualificationDashboard />;
+      case 'insights-engine':
+        return <InsightsEngineContent />;
+      
+      // AI Scoring Sub-sections
+      case 'lead-scores':
+        return <AILeadScoring />;
+      case 'scoring-model':
+        return <ScoringModelContent />;
+      
+      // AI Risk Sub-sections
+      case 'risk-dashboard':
+        return <AIDealRiskAssessment />;
+      case 'mitigation-plans':
+        return <MitigationPlansContent />;
+      
+      // Learning Sub-sections
+      case 'courses':
+      case 'certifications':
+      case 'coaching':
+        return <EnhancedLearningPlatform initialTab={subTab} />;
+      
+      // Administration Sub-sections
+      case 'pipeline-builder':
+      case 'integration-hub':
+      case 'user-management':
+      case 'system-settings':
+        return (
+          <AdministrationModule 
+            userRole={user.role} 
+            isOwner={user.email === 'admin@fulqrun.com'}
+            initialView={subTab}
+          />
+        );
+      
+      default:
+        return <DefaultContent activeTab={subTab} />;
+    }
+  }
+}
+
+function OverviewContent() {
+  return (
+    <div className="space-y-6">
+      {/* Key Metrics */}
+      <ContentGrid columns="md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pipeline Value</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">$124,500</div>
+            <p className="text-xs text-muted-foreground">
+              +20.1% from last month
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Deals</CardTitle>
+            <Target className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">23</div>
+            <p className="text-xs text-muted-foreground">
+              +5 new this week
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
+            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">73%</div>
+            <p className="text-xs text-muted-foreground">
+              +2% from last month
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Avg. Sales Cycle</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">28d</div>
+            <p className="text-xs text-muted-foreground">
+              -3 days improvement
+            </p>
+          </CardContent>
+        </Card>
+      </ContentGrid>
+
+      {/* Welcome Section */}
+      <ContentCard
+        title="Welcome to FulQrun CRM v2.0"
+        description="Your enterprise sales platform with advanced AI capabilities"
+      >
+        <div className="space-y-4">
+          <p className="text-muted-foreground">
+            FulQrun CRM Phase 2 is now complete! Your enterprise sales platform features advanced 
+            pipeline building, AI-enhanced MEDDPICC qualification, integrated learning platform, 
+            and connections to 10+ external tools. Ready for Phase 3 enterprise scaling.
+          </p>
+          
+          <ContentGrid columns="md:grid-cols-2 xl:grid-cols-3">
+            <QuickActionCard
+              icon={<Bot size={24} className="text-emerald-600" />}
+              title="AI Demo (New!)"
+              description="Experience AI-powered qualification system with live demo"
+              bgColor="bg-emerald-100"
+            />
+            <QuickActionCard
+              icon={<Workflow size={24} className="text-blue-600" />}
+              title="Pipeline Builder"
+              description="Design custom sales pipelines with drag-and-drop automation"
+              bgColor="bg-blue-100"
+            />
+            <QuickActionCard
+              icon={<CheckCircle size={24} className="text-purple-600" />}
+              title="MEDDPICC Enhanced"
+              description="AI-powered deal qualification with intelligent insights"
+              bgColor="bg-purple-100"
+            />
+            <QuickActionCard
+              icon={<Brain size={24} className="text-emerald-600" />}
+              title="AI Qualification"
+              description="Intelligent MEDDPICC analysis with AI insights"
+              bgColor="bg-emerald-100"
+            />
+            <QuickActionCard
+              icon={<Star size={24} className="text-orange-600" />}
+              title="AI Lead Scoring"
+              description="Predictive lead scoring and prioritization"
+              bgColor="bg-orange-100"
+            />
+            <QuickActionCard
+              icon={<Shield size={24} className="text-red-600" />}
+              title="Deal Risk Analysis"
+              description="AI-powered risk assessment and mitigation"
+              bgColor="bg-red-100"
+            />
+          </ContentGrid>
+        </div>
+      </ContentCard>
+    </div>
+  );
+}
+
+function QuickActionCard({ icon, title, description, bgColor }: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  bgColor: string;
+}) {
+  return (
+    <Card className="p-4 cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-[1.02]">
+      <div className="flex items-center gap-3 mb-3">
+        <div className={`p-2 ${bgColor} rounded-lg flex-shrink-0`}>
+          {icon}
+        </div>
+        <h3 className="font-semibold text-foreground">{title}</h3>
+      </div>
+      <p className="text-sm text-muted-foreground leading-relaxed">
+        {description}
+      </p>
+    </Card>
+  );
+}
+
+function DefaultContent({ activeTab }: { activeTab: string }) {
+  return (
+    <div className="flex items-center justify-center h-96">
+      <EmptyState
+        icon={<Settings size={48} />}
+        title="Feature in Development"
+        description={`The ${activeTab} feature is currently being developed. Please check back soon for updates.`}
+        action={
+          <Button>
+            <Home size={16} />
+            Return to Dashboard
+          </Button>
+        }
+      />
+    </div>
+  );
+}
+
+// Placeholder components for sub-sections
+function MeddpiccInsightsContent() {
+  return <DefaultContent activeTab="MEDDPICC Insights" />;
+}
+
+function InsightsEngineContent() {
+  return <DefaultContent activeTab="Insights Engine" />;
+}
+
+function ScoringModelContent() {
+  return <DefaultContent activeTab="Scoring Model" />;
+}
+
+function MitigationPlansContent() {
+  return <DefaultContent activeTab="Mitigation Plans" />;
 }

@@ -1,0 +1,441 @@
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { cn } from '@/lib/utils';
+import { 
+  Home,
+  BarChart3,
+  Building2,
+  Brain,
+  Star,
+  Shield,
+  CheckCircle,
+  GraduationCap,
+  Bot,
+  Wrench,
+  Target,
+  TrendingUp,
+  Workflow,
+  Plug,
+  ChevronRight,
+  ChevronDown
+} from '@phosphor-icons/react';
+
+interface NavigationItem {
+  id: string;
+  label: string;
+  icon: any;
+  description?: string;
+  isNew?: boolean;
+  badge?: string;
+  children?: SubNavigationItem[];
+}
+
+interface SubNavigationItem {
+  id: string;
+  label: string;
+  description?: string;
+  isNew?: boolean;
+  badge?: string;
+}
+
+interface UniversalSidebarProps {
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+  userName: string;
+  userRole: string;
+  isCollapsed?: boolean;
+}
+
+export function UniversalSidebar({ 
+  activeTab, 
+  onTabChange, 
+  userName, 
+  userRole, 
+  isCollapsed = false 
+}: UniversalSidebarProps) {
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['core', 'ai-tools']));
+
+  const navigationSections: { 
+    id: string; 
+    title: string; 
+    items: NavigationItem[]; 
+  }[] = [
+    {
+      id: 'core',
+      title: 'Core Platform',
+      items: [
+        {
+          id: 'overview',
+          label: 'Dashboard',
+          icon: Home,
+          description: 'Overview and key metrics'
+        },
+        {
+          id: 'full-crm',
+          label: 'CRM Suite',
+          icon: BarChart3,
+          description: 'Complete customer management',
+          children: [
+            { id: 'pipeline', label: 'Pipeline Management', description: 'Sales pipeline overview' },
+            { id: 'opportunities', label: 'Opportunities', description: 'Deal tracking and management' },
+            { id: 'contacts', label: 'Contacts', description: 'Customer contact management' },
+            { id: 'companies', label: 'Companies', description: 'Company profiles and data' },
+            { id: 'analytics', label: 'Analytics & Reports', description: 'Insights and reporting' },
+          ]
+        }
+      ]
+    },
+    {
+      id: 'ai-tools',
+      title: 'AI-Powered Tools',
+      items: [
+        {
+          id: 'ai-demo',
+          label: 'AI Demo Center',
+          icon: Bot,
+          description: 'Interactive AI demonstrations',
+          isNew: true
+        },
+        {
+          id: 'meddpicc',
+          label: 'MEDDPICC Enhanced',
+          icon: CheckCircle,
+          description: 'AI-powered deal qualification',
+          children: [
+            { id: 'meddpicc-form', label: 'Qualification Form', description: 'Complete MEDDPICC assessment' },
+            { id: 'meddpicc-insights', label: 'AI Insights', description: 'Intelligent qualification tips' },
+          ]
+        },
+        {
+          id: 'ai-qualification',
+          label: 'AI Qualification',
+          icon: Brain,
+          description: 'Intelligent deal analysis',
+          children: [
+            { id: 'qualification-dashboard', label: 'Qualification Dashboard', description: 'AI-powered qualification overview' },
+            { id: 'insights-engine', label: 'Insights Engine', description: 'Deep AI analysis and recommendations' },
+          ]
+        },
+        {
+          id: 'ai-scoring',
+          label: 'AI Lead Scoring',
+          icon: Star,
+          description: 'Predictive lead prioritization',
+          children: [
+            { id: 'lead-scores', label: 'Lead Scores', description: 'AI-generated lead rankings' },
+            { id: 'scoring-model', label: 'Scoring Model', description: 'Configure scoring parameters' },
+          ]
+        },
+        {
+          id: 'ai-risk',
+          label: 'Deal Risk Analysis',
+          icon: Shield,
+          description: 'AI risk assessment',
+          children: [
+            { id: 'risk-dashboard', label: 'Risk Dashboard', description: 'Deal risk overview and alerts' },
+            { id: 'mitigation-plans', label: 'Mitigation Plans', description: 'Risk reduction strategies' },
+          ]
+        }
+      ]
+    },
+    {
+      id: 'growth',
+      title: 'Growth & Learning',
+      items: [
+        {
+          id: 'learning',
+          label: 'Learning Platform',
+          icon: GraduationCap,
+          description: 'Training and certification',
+          children: [
+            { id: 'courses', label: 'Training Courses', description: 'PEAK & MEDDPICC training' },
+            { id: 'certifications', label: 'Certifications', description: 'Professional certifications' },
+            { id: 'coaching', label: 'AI Coaching', description: 'Personalized AI coaching' },
+          ]
+        }
+      ]
+    },
+    {
+      id: 'admin',
+      title: 'Administration',
+      items: [
+        {
+          id: 'administration',
+          label: 'System Admin',
+          icon: Wrench,
+          description: 'Enterprise configuration',
+          children: [
+            { id: 'pipeline-builder', label: 'Pipeline Builder', description: 'Custom pipeline design', isNew: true },
+            { id: 'integration-hub', label: 'Integration Hub', description: 'Third-party connections', isNew: true },
+            { id: 'user-management', label: 'User Management', description: 'User roles and permissions' },
+            { id: 'system-settings', label: 'System Settings', description: 'Platform configuration' },
+          ]
+        }
+      ]
+    }
+  ];
+
+  const toggleSection = (sectionId: string) => {
+    const newExpanded = new Set(expandedSections);
+    if (newExpanded.has(sectionId)) {
+      newExpanded.delete(sectionId);
+    } else {
+      newExpanded.add(sectionId);
+    }
+    setExpandedSections(newExpanded);
+  };
+
+  const handleItemClick = (itemId: string) => {
+    onTabChange(itemId);
+  };
+
+  const getActiveParent = (activeTab: string): string | null => {
+    for (const section of navigationSections) {
+      for (const item of section.items) {
+        if (item.children) {
+          for (const child of item.children) {
+            if (child.id === activeTab) {
+              return item.id;
+            }
+          }
+        }
+      }
+    }
+    return null;
+  };
+
+  const activeParent = getActiveParent(activeTab);
+
+  return (
+    <div className={cn(
+      'h-full bg-card border-r flex flex-col transition-all duration-300 ease-in-out sidebar-container',
+      isCollapsed ? 'w-16' : 'w-72'
+    )}>
+      {/* Header */}
+      <div className="p-4 border-b flex-shrink-0">
+        {!isCollapsed ? (
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+              <Building2 size={20} className="text-primary-foreground" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h2 className="font-bold text-lg truncate">FulQrun</h2>
+              <div className="flex items-center gap-2">
+                <p className="text-xs text-muted-foreground">Enterprise CRM</p>
+                <Badge className="text-xs bg-accent/20 text-accent-foreground">
+                  v2.0
+                </Badge>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex justify-center">
+            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+              <Building2 size={20} className="text-primary-foreground" />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* User Info */}
+      {!isCollapsed && (
+        <div className="p-4 bg-muted/30 flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-sm font-medium text-primary-foreground">
+                {userName.split(' ').map(n => n[0]).join('').toUpperCase()}
+              </span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">{userName}</p>
+              <Badge variant="secondary" className="text-xs">
+                {userRole}
+              </Badge>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <Separator />
+
+      {/* Navigation */}
+      <div className="sidebar-navigation-area">
+        <ScrollArea className="h-full sidebar-scroll-area">
+          <div className="p-3">
+            <nav className="space-y-2">
+              {navigationSections.map((section) => (
+                <div key={section.id} className="nav-section">
+                  {!isCollapsed && (
+                    <Collapsible
+                      open={expandedSections.has(section.id)}
+                      onOpenChange={() => toggleSection(section.id)}
+                    >
+                      <CollapsibleTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className="w-full justify-between h-8 px-2 py-1 nav-section-trigger"
+                        >
+                          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider nav-section-title">
+                            {section.title}
+                          </span>
+                          {expandedSections.has(section.id) ? (
+                            <ChevronDown size={12} className="text-muted-foreground" />
+                          ) : (
+                            <ChevronRight size={12} className="text-muted-foreground" />
+                          )}
+                        </Button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="collapsible-content">
+                        <div className="space-y-1 mt-2">
+                          {section.items.map((item) => {
+                            const Icon = item.icon;
+                            const isActive = activeTab === item.id || activeParent === item.id;
+                            
+                            return (
+                              <div key={item.id}>
+                                <Button
+                                  variant={isActive ? 'default' : 'ghost'}
+                                  className={cn(
+                                    'w-full justify-start h-auto p-3 nav-item',
+                                    isActive && 'bg-primary text-primary-foreground shadow-sm',
+                                    !isActive && 'hover:bg-muted/50'
+                                  )}
+                                  onClick={() => handleItemClick(item.id)}
+                                >
+                                  <div className="flex items-center gap-3 w-full min-w-0">
+                                    <Icon size={18} className={cn(
+                                      isActive ? 'text-primary-foreground' : 'text-muted-foreground'
+                                    )} />
+                                    <div className="flex-1 min-w-0 text-left">
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <span className="font-medium text-sm truncate nav-item-text">
+                                          {item.label}
+                                        </span>
+                                        {item.isNew && (
+                                          <Badge className="text-xs h-4 px-1.5 bg-green-100 text-green-800 nav-badge">
+                                            New
+                                          </Badge>
+                                        )}
+                                        {item.badge && (
+                                          <Badge className="text-xs h-4 px-1.5 nav-section-count">
+                                            {item.badge}
+                                          </Badge>
+                                        )}
+                                      </div>
+                                      {item.description && (
+                                        <div className={cn(
+                                          "text-xs leading-tight mt-0.5 nav-item-description",
+                                          isActive ? 'text-primary-foreground/80' : 'text-muted-foreground'
+                                        )}>
+                                          {item.description}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </Button>
+                                
+                                {/* Sub-navigation items */}
+                                {item.children && (isActive || activeParent === item.id) && (
+                                  <div className="ml-4 mt-1 space-y-1">
+                                    {item.children.map((child) => {
+                                      const isChildActive = activeTab === child.id;
+                                      return (
+                                        <Button
+                                          key={child.id}
+                                          variant={isChildActive ? 'secondary' : 'ghost'}
+                                          size="sm"
+                                          className={cn(
+                                            'w-full justify-start h-auto p-2 pl-4',
+                                            isChildActive && 'bg-secondary/80',
+                                            !isChildActive && 'hover:bg-muted/30'
+                                          )}
+                                          onClick={() => handleItemClick(child.id)}
+                                        >
+                                          <div className="flex items-center gap-2 w-full min-w-0">
+                                            <div className="w-1 h-1 bg-muted-foreground rounded-full" />
+                                            <div className="flex-1 min-w-0 text-left">
+                                              <div className="flex items-center gap-2">
+                                                <span className="text-xs font-medium truncate">
+                                                  {child.label}
+                                                </span>
+                                                {child.isNew && (
+                                                  <Badge className="text-xs h-3 px-1 bg-green-100 text-green-800">
+                                                    New
+                                                  </Badge>
+                                                )}
+                                              </div>
+                                              {child.description && (
+                                                <div className="text-xs text-muted-foreground leading-tight mt-0.5">
+                                                  {child.description}
+                                                </div>
+                                              )}
+                                            </div>
+                                          </div>
+                                        </Button>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )}
+                  
+                  {/* Collapsed view */}
+                  {isCollapsed && (
+                    <div className="space-y-1">
+                      {section.items.map((item) => {
+                        const Icon = item.icon;
+                        const isActive = activeTab === item.id || activeParent === item.id;
+                        
+                        return (
+                          <Button
+                            key={item.id}
+                            variant={isActive ? 'default' : 'ghost'}
+                            size="icon"
+                            className={cn(
+                              'w-10 h-10 nav-item',
+                              isActive && 'bg-primary text-primary-foreground',
+                              !isActive && 'hover:bg-muted/50'
+                            )}
+                            onClick={() => handleItemClick(item.id)}
+                            title={item.label}
+                          >
+                            <Icon size={18} />
+                            {item.isNew && (
+                              <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full" />
+                            )}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </nav>
+          </div>
+        </ScrollArea>
+      </div>
+
+      {/* Footer */}
+      {!isCollapsed && (
+        <div className="p-4 border-t bg-muted/30 flex-shrink-0">
+          <div className="text-xs text-muted-foreground">
+            <div className="font-medium mb-1 flex items-center gap-2">
+              <Target size={12} />
+              PEAK Methodology
+            </div>
+            <div className="text-xs">Prospect → Engage → Acquire → Keep</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

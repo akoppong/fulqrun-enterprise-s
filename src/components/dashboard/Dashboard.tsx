@@ -30,13 +30,16 @@ import { CompaniesView } from './CompaniesView';
 
 interface DashboardProps {
   user: User;
-  onLogout: () => void;
+  onLogout?: () => void;
+  initialView?: string;
 }
 
 export type DashboardView = 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'autosave-demo' | 'autosave-test' | 'autosave-manual' | 'autosave-interactive' | 'field-testing' | 'comprehensive-testing' | 'validation-demo';
 
-export function Dashboard({ user, onLogout }: DashboardProps) {
-  const [currentView, setCurrentView] = useState<DashboardView>('pipeline');
+export function Dashboard({ user, onLogout, initialView }: DashboardProps) {
+  const [currentView, setCurrentView] = useState<DashboardView>(
+    (initialView as DashboardView) || 'pipeline'
+  );
   const [opportunities, setOpportunities] = useKV<Opportunity[]>('opportunities', []);
   const [contacts, setContacts] = useKV<Contact[]>('contacts', []);
   const [companies, setCompanies] = useKV<Company[]>('companies', []);
