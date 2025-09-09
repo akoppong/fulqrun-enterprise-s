@@ -37,7 +37,7 @@ import {
   AlertTriangle,
   CheckSquare,
   Activity,
-  Database
+  HardDrives
 } from '@phosphor-icons/react';
 
 // Enhanced validation rules and test scenarios
@@ -1025,7 +1025,7 @@ export function ComprehensiveValidationTestSuite() {
                 {statistics.totalTests > 0 && (
                   <div className="flex items-center gap-4">
                     <Badge variant="outline" className="flex items-center gap-2">
-                      <Database className="h-3 w-3" />
+                      <HardDrives className="h-3 w-3" />
                       {statistics.totalTests} Tests
                     </Badge>
                     <Badge variant={statistics.passRate > 90 ? "default" : statistics.passRate > 70 ? "secondary" : "destructive"}>

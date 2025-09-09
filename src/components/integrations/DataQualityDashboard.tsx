@@ -9,7 +9,7 @@ import {
   TrendingUp, 
   TrendingDown, 
   Activity, 
-  Database,
+  HardDrives,
   Clock,
   AlertTriangle,
   CheckCircle,
@@ -142,7 +142,7 @@ export const DataQualityDashboard: React.FC = () => {
                   +12% vs yesterday
                 </p>
               </div>
-              <Database className="w-8 h-8 text-primary" />
+              <HardDrives className="w-8 h-8 text-primary" />
             </div>
           </CardContent>
         </Card>

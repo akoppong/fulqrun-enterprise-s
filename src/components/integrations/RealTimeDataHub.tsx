@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
-  Database, 
+  HardDrives, 
   Zap, 
   Activity, 
   Globe, 
@@ -68,7 +68,7 @@ const integrationTemplates = [
     name: 'Salesforce CRM',
     description: 'Sync leads, opportunities, and contacts in real-time',
     category: 'CRM',
-    icon: Database,
+    icon: HardDrives,
     dataTypes: ['leads', 'opportunities', 'contacts', 'accounts'],
     fields: [
       { name: 'instanceUrl', label: 'Instance URL', type: 'url', required: true },

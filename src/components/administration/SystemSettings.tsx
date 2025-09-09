@@ -16,7 +16,7 @@ import {
   Mail, 
   Clock, 
   Palette, 
-  Database,
+  HardDrives,
   Server,
   Zap,
   Save

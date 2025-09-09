@@ -29,7 +29,7 @@ import {
   FileText,
   Mail,
   Bell,
-  Database,
+  HardDrives,
   Webhook,
   Bot
 } from '@phosphor-icons/react';
@@ -178,7 +178,7 @@ export function WorkflowAutomation({ className }: WorkflowAutomationProps) {
     switch (type) {
       case 'email': return <Mail className="h-4 w-4" />;
       case 'notification': return <Bell className="h-4 w-4" />;
-      case 'field_update': return <Database className="h-4 w-4" />;
+      case 'field_update': return <HardDrives className="h-4 w-4" />;
       case 'integration': return <Webhook className="h-4 w-4" />;
       case 'delay': return <Timer className="h-4 w-4" />;
       default: return <Settings className="h-4 w-4" />;

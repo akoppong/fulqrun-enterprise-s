@@ -18,7 +18,7 @@ import {
   Settings, 
   Filter,
   ArrowRight,
-  Database,
+  HardDrives,
   Globe,
   Mail,
   Webhook,
@@ -52,14 +52,14 @@ interface AutomationWorkflow {
 }
 
 const triggerTypes = [
-  { value: 'data_change', label: 'Data Change', icon: Database },
+  { value: 'data_change', label: 'Data Change', icon: HardDrives },
   { value: 'schedule', label: 'Schedule', icon: Clock },
   { value: 'webhook', label: 'Webhook', icon: Webhook },
   { value: 'manual', label: 'Manual', icon: Play }
 ];
 
 const actionTypes = [
-  { value: 'sync_data', label: 'Sync Data', icon: Database },
+  { value: 'sync_data', label: 'Sync Data', icon: HardDrives },
   { value: 'send_notification', label: 'Send Notification', icon: Mail },
   { value: 'update_record', label: 'Update Record', icon: Settings },
   { value: 'call_webhook', label: 'Call Webhook', icon: Globe }

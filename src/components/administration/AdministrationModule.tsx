@@ -9,7 +9,7 @@ import {
   Settings, 
   Users, 
   Shield, 
-  Database, 
+  HardDrives, 
   FileText, 
   Code, 
   Bell, 
@@ -191,7 +191,7 @@ export function AdministrationModule({ userRole, isOwner = false, initialView = 
           </TabsTrigger>
           
           <TabsTrigger value="data" className="flex flex-col items-center gap-1 p-3 text-xs">
-            <Database size={16} />
+            <HardDrives size={16} />
             <span>Data</span>
           </TabsTrigger>
           

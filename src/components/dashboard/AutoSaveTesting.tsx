@@ -12,7 +12,7 @@ import {
   ClipboardList, 
   CheckCircle, 
   RefreshCw,
-  Database,
+  HardDrives,
   Clock,
   AlertCircle,
   Info,
@@ -377,7 +377,7 @@ export function AutoSaveTesting() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Database size={20} />
+            <HardDrives size={20} />
             Current Draft State
           </CardTitle>
           <CardDescription>
@@ -419,7 +419,7 @@ export function AutoSaveTesting() {
               </div>
               
               <div className="flex items-center gap-1">
-                <Database size={14} />
+                <HardDrives size={14} />
                 Storage: useKV persistent
               </div>
             </div>

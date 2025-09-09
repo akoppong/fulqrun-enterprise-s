@@ -24,7 +24,7 @@ import {
   Warning, 
   Info,
   Timer,
-  Database,
+  HardDrives,
   Eye,
   Trash
 } from '@phosphor-icons/react';
@@ -707,7 +707,7 @@ export function AutoSaveInteractiveDemo() {
                   </CardDescription>
                 </div>
                 <Button onClick={exportFormData} variant="outline" size="sm">
-                  <Database size={16} className="mr-2" />
+                  <HardDrives size={16} className="mr-2" />
                   Export Data
                 </Button>
               </div>

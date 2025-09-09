@@ -11,7 +11,7 @@ import {
   XCircle, 
   Info, 
   RefreshCw,
-  Database,
+  HardDrives,
   Clock
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
@@ -293,7 +293,7 @@ export function AutoSaveTestRunner() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Database size={24} className="text-primary" />
+            <HardDrives size={24} className="text-primary" />
             Auto-Save Functionality Test Suite
           </CardTitle>
           <CardDescription>

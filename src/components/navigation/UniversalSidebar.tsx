@@ -21,7 +21,8 @@ import {
   Workflow,
   Plug,
   ChevronRight,
-  ChevronDown
+  ChevronDown,
+  HardDrives
 } from '@phosphor-icons/react';
 
 interface NavigationItem {
@@ -166,7 +167,7 @@ export function UniversalSidebar({
         {
           id: 'data-hub',
           label: 'Real-Time Data Hub',
-          icon: Database,
+          icon: HardDrives,
           description: 'Live CRM & BI connections',
           children: [
             { id: 'real-time-sync', label: 'Data Connections', description: 'Salesforce, HubSpot, Power BI integrations', isNew: true },
