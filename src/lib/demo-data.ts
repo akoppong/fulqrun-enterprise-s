@@ -10,30 +10,51 @@ export class DemoDataGenerator {
       {
         id: 'company-1',
         name: 'TechFlow Solutions',
-        industry: 'Software',
+        industry: 'Technology',
         size: '100-500',
         website: 'https://techflow.com',
         address: '123 Tech Street, San Francisco, CA',
+        revenue: 750000000, // $750M - Strategic Partner range
+        employees: 300,
+        geography: 'North America',
+        customFields: {
+          brand_influence: 8,
+          industry_expertise: 9
+        },
         createdAt: new Date('2024-01-15'),
         updatedAt: new Date('2024-01-20')
       },
       {
         id: 'company-2',
         name: 'DataCorp Industries',
-        industry: 'Data Analytics',
+        industry: 'Technology',
         size: '50-100',
         website: 'https://datacorp.com',
         address: '456 Data Ave, Austin, TX',
+        revenue: 150000000, // $150M - Reference Customer range
+        employees: 75,
+        geography: 'North America',
+        customFields: {
+          industry_expertise: 8,
+          reference_willingness: 'high'
+        },
         createdAt: new Date('2024-02-01'),
         updatedAt: new Date('2024-02-10')
       },
       {
         id: 'company-3',
         name: 'CloudFirst Enterprise',
-        industry: 'Cloud Services',
+        industry: 'Technology',
         size: '500-1000',
         website: 'https://cloudfirst.com',
         address: '789 Cloud Blvd, Seattle, WA',
+        revenue: 1200000000, // $1.2B - Strategic Partner range
+        employees: 750,
+        geography: 'North America',
+        customFields: {
+          brand_influence: 9,
+          market_leadership: 'high'
+        },
         createdAt: new Date('2024-01-25'),
         updatedAt: new Date('2024-02-05')
       },
@@ -44,26 +65,84 @@ export class DemoDataGenerator {
         size: '200-500',
         website: 'https://financestream.com',
         address: '321 Finance Way, New York, NY',
+        revenue: 400000000, // $400M - Reference Customer range
+        employees: 350,
+        geography: 'North America',
+        customFields: {
+          industry_expertise: 7,
+          reference_willingness: 'medium'
+        },
         createdAt: new Date('2024-02-10'),
         updatedAt: new Date('2024-02-15')
       },
       {
         id: 'company-5',
+        name: 'DefenseCore Systems',
+        industry: 'Defense',
+        size: '1000+',
+        website: 'https://defensecore.gov',
+        address: '555 Defense Plaza, Arlington, VA',
+        revenue: 250000000, // $250M - Vector Control range
+        employees: 1200,
+        geography: 'North America',
+        customFields: {
+          outdoor_operations: 'high',
+          health_safety_priority: 9,
+          government_sector: true
+        },
+        createdAt: new Date('2024-01-05'),
+        updatedAt: new Date('2024-01-30')
+      },
+      {
+        id: 'company-6',
+        name: 'Hospitality Plus Group',
+        industry: 'Hospitality',
+        size: '200-500',
+        website: 'https://hospitalityplus.com',
+        address: '777 Resort Drive, Miami, FL',
+        revenue: 85000000, // $85M - Vector Control range
+        employees: 450,
+        geography: 'North America',
+        customFields: {
+          outdoor_operations: 'medium',
+          health_safety_priority: 8,
+          guest_safety: 'critical'
+        },
+        createdAt: new Date('2024-02-20'),
+        updatedAt: new Date('2024-02-25')
+      },
+      {
+        id: 'company-7',
         name: 'MedTech Innovations',
-        industry: 'Healthcare Technology',
+        industry: 'Healthcare',
         size: '100-200',
         website: 'https://medtech-innovations.com',
         address: '654 Health Plaza, Boston, MA',
+        revenue: 120000000, // $120M - Reference Customer range
+        employees: 180,
+        geography: 'North America',
+        customFields: {
+          industry_expertise: 8,
+          reference_willingness: 'high',
+          innovation_focus: 'high'
+        },
         createdAt: new Date('2024-01-30'),
         updatedAt: new Date('2024-02-12')
       },
       {
-        id: 'company-6',
+        id: 'company-8',
         name: 'RetailMax Group',
         industry: 'Retail',
         size: '1000+',
         website: 'https://retailmax.com',
         address: '987 Retail Park, Chicago, IL',
+        revenue: 850000000, // $850M - Strategic Partner range
+        employees: 1500,
+        geography: 'North America',
+        customFields: {
+          brand_influence: 9,
+          market_reach: 'national'
+        },
         createdAt: new Date('2024-02-05'),
         updatedAt: new Date('2024-02-18')
       }

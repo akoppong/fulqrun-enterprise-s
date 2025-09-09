@@ -25,13 +25,15 @@ import { WorkflowAutomation } from '../workflows/WorkflowAutomation';
 import { AIInsightsView } from './AIInsightsView';
 import { LeadScoringDashboard } from './LeadScoringDashboard';
 import { DealRiskDashboard } from './DealRiskDashboard';
+import { CustomerSegmentsList } from '../segments/CustomerSegmentsList';
+import { CompaniesView } from './CompaniesView';
 
 interface DashboardProps {
   user: User;
   onLogout: () => void;
 }
 
-export type DashboardView = 'pipeline' | 'opportunities' | 'contacts' | 'analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'autosave-demo' | 'autosave-test' | 'autosave-manual' | 'autosave-interactive' | 'field-testing' | 'comprehensive-testing' | 'validation-demo';
+export type DashboardView = 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'autosave-demo' | 'autosave-test' | 'autosave-manual' | 'autosave-interactive' | 'field-testing' | 'comprehensive-testing' | 'validation-demo';
 
 export function Dashboard({ user, onLogout }: DashboardProps) {
   const [currentView, setCurrentView] = useState<DashboardView>('pipeline');
@@ -95,6 +97,8 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
         return <OpportunityList />;
       case 'contacts':
         return <ContactsView />;
+      case 'companies':
+        return <CompaniesView />;
       case 'analytics':
         return <AnalyticsView userRole={user.role} />;
       case 'cstpv':
@@ -170,6 +174,8 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
             companies={companies}
           />
         );
+      case 'segments':
+        return <CustomerSegmentsList />;
       case 'autosave-demo':
         return <AutoSaveDemo />;
       case 'autosave-test':

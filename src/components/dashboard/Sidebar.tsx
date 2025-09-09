@@ -57,6 +57,23 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
       category: 'core'
     },
     {
+      id: 'companies' as DashboardView,
+      label: 'Companies',
+      icon: Building2,
+      description: 'Company database',
+      roles: ['rep', 'manager', 'admin'],
+      category: 'core'
+    },
+    {
+      id: 'segments' as DashboardView,
+      label: 'Customer Segments',
+      icon: Building2,
+      description: 'Strategic segmentation',
+      roles: ['manager', 'admin'],
+      category: 'core',
+      isNew: true
+    },
+    {
       id: 'analytics' as DashboardView,
       label: 'Analytics',
       icon: ChartLine,

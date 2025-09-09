@@ -31,6 +31,15 @@
 - **CSTPV Performance Metrics**: Close rate, Size, Time, Probability, Value tracking
 - **AI-Powered Insights**: Predictive analytics and automated recommendations
 
+### **NEW: Customer Segments Management**
+- **Strategic Segmentation**: Built-in templates for Strategic Partners, Reference Customers, and Vector Control
+- **Intelligent Assignment**: Automated segment assignment based on revenue, industry, and custom criteria
+- **Segment Analytics**: Performance tracking and ROI analysis per customer segment
+- **Custom Segment Creation**: Build segments with detailed criteria and characteristics
+- **Company-Segment Mapping**: Visual segment distribution and assignment management
+- **Segment-Based Insights**: Tailored strategies, messaging, and KPIs per segment
+- **Performance Benchmarking**: Compare segment performance against targets and industry averages
+
 ### **NEW: Advanced Pipeline Management**
 - **Visual Pipeline Builder**: Drag-and-drop interface for customizing sales pipeline stages
 - **Custom Stage Configuration**: Define stage names, probabilities, colors, and requirements
