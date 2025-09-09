@@ -193,8 +193,10 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
                   </p>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow" 
-                          onClick={() => setActiveTab('ai-demo')}>
+                    <Card 
+                      className="p-4 cursor-pointer hover:shadow-md transition-shadow" 
+                      onClick={() => setActiveTab('ai-demo')}
+                    >
                       <div className="flex items-center gap-3 mb-2">
                         <div className="p-2 bg-emerald-100 rounded-lg">
                           <Bot size={20} className="text-emerald-600" />
