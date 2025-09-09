@@ -98,11 +98,20 @@ textarea[class*="w-full"],
   display: grid;
   gap: 1.5rem;
   align-items: start;
+  grid-template-columns: 1fr;
 }
 
 @media (min-width: 1024px) {
   .card-grid-balanced {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .card-grid-balanced.ratio-2-3 {
     grid-template-columns: 2fr 3fr;
+  }
+  
+  .card-grid-balanced.ratio-3-2 {
+    grid-template-columns: 3fr 2fr;
   }
 }
 
