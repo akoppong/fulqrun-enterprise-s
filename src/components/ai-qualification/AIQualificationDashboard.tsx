@@ -27,6 +27,7 @@ import {
 } from '@phosphor-icons/react';
 import { useKV } from '@github/spark/hooks';
 import { toast } from 'sonner';
+import { callAIWithTimeout } from '@/lib/ai-timeout-wrapper';
 
 interface MEDDPICCData {
   metrics: {
@@ -193,7 +194,7 @@ export function AIQualificationDashboard() {
         Focus on actionable insights that will help the sales team improve their qualification and increase win rates.
       `;
 
-      const response = await spark.llm(analysisPrompt, 'gpt-4o', true);
+      const response = await callAIWithTimeout(analysisPrompt, 'gpt-4o', true);
       const analysis = JSON.parse(response);
 
       // Update AI insights with generated data
@@ -212,20 +213,20 @@ export function AIQualificationDashboard() {
       toast.success('AI analysis completed successfully!');
     } catch (error) {
       console.error('AI analysis error:', error);
+      const isTimeout = error instanceof Error && error.message.includes('timeout');
       
       // Fallback with demo insights if AI fails
       const demoInsights: AIInsights = {
-        overall_score: 78,
+        overall_score: isTimeout ? 50 : 78,
         risk_level: 'Medium',
-        confidence: 85,
+        confidence: isTimeout ? 40 : 85,
         strengths: [
-          'Strong champion identified with high internal influence',
-          'Clear budget allocation and ROI expectations defined',
-          'Compelling event driving urgency for decision',
-          'Well-defined technical and business requirements'
+          isTimeout ? 'AI analysis timed out - manual review recommended' : 'Strong champion identified with high internal influence',
+          'Budget allocation appears to be in progress',
+          'Technical requirements partially documented'
         ],
         weaknesses: [
-          'Limited engagement with economic buyer',
+          isTimeout ? 'AI timeout prevented full analysis' : 'Limited engagement with economic buyer',
           'Competitive landscape not fully mapped',
           'Decision process timeline unclear',
           'Pain point impact quantification needed'

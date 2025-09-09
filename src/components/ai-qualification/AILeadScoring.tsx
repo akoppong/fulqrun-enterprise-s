@@ -27,6 +27,7 @@ import {
 } from '@phosphor-icons/react';
 import { useKV } from '@github/spark/hooks';
 import { toast } from 'sonner';
+import { callAIWithTimeout } from '@/lib/ai-timeout-wrapper';
 
 interface LeadData {
   id: string;
@@ -191,7 +192,7 @@ export function AILeadScoring() {
         `;
 
         try {
-          const response = await spark.llm(scoringPrompt, 'gpt-4o', true);
+          const response = await callAIWithTimeout(scoringPrompt, 'gpt-4o', true);
           const analysis = JSON.parse(response);
           
           scoredLeads.push({
@@ -209,6 +210,9 @@ export function AILeadScoring() {
             recommended_strategy: analysis.recommended_strategy || ''
           });
         } catch (error) {
+          console.warn('AI scoring failed for lead:', lead.id, error);
+          const isTimeout = error instanceof Error && error.message.includes('timeout');
+          
           // Fallback scoring if AI fails
           const fallbackScore: LeadScore = {
             lead_id: lead.id,
@@ -218,15 +222,14 @@ export function AILeadScoring() {
             engagement_score: lead.engagement_level === 'High' ? 85 : lead.engagement_level === 'Medium' ? 65 : 45,
             priority_level: lead.engagement_level === 'High' ? 'Hot' : 'Warm',
             reasons: [
-              'Strong company fit for our ICP',
-              'Demonstrated budget authority',
-              'Active engagement with content',
-              'Clear pain points identified'
+              isTimeout ? 'AI scoring timed out - using fallback' : 'AI scoring failed - using fallback',
+              'Company appears to fit ICP profile',
+              'Engagement level indicates potential interest'
             ],
             next_actions: [
+              'Review lead manually due to AI scoring issue',
               'Schedule discovery call within 48 hours',
-              'Send personalized ROI calculator',
-              'Share relevant case studies'
+              'Send personalized ROI calculator'
             ],
             risk_factors: [
               'Timeline may be optimistic',

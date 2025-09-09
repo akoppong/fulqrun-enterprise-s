@@ -26,6 +26,7 @@ import {
 } from '@phosphor-icons/react';
 import { useKV } from '@github/spark/hooks';
 import { toast } from 'sonner';
+import { callAIWithTimeout } from '@/lib/ai-timeout-wrapper';
 
 interface DealData {
   id: string;
@@ -189,7 +190,7 @@ export function AIDealRiskAssessment() {
         `;
 
         try {
-          const response = await spark.llm(riskPrompt, 'gpt-4o', true);
+          const response = await callAIWithTimeout(riskPrompt, 'gpt-4o', true);
           const analysis = JSON.parse(response);
           
           assessments.push({
@@ -206,26 +207,29 @@ export function AIDealRiskAssessment() {
             deal_health_trends: analysis.deal_health_trends || []
           });
         } catch (error) {
+          console.warn('AI risk assessment failed for deal:', deal.id, error);
+          const isTimeout = error instanceof Error && error.message.includes('timeout');
+          
           // Fallback assessment if AI fails
           const fallbackAssessment: RiskAssessment = {
             deal_id: deal.id,
             overall_risk: deal.probability > 70 ? 'Low' : deal.probability > 40 ? 'Medium' : 'High',
             risk_score: 100 - deal.probability,
-            confidence_level: 80,
+            confidence_level: isTimeout ? 50 : 80,
             risk_factors: [
               {
-                category: 'Competition',
-                risk: 'Strong competitive pressure identified',
-                impact: 'High',
-                probability: 70,
-                mitigation: 'Develop competitive differentiation strategy'
+                category: 'System',
+                risk: isTimeout ? 'AI analysis timed out - manual review required' : 'AI analysis failed - manual review recommended',
+                impact: 'Medium',
+                probability: 100,
+                mitigation: 'Conduct manual risk assessment'
               },
               {
-                category: 'Timeline',
-                risk: 'Extended sales cycle beyond normal range',
+                category: 'Competition',
+                risk: 'Competitive pressure may exist',
                 impact: 'Medium',
-                probability: 60,
-                mitigation: 'Create urgency with compelling business case'
+                probability: 50,
+                mitigation: 'Review competitive positioning'
               }
             ],
             positive_indicators: [

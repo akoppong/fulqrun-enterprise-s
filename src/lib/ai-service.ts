@@ -7,6 +7,34 @@ import { SegmentUtils } from './segment-utils';
  */
 
 export class AIService {
+  private static readonly TIMEOUT_MS = 30000; // 30 seconds
+  private static readonly RETRY_ATTEMPTS = 2;
+
+  /**
+   * Execute LLM call with timeout and retry logic
+   */
+  private static async callLLMWithTimeout(prompt: string, model = 'gpt-4o', jsonMode = true): Promise<string> {
+    for (let attempt = 1; attempt <= this.RETRY_ATTEMPTS; attempt++) {
+      try {
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error('Request timeout')), this.TIMEOUT_MS);
+        });
+
+        const llmPromise = spark.llm(prompt, model, jsonMode);
+        const response = await Promise.race([llmPromise, timeoutPromise]);
+        return response;
+      } catch (error) {
+        console.warn(`LLM call attempt ${attempt} failed:`, error);
+        if (attempt === this.RETRY_ATTEMPTS) {
+          throw error;
+        }
+        // Wait before retry (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+      }
+    }
+    throw new Error('All retry attempts failed');
+  }
+
   /**
    * Analyze an opportunity and generate AI insights
    */
@@ -42,7 +70,7 @@ export class AIService {
     `;
     
     try {
-      const response = await spark.llm(prompt, 'gpt-4o', true);
+      const response = await this.callLLMWithTimeout(prompt, 'gpt-4o', true);
       const insights = JSON.parse(response);
       
       return {
@@ -55,9 +83,15 @@ export class AIService {
       };
     } catch (error) {
       console.error('AI analysis error:', error);
+      
+      // Check if it's a timeout error and provide specific feedback
+      const errorMessage = error instanceof Error && error.message.includes('timeout') 
+        ? 'AI service temporarily unavailable (timeout)'
+        : 'AI analysis unavailable';
+      
       return {
         riskScore: 50,
-        nextBestActions: ['Review MEDDPICC qualification', 'Schedule follow-up meeting', 'Validate decision timeline'],
+        nextBestActions: [`Service issue: ${errorMessage}`, 'Review MEDDPICC qualification', 'Schedule follow-up meeting'],
         confidenceLevel: 'low' as const,
         lastAiUpdate: new Date()
       };
@@ -87,7 +121,7 @@ export class AIService {
     `;
 
     try {
-      const response = await spark.llm(prompt, 'gpt-4o', true);
+      const response = await this.callLLMWithTimeout(prompt, 'gpt-4o', true);
       const hints = JSON.parse(response);
       
       return {
@@ -97,10 +131,15 @@ export class AIService {
       };
     } catch (error) {
       console.error('MEDDPICC hints error:', error);
+      
+      const errorMessage = error instanceof Error && error.message.includes('timeout') 
+        ? 'AI hints unavailable (timeout)' 
+        : 'AI hints unavailable';
+      
       return {
-        metricsHints: ['What ROI metrics matter most to your organization?', 'How do you currently measure success in this area?', 'What cost savings or revenue impact would make this a priority?'],
-        championHints: ['Who has advocated for similar initiatives in the past?', 'Who would benefit most from solving this problem?', 'Who has influence with the decision makers?'],
-        riskFactors: ['Unclear decision timeline', 'Multiple vendors being evaluated', 'Budget not formally allocated']
+        metricsHints: [errorMessage, 'What ROI metrics matter most to your organization?', 'How do you currently measure success in this area?'],
+        championHints: [errorMessage, 'Who has advocated for similar initiatives in the past?', 'Who would benefit most from solving this problem?'],
+        riskFactors: [errorMessage, 'Unclear decision timeline', 'Multiple vendors being evaluated']
       };
     }
   }
@@ -137,7 +176,7 @@ export class AIService {
     `;
 
     try {
-      const response = await spark.llm(prompt, 'gpt-4o', true);
+      const response = await this.callLLMWithTimeout(prompt, 'gpt-4o', true);
       const parsed = JSON.parse(response);
       
       // Ensure all fields are properly formatted
@@ -149,11 +188,15 @@ export class AIService {
       };
     } catch (error) {
       console.error('Performance analysis error:', error);
+      const errorMessage = error instanceof Error && error.message.includes('timeout') 
+        ? 'Performance analysis timed out' 
+        : 'Performance analysis failed';
+      
       return {
-        strengths: ['Active pipeline management', 'Consistent follow-up practices'],
-        improvements: ['Qualification consistency', 'Deal size optimization'],
-        recommendations: ['Focus on MEDDPICC completion', 'Improve champion development', 'Accelerate decision processes'],
-        benchmark: 'Review industry standards for your sector'
+        strengths: [errorMessage, 'Active pipeline management', 'Consistent follow-up practices'],
+        improvements: ['AI analysis unavailable - manual review needed', 'Qualification consistency'],
+        recommendations: ['Retry performance analysis when service is available', 'Focus on MEDDPICC completion'],
+        benchmark: 'AI benchmark analysis currently unavailable'
       };
     }
   }
@@ -268,7 +311,7 @@ export class AIService {
     `;
 
     try {
-      const response = await spark.llm(prompt, 'gpt-4o', true);
+      const response = await this.callLLMWithTimeout(prompt, 'gpt-4o', true);
       const result = JSON.parse(response);
       
       return {
@@ -298,7 +341,21 @@ export class AIService {
       };
     } catch (error) {
       console.error('Lead scoring error:', error);
-      return this.getDefaultLeadScore(contact);
+      const isTimeout = error instanceof Error && error.message.includes('timeout');
+      const defaultScore = this.getDefaultLeadScore(contact);
+      
+      // Add timeout context to the default score
+      if (isTimeout) {
+        defaultScore.factors.unshift({
+          name: 'AI Service',
+          value: 0,
+          weight: 10,
+          impact: 'Scoring timed out - using fallback analysis'
+        });
+        defaultScore.recommendations = [`AI scoring timed out - manual review recommended`, ...defaultScore.recommendations.slice(0, 2)];
+      }
+      
+      return defaultScore;
     }
   }
 
@@ -373,7 +430,7 @@ export class AIService {
     `;
 
     try {
-      const response = await spark.llm(prompt, 'gpt-4o', true);
+      const response = await this.callLLMWithTimeout(prompt, 'gpt-4o', true);
       const result = JSON.parse(response);
       
       return {
@@ -412,7 +469,23 @@ export class AIService {
       };
     } catch (error) {
       console.error('Risk assessment error:', error);
-      return this.getDefaultRiskAssessment(opportunity);
+      const isTimeout = error instanceof Error && error.message.includes('timeout');
+      const defaultAssessment = this.getDefaultRiskAssessment(opportunity);
+      
+      // Add timeout context to the default assessment
+      if (isTimeout) {
+        defaultAssessment.factors.unshift({
+          category: 'System',
+          risk: 'AI risk assessment timed out',
+          impact: 'Medium',
+          probability: 100,
+          mitigation: 'Complete manual risk assessment'
+        });
+        defaultAssessment.recommendations.unshift('AI assessment failed - conduct manual review');
+        defaultAssessment.confidence = 30;
+      }
+      
+      return defaultAssessment;
     }
   }
 
@@ -448,17 +521,22 @@ export class AIService {
     `;
 
     try {
-      const response = await spark.llm(prompt, 'gpt-4o', true);
+      const response = await this.callLLMWithTimeout(prompt, 'gpt-4o', true);
       return JSON.parse(response);
     } catch (error) {
       console.error('Pipeline forecast error:', error);
+      const isTimeout = error instanceof Error && error.message.includes('timeout');
+      
       return {
-        healthScore: 75,
-        forecastAccuracy: 85,
-        atRiskDeals: [],
+        healthScore: isTimeout ? 50 : 75,
+        forecastAccuracy: isTimeout ? 60 : 85,
+        atRiskDeals: isTimeout ? ['AI analysis timed out - manual review required'] : [],
         quarterlyForecast: { q1: 0, q2: 0, q3: 0, q4: 0 },
-        recommendations: ['Improve MEDDPICC qualification', 'Focus on champion development'],
-        earlyWarnings: ['Monitor deal velocity changes']
+        recommendations: [
+          isTimeout ? 'AI forecast timed out - conduct manual analysis' : 'Improve MEDDPICC qualification', 
+          'Focus on champion development'
+        ],
+        earlyWarnings: [isTimeout ? 'AI forecasting service unavailable' : 'Monitor deal velocity changes']
       };
     }
   }
@@ -567,7 +645,7 @@ export class AIService {
     `;
 
     try {
-      const response = await spark.llm(prompt, 'gpt-4o', true);
+      const response = await this.callLLMWithTimeout(prompt, 'gpt-4o', true);
       const result = JSON.parse(response);
       
       return {
@@ -583,14 +661,18 @@ export class AIService {
       };
     } catch (error) {
       console.error('AI segment assignment error:', error);
+      const isTimeout = error instanceof Error && error.message.includes('timeout');
+      
       // Fallback to rule-based assignment
       const fallback = SegmentUtils.findBestSegmentMatch(company, segments);
       return {
         segmentId: fallback?.segment.id || segments[0]?.id,
-        confidence: fallback?.confidence || 50,
-        reasoning: fallback?.reason || 'Fallback assignment based on basic criteria',
+        confidence: isTimeout ? 30 : (fallback?.confidence || 50),
+        reasoning: isTimeout 
+          ? 'AI assignment timed out - using rule-based fallback' 
+          : (fallback?.reason || 'Fallback assignment based on basic criteria'),
         strategicInsights: [
-          'Review company profile for additional strategic context',
+          isTimeout ? 'AI insights unavailable due to timeout' : 'Review company profile for additional strategic context',
           'Validate segment fit through direct engagement'
         ],
         alternativeSegments: []
@@ -659,7 +741,7 @@ export class AIService {
     `;
 
     try {
-      const response = await spark.llm(prompt, 'gpt-4o', true);
+      const response = await this.callLLMWithTimeout(prompt, 'gpt-4o', true);
       const result = JSON.parse(response);
       
       return {
@@ -671,12 +753,26 @@ export class AIService {
       };
     } catch (error) {
       console.error('Segment insights error:', error);
+      const isTimeout = error instanceof Error && error.message.includes('timeout');
+      
       return {
-        performance: `Segment contains ${segmentCompanies.length} companies with average revenue of ${avgRevenue.toLocaleString()}`,
-        trends: ['Digital transformation acceleration', 'Cost optimization focus', 'Remote work adaptation'],
-        opportunities: ['Expand into adjacent markets', 'Develop partnership channels'],
-        recommendations: ['Refine targeting criteria', 'Enhance value proposition', 'Improve sales process'],
-        competitivePosition: 'Market position assessment needed'
+        performance: isTimeout 
+          ? `AI analysis timed out - ${segmentCompanies.length} companies, avg revenue ${avgRevenue.toLocaleString()}`
+          : `Segment contains ${segmentCompanies.length} companies with average revenue of ${avgRevenue.toLocaleString()}`,
+        trends: [
+          isTimeout ? 'AI trend analysis unavailable' : 'Digital transformation acceleration', 
+          'Cost optimization focus', 
+          'Remote work adaptation'
+        ],
+        opportunities: [
+          isTimeout ? 'AI opportunities analysis failed' : 'Expand into adjacent markets', 
+          'Develop partnership channels'
+        ],
+        recommendations: [
+          isTimeout ? 'Retry AI analysis when service available' : 'Refine targeting criteria', 
+          'Enhance value proposition'
+        ],
+        competitivePosition: isTimeout ? 'AI competitive analysis timed out' : 'Market position assessment needed'
       };
     }
   }

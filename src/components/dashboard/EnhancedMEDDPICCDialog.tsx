@@ -20,7 +20,7 @@ import {
   Clock
 } from '@phosphor-icons/react';
 import { MEDDPICC, Opportunity, Company } from '@/lib/types';
-import { AIService } from '@/lib/ai-service';
+import { callAIWithTimeout } from '@/lib/ai-timeout-wrapper';
 import { toast } from 'sonner';
 
 interface EnhancedMEDDPICCDialogProps {
@@ -125,7 +125,7 @@ export function EnhancedMEDDPICCDialog({
       Return as JSON: {score, recommendations, strengths, gaps}
       `;
       
-      const response = await spark.llm(prompt, 'gpt-4o', true);
+      const response = await callAIWithTimeout(prompt, 'gpt-4o', true);
       const analysis = JSON.parse(response);
       
       setMeddpicc(prev => ({
@@ -136,7 +136,8 @@ export function EnhancedMEDDPICCDialog({
       toast.success(`AI Analysis Complete - Score: ${analysis.score}/100`);
     } catch (error) {
       console.error('AI analysis failed:', error);
-      toast.error('AI analysis failed');
+      const isTimeout = error instanceof Error && error.message.includes('timeout');
+      toast.error(isTimeout ? 'AI analysis timed out - please try again' : 'AI analysis failed');
     } finally {
       setAnalysisLoading(false);
     }

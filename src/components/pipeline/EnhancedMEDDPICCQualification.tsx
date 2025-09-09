@@ -11,6 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
+import { callAIWithTimeout } from '@/lib/ai-timeout-wrapper';
 import {
   Brain,
   Target,
@@ -236,7 +237,7 @@ export function EnhancedMEDDPICCQualification({
         Provide insights for gaps, risks, opportunities, and specific actionable recommendations.
       `;
       
-      const insights = await spark.llm(prompt, 'gpt-4o', true);
+      const insights = await callAIWithTimeout(prompt, 'gpt-4o', true);
       const parsedInsights = JSON.parse(insights);
       
       // Update each section with AI insights
@@ -253,7 +254,8 @@ export function EnhancedMEDDPICCQualification({
       toast.success('AI insights generated successfully');
     } catch (error) {
       console.error('Failed to generate AI insights:', error);
-      toast.error('Failed to generate AI insights');
+      const isTimeout = error instanceof Error && error.message.includes('timeout');
+      toast.error(isTimeout ? 'AI insights timed out - please try again' : 'Failed to generate AI insights');
     } finally {
       setIsGeneratingInsights(false);
     }
