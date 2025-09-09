@@ -4,15 +4,25 @@ import { PipelineBuilder } from './PipelineBuilder';
 import { EnhancedPipelineView } from './EnhancedPipelineView';
 import { WorkflowAutomationEngine } from './WorkflowAutomationEngine';
 import { PipelineAnalyticsDashboard } from './PipelineAnalyticsDashboard';
+import { PipelineTemplateManager } from './PipelineTemplateManager';
+import { MultiPipelineDashboard } from './MultiPipelineDashboard';
+import { PipelineConfiguration } from '@/lib/types';
 import { 
   Gear, 
   BarChart, 
   Zap, 
-  Target 
+  Target,
+  Template,
+  ChartLine
 } from '@phosphor-icons/react';
 
 export function AdvancedPipelineManagement() {
-  const [activeTab, setActiveTab] = useState('pipeline');
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [selectedPipeline, setSelectedPipeline] = useState<PipelineConfiguration | null>(null);
+
+  const handlePipelineSelect = (pipeline: PipelineConfiguration) => {
+    setSelectedPipeline(pipeline);
+  };
 
   return (
     <div className="space-y-6">
@@ -26,7 +36,15 @@ export function AdvancedPipelineManagement() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="dashboard" className="flex items-center gap-2">
+            <ChartLine size={16} />
+            Dashboard
+          </TabsTrigger>
+          <TabsTrigger value="templates" className="flex items-center gap-2">
+            <Template size={16} />
+            Templates
+          </TabsTrigger>
           <TabsTrigger value="pipeline" className="flex items-center gap-2">
             <Target size={16} />
             Pipeline View
@@ -45,12 +63,20 @@ export function AdvancedPipelineManagement() {
           </TabsTrigger>
         </TabsList>
 
+        <TabsContent value="dashboard" className="space-y-6">
+          <MultiPipelineDashboard />
+        </TabsContent>
+
+        <TabsContent value="templates" className="space-y-6">
+          <PipelineTemplateManager onPipelineSelect={handlePipelineSelect} />
+        </TabsContent>
+
         <TabsContent value="pipeline" className="space-y-6">
-          <EnhancedPipelineView />
+          <EnhancedPipelineView selectedPipeline={selectedPipeline} />
         </TabsContent>
 
         <TabsContent value="builder" className="space-y-6">
-          <PipelineBuilder />
+          <PipelineBuilder selectedPipeline={selectedPipeline} />
         </TabsContent>
 
         <TabsContent value="automation" className="space-y-6">

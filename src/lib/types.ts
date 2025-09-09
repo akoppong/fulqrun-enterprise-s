@@ -54,7 +54,8 @@ export interface Opportunity {
   title: string;
   description: string;
   value: number;
-  stage: 'prospect' | 'engage' | 'acquire' | 'keep';
+  stage: string; // Changed to string to support custom pipeline stages
+  pipelineId?: string; // Pipeline configuration ID
   probability: number;
   expectedCloseDate: string; // ISO date string for reliable serialization
   ownerId: string;

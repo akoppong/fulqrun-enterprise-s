@@ -10,6 +10,257 @@ import {
   PEAK_STAGES
 } from './types';
 
+// Pre-defined pipeline templates for different sales processes
+export const PIPELINE_TEMPLATES: PipelineConfiguration[] = [
+  // Enterprise B2B Sales Pipeline
+  {
+    id: 'enterprise-b2b',
+    name: 'Enterprise B2B Sales',
+    description: 'Complex sales process for large enterprise deals with long sales cycles',
+    stages: [
+      {
+        id: 'lead-qualification',
+        name: 'Lead Qualification',
+        description: 'Initial qualification and BANT assessment',
+        position: 0,
+        color: 'bg-slate-100 text-slate-800',
+        probability: 10,
+        isDefault: true,
+        automationRules: [],
+        requiredFields: ['company', 'contact', 'budget'],
+        exitCriteria: ['BANT qualified', 'Decision maker identified'],
+        workflows: [],
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: 'discovery',
+        name: 'Discovery & Needs Analysis',
+        description: 'Deep dive into customer needs and pain points',
+        position: 1,
+        color: 'bg-blue-100 text-blue-800',
+        probability: 25,
+        isDefault: false,
+        automationRules: [],
+        requiredFields: ['pain_points', 'decision_criteria', 'timeline'],
+        exitCriteria: ['Needs documented', 'Stakeholders mapped', 'Champion identified'],
+        workflows: [],
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: 'solution-design',
+        name: 'Solution Design',
+        description: 'Custom solution development and presentation',
+        position: 2,
+        color: 'bg-purple-100 text-purple-800',
+        probability: 40,
+        isDefault: false,
+        automationRules: [],
+        requiredFields: ['solution_requirements', 'technical_specs'],
+        exitCriteria: ['Solution approved', 'Technical validation complete'],
+        workflows: [],
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: 'proposal',
+        name: 'Proposal & Negotiation',
+        description: 'Formal proposal submission and contract negotiation',
+        position: 3,
+        color: 'bg-orange-100 text-orange-800',
+        probability: 65,
+        isDefault: false,
+        automationRules: [],
+        requiredFields: ['proposal_sent', 'pricing_approved'],
+        exitCriteria: ['Proposal reviewed', 'Terms negotiated', 'Legal approval obtained'],
+        workflows: [],
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: 'contracting',
+        name: 'Contracting & Legal',
+        description: 'Final contract review and execution',
+        position: 4,
+        color: 'bg-yellow-100 text-yellow-800',
+        probability: 85,
+        isDefault: false,
+        automationRules: [],
+        requiredFields: ['contract_terms', 'legal_review'],
+        exitCriteria: ['Contract signed', 'Payment terms agreed'],
+        workflows: [],
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: 'closed-won',
+        name: 'Closed Won',
+        description: 'Deal successfully closed and implementation initiated',
+        position: 5,
+        color: 'bg-green-100 text-green-800',
+        probability: 100,
+        isDefault: false,
+        automationRules: [],
+        requiredFields: ['implementation_plan', 'success_criteria'],
+        exitCriteria: ['Deal closed', 'Implementation started'],
+        workflows: [],
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ],
+    defaultProbabilities: {
+      'lead-qualification': 10,
+      'discovery': 25,
+      'solution-design': 40,
+      'proposal': 65,
+      'contracting': 85,
+      'closed-won': 100
+    },
+    salesCycleTargets: {
+      'lead-qualification': 3,
+      'discovery': 14,
+      'solution-design': 21,
+      'proposal': 14,
+      'contracting': 7,
+      'closed-won': 1
+    },
+    conversionTargets: {
+      'lead-qualification-to-discovery': 40,
+      'discovery-to-solution-design': 60,
+      'solution-design-to-proposal': 70,
+      'proposal-to-contracting': 80,
+      'contracting-to-closed-won': 90
+    },
+    isActive: true,
+    createdBy: 'system',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+
+  // SMB/Transactional Sales Pipeline
+  {
+    id: 'smb-transactional',
+    name: 'SMB Transactional Sales',
+    description: 'Fast-moving sales process for small to medium business deals',
+    stages: [
+      {
+        id: 'inbound-lead',
+        name: 'Inbound Lead',
+        description: 'New leads from marketing campaigns and referrals',
+        position: 0,
+        color: 'bg-cyan-100 text-cyan-800',
+        probability: 15,
+        isDefault: true,
+        automationRules: [],
+        requiredFields: ['lead_source', 'contact_info'],
+        exitCriteria: ['Lead qualified', 'Initial contact made'],
+        workflows: [],
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: 'qualification-call',
+        name: 'Qualification Call',
+        description: 'Quick qualification and needs assessment',
+        position: 1,
+        color: 'bg-indigo-100 text-indigo-800',
+        probability: 35,
+        isDefault: false,
+        automationRules: [],
+        requiredFields: ['budget_range', 'timeline', 'decision_maker'],
+        exitCriteria: ['Needs confirmed', 'Budget qualified', 'Timeline established'],
+        workflows: [],
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: 'demo-presentation',
+        name: 'Demo & Presentation',
+        description: 'Product demonstration and value proposition',
+        position: 2,
+        color: 'bg-violet-100 text-violet-800',
+        probability: 55,
+        isDefault: false,
+        automationRules: [],
+        requiredFields: ['demo_completed', 'value_proposition'],
+        exitCriteria: ['Demo delivered', 'Value demonstrated', 'Next steps defined'],
+        workflows: [],
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: 'proposal-quote',
+        name: 'Proposal & Quote',
+        description: 'Formal quote and proposal delivery',
+        position: 3,
+        color: 'bg-amber-100 text-amber-800',
+        probability: 75,
+        isDefault: false,
+        automationRules: [],
+        requiredFields: ['quote_sent', 'pricing_confirmed'],
+        exitCriteria: ['Quote approved', 'Terms accepted'],
+        workflows: [],
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: 'closed-won-smb',
+        name: 'Closed Won',
+        description: 'Deal closed and onboarding initiated',
+        position: 4,
+        color: 'bg-green-100 text-green-800',
+        probability: 100,
+        isDefault: false,
+        automationRules: [],
+        requiredFields: ['payment_received', 'onboarding_scheduled'],
+        exitCriteria: ['Payment processed', 'Customer onboarded'],
+        workflows: [],
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ],
+    defaultProbabilities: {
+      'inbound-lead': 15,
+      'qualification-call': 35,
+      'demo-presentation': 55,
+      'proposal-quote': 75,
+      'closed-won-smb': 100
+    },
+    salesCycleTargets: {
+      'inbound-lead': 1,
+      'qualification-call': 3,
+      'demo-presentation': 7,
+      'proposal-quote': 5,
+      'closed-won-smb': 1
+    },
+    conversionTargets: {
+      'inbound-lead-to-qualification-call': 70,
+      'qualification-call-to-demo-presentation': 65,
+      'demo-presentation-to-proposal-quote': 60,
+      'proposal-quote-to-closed-won-smb': 85
+    },
+    isActive: true,
+    createdBy: 'system',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  }
+];
+
+// Get all available pipeline configurations (templates + custom)
+export function getAllPipelineConfigurations(customPipelines: PipelineConfiguration[] = []): PipelineConfiguration[] {
+  return [...PIPELINE_TEMPLATES, ...customPipelines];
+}
+
+// Find a specific pipeline configuration by ID
+export function getPipelineConfiguration(
+  id: string, 
+  customPipelines: PipelineConfiguration[] = []
+): PipelineConfiguration | undefined {
+  const allPipelines = getAllPipelineConfigurations(customPipelines);
+  return allPipelines.find(pipeline => pipeline.id === id);
+}
+
 // Default pipeline configuration based on PEAK methodology
 export function createDefaultPipelineConfiguration(): PipelineConfiguration {
   const stages: PipelineStage[] = PEAK_STAGES.map((stage, index) => ({
