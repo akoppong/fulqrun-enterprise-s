@@ -384,7 +384,7 @@ export function withDateValidation<T extends Record<string, any>>(
   Component: React.ComponentType<T>,
   dateFields: string[] = [],
   validationOptions: DateValidationOptions = {}
-) {
+): React.ComponentType<T> {
   return function DateValidatedComponent(props: T) {
     const validatedProps = { ...props };
     
