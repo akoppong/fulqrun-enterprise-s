@@ -121,45 +121,6 @@ export function CreateSegmentDialog({ isOpen, onClose, onSubmit }: CreateSegment
       setError('Failed to create segment. Please try again.');
     }
   };
-      setValidationErrors(prev => ({
-        ...prev,
-        'criteria.revenue.min': 'Minimum revenue must be less than maximum revenue',
-        'criteria.revenue.max': 'Maximum revenue must be greater than minimum revenue'
-      }));
-      setCurrentTab('criteria');
-      toast.error('Please fix revenue range validation errors');
-      return;
-    }
-
-    setIsSubmitting(true);
-    
-    try {
-      const segment: Omit<CustomerSegment, 'id' | 'createdBy' | 'createdAt' | 'updatedAt'> = {
-        ...formData,
-        metrics: {
-          totalOpportunities: 0,
-          totalValue: 0,
-          conversionRate: 0.2,
-          averageDealSize: formData.characteristics.avgDealSize,
-          averageSalesCycle: formData.characteristics.avgSalesCycle,
-          customerLifetimeValue: formData.characteristics.avgDealSize * 5,
-          acquisitionCost: formData.characteristics.avgDealSize * 0.1,
-          retention: 0.8,
-          expansion: 1.2,
-          nps: 50,
-          lastCalculated: new Date().toISOString()
-        }
-      };
-
-      await onSubmit(segment);
-      toast.success('Customer segment created successfully!');
-      resetForm();
-    } catch (error) {
-      toast.error('Failed to create segment. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const resetForm = () => {
     setFormData({
