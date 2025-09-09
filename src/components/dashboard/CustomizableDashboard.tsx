@@ -328,6 +328,8 @@ export function CustomizableDashboard({ user, onConfigChange }: CustomizableDash
     setSelectedWidgetForConfig(widget);
     setIsConfigDialogOpen(true);
   }, []);
+
+  const removeWidget = useCallback((widgetId: string) => {
     if (!activeDashboard) return;
 
     const updatedDashboard: DashboardConfig = {
