@@ -469,7 +469,7 @@ export function IntegrationHub() {
                                 </div>
                                 {integration.lastSync && (
                                   <div className="text-xs text-muted-foreground">
-                                    Last sync: {integration.lastSync.toLocaleDateString()}
+                                    Last sync: {new Date(integration.lastSync).toLocaleDateString()}
                                   </div>
                                 )}
                               </div>

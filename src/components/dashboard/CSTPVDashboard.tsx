@@ -56,7 +56,11 @@ export function CSTPVDashboard({ opportunities, currentUser, allUsers = [] }: CS
     
     // Calculate average sales cycle (simplified)
     const avgSalesCycle = filteredOpportunities.reduce((acc, o) => {
-      const daysDiff = Math.floor((new Date().getTime() - o.createdAt.getTime()) / (1000 * 60 * 60 * 24));
+      const createdDate = new Date(o.createdAt);
+      if (isNaN(createdDate.getTime())) {
+        return acc; // Skip invalid dates
+      }
+      const daysDiff = Math.floor((new Date().getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
       return acc + daysDiff;
     }, 0) / totalOpps || 0;
 

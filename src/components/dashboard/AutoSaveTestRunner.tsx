@@ -374,7 +374,7 @@ export function AutoSaveTestRunner() {
                 
                 {test.timestamp && (
                   <div className="mt-2 text-xs text-muted-foreground">
-                    Completed: {test.timestamp.toLocaleTimeString()}
+                    Completed: {new Date(test.timestamp).toLocaleTimeString()}
                   </div>
                 )}
               </div>

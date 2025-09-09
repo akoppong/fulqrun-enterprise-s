@@ -1365,7 +1365,7 @@ export function FieldTypeTestingLab() {
                                 {JSON.stringify(result.testData).slice(0, 30)}...
                               </code>
                               <span className="text-xs text-muted-foreground">
-                                {result.timestamp.toLocaleTimeString()}
+                                {result.timestamp ? new Date(result.timestamp).toLocaleTimeString() : 'N/A'}
                               </span>
                             </div>
                           </div>

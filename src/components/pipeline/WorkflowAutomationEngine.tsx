@@ -320,7 +320,7 @@ export function WorkflowAutomationEngine() {
                       <div className="text-sm text-muted-foreground">
                         <div>Executed: {workflow.executionCount} times</div>
                         {workflow.lastExecuted && (
-                          <div>Last: {workflow.lastExecuted.toLocaleDateString()}</div>
+                          <div>Last: {new Date(workflow.lastExecuted).toLocaleDateString()}</div>
                         )}
                       </div>
                     </div>

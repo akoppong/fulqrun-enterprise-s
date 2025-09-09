@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
+import { safeGetTime } from '@/lib/utils';
 import {
   GraduationCap,
   BookOpen,
@@ -527,7 +528,7 @@ function LearningDashboard({
 }) {
   const inProgressCourses = userProgress.filter(p => p.status === 'in-progress');
   const recentActivity = userProgress
-    .sort((a, b) => b.lastAccessedAt.getTime() - a.lastAccessedAt.getTime())
+    .sort((a, b) => safeGetTime(b.lastAccessedAt) - safeGetTime(a.lastAccessedAt))
     .slice(0, 5);
 
   return (
@@ -643,7 +644,7 @@ function LearningDashboard({
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{course.title}</p>
                       <p className="text-xs text-muted-foreground">
-                        {progress.lastAccessedAt.toLocaleDateString()}
+                        {new Date(progress.lastAccessedAt).toLocaleDateString()}
                       </p>
                     </div>
                     <Badge variant="outline" className="text-xs">
@@ -934,7 +935,7 @@ function ProgressTracker({
                     
                     <div>
                       <div className="text-sm text-muted-foreground mb-1">Last Accessed</div>
-                      <div className="font-medium">{progress.lastAccessedAt.toLocaleDateString()}</div>
+                      <div className="font-medium">{new Date(progress.lastAccessedAt).toLocaleDateString()}</div>
                     </div>
                   </div>
 
@@ -1020,7 +1021,7 @@ function CertificatesView({
                   <div>
                     <h3 className="font-semibold mb-1">{course.title} Certification</h3>
                     <p className="text-sm text-muted-foreground mb-2">
-                      Earned on {cert.earnedAt.toLocaleDateString()}
+                      Earned on {new Date(cert.earnedAt).toLocaleDateString()}
                     </p>
                     
                     <div className="flex items-center gap-4 text-sm">
@@ -1031,7 +1032,7 @@ function CertificatesView({
                       {cert.validUntil && (
                         <div>
                           <span className="text-muted-foreground">Valid until: </span>
-                          <span className="font-medium">{cert.validUntil.toLocaleDateString()}</span>
+                          <span className="font-medium">{new Date(cert.validUntil).toLocaleDateString()}</span>
                         </div>
                       )}
                     </div>

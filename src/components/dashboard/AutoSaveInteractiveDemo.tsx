@@ -14,6 +14,7 @@ import { useAutoSave } from '@/hooks/use-auto-save';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
+import { safeGetTime } from '@/lib/utils';
 import { 
   FloppyDisk, 
   TestTube, 
@@ -668,7 +669,7 @@ export function AutoSaveInteractiveDemo() {
                 <div className="space-y-2">
                   {testResults.slice().reverse().map((result) => (
                     <div
-                      key={`${result.id}-${result.timestamp.getTime()}`}
+                      key={`${result.id}-${safeGetTime(result.timestamp)}`}
                       className="flex items-center justify-between p-3 border rounded-lg"
                     >
                       <div className="flex items-center gap-3">
@@ -685,7 +686,7 @@ export function AutoSaveInteractiveDemo() {
                       </div>
                       
                       <div className="text-xs text-muted-foreground">
-                        {result.timestamp.toLocaleTimeString()}
+                        {result.timestamp ? new Date(result.timestamp).toLocaleTimeString() : 'N/A'}
                       </div>
                     </div>
                   ))}

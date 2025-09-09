@@ -16,6 +16,7 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useKV } from '@github/spark/hooks';
 import { toast } from 'sonner';
+import { safeGetTime } from '@/lib/utils';
 import { 
   CheckCircle2, 
   AlertCircle, 
@@ -1147,7 +1148,7 @@ export function ComprehensiveValidationTestSuite() {
                             {result.validationMessage}
                           </p>
                           <p className="text-muted-foreground">
-                            {result.timestamp.toLocaleTimeString()}
+                            {result.timestamp ? new Date(result.timestamp).toLocaleTimeString() : 'N/A'}
                           </p>
                         </div>
                       </div>
@@ -1237,7 +1238,7 @@ export function ComprehensiveValidationTestSuite() {
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-orange-600">
-                    {statistics.totalTests > 0 ? (statistics.totalTests / ((testResults[testResults.length - 1]?.timestamp.getTime() - testResults[0]?.timestamp.getTime()) / 1000 || 1)).toFixed(0) : 0}
+                    {statistics.totalTests > 0 ? (statistics.totalTests / Math.max((safeGetTime(testResults[testResults.length - 1]?.timestamp) - safeGetTime(testResults[0]?.timestamp)) / 1000, 1)).toFixed(0) : 0}
                   </div>
                   <div className="text-sm text-muted-foreground">Tests/Second</div>
                 </div>
