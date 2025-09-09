@@ -10,6 +10,7 @@ import { MobileNavigation } from '../navigation/MobileNavigation';
 import { EnhancedMEDDPICCQualification } from '../pipeline/EnhancedMEDDPICCQualification';
 import { EnhancedLearningPlatform } from './EnhancedLearningPlatform';
 import { Dashboard } from './Dashboard';
+import { CustomizableDashboard } from './CustomizableDashboard';
 import { AIQualificationDashboard, AILeadScoring, AIDealRiskAssessment, AIQualificationDemo } from '../ai-qualification';
 import { AdministrationModule } from '../administration/AdministrationModule';
 import { 
@@ -34,7 +35,8 @@ import {
   Filter,
   Download,
   Share,
-  MoreHorizontal
+  MoreHorizontal,
+  Grid
 } from '@phosphor-icons/react';
 
 interface SimpleDashboardProps {
@@ -50,6 +52,7 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
   const getSubNavigationItems = (mainTab: string) => {
     const subNavMappings: Record<string, any[]> = {
       'full-crm': [
+        { id: 'dashboard-builder', label: 'Dashboard Builder', description: 'Customizable widgets', isNew: true },
         { id: 'pipeline', label: 'Pipeline', description: 'Sales pipeline overview' },
         { id: 'opportunities', label: 'Opportunities', description: 'Deal management' },
         { id: 'contacts', label: 'Contacts', description: 'Contact management' },
@@ -205,7 +208,8 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
     const descriptions: Record<string, string> = {
       'overview': 'Monitor your sales performance, pipeline health, and key metrics at a glance.',
       'ai-demo': 'Experience the power of AI-driven sales qualification and insights.',
-      'full-crm': 'Complete customer relationship management with AI-enhanced features.',
+      'full-crm': 'Complete customer relationship management with AI-enhanced features and customizable dashboards.',
+      'dashboard-builder': 'Create and customize dashboard layouts with drag-and-drop widgets.',
       'pipeline': 'Track and manage your sales pipeline with visual insights.',
       'opportunities': 'Manage active deals and track progress through your sales process.',
       'contacts': 'Maintain relationships with customers and prospects.',
@@ -269,9 +273,10 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
           <div className="flex items-center gap-2">
             <Button size="sm">
               <Plus size={16} />
-              New {subTab === 'opportunities' ? 'Opportunity' : 
-                    subTab === 'contacts' ? 'Contact' : 
-                    subTab === 'companies' ? 'Company' : 'Record'}
+              {subTab === 'dashboard-builder' ? 'Add Widget' : 
+               subTab === 'opportunities' ? 'New Opportunity' : 
+               subTab === 'contacts' ? 'New Contact' : 
+               subTab === 'companies' ? 'New Company' : 'New Record'}
             </Button>
             <Button variant="outline" size="sm">
               <Filter size={16} />
@@ -325,6 +330,8 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
   function renderSubContent(subTab: string) {
     switch (subTab) {
       // CRM Sub-sections
+      case 'dashboard-builder':
+        return <CustomizableDashboard user={user} />;
       case 'pipeline':
       case 'opportunities':
       case 'contacts':
@@ -453,8 +460,14 @@ function OverviewContent() {
           
           <ContentGrid columns="md:grid-cols-2 xl:grid-cols-3">
             <QuickActionCard
+              icon={<Grid size={24} className="text-blue-600" />}
+              title="Dashboard Builder (New!)"
+              description="Create customizable dashboards with drag-and-drop widgets"
+              bgColor="bg-blue-100"
+            />
+            <QuickActionCard
               icon={<Bot size={24} className="text-emerald-600" />}
-              title="AI Demo (New!)"
+              title="AI Demo"
               description="Experience AI-powered qualification system with live demo"
               bgColor="bg-emerald-100"
             />
@@ -481,12 +494,6 @@ function OverviewContent() {
               title="AI Lead Scoring"
               description="Predictive lead scoring and prioritization"
               bgColor="bg-orange-100"
-            />
-            <QuickActionCard
-              icon={<Shield size={24} className="text-red-600" />}
-              title="Deal Risk Analysis"
-              description="AI-powered risk assessment and mitigation"
-              bgColor="bg-red-100"
             />
           </ContentGrid>
         </div>
