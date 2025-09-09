@@ -30,6 +30,7 @@ import {
   TestTube,
   ClipboardList,
   MagicWand,
+  Calendar,
   CaretDown,
   CaretRight,
   X,
@@ -354,6 +355,14 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           label: 'Validation Demo',
           icon: MagicWand,
           description: 'Interactive validation testing',
+          permissionId: 'pipeline',
+          isBeta: true
+        },
+        {
+          id: 'date-validation',
+          label: 'Date Validation',
+          icon: Calendar,
+          description: 'Advanced date validation middleware',
           permissionId: 'pipeline',
           isBeta: true
         },

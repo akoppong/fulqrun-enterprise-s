@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { DateValidator } from './date-validation'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -34,6 +35,25 @@ export function safeFormatDate(
 }
 
 /**
+ * Enhanced date formatting using the date validation middleware
+ * @param date - Date input
+ * @param format - Format type
+ * @param fallback - Fallback string
+ * @returns Formatted date string
+ */
+export function formatDateSafe(
+  date: string | Date | number | null | undefined,
+  format: 'ISO' | 'display' | 'compact' = 'display',
+  fallback: string = 'Invalid Date'
+): string {
+  const result = DateValidator.validate(date);
+  if (!result.isValid || !result.normalizedDate) {
+    return fallback;
+  }
+  return DateValidator.formatDate(result.normalizedDate, format);
+}
+
+/**
  * Safely gets the time value from a date, returning 0 for invalid dates
  * @param date - Date string, Date object, or any value that can be passed to new Date()
  * @returns Time in milliseconds or 0 for invalid dates
@@ -56,19 +76,19 @@ export function safeGetTime(date: string | Date | number | null | undefined): nu
 }
 
 /**
- * Checks if a date value is valid
- * @param date - Date string, Date object, or any value that can be passed to new Date()
+ * Enhanced date validation using the middleware
+ * @param date - Date input
  * @returns true if the date is valid, false otherwise
  */
 export function isValidDate(date: string | Date | number | null | undefined): boolean {
-  if (date === null || date === undefined) {
-    return false;
-  }
+  return DateValidator.validate(date).isValid;
+}
 
-  try {
-    const dateObj = date instanceof Date ? date : new Date(date);
-    return !isNaN(dateObj.getTime());
-  } catch {
-    return false;
-  }
+/**
+ * Normalizes a date for consistent storage
+ * @param date - Date input
+ * @returns ISO string or null for invalid dates
+ */
+export function normalizeDateForStorage(date: string | Date | number | null | undefined): string | null {
+  return DateValidator.normalizeForStorage(date);
 }

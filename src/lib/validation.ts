@@ -1,3 +1,5 @@
+import { DateValidator, DateValidationOptions, DateInput } from './date-validation';
+
 export interface ValidationRule {
   required?: boolean;
   minLength?: number;
@@ -8,6 +10,7 @@ export interface ValidationRule {
   custom?: (value: any) => string | null;
   email?: boolean;
   url?: boolean;
+  date?: DateValidationOptions | boolean;
 }
 
 export interface ValidationSchema {
@@ -98,6 +101,23 @@ export class FormValidator {
     if (rule.pattern && typeof value === 'string') {
       if (!rule.pattern.test(value)) {
         this.addError(field, `${this.formatFieldName(field)} format is invalid`);
+      }
+    }
+
+    // Date validation
+    if (rule.date) {
+      const dateOptions = typeof rule.date === 'boolean' ? {} : rule.date;
+      const dateResult = DateValidator.validate(value as DateInput, dateOptions);
+      if (!dateResult.isValid && dateResult.error) {
+        this.addError(field, dateResult.error);
+      }
+      
+      // Add warnings as info messages (non-blocking)
+      if (dateResult.warnings && dateResult.warnings.length > 0) {
+        dateResult.warnings.forEach(warning => {
+          // Store warnings separately or handle as needed
+          console.warn(`Date validation warning for ${field}: ${warning}`);
+        });
       }
     }
 
@@ -213,24 +233,11 @@ export const opportunityValidationSchema: ValidationSchema = {
   },
   expectedCloseDate: {
     required: true,
-    custom: (value: string) => {
-      if (value) {
-        const date = new Date(value);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
-        if (date < today) {
-          return 'Expected close date cannot be in the past';
-        }
-        
-        const oneYearFromNow = new Date();
-        oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 2);
-        
-        if (date > oneYearFromNow) {
-          return 'Expected close date cannot be more than 2 years in the future';
-        }
-      }
-      return null;
+    date: {
+      allowPast: false,
+      allowFuture: true,
+      required: true,
+      maxDate: new Date(Date.now() + 2 * 365 * 24 * 60 * 60 * 1000) // 2 years from now
     }
   }
 };

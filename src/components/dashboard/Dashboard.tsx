@@ -5,6 +5,7 @@ import { AutoSaveInteractiveDemo } from './AutoSaveInteractiveDemo';
 import { FieldTypeTestingLab } from './FieldTypeTestingLab';
 import { ComprehensiveValidationTestSuite } from './ComprehensiveValidationTestSuite';
 import { ValidationTestingDemo } from './ValidationTestingDemo';
+import { DateValidationDemo } from './DateValidationDemo';
 import { useState, useEffect } from 'react';
 import { User, Opportunity, Contact, Company, KPITarget } from '@/lib/types';
 import { DemoDataGenerator } from '@/lib/demo-data';
@@ -37,7 +38,7 @@ interface DashboardProps {
   initialView?: string;
 }
 
-export type DashboardView = 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'autosave-demo' | 'autosave-test' | 'autosave-manual' | 'autosave-interactive' | 'field-testing' | 'comprehensive-testing' | 'validation-demo' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit';
+export type DashboardView = 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'autosave-demo' | 'autosave-test' | 'autosave-manual' | 'autosave-interactive' | 'field-testing' | 'comprehensive-testing' | 'validation-demo' | 'date-validation' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit';
 
 export function Dashboard({ user, onLogout, initialView }: DashboardProps) {
   const [currentView, setCurrentView] = useState<DashboardView>(
@@ -242,6 +243,8 @@ export function Dashboard({ user, onLogout, initialView }: DashboardProps) {
         return <ComprehensiveValidationTestSuite />;
       case 'validation-demo':
         return <ValidationTestingDemo />;
+      case 'date-validation':
+        return <DateValidationDemo />;
       default:
         return <PipelineView />;
     }
