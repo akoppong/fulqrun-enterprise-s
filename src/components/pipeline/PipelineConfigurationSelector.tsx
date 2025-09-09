@@ -125,7 +125,7 @@ export function PipelineConfigurationSelector({
                   if (pipeline) onPipelineSelect(pipeline);
                 }}
               >
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-full max-w-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -142,7 +142,7 @@ export function PipelineConfigurationSelector({
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-3 gap-4 text-center">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
               <div className="space-y-1">
                 <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground">
                   <Target size={14} />
@@ -166,17 +166,19 @@ export function PipelineConfigurationSelector({
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               <h4 className="text-sm font-medium">Pipeline Stages</h4>
-              <div className="flex flex-wrap gap-2">
+              <div className="space-y-2">
                 {selectedPipeline.stages.map((stage, index) => (
-                  <div key={stage.id} className="flex items-center gap-2">
-                    <Badge className={stage.color} variant="secondary">
-                      {stage.name}
-                      <span className="ml-1 text-xs opacity-70">
-                        ({stage.probability}%)
+                  <div key={stage.id} className="flex items-center justify-between p-2 bg-muted/30 rounded-md">
+                    <div className="flex items-center gap-2">
+                      <Badge className={stage.color} variant="secondary">
+                        {stage.name}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">
+                        {stage.probability}% win probability
                       </span>
-                    </Badge>
+                    </div>
                     {index < selectedPipeline.stages.length - 1 && (
                       <span className="text-muted-foreground text-sm">→</span>
                     )}
@@ -185,29 +187,29 @@ export function PipelineConfigurationSelector({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-sm">
               <div>
-                <h5 className="font-medium mb-2">Stage Conversion Targets</h5>
-                <div className="space-y-1">
-                  {Object.entries(selectedPipeline.conversionTargets).slice(0, 3).map(([key, value]) => (
-                    <div key={key} className="flex justify-between">
-                      <span className="text-muted-foreground truncate">
+                <h5 className="font-medium mb-2 text-sm">Stage Conversion Targets</h5>
+                <div className="space-y-2">
+                  {Object.entries(selectedPipeline.conversionTargets).slice(0, 4).map(([key, value]) => (
+                    <div key={key} className="flex justify-between p-2 bg-muted/20 rounded">
+                      <span className="text-muted-foreground text-xs">
                         {key.split('-to-').join(' → ').replace(/-/g, ' ')}
                       </span>
-                      <span className="font-medium">{value}%</span>
+                      <span className="font-medium text-xs">{value}%</span>
                     </div>
                   ))}
                 </div>
               </div>
               <div>
-                <h5 className="font-medium mb-2">Time Targets (Days)</h5>
-                <div className="space-y-1">
-                  {Object.entries(selectedPipeline.salesCycleTargets).slice(0, 3).map(([key, value]) => (
-                    <div key={key} className="flex justify-between">
-                      <span className="text-muted-foreground capitalize">
+                <h5 className="font-medium mb-2 text-sm">Time Targets (Days)</h5>
+                <div className="space-y-2">
+                  {Object.entries(selectedPipeline.salesCycleTargets).slice(0, 4).map(([key, value]) => (
+                    <div key={key} className="flex justify-between p-2 bg-muted/20 rounded">
+                      <span className="text-muted-foreground text-xs capitalize">
                         {key.replace(/-/g, ' ')}
                       </span>
-                      <span className="font-medium">{value}d</span>
+                      <span className="font-medium text-xs">{value}d</span>
                     </div>
                   ))}
                 </div>

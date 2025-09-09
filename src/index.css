@@ -75,21 +75,35 @@
 
 /* Form and Dialog Improvements */
 .dialog-content {
-  max-width: min(95vw, var(--dialog-max-width, 42rem));
-  max-height: min(90vh, var(--dialog-max-height, 36rem));
+  max-width: min(95vw, var(--dialog-max-width, 56rem));
+  max-height: min(90vh, var(--dialog-max-height, 42rem));
+  min-width: min(90vw, 32rem);
 }
 
 /* Ensure form inputs have proper minimum widths */
 input[class*="w-full"], 
 textarea[class*="w-full"], 
 [data-radix-select-trigger] {
-  min-width: 200px;
+  min-width: 240px;
 }
 
 /* Select dropdown content sizing */
 [data-radix-select-content] {
-  min-width: max(var(--radix-select-trigger-width), 200px);
-  max-width: min(95vw, 500px);
+  min-width: max(var(--radix-select-trigger-width), 240px);
+  max-width: min(95vw, 600px);
+}
+
+/* Card improvements for better alignment */
+.card-grid-balanced {
+  display: grid;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .card-grid-balanced {
+    grid-template-columns: 2fr 3fr;
+  }
 }
 
 /* Prevent form overflow issues */
@@ -106,6 +120,17 @@ textarea[class*="w-full"],
 }
 
 /* Grid responsive improvements */
+@media (max-width: 1023px) {
+  .lg\\:grid-cols-5 {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .lg\\:col-span-2,
+  .lg\\:col-span-3 {
+    grid-column: span 1 / span 1 !important;
+  }
+}
+
 @media (max-width: 768px) {
   .grid-cols-1.md\:grid-cols-2 {
     grid-template-columns: 1fr;
@@ -115,6 +140,7 @@ textarea[class*="w-full"],
     margin: 1rem;
     max-width: calc(100vw - 2rem);
     max-height: calc(100vh - 2rem);
+    min-width: unset;
   }
   
   input[class*="w-full"], 

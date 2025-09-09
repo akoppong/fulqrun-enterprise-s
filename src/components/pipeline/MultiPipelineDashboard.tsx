@@ -362,8 +362,8 @@ export function MultiPipelineDashboard() {
         </TabsContent>
 
         <TabsContent value="analysis" className="space-y-6">
-          <div className="grid gap-6 lg:grid-cols-3">
-            <div className="lg:col-span-1">
+          <div className="grid gap-6 lg:grid-cols-5">
+            <div className="lg:col-span-2">
               <PipelineConfigurationSelector
                 pipelines={allPipelines}
                 selectedPipeline={selectedPipelineForAnalysis}
@@ -371,7 +371,7 @@ export function MultiPipelineDashboard() {
                 showDetails={true}
               />
             </div>
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-3">
               {selectedPipelineForAnalysis && (
                 <Card>
                   <CardHeader>
