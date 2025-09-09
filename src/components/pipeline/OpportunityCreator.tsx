@@ -140,7 +140,6 @@ export function OpportunityCreator({ onOpportunityCreated }: OpportunityCreatorP
     // Clear any existing validation errors
     validation.clearErrors();
   };
-  };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
