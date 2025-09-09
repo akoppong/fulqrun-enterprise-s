@@ -17,8 +17,8 @@ import { EnhancedMEDDPICCDialog } from './EnhancedMEDDPICCDialog';
 import { AutoSaveIndicator } from '@/components/ui/auto-save-indicator';
 import { useAutoSave } from '@/hooks/use-auto-save';
 import { OpportunityCloseDateInput } from '@/components/ui/date-input';
-import { useDateValidation, useDataNormalization } from '@/hooks/useDateValidation';
-import { normalizeOpportunityData, CRMDataSchemas } from '@/lib/data-normalizer';
+import { useDateValidation } from '@/hooks/useDateValidation';
+import { normalizeOpportunityData } from '@/lib/data-normalizer';
 import { Target, TrendUp, Brain, Lightbulb, CalendarCheck, AlertTriangle } from '@phosphor-icons/react';
 import { useKV } from '@github/spark/hooks';
 import { toast } from 'sonner';
@@ -38,23 +38,12 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
   const [generatingInsights, setGeneratingInsights] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   
-  // Date validation hook
-  const { 
-    validateDate, 
-    normalizeDate, 
-    formatDate, 
-    validationErrors,
-    validationWarnings,
-    clearValidation 
-  } = useDateValidation();
-  
-  // Data normalization hook
-  const {
-    normalizeFormData,
-    normalizationErrors,
-    normalizationWarnings,
-    hasNormalizationErrors
-  } = useDataNormalization(CRMDataSchemas.Opportunity);
+  // Date validation hook for close date
+  const closeDateValidation = useDateValidation({
+    required: true,
+    minDate: new Date(),
+    format: 'MM/dd/yyyy'
+  });
   
   const [formData, setFormData] = useState<Partial<Opportunity>>({
     title: '',
@@ -88,14 +77,9 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
     },
     onLoad: (savedData) => {
       if (savedData && !opportunity) {
-        // Normalize loaded data
-        const normalized = normalizeFormData(savedData);
-        if (!normalized.errors.length) {
-          setFormData(normalized.normalized);
-          toast.info('Draft restored from auto-save');
-        } else {
-          toast.error('Failed to restore draft: Invalid data format');
-        }
+        // Use the data as-is, since it's already validated by auto-save
+        setFormData(savedData);
+        toast.info('Draft restored from auto-save');
       }
     }
   });
@@ -191,25 +175,20 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate and normalize all form data
-    const normalizedResult = normalizeFormData(formData);
-    
-    if (normalizedResult.errors.length > 0) {
-      toast.error(`Validation failed: ${normalizedResult.errors.map(e => e.error).join(', ')}`);
+    // Validate required fields
+    if (!formData.title?.trim()) {
+      toast.error('Title is required');
       return;
     }
     
-    // Validate the expected close date specifically
-    const dateValidation = validateDate('expectedCloseDate', formData.expectedCloseDate, {
-      allowPast: false,
-      allowFuture: true,
-      required: true,
-      maxDate: new Date(Date.now() + 2 * 365 * 24 * 60 * 60 * 1000) // 2 years
-    });
-    
-    if (!dateValidation.isValid) {
-      toast.error(`Invalid expected close date: ${dateValidation.error}`);
-      return;
+    // Validate close date using our hook
+    if (!closeDateValidation.isValid && formData.expectedCloseDate) {
+      closeDateValidation.setValue(formData.expectedCloseDate);
+      closeDateValidation.setTouched(true);
+      if (!closeDateValidation.validate()) {
+        toast.error(`Invalid expected close date: ${closeDateValidation.error}`);
+        return;
+      }
     }
     
     const meddpicScore = getMEDDPICCScore(formData.meddpicc);
@@ -217,9 +196,9 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
     // Add AI insights and next best actions
     const nextBestActions = AIService.getNextBestActions(formData as Opportunity);
     
-    // Use normalized data for saving
+    // Use form data directly for saving
     const dataToSave = {
-      ...normalizedResult.normalized,
+      ...formData,
       meddpicc: {
         ...formData.meddpicc!,
         score: meddpicScore
@@ -230,22 +209,17 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
         confidenceLevel: 'medium' as const,
         lastAiUpdate: new Date().toISOString()
       },
-      // Ensure dates are properly normalized
-      expectedCloseDate: dateValidation.isoString,
+      // Ensure dates are properly formatted
+      expectedCloseDate: formData.expectedCloseDate?.toISOString() || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       createdAt: opportunity?.createdAt || new Date().toISOString()
     };
 
     onSave(dataToSave);
 
-    // Clear the draft and validation state after successful save
+    // Clear the draft after successful save
     autoSave.clearDraft();
-    clearValidation();
     setHasUnsavedChanges(false);
-    
-    if (normalizedResult.warnings.length > 0) {
-      toast.info(`Data was normalized: ${normalizedResult.warnings.map(w => w.warning).join(', ')}`);
-    }
   };
 
   const handleClose = () => {
@@ -302,31 +276,12 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
           </DialogHeader>
           
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Data validation alerts */}
-            {hasNormalizationErrors && (
+            {/* Date validation alert */}
+            {closeDateValidation.isTouched && closeDateValidation.error && (
               <Alert variant="destructive">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
-                  <div className="space-y-1">
-                    <div className="font-medium">Data validation issues found:</div>
-                    {normalizationErrors.map((error, index) => (
-                      <div key={index} className="text-sm">• {error.field}: {error.error}</div>
-                    ))}
-                  </div>
-                </AlertDescription>
-              </Alert>
-            )}
-            
-            {normalizationWarnings.length > 0 && !hasNormalizationErrors && (
-              <Alert>
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>
-                  <div className="space-y-1">
-                    <div className="font-medium">Data normalization notices:</div>
-                    {normalizationWarnings.map((warning, index) => (
-                      <div key={index} className="text-sm">• {warning.field}: {warning.warning}</div>
-                    ))}
-                  </div>
+                  Expected close date: {closeDateValidation.error}
                 </AlertDescription>
               </Alert>
             )}
@@ -718,16 +673,11 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
               </Button>
               <Button 
                 type="submit" 
-                disabled={hasNormalizationErrors}
+                disabled={!formData.title?.trim() || (closeDateValidation.isTouched && !closeDateValidation.isValid)}
                 className="flex items-center gap-2"
               >
                 <CalendarCheck size={16} />
                 {opportunity ? 'Update Opportunity' : 'Create Opportunity'}
-                {hasNormalizationErrors && (
-                  <Badge variant="destructive" className="ml-2">
-                    Validation Issues
-                  </Badge>
-                )}
               </Button>
             </div>
           </form>
