@@ -12,9 +12,17 @@ export function calculateKPIProgress(kpi: KPITarget): number {
 export function determineKPIStatus(kpi: KPITarget): KPITarget['status'] {
   const progress = calculateKPIProgress(kpi);
   const now = new Date();
-  const timeRemaining = new Date(kpi.endDate).getTime() - now.getTime();
-  const totalTime = new Date(kpi.endDate).getTime() - new Date(kpi.startDate).getTime();
-  const timeProgress = ((totalTime - timeRemaining) / totalTime) * 100;
+  const endDate = new Date(kpi.endDate);
+  const startDate = new Date(kpi.startDate);
+  
+  // Check for valid dates
+  if (isNaN(endDate.getTime()) || isNaN(startDate.getTime())) {
+    return 'at-risk'; // Default status for invalid dates
+  }
+  
+  const timeRemaining = endDate.getTime() - now.getTime();
+  const totalTime = endDate.getTime() - startDate.getTime();
+  const timeProgress = totalTime > 0 ? ((totalTime - timeRemaining) / totalTime) * 100 : 0;
 
   // If we've exceeded the target
   if (progress >= 100) {
@@ -92,7 +100,10 @@ export function calculateAverageSalesCycle(opportunities: Opportunity[], period:
   
   const closedDeals = opportunities.filter(opp => {
     const oppDate = new Date(opp.updatedAt);
-    return opp.stage === 'keep' && oppDate >= startOfPeriod && oppDate <= now;
+    return opp.stage === 'keep' && 
+           !isNaN(oppDate.getTime()) && 
+           oppDate >= startOfPeriod && 
+           oppDate <= now;
   });
   
   if (closedDeals.length === 0) return 0;
@@ -100,8 +111,14 @@ export function calculateAverageSalesCycle(opportunities: Opportunity[], period:
   const totalCycleDays = closedDeals.reduce((sum, opp) => {
     const createdDate = new Date(opp.createdAt);
     const closedDate = new Date(opp.updatedAt);
+    
+    // Check for valid dates
+    if (isNaN(createdDate.getTime()) || isNaN(closedDate.getTime())) {
+      return sum; // Skip invalid dates
+    }
+    
     const cycleDays = Math.floor((closedDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
-    return sum + cycleDays;
+    return sum + (cycleDays > 0 ? cycleDays : 0); // Ensure positive cycle days
   }, 0);
   
   return totalCycleDays / closedDeals.length;

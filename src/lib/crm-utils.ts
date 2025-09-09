@@ -13,6 +13,9 @@ export const calculatePipelineMetrics = (opportunities: Opportunity[]): Pipeline
   const averageSalesCycle = opportunities.length > 0 
     ? opportunities.reduce((sum, opp) => {
         const createdDate = new Date(opp.createdAt);
+        if (isNaN(createdDate.getTime())) {
+          return sum; // Skip invalid dates
+        }
         const daysSinceCreated = Math.floor((Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
         return sum + daysSinceCreated;
       }, 0) / opportunities.length

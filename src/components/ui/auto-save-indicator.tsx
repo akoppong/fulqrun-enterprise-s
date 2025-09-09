@@ -36,7 +36,7 @@ export function AutoSaveIndicator({
   const [timeAgo, setTimeAgo] = useState<string>('');
 
   useEffect(() => {
-    if (!lastSaved) return;
+    if (!lastSaved || !(lastSaved instanceof Date) || isNaN(lastSaved.getTime())) return;
 
     const updateTimeAgo = () => {
       const now = new Date();
@@ -83,7 +83,7 @@ export function AutoSaveIndicator({
       };
     }
 
-    if (lastSaved) {
+    if (lastSaved && lastSaved instanceof Date && !isNaN(lastSaved.getTime())) {
       return {
         icon: <CheckCircle size={14} />,
         text: `Saved ${timeAgo}`,
@@ -164,7 +164,7 @@ export function AutoSaveStatus({
     );
   }
 
-  if (lastSaved) {
+  if (lastSaved && lastSaved instanceof Date && !isNaN(lastSaved.getTime())) {
     return (
       <div className={cn('flex items-center gap-1 text-xs text-green-600', className)}>
         <CheckCircle size={12} />

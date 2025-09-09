@@ -91,7 +91,9 @@ export class LeadPrioritizationEngine {
     timeframe: string;
   } {
     const tier = this.getLeadTier(lead);
-    const hasRecentActivity = (new Date().getTime() - new Date(lead.lastUpdated).getTime()) < 7 * 24 * 60 * 60 * 1000;
+    const lastUpdated = new Date(lead.lastUpdated);
+    const hasRecentActivity = !isNaN(lastUpdated.getTime()) && 
+      (new Date().getTime() - lastUpdated.getTime()) < 7 * 24 * 60 * 60 * 1000;
 
     if (tier === 'platinum') {
       return {

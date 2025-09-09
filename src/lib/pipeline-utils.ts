@@ -363,9 +363,17 @@ export function calculateAverageTimeInStage(movements: DealMovement[], stageId: 
   entryMovements.forEach(entry => {
     const exit = exitMovements.find(e => e.opportunityId === entry.opportunityId && e.timestamp > entry.timestamp);
     if (exit) {
+      // Validate timestamps before calling getTime()
+      if (!(entry.timestamp instanceof Date) || !(exit.timestamp instanceof Date) ||
+          isNaN(entry.timestamp.getTime()) || isNaN(exit.timestamp.getTime())) {
+        return; // Skip invalid timestamps
+      }
+      
       const timeInStage = (exit.timestamp.getTime() - entry.timestamp.getTime()) / (1000 * 60 * 60 * 24);
-      totalTime += timeInStage;
-      count++;
+      if (timeInStage >= 0) { // Only count positive time durations
+        totalTime += timeInStage;
+        count++;
+      }
     }
   });
   
@@ -516,6 +524,11 @@ function calculateBottleneckScore(movements: DealMovement[], opportunityCount: n
   
   const exitRate = movements.length / opportunityCount;
   const timeScore = movements.reduce((sum, m) => {
+    // Validate timestamp before calling getTime()
+    if (!(m.timestamp instanceof Date) || isNaN(m.timestamp.getTime())) {
+      return sum; // Skip invalid timestamps
+    }
+    
     const daysSinceMove = (Date.now() - m.timestamp.getTime()) / (1000 * 60 * 60 * 24);
     return sum + Math.min(daysSinceMove / 30, 1); // Normalize to 0-1 over 30 days
   }, 0) / Math.max(movements.length, 1);
@@ -539,8 +552,14 @@ function calculateAverageSalesCycle(movements: DealMovement[]): number {
   if (completedCycles.length === 0) return 0;
   
   const totalDays = completedCycles.reduce((sum, cycle) => {
-    const days = (cycle.end!.getTime() - cycle.start.getTime()) / (1000 * 60 * 60 * 24);
-    return sum + days;
+    // Validate dates before calling getTime()
+    if (!(cycle.start instanceof Date) || !(cycle.end instanceof Date) ||
+        isNaN(cycle.start.getTime()) || isNaN(cycle.end.getTime())) {
+      return sum; // Skip invalid dates
+    }
+    
+    const days = (cycle.end.getTime() - cycle.start.getTime()) / (1000 * 60 * 60 * 24);
+    return sum + (days >= 0 ? days : 0); // Only count positive durations
   }, 0);
   
   return totalDays / completedCycles.length;

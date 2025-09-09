@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatCurrency, getMEDDPICCScore } from '@/lib/crm-utils';
+import { safeFormatDate } from '@/lib/utils';
 import { Search, Filter, Target } from '@phosphor-icons/react';
 import { useState } from 'react';
 import { OpportunityDialog } from './OpportunityDialog';
@@ -156,7 +157,7 @@ export function OpportunityList() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-sm">
-                      {new Date(opportunity.expectedCloseDate).toLocaleDateString()}
+                      {safeFormatDate(opportunity.expectedCloseDate, 'No date set')}
                     </TableCell>
                     <TableCell>
                       <Button 
