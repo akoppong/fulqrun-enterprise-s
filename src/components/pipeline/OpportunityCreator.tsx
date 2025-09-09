@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
 import { usePipelineConfigurations } from '@/hooks/usePipelineConfigurations';
+import { useValidatedForm } from '@/hooks/useFormValidation';
+import { opportunityValidationSchema } from '@/lib/validation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { InputField, TextareaField, SelectField, FormGrid } from '@/components/ui/form-fields';
 import { MEDDPICC } from '@/lib/types';
-import { Plus, Building, DollarSign, Calendar, User } from '@phosphor-icons/react';
+import { Plus, Building, DollarSign, Calendar, User, AlertTriangle } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 
 interface OpportunityCreatorProps {
@@ -33,14 +32,8 @@ export function OpportunityCreator({ onOpportunityCreated }: OpportunityCreatorP
 
   const selectedPipeline = allPipelines.find(p => p.id === selectedPipelineId) || activePipeline;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.title || !formData.value) {
-      toast.error('Please fill in required fields');
-      return;
-    }
-
+  // Initialize form validation
+  const validation = useValidatedForm(opportunityValidationSchema, async (data) => {
     const defaultMEDDPICC: MEDDPICC = {
       metrics: '',
       economicBuyer: '',
@@ -53,13 +46,13 @@ export function OpportunityCreator({ onOpportunityCreated }: OpportunityCreatorP
     };
 
     const opportunity = {
-      title: formData.title,
-      description: formData.description,
-      value: parseFloat(formData.value) || 0,
-      expectedCloseDate: formData.expectedCloseDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      companyId: formData.companyId || `company-${Date.now()}`,
-      contactId: formData.contactId || `contact-${Date.now()}`,
-      ownerId: formData.ownerId,
+      title: data.title,
+      description: data.description,
+      value: parseFloat(data.value) || 0,
+      expectedCloseDate: data.expectedCloseDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      companyId: data.companyId || `company-${Date.now()}`,
+      contactId: data.contactId || `contact-${Date.now()}`,
+      ownerId: data.ownerId,
       meddpicc: defaultMEDDPICC,
       probability: selectedPipeline.stages[0]?.probability || 10
     };
@@ -77,9 +70,43 @@ export function OpportunityCreator({ onOpportunityCreated }: OpportunityCreatorP
       ownerId: 'current-user'
     });
     
+    validation.reset();
     setIsOpen(false);
+    
+    toast.success('Opportunity created successfully!');
     onOpportunityCreated?.();
+  });
+
+  const handleFieldChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Validate field if it's been touched
+    if (validation.touched[field]) {
+      validation.validateField(field, value, { ...formData, [field]: value });
+    }
   };
+
+  const handleFieldBlur = (field: string) => {
+    validation.setFieldTouched(field, true);
+    const value = formData[field as keyof typeof formData];
+    validation.validateField(field, value, formData);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    try {
+      await validation.handleSubmit(formData, e);
+    } catch (error) {
+      // Error is already handled by the validation hook
+      console.error('Form submission error:', error);
+    }
+  };
+
+  // Format today's date as default minimum
+  const today = new Date().toISOString().split('T')[0];
+  // Format one year from now as reasonable maximum
+  const maxDate = new Date();
+  maxDate.setFullYear(maxDate.getFullYear() + 2);
+  const maxDateString = maxDate.toISOString().split('T')[0];
 
   const generateSampleData = () => {
     const sampleTitles = [
@@ -100,13 +127,19 @@ export function OpportunityCreator({ onOpportunityCreated }: OpportunityCreatorP
     const randomDays = Math.floor(Math.random() * 90) + 30;
     const closeDate = new Date(Date.now() + randomDays * 24 * 60 * 60 * 1000);
 
-    setFormData(prev => ({
-      ...prev,
+    const newData = {
+      ...formData,
       title: randomTitle,
       description: `Potential ${randomTitle.toLowerCase()} opportunity with high strategic value`,
       value: randomValue.toString(),
       expectedCloseDate: closeDate.toISOString().split('T')[0]
-    }));
+    };
+    
+    setFormData(newData);
+    
+    // Clear any existing validation errors
+    validation.clearErrors();
+  };
   };
 
   return (
@@ -117,141 +150,171 @@ export function OpportunityCreator({ onOpportunityCreated }: OpportunityCreatorP
           Create Demo Opportunity
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl">
+      <DialogContent className="max-w-4xl max-h-[90vh] form-container">
         <DialogHeader>
-          <DialogTitle>Create New Opportunity</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <Plus className="h-5 w-5" />
+            Create New Opportunity
+          </DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <Label htmlFor="pipeline">Pipeline Configuration</Label>
-              <Select value={selectedPipelineId} onValueChange={setSelectedPipelineId}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {allPipelines.map((pipeline) => (
-                    <SelectItem key={pipeline.id} value={pipeline.id}>
-                      <div className="flex items-center justify-between w-full">
-                        <span>{pipeline.name}</span>
-                        <Badge variant="outline" className="ml-2">
-                          {pipeline.stages.length} stages
-                        </Badge>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {selectedPipeline && (
-                <p className="text-sm text-muted-foreground mt-1">
-                  Will start in: <Badge variant="secondary" className={selectedPipeline.stages[0]?.color}>
-                    {selectedPipeline.stages[0]?.name}
-                  </Badge>
-                </p>
-              )}
-            </div>
+        <div className="overflow-y-auto flex-1">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="pipeline">Pipeline Configuration</Label>
+                <SelectField
+                  id="pipeline"
+                  label=""
+                  value={selectedPipelineId}
+                  onChange={setSelectedPipelineId}
+                  options={allPipelines.map(p => ({
+                    value: p.id,
+                    label: `${p.name} (${p.stages.length} stages)`
+                  }))}
+                  containerClassName="mt-0"
+                />
+                {selectedPipeline && (
+                  <p className="text-sm text-muted-foreground mt-2 p-2 bg-muted/30 rounded-md">
+                    Will start in: <span className="font-medium text-foreground">{selectedPipeline.stages[0]?.name}</span>
+                  </p>
+                )}
+              </div>
 
-            <div className="col-span-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="title">Opportunity Title *</Label>
+                <span></span>
                 <Button 
                   type="button" 
                   variant="outline" 
                   size="sm"
                   onClick={generateSampleData}
+                  className="flex items-center gap-2"
                 >
-                  Generate Sample
+                  <DollarSign className="h-4 w-4" />
+                  Generate Sample Data
                 </Button>
               </div>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="Enter opportunity title"
-                required
-              />
-            </div>
 
-            <div className="col-span-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Describe the opportunity"
-                rows={3}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="value">Deal Value * ($)</Label>
-              <div className="relative">
-                <DollarSign size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="value"
-                  type="number"
-                  value={formData.value}
-                  onChange={(e) => setFormData(prev => ({ ...prev, value: e.target.value }))}
-                  placeholder="0"
-                  className="pl-8"
+              <FormGrid columns={1}>
+                <InputField
+                  id="opportunity-title"
+                  label="Opportunity Title"
+                  value={formData.title}
+                  onChange={(value) => handleFieldChange('title', value)}
+                  onBlur={() => handleFieldBlur('title')}
+                  error={validation.getFieldError('title')}
+                  placeholder="e.g., Enterprise Software License Deal"
                   required
+                  helpText="A clear, descriptive title for this sales opportunity"
                 />
-              </div>
-            </div>
+              </FormGrid>
 
-            <div>
-              <Label htmlFor="closeDate">Expected Close Date</Label>
-              <div className="relative">
-                <Calendar size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="closeDate"
-                  type="date"
-                  value={formData.expectedCloseDate}
-                  onChange={(e) => setFormData(prev => ({ ...prev, expectedCloseDate: e.target.value }))}
-                  className="pl-8"
+              <FormGrid columns={1}>
+                <TextareaField
+                  id="opportunity-description"
+                  label="Description"
+                  value={formData.description}
+                  onChange={(value) => handleFieldChange('description', value)}
+                  onBlur={() => handleFieldBlur('description')}
+                  error={validation.getFieldError('description')}
+                  placeholder="Describe the opportunity, key stakeholders, and strategic importance..."
+                  rows={3}
+                  helpText="Provide context about this opportunity and its strategic value"
                 />
-              </div>
-            </div>
+              </FormGrid>
 
-            <div>
-              <Label htmlFor="company">Company ID</Label>
-              <div className="relative">
-                <Building size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="company"
-                  value={formData.companyId}
-                  onChange={(e) => setFormData(prev => ({ ...prev, companyId: e.target.value }))}
-                  placeholder="Auto-generated if empty"
-                  className="pl-8"
-                />
-              </div>
-            </div>
+              <FormGrid columns={2}>
+                <div className="relative">
+                  <InputField
+                    id="opportunity-value"
+                    label="Deal Value"
+                    type="number"
+                    value={formData.value}
+                    onChange={(value) => handleFieldChange('value', value)}
+                    onBlur={() => handleFieldBlur('value')}
+                    error={validation.getFieldError('value')}
+                    placeholder="100000"
+                    required
+                    min={0}
+                    helpText="Expected total deal value in USD"
+                    className="pl-8"
+                  />
+                  <DollarSign size={16} className="absolute left-3 top-9 text-muted-foreground" />
+                </div>
 
-            <div>
-              <Label htmlFor="contact">Contact ID</Label>
-              <div className="relative">
-                <User size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="contact"
-                  value={formData.contactId}
-                  onChange={(e) => setFormData(prev => ({ ...prev, contactId: e.target.value }))}
-                  placeholder="Auto-generated if empty"
-                  className="pl-8"
-                />
-              </div>
+                <div className="relative">
+                  <InputField
+                    id="expected-close-date"
+                    label="Expected Close Date"
+                    type="date"
+                    value={formData.expectedCloseDate}
+                    onChange={(value) => handleFieldChange('expectedCloseDate', value)}
+                    onBlur={() => handleFieldBlur('expectedCloseDate')}
+                    error={validation.getFieldError('expectedCloseDate')}
+                    required
+                    helpText="When do you expect to close this deal?"
+                    className="pl-8"
+                    min={today}
+                    max={maxDateString}
+                  />
+                  <Calendar size={16} className="absolute left-3 top-9 text-muted-foreground" />
+                </div>
+              </FormGrid>
+
+              <FormGrid columns={2}>
+                <div className="relative">
+                  <InputField
+                    id="company-id"
+                    label="Company ID"
+                    value={formData.companyId}
+                    onChange={(value) => handleFieldChange('companyId', value)}
+                    placeholder="Will auto-generate if empty"
+                    helpText="Link to an existing company or leave empty to auto-generate"
+                    className="pl-8"
+                  />
+                  <Building size={16} className="absolute left-3 top-9 text-muted-foreground" />
+                </div>
+
+                <div className="relative">
+                  <InputField
+                    id="contact-id"
+                    label="Contact ID"
+                    value={formData.contactId}
+                    onChange={(value) => handleFieldChange('contactId', value)}
+                    placeholder="Will auto-generate if empty"
+                    helpText="Link to an existing contact or leave empty to auto-generate"
+                    className="pl-8"
+                  />
+                  <User size={16} className="absolute left-3 top-9 text-muted-foreground" />
+                </div>
+              </FormGrid>
             </div>
+          </form>
+        </div>
+
+        <div className="flex justify-between items-center pt-6 border-t">
+          <div className="text-sm text-muted-foreground">
+            {validation.submitError && (
+              <span className="text-destructive flex items-center gap-1">
+                <AlertTriangle className="h-4 w-4" />
+                {validation.submitError}
+              </span>
+            )}
           </div>
-
-          <div className="flex justify-end gap-2 pt-4">
+          <div className="flex gap-3">
             <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit">
-              Create Opportunity
+            <Button 
+              type="submit"
+              onClick={handleSubmit}
+              disabled={validation.isSubmitting || !validation.isValid}
+              className="min-w-[140px]"
+            >
+              {validation.isSubmitting ? 'Creating...' : 'Create Opportunity'}
             </Button>
           </div>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   );

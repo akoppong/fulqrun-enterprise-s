@@ -73,6 +73,98 @@
   opacity: 1;
 }
 
+/* Form and Dialog Improvements */
+.dialog-content {
+  max-width: min(95vw, var(--dialog-max-width, 42rem));
+  max-height: min(90vh, var(--dialog-max-height, 36rem));
+}
+
+/* Ensure form inputs have proper minimum widths */
+input[class*="w-full"], 
+textarea[class*="w-full"], 
+[data-radix-select-trigger] {
+  min-width: 200px;
+}
+
+/* Select dropdown content sizing */
+[data-radix-select-content] {
+  min-width: max(var(--radix-select-trigger-width), 200px);
+  max-width: min(95vw, 500px);
+}
+
+/* Prevent form overflow issues */
+.form-container {
+  overflow-x: hidden;
+}
+
+.form-container input,
+.form-container textarea,
+.form-container [data-radix-select-trigger] {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Grid responsive improvements */
+@media (max-width: 768px) {
+  .grid-cols-1.md\:grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+  
+  .dialog-content {
+    margin: 1rem;
+    max-width: calc(100vw - 2rem);
+    max-height: calc(100vh - 2rem);
+  }
+  
+  input[class*="w-full"], 
+  textarea[class*="w-full"], 
+  [data-radix-select-trigger] {
+    min-width: unset;
+  }
+}
+
+/* Badge and pill spacing improvements */
+.flex.flex-wrap.gap-2 {
+  min-height: 2.5rem;
+}
+
+/* Tab content spacing */
+.tabs-content {
+  padding-top: 1rem;
+}
+
+/* Ensure proper spacing for form sections */
+.space-y-6 > * + * {
+  margin-top: 1.5rem;
+}
+
+.space-y-4 > * + * {
+  margin-top: 1rem;
+}
+
+/* Form validation styling */
+.field-error {
+  border-color: rgb(var(--destructive));
+  background-color: rgb(var(--destructive) / 0.05);
+}
+
+.field-success {
+  border-color: rgb(34 197 94);
+  background-color: rgb(34 197 94 / 0.05);
+}
+
+/* Loading state styling */
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgb(255 255 255 / 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
 @layer base {
   * {
     @apply border-border;

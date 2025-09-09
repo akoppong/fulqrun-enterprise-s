@@ -137,7 +137,7 @@ export function AISegmentAssignmentDialog({ isOpen, onClose, onAssignmentComplet
   if (selectedCompany && companyAssignment) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-5xl max-h-[85vh]">
+        <DialogContent className="max-w-6xl max-h-[90vh] form-container">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Brain className="h-5 w-5 text-primary" />
@@ -148,8 +148,8 @@ export function AISegmentAssignmentDialog({ isOpen, onClose, onAssignmentComplet
             </DialogDescription>
           </DialogHeader>
 
-          <ScrollArea className="max-h-[60vh]">
-            <div className="space-y-6">
+          <ScrollArea className="max-h-[65vh] overflow-x-hidden">
+            <div className="space-y-6 pr-4">
               {/* Primary Assignment */}
               <Card>
                 <CardHeader>
@@ -164,12 +164,12 @@ export function AISegmentAssignmentDialog({ isOpen, onClose, onAssignmentComplet
                 <CardContent className="space-y-4">
                   <div className="flex items-center gap-4">
                     <div 
-                      className="h-12 w-12 rounded-lg flex items-center justify-center"
+                      className="h-12 w-12 rounded-lg flex items-center justify-center flex-shrink-0"
                       style={{ backgroundColor: `${getSegmentColor(companyAssignment.segmentId)}20` }}
                     >
                       <Users className="h-6 w-6" style={{ color: getSegmentColor(companyAssignment.segmentId) }} />
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-lg">{getSegmentName(companyAssignment.segmentId)}</h3>
                       <div className="flex items-center gap-2 mt-1">
                         <span className={`font-medium ${getConfidenceColor(companyAssignment.confidence)}`}>
@@ -179,7 +179,7 @@ export function AISegmentAssignmentDialog({ isOpen, onClose, onAssignmentComplet
                       </div>
                     </div>
                   </div>
-                  <p className="text-sm text-muted-foreground">{companyAssignment.reasoning}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{companyAssignment.reasoning}</p>
                 </CardContent>
               </Card>
 
@@ -193,11 +193,11 @@ export function AISegmentAssignmentDialog({ isOpen, onClose, onAssignmentComplet
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <ul className="space-y-2">
+                    <ul className="space-y-3">
                       {companyAssignment.strategicInsights.map((insight, index) => (
-                        <li key={index} className="flex items-start gap-2">
+                        <li key={index} className="flex items-start gap-3">
                           <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                          <span className="text-sm">{insight}</span>
+                          <span className="text-sm leading-relaxed">{insight}</span>
                         </li>
                       ))}
                     </ul>
@@ -217,19 +217,19 @@ export function AISegmentAssignmentDialog({ isOpen, onClose, onAssignmentComplet
                   <CardContent className="space-y-3">
                     {companyAssignment.alternativeSegments.map((alt, index) => (
                       <div key={index} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
                           <div 
-                            className="h-8 w-8 rounded-md flex items-center justify-center"
+                            className="h-8 w-8 rounded-md flex items-center justify-center flex-shrink-0"
                             style={{ backgroundColor: `${getSegmentColor(alt.segmentId)}20` }}
                           >
                             <Users className="h-4 w-4" style={{ color: getSegmentColor(alt.segmentId) }} />
                           </div>
-                          <div>
+                          <div className="min-w-0 flex-1">
                             <span className="font-medium">{getSegmentName(alt.segmentId)}</span>
-                            <p className="text-sm text-muted-foreground">{alt.reason}</p>
+                            <p className="text-sm text-muted-foreground truncate">{alt.reason}</p>
                           </div>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right flex-shrink-0">
                           <span className={`font-medium ${getConfidenceColor(alt.confidence)}`}>
                             {alt.confidence}%
                           </span>
@@ -269,7 +269,7 @@ export function AISegmentAssignmentDialog({ isOpen, onClose, onAssignmentComplet
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[85vh]">
+      <DialogContent className="max-w-7xl max-h-[90vh] form-container">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Brain className="h-5 w-5 text-primary" />
@@ -280,23 +280,23 @@ export function AISegmentAssignmentDialog({ isOpen, onClose, onAssignmentComplet
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-6 overflow-x-hidden">
           {currentStep === 'preview' && (
             <>
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">Assignment Overview</CardTitle>
                 </CardHeader>
-                <CardContent className="grid grid-cols-3 gap-4">
-                  <div className="text-center">
+                <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center p-4">
                     <div className="text-2xl font-bold text-primary">{unassignedCompanies.length}</div>
                     <div className="text-sm text-muted-foreground">Unassigned Companies</div>
                   </div>
-                  <div className="text-center">
+                  <div className="text-center p-4">
                     <div className="text-2xl font-bold text-green-600">{activeSegments.length}</div>
                     <div className="text-sm text-muted-foreground">Active Segments</div>
                   </div>
-                  <div className="text-center">
+                  <div className="text-center p-4">
                     <div className="text-2xl font-bold text-blue-600">{companies.filter(c => c.segmentId).length}</div>
                     <div className="text-sm text-muted-foreground">Already Assigned</div>
                   </div>
@@ -305,23 +305,23 @@ export function AISegmentAssignmentDialog({ isOpen, onClose, onAssignmentComplet
 
               {unassignedCompanies.length > 0 ? (
                 <>
-                  <div className="flex justify-between items-center">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <h3 className="text-lg font-semibold">Companies Ready for Assignment</h3>
-                    <Button onClick={handleBulkAssignment} className="flex items-center gap-2">
+                    <Button onClick={handleBulkAssignment} className="flex items-center gap-2 w-full sm:w-auto">
                       <Zap className="h-4 w-4" />
                       Assign All with AI
                     </Button>
                   </div>
 
-                  <ScrollArea className="max-h-96">
-                    <div className="grid gap-3">
+                  <ScrollArea className="max-h-[40vh]">
+                    <div className="grid gap-3 pr-4">
                       {unassignedCompanies.map((company) => (
                         <Card key={company.id} className="cursor-pointer hover:shadow-md transition-shadow">
                           <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                              <div>
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                              <div className="flex-1 min-w-0">
                                 <h4 className="font-medium">{company.name}</h4>
-                                <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
+                                <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mt-1">
                                   <span>{company.industry}</span>
                                   <span>{company.size}</span>
                                   {company.revenue && (
@@ -334,6 +334,7 @@ export function AISegmentAssignmentDialog({ isOpen, onClose, onAssignmentComplet
                                 size="sm"
                                 onClick={() => handleSingleCompanyAnalysis(company)}
                                 disabled={isProcessing}
+                                className="w-full sm:w-auto"
                               >
                                 {isProcessing && selectedCompany?.id === company.id ? (
                                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -388,16 +389,16 @@ export function AISegmentAssignmentDialog({ isOpen, onClose, onAssignmentComplet
                       Assignment Results
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="grid grid-cols-3 gap-4">
-                    <div className="text-center">
+                  <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="text-center p-4">
                       <div className="text-2xl font-bold text-green-600">{insights.totalAssigned}</div>
                       <div className="text-sm text-muted-foreground">Companies Assigned</div>
                     </div>
-                    <div className="text-center">
+                    <div className="text-center p-4">
                       <div className="text-2xl font-bold text-blue-600">{insights.highConfidence}</div>
                       <div className="text-sm text-muted-foreground">High Confidence</div>
                     </div>
-                    <div className="text-center">
+                    <div className="text-center p-4">
                       <div className="text-2xl font-bold text-orange-600">{insights.requiresReview}</div>
                       <div className="text-sm text-muted-foreground">Needs Review</div>
                     </div>
@@ -434,24 +435,24 @@ export function AISegmentAssignmentDialog({ isOpen, onClose, onAssignmentComplet
                 </CardHeader>
                 <CardContent>
                   <ScrollArea className="max-h-64">
-                    <div className="space-y-3">
+                    <div className="space-y-3 pr-4">
                       {assignments.map((assignment, index) => {
                         const company = companies.find(c => c.id === assignment.companyId);
                         return (
-                          <div key={index} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                            <div className="flex items-center gap-3">
-                              <div>
+                          <div key={index} className="flex flex-col lg:flex-row items-start lg:items-center justify-between p-3 bg-muted/30 rounded-lg gap-4">
+                            <div className="flex items-start gap-3 flex-1 min-w-0">
+                              <div className="flex-1 min-w-0">
                                 <span className="font-medium">{company?.name}</span>
-                                <div className="text-sm text-muted-foreground">
+                                <div className="text-sm text-muted-foreground mt-1">
                                   {company?.industry} • {company?.size}
                                 </div>
-                              </div>
-                              <div className="text-xs text-muted-foreground max-w-xs">
-                                {assignment.reasoning}
+                                <div className="text-xs text-muted-foreground mt-2 max-w-md">
+                                  {assignment.reasoning}
+                                </div>
                               </div>
                             </div>
-                            <div className="flex items-center gap-3">
-                              <div className="text-right">
+                            <div className="flex flex-col lg:flex-row items-start lg:items-center gap-3 w-full lg:w-auto">
+                              <div className="text-left lg:text-right">
                                 <div className="font-medium">{getSegmentName(assignment.segmentId)}</div>
                                 <div className={`text-sm ${getConfidenceColor(assignment.confidence)}`}>
                                   {assignment.confidence}% confidence

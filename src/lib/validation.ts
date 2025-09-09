@@ -1,189 +1,295 @@
 export interface ValidationRule {
-  type: 'required' | 'email' | 'phone' | 'url' | 'min' | 'max' | 'pattern' | 'custom';
-  message: string;
-  value?: any;
+  required?: boolean;
+  minLength?: number;
+  maxLength?: number;
+  min?: number;
+  max?: number;
   pattern?: RegExp;
-  validator?: (value: any) => boolean;
+  custom?: (value: any) => string | null;
+  email?: boolean;
+  url?: boolean;
 }
 
-export interface FieldValidationConfig {
-  rules: ValidationRule[];
-  realTime: boolean;
-  debounceMs: number;
+export interface ValidationSchema {
+  [field: string]: ValidationRule;
 }
 
-export class FieldValidator {
-  static validateField(value: any, config: FieldValidationConfig): { isValid: boolean; errors: string[] } {
-    const errors: string[] = [];
-    
-    for (const rule of config.rules) {
-      const result = this.validateRule(value, rule);
-      if (!result.isValid) {
-        errors.push(result.message);
-      }
+export interface ValidationError {
+  field: string;
+  message: string;
+}
+
+export class FormValidator {
+  private schema: ValidationSchema;
+  private errors: ValidationError[] = [];
+
+  constructor(schema: ValidationSchema) {
+    this.schema = schema;
+  }
+
+  validate(data: Record<string, any>): { isValid: boolean; errors: ValidationError[] } {
+    this.errors = [];
+
+    for (const [field, rule] of Object.entries(this.schema)) {
+      const value = this.getNestedValue(data, field);
+      this.validateField(field, value, rule);
     }
-    
+
     return {
-      isValid: errors.length === 0,
-      errors
+      isValid: this.errors.length === 0,
+      errors: this.errors
     };
   }
-  
-  private static validateRule(value: any, rule: ValidationRule): { isValid: boolean; message: string } {
-    switch (rule.type) {
-      case 'required':
-        const isEmpty = value === null || value === undefined || value === '' || 
-                       (Array.isArray(value) && value.length === 0);
-        return {
-          isValid: !isEmpty,
-          message: isEmpty ? rule.message : ''
-        };
-        
-      case 'email':
-        if (!value) return { isValid: true, message: '' };
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        const isValidEmail = emailRegex.test(value);
-        return {
-          isValid: isValidEmail,
-          message: isValidEmail ? '' : rule.message
-        };
-        
-      case 'phone':
-        if (!value) return { isValid: true, message: '' };
-        const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
-        const cleanPhone = value.replace(/[\s\-\(\)]/g, '');
-        const isValidPhone = phoneRegex.test(cleanPhone);
-        return {
-          isValid: isValidPhone,
-          message: isValidPhone ? '' : rule.message
-        };
-        
-      case 'url':
-        if (!value) return { isValid: true, message: '' };
-        try {
-          new URL(value);
-          return { isValid: true, message: '' };
-        } catch {
-          return { isValid: false, message: rule.message };
-        }
-        
-      case 'min':
-        if (!value) return { isValid: true, message: '' };
-        const minValid = Number(value) >= rule.value;
-        return {
-          isValid: minValid,
-          message: minValid ? '' : rule.message
-        };
-        
-      case 'max':
-        if (!value) return { isValid: true, message: '' };
-        const maxValid = Number(value) <= rule.value;
-        return {
-          isValid: maxValid,
-          message: maxValid ? '' : rule.message
-        };
-        
-      case 'pattern':
-        if (!value) return { isValid: true, message: '' };
-        const patternValid = rule.pattern?.test(value) ?? true;
-        return {
-          isValid: patternValid,
-          message: patternValid ? '' : rule.message
-        };
-        
-      case 'custom':
-        if (!rule.validator) return { isValid: true, message: '' };
-        const customValid = rule.validator(value);
-        return {
-          isValid: customValid,
-          message: customValid ? '' : rule.message
-        };
-        
-      default:
-        return { isValid: true, message: '' };
+
+  private getNestedValue(obj: any, path: string): any {
+    return path.split('.').reduce((current, key) => current?.[key], obj);
+  }
+
+  private validateField(field: string, value: any, rule: ValidationRule): void {
+    // Required validation
+    if (rule.required && (value === undefined || value === null || value === '' || (Array.isArray(value) && value.length === 0))) {
+      this.addError(field, `${this.formatFieldName(field)} is required`);
+      return;
     }
+
+    // Skip other validations if value is empty and not required
+    if (!rule.required && (value === undefined || value === null || value === '')) {
+      return;
+    }
+
+    // String length validations
+    if (typeof value === 'string') {
+      if (rule.minLength && value.length < rule.minLength) {
+        this.addError(field, `${this.formatFieldName(field)} must be at least ${rule.minLength} characters long`);
+      }
+      if (rule.maxLength && value.length > rule.maxLength) {
+        this.addError(field, `${this.formatFieldName(field)} cannot exceed ${rule.maxLength} characters`);
+      }
+    }
+
+    // Numeric validations
+    if (typeof value === 'number') {
+      if (rule.min !== undefined && value < rule.min) {
+        this.addError(field, `${this.formatFieldName(field)} must be at least ${rule.min}`);
+      }
+      if (rule.max !== undefined && value > rule.max) {
+        this.addError(field, `${this.formatFieldName(field)} cannot exceed ${rule.max}`);
+      }
+    }
+
+    // Email validation
+    if (rule.email && typeof value === 'string') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(value)) {
+        this.addError(field, `${this.formatFieldName(field)} must be a valid email address`);
+      }
+    }
+
+    // URL validation
+    if (rule.url && typeof value === 'string') {
+      try {
+        new URL(value);
+      } catch {
+        this.addError(field, `${this.formatFieldName(field)} must be a valid URL`);
+      }
+    }
+
+    // Pattern validation
+    if (rule.pattern && typeof value === 'string') {
+      if (!rule.pattern.test(value)) {
+        this.addError(field, `${this.formatFieldName(field)} format is invalid`);
+      }
+    }
+
+    // Custom validation
+    if (rule.custom) {
+      const customError = rule.custom(value);
+      if (customError) {
+        this.addError(field, customError);
+      }
+    }
+  }
+
+  private addError(field: string, message: string): void {
+    this.errors.push({ field, message });
+  }
+
+  private formatFieldName(field: string): string {
+    // Convert dot notation to readable format
+    const parts = field.split('.');
+    const lastPart = parts[parts.length - 1];
+    
+    // Convert camelCase to Title Case
+    return lastPart.replace(/([A-Z])/g, ' $1')
+      .replace(/^./, str => str.toUpperCase())
+      .trim();
+  }
+
+  getFieldErrors(field: string): string[] {
+    return this.errors
+      .filter(error => error.field === field)
+      .map(error => error.message);
+  }
+
+  hasFieldError(field: string): boolean {
+    return this.errors.some(error => error.field === field);
+  }
+
+  getFirstFieldError(field: string): string | null {
+    const error = this.errors.find(error => error.field === field);
+    return error ? error.message : null;
   }
 }
 
-export const commonValidationRules = {
-  required: (message = 'This field is required'): ValidationRule => ({
-    type: 'required',
-    message
-  }),
-  
-  email: (message = 'Please enter a valid email address'): ValidationRule => ({
-    type: 'email',
-    message
-  }),
-  
-  phone: (message = 'Please enter a valid phone number'): ValidationRule => ({
-    type: 'phone',
-    message
-  }),
-  
-  url: (message = 'Please enter a valid URL'): ValidationRule => ({
-    type: 'url',
-    message
-  }),
-  
-  minValue: (min: number, message?: string): ValidationRule => ({
-    type: 'min',
-    value: min,
-    message: message || `Value must be at least ${min}`
-  }),
-  
-  maxValue: (max: number, message?: string): ValidationRule => ({
-    type: 'max',
-    value: max,
-    message: message || `Value must be at most ${max}`
-  }),
-  
-  pattern: (regex: RegExp, message: string): ValidationRule => ({
-    type: 'pattern',
-    pattern: regex,
-    message
-  }),
-  
-  strongPassword: (message = 'Password must contain uppercase, lowercase, numbers, and special characters'): ValidationRule => ({
-    type: 'custom',
-    validator: (password: string) => {
-      if (!password) return true;
-      return password.length >= 8 &&
-             /[A-Z]/.test(password) &&
-             /[a-z]/.test(password) &&
-             /\d/.test(password) &&
-             /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    },
-    message
-  }),
-  
-  creditCard: (message = 'Please enter a valid credit card number'): ValidationRule => ({
-    type: 'custom',
-    validator: (cardNumber: string) => {
-      if (!cardNumber) return true;
-      // Basic Luhn algorithm check
-      const digits = cardNumber.replace(/\D/g, '');
-      if (digits.length < 13 || digits.length > 19) return false;
-      
-      let sum = 0;
-      let isEven = false;
-      
-      for (let i = digits.length - 1; i >= 0; i--) {
-        let digit = parseInt(digits[i]);
+// Common validation schemas
+export const segmentValidationSchema: ValidationSchema = {
+  name: {
+    required: true,
+    minLength: 2,
+    maxLength: 100,
+    custom: (value: string) => {
+      if (value && /^\s+|\s+$/.test(value)) {
+        return 'Segment name cannot start or end with spaces';
+      }
+      if (value && /\s{2,}/.test(value)) {
+        return 'Segment name cannot contain consecutive spaces';
+      }
+      return null;
+    }
+  },
+  description: {
+    required: true,
+    minLength: 10,
+    maxLength: 500
+  },
+  'criteria.revenue.min': {
+    min: 0,
+    custom: (value: number, data?: any) => {
+      if (value !== undefined && data?.criteria?.revenue?.max !== undefined && value >= data.criteria.revenue.max) {
+        return 'Minimum revenue must be less than maximum revenue';
+      }
+      return null;
+    }
+  },
+  'criteria.revenue.max': {
+    min: 1,
+    custom: (value: number, data?: any) => {
+      if (value !== undefined && data?.criteria?.revenue?.min !== undefined && value <= data.criteria.revenue.min) {
+        return 'Maximum revenue must be greater than minimum revenue';
+      }
+      return null;
+    }
+  },
+  'characteristics.avgDealSize': {
+    required: true,
+    min: 0,
+    max: 1000000000
+  },
+  'characteristics.avgSalesCycle': {
+    required: true,
+    min: 1,
+    max: 365
+  },
+  'strategy.touchpoints': {
+    required: true,
+    min: 1,
+    max: 50
+  }
+};
+
+export const opportunityValidationSchema: ValidationSchema = {
+  title: {
+    required: true,
+    minLength: 3,
+    maxLength: 200
+  },
+  description: {
+    maxLength: 1000
+  },
+  value: {
+    required: true,
+    min: 0,
+    max: 1000000000
+  },
+  expectedCloseDate: {
+    required: true,
+    custom: (value: string) => {
+      if (value) {
+        const date = new Date(value);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
         
-        if (isEven) {
-          digit *= 2;
-          if (digit > 9) {
-            digit -= 9;
-          }
+        if (date < today) {
+          return 'Expected close date cannot be in the past';
         }
         
-        sum += digit;
-        isEven = !isEven;
+        const oneYearFromNow = new Date();
+        oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 2);
+        
+        if (date > oneYearFromNow) {
+          return 'Expected close date cannot be more than 2 years in the future';
+        }
       }
-      
-      return sum % 10 === 0;
-    },
-    message
-  })
+      return null;
+    }
+  }
 };
+
+export const companyValidationSchema: ValidationSchema = {
+  name: {
+    required: true,
+    minLength: 1,
+    maxLength: 200
+  },
+  industry: {
+    required: true
+  },
+  size: {
+    required: true
+  },
+  revenue: {
+    min: 0,
+    max: 10000000000
+  },
+  website: {
+    url: true
+  },
+  email: {
+    email: true
+  }
+};
+
+// Utility functions
+export function createFieldValidator(schema: ValidationSchema) {
+  const validator = new FormValidator(schema);
+  
+  return {
+    validate: (data: Record<string, any>) => validator.validate(data),
+    validateField: (field: string, value: any, allData?: Record<string, any>) => {
+      const fieldSchema = { [field]: schema[field] };
+      const fieldValidator = new FormValidator(fieldSchema);
+      const result = fieldValidator.validate(allData || { [field]: value });
+      return {
+        isValid: result.isValid,
+        error: result.errors[0]?.message || null
+      };
+    },
+    getFieldErrors: (field: string, data: Record<string, any>) => {
+      const result = validator.validate(data);
+      return validator.getFieldErrors(field);
+    }
+  };
+}
+
+export function formatCurrency(value: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(value);
+}
+
+export function formatNumber(value: number): string {
+  return new Intl.NumberFormat('en-US').format(value);
+}

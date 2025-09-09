@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { CustomerSegment } from '@/lib/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, X } from '@phosphor-icons/react';
+import { InputField, TextareaField, SelectField, FormSection, FormGrid } from '@/components/ui/form-fields';
+import { FormValidator, segmentValidationSchema } from '@/lib/validation';
+import { Plus, X, AlertTriangle } from '@phosphor-icons/react';
+import { toast } from 'sonner';
 
 interface CreateSegmentDialogProps {
   isOpen: boolean;
@@ -75,30 +78,162 @@ export function CreateSegmentDialog({ isOpen, onClose, onSubmit }: CreateSegment
     }
   });
 
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+  const [currentTab, setCurrentTab] = useState('basic');
   const [newItem, setNewItem] = useState({ type: '', value: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const validator = useMemo(() => new FormValidator(segmentValidationSchema), []);
+
+  // Validate specific field
+  const validateField = (field: string, value: any) => {
+    const fieldSchema = { [field]: segmentValidationSchema[field] };
+    const fieldValidator = new FormValidator(fieldSchema);
+    const result = fieldValidator.validate(formData);
     
-    const segment: Omit<CustomerSegment, 'id' | 'createdBy' | 'createdAt' | 'updatedAt'> = {
-      ...formData,
-      metrics: {
-        totalOpportunities: 0,
-        totalValue: 0,
-        conversionRate: 0.2,
-        averageDealSize: formData.characteristics.avgDealSize,
-        averageSalesCycle: formData.characteristics.avgSalesCycle,
-        customerLifetimeValue: formData.characteristics.avgDealSize * 5,
-        acquisitionCost: formData.characteristics.avgDealSize * 0.1,
-        retention: 0.8,
-        expansion: 1.2,
-        nps: 50,
-        lastCalculated: new Date().toISOString()
-      }
+    return result.errors.find(error => error.field === field)?.message || null;
+  };
+
+  // Handle field changes with validation
+  const handleFieldChange = (field: string, value: any) => {
+    const keys = field.split('.');
+    let newFormData = { ...formData };
+    
+    // Handle nested updates
+    if (keys.length === 1) {
+      newFormData[keys[0] as keyof typeof formData] = value as any;
+    } else if (keys.length === 2) {
+      newFormData[keys[0] as keyof typeof formData] = {
+        ...(newFormData[keys[0] as keyof typeof formData] as any),
+        [keys[1]]: value
+      } as any;
+    } else if (keys.length === 3) {
+      newFormData[keys[0] as keyof typeof formData] = {
+        ...(newFormData[keys[0] as keyof typeof formData] as any),
+        [keys[1]]: {
+          ...(newFormData[keys[0] as keyof typeof formData] as any)[keys[1]],
+          [keys[2]]: value
+        }
+      } as any;
+    }
+
+    setFormData(newFormData);
+    setTouchedFields(prev => ({ ...prev, [field]: true }));
+
+    // Validate field if it has been touched
+    if (touchedFields[field]) {
+      const error = validateField(field, value);
+      setValidationErrors(prev => ({
+        ...prev,
+        [field]: error || ''
+      }));
+    }
+  };
+
+  // Handle field blur events
+  const handleFieldBlur = (field: string) => {
+    setTouchedFields(prev => ({ ...prev, [field]: true }));
+    const value = field.split('.').reduce((obj, key) => obj?.[key], formData);
+    const error = validateField(field, value);
+    setValidationErrors(prev => ({
+      ...prev,
+      [field]: error || ''
+    }));
+  };
+
+  // Check if current tab has errors
+  const getTabErrors = (tab: string) => {
+    const tabFields: Record<string, string[]> = {
+      basic: ['name', 'description'],
+      criteria: ['criteria.revenue.min', 'criteria.revenue.max'],
+      characteristics: ['characteristics.avgDealSize', 'characteristics.avgSalesCycle'],
+      strategy: ['strategy.touchpoints']
     };
 
-    onSubmit(segment);
-    resetForm();
+    const fields = tabFields[tab] || [];
+    return fields.some(field => validationErrors[field]);
+  };
+
+  const hasFormErrors = () => {
+    const result = validator.validate(formData);
+    return !result.isValid;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate entire form
+    const result = validator.validate(formData);
+    
+    if (!result.isValid) {
+      // Set all validation errors
+      const errorMap: Record<string, string> = {};
+      result.errors.forEach(error => {
+        errorMap[error.field] = error.message;
+      });
+      setValidationErrors(errorMap);
+
+      // Mark all fields as touched
+      const touchedMap: Record<string, boolean> = {};
+      Object.keys(segmentValidationSchema).forEach(field => {
+        touchedMap[field] = true;
+      });
+      setTouchedFields(touchedMap);
+
+      // Find first tab with errors and switch to it
+      const tabsWithErrors = ['basic', 'criteria', 'characteristics', 'strategy']
+        .filter(tab => getTabErrors(tab));
+      
+      if (tabsWithErrors.length > 0) {
+        setCurrentTab(tabsWithErrors[0]);
+      }
+
+      toast.error(`Please fix ${result.errors.length} validation error${result.errors.length > 1 ? 's' : ''} before submitting`);
+      return;
+    }
+
+    // Additional business logic validation
+    if (formData.criteria.revenue.min && formData.criteria.revenue.max && 
+        formData.criteria.revenue.min >= formData.criteria.revenue.max) {
+      setValidationErrors(prev => ({
+        ...prev,
+        'criteria.revenue.min': 'Minimum revenue must be less than maximum revenue',
+        'criteria.revenue.max': 'Maximum revenue must be greater than minimum revenue'
+      }));
+      setCurrentTab('criteria');
+      toast.error('Please fix revenue range validation errors');
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      const segment: Omit<CustomerSegment, 'id' | 'createdBy' | 'createdAt' | 'updatedAt'> = {
+        ...formData,
+        metrics: {
+          totalOpportunities: 0,
+          totalValue: 0,
+          conversionRate: 0.2,
+          averageDealSize: formData.characteristics.avgDealSize,
+          averageSalesCycle: formData.characteristics.avgSalesCycle,
+          customerLifetimeValue: formData.characteristics.avgDealSize * 5,
+          acquisitionCost: formData.characteristics.avgDealSize * 0.1,
+          retention: 0.8,
+          expansion: 1.2,
+          nps: 50,
+          lastCalculated: new Date().toISOString()
+        }
+      };
+
+      await onSubmit(segment);
+      toast.success('Customer segment created successfully!');
+      resetForm();
+    } catch (error) {
+      toast.error('Failed to create segment. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const resetForm = () => {
@@ -137,6 +272,9 @@ export function CreateSegmentDialog({ isOpen, onClose, onSubmit }: CreateSegment
         kpis: []
       }
     });
+    setValidationErrors({});
+    setTouchedFields({});
+    setCurrentTab('basic');
   };
 
   const addArrayItem = (field: string, subField?: string) => {
@@ -178,270 +316,436 @@ export function CreateSegmentDialog({ isOpen, onClose, onSubmit }: CreateSegment
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Create Customer Segment</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <Tabs defaultValue="basic" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="basic">Basic Info</TabsTrigger>
-              <TabsTrigger value="criteria">Criteria</TabsTrigger>
-              <TabsTrigger value="characteristics">Characteristics</TabsTrigger>
-              <TabsTrigger value="strategy">Strategy</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="basic" className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Segment Name</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData(current => ({ ...current, name: e.target.value }))}
-                    placeholder="e.g., Enterprise Accounts"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="icon">Icon</Label>
-                  <Select 
-                    value={formData.icon} 
-                    onValueChange={(value) => setFormData(current => ({ ...current, icon: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SEGMENT_ICONS.map(icon => (
-                        <SelectItem key={icon} value={icon}>{icon}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData(current => ({ ...current, description: e.target.value }))}
-                  placeholder="Describe this customer segment..."
-                  rows={3}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Color</Label>
-                <div className="flex gap-2 flex-wrap">
-                  {SEGMENT_COLORS.map(color => (
-                    <button
-                      key={color}
-                      type="button"
-                      className={`w-8 h-8 rounded-full border-2 ${formData.color === color ? 'border-foreground' : 'border-transparent'}`}
-                      style={{ backgroundColor: color }}
-                      onClick={() => setFormData(current => ({ ...current, color }))}
-                    />
-                  ))}
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="criteria" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Revenue Range</CardTitle>
-                </CardHeader>
-                <CardContent className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Minimum Revenue ($)</Label>
-                    <Input
-                      type="number"
-                      value={formData.criteria.revenue.min || ''}
-                      onChange={(e) => setFormData(current => ({
-                        ...current,
-                        criteria: {
-                          ...current.criteria,
-                          revenue: { ...current.criteria.revenue, min: e.target.value ? parseInt(e.target.value) : undefined }
-                        }
-                      }))}
-                      placeholder="50000000"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Maximum Revenue ($)</Label>
-                    <Input
-                      type="number"
-                      value={formData.criteria.revenue.max || ''}
-                      onChange={(e) => setFormData(current => ({
-                        ...current,
-                        criteria: {
-                          ...current.criteria,
-                          revenue: { ...current.criteria.revenue, max: e.target.value ? parseInt(e.target.value) : undefined }
-                        }
-                      }))}
-                      placeholder="500000000"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Industries</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {formData.criteria.industry.map((industry, index) => (
-                      <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                        {industry}
-                        <button
-                          type="button"
-                          onClick={() => removeArrayItem('criteria', index, 'industry')}
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                  <Select 
-                    value="" 
-                    onValueChange={(value) => {
-                      if (!formData.criteria.industry.includes(value)) {
-                        setFormData(current => ({
-                          ...current,
-                          criteria: {
-                            ...current.criteria,
-                            industry: [...current.criteria.industry, value]
-                          }
-                        }));
-                      }
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select industries" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {INDUSTRIES.map(industry => (
-                        <SelectItem key={industry} value={industry}>{industry}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="characteristics" className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Average Deal Size ($)</Label>
-                  <Input
-                    type="number"
-                    value={formData.characteristics.avgDealSize}
-                    onChange={(e) => setFormData(current => ({
-                      ...current,
-                      characteristics: { ...current.characteristics, avgDealSize: parseInt(e.target.value) || 0 }
-                    }))}
-                    placeholder="100000"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Average Sales Cycle (days)</Label>
-                  <Input
-                    type="number"
-                    value={formData.characteristics.avgSalesCycle}
-                    onChange={(e) => setFormData(current => ({
-                      ...current,
-                      characteristics: { ...current.characteristics, avgSalesCycle: parseInt(e.target.value) || 30 }
-                    }))}
-                    placeholder="90"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Buying Process</Label>
-                <Textarea
-                  value={formData.characteristics.buyingProcess}
-                  onChange={(e) => setFormData(current => ({
-                    ...current,
-                    characteristics: { ...current.characteristics, buyingProcess: e.target.value }
-                  }))}
-                  placeholder="Describe the typical buying process..."
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Churn Risk</Label>
-                <Select 
-                  value={formData.characteristics.churnRisk} 
-                  onValueChange={(value: 'low' | 'medium' | 'high') => setFormData(current => ({
-                    ...current,
-                    characteristics: { ...current.characteristics, churnRisk: value }
-                  }))}
+        <div className="flex-1 overflow-y-auto">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-4 mb-6">
+                <TabsTrigger 
+                  value="basic" 
+                  className={getTabErrors('basic') ? 'text-destructive' : ''}
                 >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </TabsContent>
+                  <span className="flex items-center gap-2">
+                    Basic Info
+                    {getTabErrors('basic') && <AlertTriangle className="h-3 w-3" />}
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="criteria"
+                  className={getTabErrors('criteria') ? 'text-destructive' : ''}
+                >
+                  <span className="flex items-center gap-2">
+                    Criteria
+                    {getTabErrors('criteria') && <AlertTriangle className="h-3 w-3" />}
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="characteristics"
+                  className={getTabErrors('characteristics') ? 'text-destructive' : ''}
+                >
+                  <span className="flex items-center gap-2">
+                    Characteristics
+                    {getTabErrors('characteristics') && <AlertTriangle className="h-3 w-3" />}
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="strategy"
+                  className={getTabErrors('strategy') ? 'text-destructive' : ''}
+                >
+                  <span className="flex items-center gap-2">
+                    Strategy
+                    {getTabErrors('strategy') && <AlertTriangle className="h-3 w-3" />}
+                  </span>
+                </TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="strategy" className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Touchpoints</Label>
-                  <Input
-                    type="number"
-                    value={formData.strategy.touchpoints}
-                    onChange={(e) => setFormData(current => ({
-                      ...current,
-                      strategy: { ...current.strategy, touchpoints: parseInt(e.target.value) || 5 }
-                    }))}
-                    placeholder="5"
+              <TabsContent value="basic" className="space-y-6">
+                <FormSection 
+                  title="Basic Information" 
+                  description="Define the fundamental details of your customer segment"
+                >
+                  <FormGrid columns={2}>
+                    <InputField
+                      id="segment-name"
+                      label="Segment Name"
+                      value={formData.name}
+                      onChange={(value) => handleFieldChange('name', value)}
+                      onBlur={() => handleFieldBlur('name')}
+                      error={validationErrors.name}
+                      placeholder="e.g., Strategic Partners"
+                      required
+                      helpText="A clear, descriptive name for this customer segment"
+                    />
+                    
+                    <SelectField
+                      id="segment-icon"
+                      label="Icon"
+                      value={formData.icon}
+                      onChange={(value) => handleFieldChange('icon', value)}
+                      options={SEGMENT_ICONS.map(icon => ({ value: icon, label: icon }))}
+                      required
+                    />
+                  </FormGrid>
+
+                  <TextareaField
+                    id="segment-description"
+                    label="Description"
+                    value={formData.description}
+                    onChange={(value) => handleFieldChange('description', value)}
+                    onBlur={() => handleFieldBlur('description')}
+                    error={validationErrors.description}
+                    placeholder="Describe this customer segment, their characteristics, and what makes them unique..."
+                    rows={4}
+                    required
+                    helpText="Provide a detailed description of this segment's defining characteristics"
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label>Cadence</Label>
-                  <Select 
-                    value={formData.strategy.cadence} 
-                    onValueChange={(value) => setFormData(current => ({
-                      ...current,
-                      strategy: { ...current.strategy, cadence: value }
-                    }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="daily">Daily</SelectItem>
-                      <SelectItem value="weekly">Weekly</SelectItem>
-                      <SelectItem value="bi-weekly">Bi-weekly</SelectItem>
-                      <SelectItem value="monthly">Monthly</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
 
-          <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={onClose}>
+                  <div className="space-y-2">
+                    <Label>Color Theme</Label>
+                    <div className="flex gap-3 flex-wrap">
+                      {SEGMENT_COLORS.map(color => (
+                        <button
+                          key={color}
+                          type="button"
+                          className={`w-10 h-10 rounded-full border-4 transition-all hover:scale-110 ${
+                            formData.color === color 
+                              ? 'border-foreground shadow-lg' 
+                              : 'border-transparent hover:border-muted-foreground'
+                          }`}
+                          style={{ backgroundColor: color }}
+                          onClick={() => handleFieldChange('color', color)}
+                          aria-label={`Select color ${color}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </FormSection>
+              </TabsContent>
+
+              <TabsContent value="criteria" className="space-y-6">
+                <FormSection 
+                  title="Targeting Criteria" 
+                  description="Define the specific criteria that companies must meet to belong to this segment"
+                >
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Revenue Range</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <FormGrid columns={2}>
+                        <InputField
+                          id="min-revenue"
+                          label="Minimum Annual Revenue"
+                          type="number"
+                          value={formData.criteria.revenue.min || ''}
+                          onChange={(value) => handleFieldChange('criteria.revenue.min', value ? parseInt(value) : undefined)}
+                          onBlur={() => handleFieldBlur('criteria.revenue.min')}
+                          error={validationErrors['criteria.revenue.min']}
+                          placeholder="500000000"
+                          helpText="Minimum annual revenue in USD"
+                          min={0}
+                        />
+                        <InputField
+                          id="max-revenue"
+                          label="Maximum Annual Revenue"
+                          type="number"
+                          value={formData.criteria.revenue.max || ''}
+                          onChange={(value) => handleFieldChange('criteria.revenue.max', value ? parseInt(value) : undefined)}
+                          onBlur={() => handleFieldBlur('criteria.revenue.max')}
+                          error={validationErrors['criteria.revenue.max']}
+                          placeholder="2000000000"
+                          helpText="Maximum annual revenue in USD"
+                          min={1}
+                        />
+                      </FormGrid>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Industries</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex flex-wrap gap-2">
+                        {formData.criteria.industry.map((industry, index) => (
+                          <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                            {industry}
+                            <button
+                              type="button"
+                              onClick={() => removeArrayItem('criteria', index, 'industry')}
+                              className="hover:text-destructive"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                      <Select 
+                        value="" 
+                        onValueChange={(value) => {
+                          if (!formData.criteria.industry.includes(value)) {
+                            handleFieldChange('criteria.industry', [...formData.criteria.industry, value]);
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select industries to include" />
+                        </SelectTrigger>
+                        <SelectContent className="max-w-[400px]">
+                          {INDUSTRIES.map(industry => (
+                            <SelectItem 
+                              key={industry} 
+                              value={industry}
+                              disabled={formData.criteria.industry.includes(industry)}
+                            >
+                              {industry}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Geography & Business Model</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label className="text-sm font-medium">Geographic Regions</Label>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {formData.criteria.geography.map((geo, index) => (
+                            <Badge key={index} variant="outline" className="flex items-center gap-1">
+                              {geo}
+                              <button
+                                type="button"
+                                onClick={() => removeArrayItem('criteria', index, 'geography')}
+                                className="hover:text-destructive"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </Badge>
+                          ))}
+                        </div>
+                        <Select 
+                          value="" 
+                          onValueChange={(value) => {
+                            if (!formData.criteria.geography.includes(value)) {
+                              handleFieldChange('criteria.geography', [...formData.criteria.geography, value]);
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="w-full mt-2">
+                            <SelectValue placeholder="Add geographic regions" />
+                          </SelectTrigger>
+                          <SelectContent className="max-w-[400px]">
+                            {GEOGRAPHIES.map(geo => (
+                              <SelectItem 
+                                key={geo} 
+                                value={geo}
+                                disabled={formData.criteria.geography.includes(geo)}
+                              >
+                                {geo}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label className="text-sm font-medium">Business Models</Label>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {formData.criteria.businessModel.map((model, index) => (
+                            <Badge key={index} variant="outline" className="flex items-center gap-1">
+                              {model}
+                              <button
+                                type="button"
+                                onClick={() => removeArrayItem('criteria', index, 'businessModel')}
+                                className="hover:text-destructive"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </Badge>
+                          ))}
+                        </div>
+                        <Select 
+                          value="" 
+                          onValueChange={(value) => {
+                            if (!formData.criteria.businessModel.includes(value)) {
+                              handleFieldChange('criteria.businessModel', [...formData.criteria.businessModel, value]);
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="w-full mt-2">
+                            <SelectValue placeholder="Add business models" />
+                          </SelectTrigger>
+                          <SelectContent className="max-w-[400px]">
+                            {BUSINESS_MODELS.map(model => (
+                              <SelectItem 
+                                key={model} 
+                                value={model}
+                                disabled={formData.criteria.businessModel.includes(model)}
+                              >
+                                {model}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </FormSection>
+              </TabsContent>
+
+              <TabsContent value="characteristics" className="space-y-6">
+                <FormSection 
+                  title="Segment Characteristics" 
+                  description="Define the typical characteristics and behavior patterns of this segment"
+                >
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Financial Metrics</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <FormGrid columns={2}>
+                        <InputField
+                          id="avg-deal-size"
+                          label="Average Deal Size"
+                          type="number"
+                          value={formData.characteristics.avgDealSize}
+                          onChange={(value) => handleFieldChange('characteristics.avgDealSize', parseInt(value) || 0)}
+                          onBlur={() => handleFieldBlur('characteristics.avgDealSize')}
+                          error={validationErrors['characteristics.avgDealSize']}
+                          placeholder="100000"
+                          required
+                          helpText="Average deal value in USD"
+                          min={0}
+                        />
+                        <InputField
+                          id="avg-sales-cycle"
+                          label="Average Sales Cycle (days)"
+                          type="number"
+                          value={formData.characteristics.avgSalesCycle}
+                          onChange={(value) => handleFieldChange('characteristics.avgSalesCycle', parseInt(value) || 30)}
+                          onBlur={() => handleFieldBlur('characteristics.avgSalesCycle')}
+                          error={validationErrors['characteristics.avgSalesCycle']}
+                          placeholder="90"
+                          required
+                          helpText="Typical time from first contact to close"
+                          min={1}
+                          max={365}
+                        />
+                      </FormGrid>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Buying Behavior</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <TextareaField
+                        id="buying-process"
+                        label="Typical Buying Process"
+                        value={formData.characteristics.buyingProcess}
+                        onChange={(value) => handleFieldChange('characteristics.buyingProcess', value)}
+                        placeholder="Describe the typical buying process, decision makers, approval cycles, etc..."
+                        rows={3}
+                        helpText="Document the typical journey these customers take when making purchasing decisions"
+                      />
+
+                      <SelectField
+                        id="churn-risk"
+                        label="Churn Risk Level"
+                        value={formData.characteristics.churnRisk}
+                        onChange={(value) => handleFieldChange('characteristics.churnRisk', value)}
+                        options={[
+                          { value: 'low', label: 'Low - Very loyal customers' },
+                          { value: 'medium', label: 'Medium - Standard retention' },
+                          { value: 'high', label: 'High - Requires active retention' }
+                        ]}
+                        required
+                      />
+                    </CardContent>
+                  </Card>
+                </FormSection>
+              </TabsContent>
+
+              <TabsContent value="strategy" className="space-y-6">
+                <FormSection 
+                  title="Engagement Strategy" 
+                  description="Define how your team should engage with this customer segment"
+                >
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Communication Strategy</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <FormGrid columns={2}>
+                        <InputField
+                          id="touchpoints"
+                          label="Recommended Touchpoints"
+                          type="number"
+                          value={formData.strategy.touchpoints}
+                          onChange={(value) => handleFieldChange('strategy.touchpoints', parseInt(value) || 5)}
+                          onBlur={() => handleFieldBlur('strategy.touchpoints')}
+                          error={validationErrors['strategy.touchpoints']}
+                          placeholder="5"
+                          required
+                          helpText="Number of touchpoints in a typical sales cycle"
+                          min={1}
+                          max={50}
+                        />
+                        
+                        <SelectField
+                          id="cadence"
+                          label="Follow-up Cadence"
+                          value={formData.strategy.cadence}
+                          onChange={(value) => handleFieldChange('strategy.cadence', value)}
+                          options={[
+                            { value: 'daily', label: 'Daily' },
+                            { value: 'weekly', label: 'Weekly' },
+                            { value: 'bi-weekly', label: 'Bi-weekly' },
+                            { value: 'monthly', label: 'Monthly' }
+                          ]}
+                          required
+                        />
+                      </FormGrid>
+                    </CardContent>
+                  </Card>
+                </FormSection>
+              </TabsContent>
+            </Tabs>
+          </form>
+        </div>
+
+        <div className="flex justify-between items-center pt-6 border-t flex-shrink-0">
+          <div className="text-sm text-muted-foreground">
+            {Object.keys(validationErrors).filter(key => validationErrors[key]).length > 0 && (
+              <span className="text-destructive flex items-center gap-1">
+                <AlertTriangle className="h-4 w-4" />
+                {Object.keys(validationErrors).filter(key => validationErrors[key]).length} validation error(s)
+              </span>
+            )}
+          </div>
+          <div className="flex gap-3">
+            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button type="submit" disabled={!formData.name || !formData.description}>
-              Create Segment
+            <Button 
+              type="submit" 
+              onClick={handleSubmit}
+              disabled={isSubmitting || hasFormErrors()}
+              className="min-w-[120px]"
+            >
+              {isSubmitting ? 'Creating...' : 'Create Segment'}
             </Button>
           </div>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   );
