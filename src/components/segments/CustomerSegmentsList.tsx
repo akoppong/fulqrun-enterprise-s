@@ -5,9 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Plus, Settings, TrendingUp, Users, DollarSign, Clock, Zap } from '@phosphor-icons/react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Settings, TrendingUp, Users, DollarSign, Clock, Zap, Brain, BarChart3 } from '@phosphor-icons/react';
 import { CreateSegmentDialog } from './CreateSegmentDialog';
 import { SegmentDetailsDialog } from './SegmentDetailsDialog';
+import { AISegmentAssignmentDialog } from './AISegmentAssignmentDialog';
+import { AllSegmentsInsights } from './SegmentInsights';
 import { SegmentUtils } from '@/lib/segment-utils';
 import { toast } from 'sonner';
 
@@ -15,7 +18,9 @@ export function CustomerSegmentsList() {
   const [segments, setSegments] = useKV<CustomerSegment[]>('customer-segments', []);
   const [companies, setCompanies] = useKV<Company[]>('companies', []);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isAIAssignmentOpen, setIsAIAssignmentOpen] = useState(false);
   const [selectedSegment, setSelectedSegment] = useState<CustomerSegment | null>(null);
+  const [activeTab, setActiveTab] = useState<'overview' | 'insights'>('overview');
 
   // Initialize with templates if no segments exist
   const initializeTemplates = () => {
@@ -76,6 +81,13 @@ export function CustomerSegmentsList() {
     );
     toast.success(`Customer segment "${updatedSegment.name}" updated successfully`);
     setSelectedSegment(null);
+  };
+
+  const handleAIAssignmentComplete = (assignments: { companyId: string; segmentId: string }[]) => {
+    // The assignments have already been applied in the AI dialog
+    // Just show success message and refresh if needed
+    toast.success(`AI successfully assigned ${assignments.length} companies to segments`);
+    setIsAIAssignmentOpen(false);
   };
 
   const handleDeleteSegment = (segmentId: string) => {
@@ -170,8 +182,17 @@ export function CustomerSegmentsList() {
         </div>
         <div className="flex items-center gap-4">
           <Badge variant="outline" className="text-sm">
-            {segments.filter(s => s.isActive).length} active segments • {formatNumber(companies.filter(c => c.segmentId).length)} assigned companies
+            {companies.filter(c => !c.segmentId).length} unassigned companies
           </Badge>
+          <Button 
+            variant="outline"
+            onClick={() => setIsAIAssignmentOpen(true)}
+            className="flex items-center gap-2"
+            disabled={segments.length === 0}
+          >
+            <Brain className="h-4 w-4" />
+            AI Assignment
+          </Button>
           <Button 
             variant="outline"
             onClick={handleAutoAssign}
@@ -191,104 +212,129 @@ export function CustomerSegmentsList() {
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {segments.map((segment) => {
-          const segmentCompanies = companies.filter(c => c.segmentId === segment.id);
-          const totalValue = segmentCompanies.reduce((sum, c) => sum + (c.revenue || 0), 0);
-          const avgRevenue = segmentCompanies.length > 0 ? totalValue / segmentCompanies.length : 0;
-          
-          return (
-            <Card 
-              key={segment.id} 
-              className="cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => setSelectedSegment(segment)}
-            >
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div 
-                      className="h-10 w-10 rounded-lg flex items-center justify-center"
-                      style={{ backgroundColor: `${segment.color}20` }}
-                    >
-                      <div style={{ color: segment.color }}>
-                        {getIconComponent(segment.icon)}
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'overview' | 'insights')}>
+        <TabsList>
+          <TabsTrigger value="overview" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Segments Overview
+          </TabsTrigger>
+          <TabsTrigger value="insights" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Strategic Insights
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {segments.map((segment) => {
+              const segmentCompanies = companies.filter(c => c.segmentId === segment.id);
+              const totalValue = segmentCompanies.reduce((sum, c) => sum + (c.revenue || 0), 0);
+              const avgRevenue = segmentCompanies.length > 0 ? totalValue / segmentCompanies.length : 0;
+              
+              return (
+                <Card 
+                  key={segment.id} 
+                  className="cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => setSelectedSegment(segment)}
+                >
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div 
+                          className="h-10 w-10 rounded-lg flex items-center justify-center"
+                          style={{ backgroundColor: `${segment.color}20` }}
+                        >
+                          <div style={{ color: segment.color }}>
+                            {getIconComponent(segment.icon)}
+                          </div>
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg">{segment.name}</CardTitle>
+                          <Badge variant={segment.isActive ? "default" : "secondary"}>
+                            {segment.isActive ? "Active" : "Inactive"}
+                          </Badge>
+                        </div>
                       </div>
                     </div>
-                    <div>
-                      <CardTitle className="text-lg">{segment.name}</CardTitle>
-                      <Badge variant={segment.isActive ? "default" : "secondary"}>
-                        {segment.isActive ? "Active" : "Inactive"}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-                <CardDescription className="line-clamp-2">
-                  {segment.description}
-                </CardDescription>
-              </CardHeader>
+                    <CardDescription className="line-clamp-2">
+                      {segment.description}
+                    </CardDescription>
+                  </CardHeader>
 
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                      <DollarSign className="h-3 w-3" />
-                      Total Value
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                          <DollarSign className="h-3 w-3" />
+                          Total Value
+                        </div>
+                        <div className="font-semibold">
+                          {formatCurrency(totalValue)}
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                          <Users className="h-3 w-3" />
+                          Companies
+                        </div>
+                        <div className="font-semibold">
+                          {formatNumber(segmentCompanies.length)}
+                        </div>
+                      </div>
                     </div>
-                    <div className="font-semibold">
-                      {formatCurrency(totalValue)}
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                      <Users className="h-3 w-3" />
-                      Companies
-                    </div>
-                    <div className="font-semibold">
-                      {formatNumber(segmentCompanies.length)}
-                    </div>
-                  </div>
-                </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Avg Revenue</span>
-                    <span className="font-medium">
-                      {formatCurrency(avgRevenue)}
-                    </span>
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Target Conv. Rate</span>
-                      <span className="font-medium">
-                        {(segment.metrics.conversionRate * 100).toFixed(1)}%
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Avg Revenue</span>
+                        <span className="font-medium">
+                          {formatCurrency(avgRevenue)}
+                        </span>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Target Conv. Rate</span>
+                          <span className="font-medium">
+                            {(segment.metrics.conversionRate * 100).toFixed(1)}%
+                          </span>
+                        </div>
+                        <Progress 
+                          value={segment.metrics.conversionRate * 100} 
+                          className="h-2" 
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t">
+                      <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                        <Clock className="h-3 w-3" />
+                        Avg. Sales Cycle
+                      </div>
+                      <span className="text-sm font-medium">
+                        {segment.metrics.averageSalesCycle} days
                       </span>
                     </div>
-                    <Progress 
-                      value={segment.metrics.conversionRate * 100} 
-                      className="h-2" 
-                    />
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </TabsContent>
 
-                <div className="flex items-center justify-between pt-2 border-t">
-                  <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                    <Clock className="h-3 w-3" />
-                    Avg. Sales Cycle
-                  </div>
-                  <span className="text-sm font-medium">
-                    {segment.metrics.averageSalesCycle} days
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+        <TabsContent value="insights" className="space-y-6">
+          <AllSegmentsInsights segments={segments} companies={companies} />
+        </TabsContent>
+      </Tabs>
 
       <CreateSegmentDialog
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
         onSubmit={handleCreateSegment}
+      />
+
+      <AISegmentAssignmentDialog
+        isOpen={isAIAssignmentOpen}
+        onClose={() => setIsAIAssignmentOpen(false)}
+        onAssignmentComplete={handleAIAssignmentComplete}
       />
 
       {selectedSegment && (

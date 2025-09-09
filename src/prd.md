@@ -33,12 +33,25 @@
 
 ### **NEW: Customer Segments Management**
 - **Strategic Segmentation**: Built-in templates for Strategic Partners, Reference Customers, and Vector Control
-- **Intelligent Assignment**: Automated segment assignment based on revenue, industry, and custom criteria
-- **Segment Analytics**: Performance tracking and ROI analysis per customer segment
-- **Custom Segment Creation**: Build segments with detailed criteria and characteristics
-- **Company-Segment Mapping**: Visual segment distribution and assignment management
-- **Segment-Based Insights**: Tailored strategies, messaging, and KPIs per segment
+- **AI-Powered Assignment**: Automated segment assignment using machine learning analysis of company profiles
+- **Intelligent Insights**: AI-generated strategic recommendations and market analysis per segment
+- **Custom Segment Creation**: Build segments with detailed criteria, characteristics, and strategies
+- **Company-Segment Mapping**: Visual segment distribution and assignment confidence scoring
+- **Strategic Analysis**: AI-powered performance insights, trends, and competitive positioning
+- **Bulk Assignment**: Process multiple companies simultaneously with AI analysis
+- **Assignment Confidence**: Machine learning confidence scores for segment recommendations
+- **Alternative Suggestions**: AI provides secondary segment options with reasoning
 - **Performance Benchmarking**: Compare segment performance against targets and industry averages
+
+### **NEW: AI-Powered Strategic Intelligence**
+- **Automated Segment Analysis**: AI evaluates company characteristics against segment criteria
+- **Strategic Insights Generation**: AI provides market trends, opportunities, and recommendations
+- **Confidence Scoring**: Machine learning algorithms assess assignment reliability (0-100%)
+- **Alternative Segment Recommendations**: AI suggests backup segment options with detailed reasoning
+- **Competitive Positioning**: AI-generated competitive analysis and market positioning insights
+- **Performance Prediction**: Forecast segment success rates and revenue potential
+- **Strategic Recommendations**: AI-driven action items for segment optimization
+- **Market Trend Analysis**: Automated identification of emerging trends affecting segments
 
 ### **NEW: Advanced Pipeline Management**
 - **Visual Pipeline Builder**: Drag-and-drop interface for customizing sales pipeline stages
@@ -190,7 +203,37 @@
 
 ## Recent Updates
 
-### AI-Powered Lead Scoring & Deal Risk Assessment (Just Added)
+### AI-Powered Customer Segment Assignment (Just Added)
+
+#### Strategic Segment Intelligence
+- **Automated Profile Analysis**: AI evaluates company revenue, industry, size, geography, and custom fields
+- **Machine Learning Assignment**: Advanced algorithms determine optimal segment fit with confidence scoring
+- **Strategic Context Analysis**: AI considers growth trajectory, market position, and competitive landscape
+- **Multi-Segment Evaluation**: Comprehensive analysis across all available customer segments
+- **Alternative Recommendations**: Secondary segment options with detailed reasoning and confidence levels
+
+#### AI-Generated Strategic Insights
+- **Performance Assessment**: AI-driven analysis of segment health and revenue performance
+- **Market Trend Analysis**: Automated identification of trends affecting each customer segment
+- **Growth Opportunity Detection**: AI-powered identification of expansion and optimization opportunities  
+- **Strategic Recommendations**: Prioritized action items for segment performance improvement
+- **Competitive Positioning**: Market positioning analysis with competitive threat assessment
+
+#### Bulk Processing & Automation
+- **Batch Assignment**: Process multiple companies simultaneously with AI analysis
+- **Confidence Thresholds**: Configurable confidence levels for automatic vs. manual review
+- **Assignment Audit Trail**: Complete history of segment assignments with reasoning
+- **Performance Tracking**: Monitor assignment accuracy and segment performance over time
+- **Intelligent Fallbacks**: Rule-based assignment when AI analysis is unavailable
+
+#### Business Impact
+- **Enhanced Targeting**: Precision segment assignment improves sales strategy effectiveness
+- **Strategic Alignment**: AI ensures companies are matched to optimal engagement strategies
+- **Scalable Growth**: Automated processing handles large customer portfolios efficiently
+- **Data-Driven Decisions**: Confidence scoring and insights support strategic planning
+- **Competitive Advantage**: AI-powered segmentation provides market positioning intelligence
+
+### AI-Powered Lead Scoring & Deal Risk Assessment (Previously Added)
 
 #### Lead Scoring Features
 - **Comprehensive Scoring Algorithm**: AI-powered lead qualification scoring 0-100 points

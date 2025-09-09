@@ -1,4 +1,5 @@
-import { Opportunity, MEDDPICC, Contact, Company, LeadScore, DealRiskAssessment, ScoringFactor, RiskFactor, RiskRecommendation } from './types';
+import { Opportunity, MEDDPICC, Contact, Company, LeadScore, DealRiskAssessment, ScoringFactor, RiskFactor, RiskRecommendation, CustomerSegment } from './types';
+import { SegmentUtils } from './segment-utils';
 
 /**
  * AI Service for FulQrun CRM Phase 2 Features
@@ -492,6 +493,266 @@ export class AIService {
         competitorRisk: 'medium',
         urgencyScore: 5
       }
+    };
+  }
+
+  /**
+   * AI-Powered Customer Segment Assignment
+   */
+  static async assignCustomerSegment(company: Company, segments: CustomerSegment[]): Promise<{
+    segmentId: string;
+    confidence: number;
+    reasoning: string;
+    strategicInsights: string[];
+    alternativeSegments: { segmentId: string; confidence: number; reason: string }[];
+  }> {
+    const prompt = spark.llmPrompt`
+    Analyze this company profile and determine the best customer segment assignment:
+    
+    Company Profile:
+    - Name: ${company.name}
+    - Industry: ${company.industry}
+    - Size: ${company.size}
+    - Revenue: ${company.revenue ? `$${company.revenue.toLocaleString()}` : 'Not provided'}
+    - Employees: ${company.employees ? company.employees.toLocaleString() : 'Not provided'}
+    - Geography: ${company.geography || 'Not specified'}
+    - Website: ${company.website || 'Not provided'}
+    - Custom Fields: ${JSON.stringify(company.customFields || {})}
+    
+    Available Customer Segments:
+    ${segments.map((segment, index) => `
+    ${index + 1}. ${segment.name} (ID: ${segment.id})
+       Description: ${segment.description}
+       Revenue Criteria: $${segment.criteria.revenue.min?.toLocaleString() || 0} - $${segment.criteria.revenue.max?.toLocaleString() || 'unlimited'}
+       Industries: ${segment.criteria.industry.join(', ')}
+       Company Size: ${segment.criteria.companySize.min || 0} - ${segment.criteria.companySize.max || 'unlimited'} employees
+       Geography: ${segment.criteria.geography.join(', ')}
+       Characteristics:
+       - Avg Deal Size: $${segment.characteristics.avgDealSize.toLocaleString()}
+       - Sales Cycle: ${segment.characteristics.avgSalesCycle} days
+       - Common Pain Points: ${segment.characteristics.commonPainPoints.join(', ')}
+       - Decision Makers: ${segment.characteristics.decisionMakers.join(', ')}
+       Strategy:
+       - Messaging: ${segment.strategy.messaging.join(', ')}
+       - Channels: ${segment.strategy.channels.join(', ')}
+       - Touchpoints: ${segment.strategy.touchpoints}
+    `).join('')}
+    
+    Please analyze the company and provide:
+    1. Primary segment assignment with confidence score (0-100)
+    2. Detailed reasoning for the assignment
+    3. Strategic insights about how to approach this customer
+    4. Top 2 alternative segment options with confidence scores
+    5. Key factors that influenced the decision
+    
+    Consider:
+    - Exact matches vs. strategic potential
+    - Growth trajectory and market position
+    - Buying behavior patterns
+    - Value alignment with segment characteristics
+    - Competitive landscape in their industry
+    
+    Return as JSON: {
+      primarySegment: {
+        segmentId: string,
+        confidence: number,
+        reasoning: string
+      },
+      strategicInsights: string[],
+      alternativeSegments: [
+        {segmentId: string, confidence: number, reason: string}
+      ],
+      keyFactors: string[]
+    }
+    `;
+
+    try {
+      const response = await spark.llm(prompt, 'gpt-4o', true);
+      const result = JSON.parse(response);
+      
+      return {
+        segmentId: result.primarySegment?.segmentId || segments[0]?.id,
+        confidence: result.primarySegment?.confidence || 50,
+        reasoning: result.primarySegment?.reasoning || 'AI analysis completed with limited data',
+        strategicInsights: result.strategicInsights || [
+          'Consider company growth trajectory',
+          'Evaluate decision-making process',
+          'Assess competitive landscape'
+        ],
+        alternativeSegments: result.alternativeSegments?.slice(0, 2) || []
+      };
+    } catch (error) {
+      console.error('AI segment assignment error:', error);
+      // Fallback to rule-based assignment
+      const fallback = SegmentUtils.findBestSegmentMatch(company, segments);
+      return {
+        segmentId: fallback?.segment.id || segments[0]?.id,
+        confidence: fallback?.confidence || 50,
+        reasoning: fallback?.reason || 'Fallback assignment based on basic criteria',
+        strategicInsights: [
+          'Review company profile for additional strategic context',
+          'Validate segment fit through direct engagement'
+        ],
+        alternativeSegments: []
+      };
+    }
+  }
+
+  /**
+   * Generate Strategic Segment Insights
+   */
+  static async generateSegmentInsights(segment: CustomerSegment, companies: Company[]): Promise<{
+    performance: string;
+    trends: string[];
+    opportunities: string[];
+    recommendations: string[];
+    competitivePosition: string;
+  }> {
+    const segmentCompanies = companies.filter(c => c.segmentId === segment.id);
+    const totalRevenue = segmentCompanies.reduce((sum, c) => sum + (c.revenue || 0), 0);
+    const avgRevenue = segmentCompanies.length > 0 ? totalRevenue / segmentCompanies.length : 0;
+    
+    const industriesDistribution = segmentCompanies.reduce((acc, c) => {
+      acc[c.industry] = (acc[c.industry] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const prompt = spark.llmPrompt`
+    Generate strategic insights for this customer segment:
+    
+    Segment: ${segment.name}
+    Description: ${segment.description}
+    
+    Current Performance:
+    - Total Companies: ${segmentCompanies.length}
+    - Total Revenue: $${totalRevenue.toLocaleString()}
+    - Average Revenue: $${avgRevenue.toLocaleString()}
+    - Industries: ${Object.entries(industriesDistribution).map(([industry, count]) => `${industry} (${count})`).join(', ')}
+    
+    Segment Characteristics:
+    - Target Deal Size: $${segment.characteristics.avgDealSize.toLocaleString()}
+    - Target Sales Cycle: ${segment.characteristics.avgSalesCycle} days
+    - Decision Makers: ${segment.characteristics.decisionMakers.join(', ')}
+    - Common Pain Points: ${segment.characteristics.commonPainPoints.join(', ')}
+    - Buying Process: ${segment.characteristics.buyingProcess}
+    
+    Strategy Framework:
+    - Messaging: ${segment.strategy.messaging.join(', ')}
+    - Channels: ${segment.strategy.channels.join(', ')}
+    - Target Touchpoints: ${segment.strategy.touchpoints}
+    - Cadence: ${segment.strategy.cadence}
+    
+    Provide strategic analysis including:
+    1. Performance assessment of this segment
+    2. Market trends affecting this segment (3-4 trends)
+    3. Growth opportunities within this segment (3-4 opportunities)
+    4. Strategic recommendations for optimization (4-5 recommendations)
+    5. Competitive positioning analysis
+    
+    Return as JSON: {
+      performance: string,
+      trends: string[],
+      opportunities: string[],
+      recommendations: string[],
+      competitivePosition: string
+    }
+    `;
+
+    try {
+      const response = await spark.llm(prompt, 'gpt-4o', true);
+      const result = JSON.parse(response);
+      
+      return {
+        performance: result.performance || 'Segment performance analysis in progress',
+        trends: result.trends || ['Market evolution', 'Technology adoption', 'Buyer behavior shifts'],
+        opportunities: result.opportunities || ['Segment expansion', 'Value proposition enhancement'],
+        recommendations: result.recommendations || ['Strengthen positioning', 'Optimize approach'],
+        competitivePosition: result.competitivePosition || 'Competitive analysis pending'
+      };
+    } catch (error) {
+      console.error('Segment insights error:', error);
+      return {
+        performance: `Segment contains ${segmentCompanies.length} companies with average revenue of ${avgRevenue.toLocaleString()}`,
+        trends: ['Digital transformation acceleration', 'Cost optimization focus', 'Remote work adaptation'],
+        opportunities: ['Expand into adjacent markets', 'Develop partnership channels'],
+        recommendations: ['Refine targeting criteria', 'Enhance value proposition', 'Improve sales process'],
+        competitivePosition: 'Market position assessment needed'
+      };
+    }
+  }
+
+  /**
+   * Bulk AI-Powered Segment Assignment
+   */
+  static async bulkAssignSegments(companies: Company[], segments: CustomerSegment[]): Promise<{
+    assignments: { companyId: string; segmentId: string; confidence: number; reasoning: string }[];
+    insights: { totalAssigned: number; highConfidence: number; requiresReview: number };
+    recommendations: string[];
+  }> {
+    const assignments: { companyId: string; segmentId: string; confidence: number; reasoning: string }[] = [];
+    let highConfidence = 0;
+    let requiresReview = 0;
+
+    // Process companies in smaller batches to avoid overwhelming the AI
+    const batchSize = 5;
+    const unassignedCompanies = companies.filter(c => !c.segmentId);
+    
+    for (let i = 0; i < unassignedCompanies.length; i += batchSize) {
+      const batch = unassignedCompanies.slice(i, i + batchSize);
+      
+      for (const company of batch) {
+        try {
+          const assignment = await this.assignCustomerSegment(company, segments);
+          assignments.push({
+            companyId: company.id,
+            segmentId: assignment.segmentId,
+            confidence: assignment.confidence,
+            reasoning: assignment.reasoning
+          });
+          
+          if (assignment.confidence >= 80) {
+            highConfidence++;
+          } else if (assignment.confidence < 60) {
+            requiresReview++;
+          }
+        } catch (error) {
+          console.error(`Error assigning segment for company ${company.id}:`, error);
+          // Use fallback logic
+          const fallback = SegmentUtils.findBestSegmentMatch(company, segments);
+          if (fallback) {
+            assignments.push({
+              companyId: company.id,
+              segmentId: fallback.segment.id,
+              confidence: fallback.confidence,
+              reasoning: fallback.reason
+            });
+            if (fallback.confidence < 60) requiresReview++;
+          }
+        }
+      }
+      
+      // Add small delay between batches to avoid rate limits
+      if (i + batchSize < unassignedCompanies.length) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+
+    const recommendations = [
+      `Assigned ${assignments.length} companies to segments`,
+      `${highConfidence} assignments have high confidence (≥80%)`,
+      requiresReview > 0 ? `${requiresReview} assignments need manual review (<60% confidence)` : 'All assignments above 60% confidence',
+      'Review strategic fit for low-confidence assignments',
+      'Consider creating new segments for unmatched company profiles'
+    ].filter(Boolean);
+
+    return {
+      assignments,
+      insights: {
+        totalAssigned: assignments.length,
+        highConfidence,
+        requiresReview
+      },
+      recommendations
     };
   }
 
