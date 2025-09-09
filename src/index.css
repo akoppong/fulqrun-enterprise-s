@@ -329,16 +329,330 @@ textarea[class*="w-full"],
   }
 }
 
-/* Dashboard Layout Improvements */
-.dashboard-main-content {
-  width: 100%;
-  max-width: none !important;
+/* Enhanced Mobile Navigation Styles */
+
+/* Improved mobile navigation trigger positioning */
+.mobile-nav-trigger {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 60;
+  transition: all 200ms ease;
+  backdrop-filter: blur(12px);
+  border: 1px solid rgb(var(--border) / 0.8);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.15);
 }
 
-.dashboard-container {
+.mobile-nav-trigger:hover {
+  scale: 1.05;
+  box-shadow: 0 6px 16px rgb(0 0 0 / 0.2);
+}
+
+.mobile-nav-trigger:active {
+  scale: 0.95;
+}
+
+/* Mobile navigation backdrop blur */
+.mobile-nav-backdrop {
+  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* Enhanced sidebar scrolling */
+.sidebar-scroll-area {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--border)) transparent;
+}
+
+.sidebar-scroll-area::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-scroll-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-scroll-area::-webkit-scrollbar-thumb {
+  background-color: rgb(var(--border));
+  border-radius: 2px;
+}
+
+.sidebar-scroll-area::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(var(--border) / 0.8);
+}
+
+/* Collapsible animation improvements */
+.collapsible-content {
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: top;
+}
+
+/* Navigation item hover animations */
+.nav-item {
+  transition: all 150ms ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
   width: 100%;
-  max-width: none;
-  margin: 0;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 500ms ease;
+}
+
+.nav-item:hover::before {
+  left: 100%;
+}
+
+/* Badge animations */
+.nav-badge {
+  animation: pulse-subtle 2s infinite;
+}
+
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+    scale: 1;
+  }
+  50% {
+    opacity: 0.8;
+    scale: 1.02;
+  }
+}
+
+/* Mobile header improvements */
+.mobile-header {
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgb(var(--border) / 0.5);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+/* Responsive navigation spacing */
+@media (max-width: 768px) {
+  .nav-item {
+    padding: 0.75rem;
+    border-radius: 8px;
+    margin: 0.125rem 0;
+  }
+  
+  .nav-section-header {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+  }
+  
+  .sidebar-content {
+    padding: 1rem;
+  }
+
+  .mobile-nav-trigger {
+    top: 0.75rem;
+    left: 0.75rem;
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav-item {
+    padding: 0.625rem;
+    font-size: 0.875rem;
+  }
+  
+  .nav-item-text {
+    font-size: 0.875rem;
+  }
+  
+  .nav-item-description {
+    font-size: 0.75rem;
+    line-height: 1.2;
+  }
+
+  .mobile-nav-trigger {
+    top: 0.5rem;
+    left: 0.5rem;
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+}
+
+/* Focus management for accessibility */
+.nav-item:focus-visible {
+  outline: 2px solid rgb(var(--ring));
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.mobile-nav-trigger:focus-visible {
+  outline: 2px solid rgb(var(--ring));
+  outline-offset: 2px;
+}
+
+/* Enhanced touch targets for mobile */
+@media (max-width: 1024px) {
+  .nav-item,
+  .nav-section-trigger {
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+}
+
+/* Improved Sheet animations on mobile */
+@media (max-width: 768px) {
+  [data-radix-dialog-overlay] {
+    backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.2);
+  }
+  
+  [data-radix-dialog-content] {
+    animation: slideInFromLeft 200ms ease-out;
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Better spacing for navigation sections */
+.nav-section {
+  margin-bottom: 1rem;
+}
+
+.nav-section:last-child {
+  margin-bottom: 0;
+}
+
+/* Improved collapsible trigger styling */
+.nav-section-trigger {
+  border-radius: 6px;
+  transition: all 150ms ease;
+  position: relative;
+}
+
+.nav-section-trigger:hover {
+  background-color: rgb(var(--muted) / 0.5);
+}
+
+.nav-section-trigger[data-state="open"] {
+  background-color: rgb(var(--muted) / 0.8);
+}
+
+/* Better visual hierarchy for navigation */
+.nav-section-title {
+  font-weight: 600;
+  color: rgb(var(--foreground));
+}
+
+.nav-section-count {
+  background-color: rgb(var(--primary) / 0.1);
+  color: rgb(var(--primary));
+  border: 1px solid rgb(var(--primary) / 0.2);
+}
+
+/* Smooth expand/collapse animation */
+[data-radix-collapsible-content] {
+  overflow: hidden;
+  animation-duration: 200ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-radix-collapsible-content][data-state="open"] {
+  animation-name: slideDown;
+}
+
+[data-radix-collapsible-content][data-state="closed"] {
+  animation-name: slideUp;
+}
+
+@keyframes slideDown {
+  from {
+    height: 0;
+    opacity: 0;
+  }
+  to {
+    height: var(--radix-collapsible-content-height);
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    height: var(--radix-collapsible-content-height);
+    opacity: 1;
+  }
+  to {
+    height: 0;
+    opacity: 0;
+  }
+}
+
+/* Enhanced mobile navigation experience */
+@media (hover: none) and (pointer: coarse) {
+  .nav-item:hover::before {
+    display: none;
+  }
+  
+  .nav-item:active {
+    scale: 0.98;
+    background-color: rgb(var(--muted) / 0.8);
+  }
+}
+
+/* Better contrast for active navigation items */
+.nav-item[aria-current="page"] {
+  background-color: rgb(var(--primary));
+  color: rgb(var(--primary-foreground));
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgb(var(--primary) / 0.3);
+}
+
+.nav-item[aria-current="page"]:hover {
+  background-color: rgb(var(--primary) / 0.9);
+}
+
+/* Responsive breadcrumb improvements */
+.breadcrumb-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+@media (max-width: 640px) {
+  .breadcrumb-item span {
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* Loading states for navigation */
+.nav-loading {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 /* Card stack for mobile */

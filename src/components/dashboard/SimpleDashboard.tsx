@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { MobileNavigation } from '../navigation/MobileNavigation';
 import { AdvancedPipelineManagement } from '../pipeline/AdvancedPipelineManagement';
 import { Dashboard } from './Dashboard';
 import { 
@@ -25,16 +26,27 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card p-4">
+      {/* Mobile Navigation */}
+      <div className="lg:hidden">
+        <MobileNavigation
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          userName={user.name}
+          userRole={user.role}
+        />
+      </div>
+
+      {/* Header */}
+      <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 p-4 mobile-header sticky top-0 z-40">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold">FulQrun CRM</h1>
+          <div className="ml-16 lg:ml-0">
+            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold">FulQrun CRM</h1>
             <p className="text-xs sm:text-sm text-muted-foreground">Professional Enterprise Sales Platform</p>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
             <div className="text-right hidden sm:block">
-              <p className="font-medium">{user.name}</p>
-              <Badge variant="secondary">{user.role}</Badge>
+              <p className="font-medium text-sm">{user.name}</p>
+              <Badge variant="secondary" className="text-xs">{user.role}</Badge>
             </div>
             <div className="text-right block sm:hidden">
               <Badge variant="secondary" className="text-xs">{user.role}</Badge>

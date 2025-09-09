@@ -196,22 +196,24 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
   };
 
   return (
-    <div className="dashboard-container flex h-screen bg-background">
-      {/* Move sidebar to the left with increased width */}
+    <div className="flex h-screen bg-background overflow-hidden">
+      {/* Enhanced mobile-responsive sidebar */}
       <Sidebar 
         currentView={currentView} 
         onViewChange={setCurrentView}
         userRole={user.role}
       />
-      {/* Increase main content area width */}
-      <div className="dashboard-main-content flex-1 flex flex-col overflow-hidden">
+      
+      {/* Main content area with improved mobile layout */}
+      <div className="flex-1 flex flex-col min-w-0">
         <Header user={user} onLogout={onLogout} />
-        <main className="flex-1 overflow-auto p-3 sm:p-4 lg:p-6">
-          <div className="max-w-7xl mx-auto pt-16 lg:pt-0">
+        <main className="flex-1 overflow-auto">
+          <div className="p-3 sm:p-4 lg:p-6 w-full">
             {renderView()}
           </div>
         </main>
       </div>
+      
       <FinancialAlerts opportunities={opportunities} />
     </div>
   );
