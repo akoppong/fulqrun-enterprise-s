@@ -351,8 +351,8 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
         </Sheet>
       </div>
 
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:flex w-64 bg-card border-r flex-col">
+      {/* Desktop Sidebar - Increased width for better space utilization */}
+      <div className="hidden lg:flex w-80 bg-card border-r flex-col">
         <SidebarContent />
       </div>
     </>

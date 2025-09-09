@@ -196,16 +196,18 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
   };
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="dashboard-container flex h-screen bg-background">
+      {/* Move sidebar to the left with increased width */}
       <Sidebar 
         currentView={currentView} 
         onViewChange={setCurrentView}
         userRole={user.role}
       />
-      <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
+      {/* Increase main content area width */}
+      <div className="dashboard-main-content flex-1 flex flex-col overflow-hidden">
         <Header user={user} onLogout={onLogout} />
         <main className="flex-1 overflow-auto p-3 sm:p-4 lg:p-6">
-          <div className="lg:pl-0 pt-16 lg:pt-0">
+          <div className="pt-16 lg:pt-0">
             {renderView()}
           </div>
         </main>

@@ -99,19 +99,20 @@ export function OpportunityList() {
             </Select>
           </div>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Opportunity</TableHead>
-                <TableHead>Stage</TableHead>
-                <TableHead>Value</TableHead>
-                <TableHead>Probability</TableHead>
-                <TableHead>MEDDPICC</TableHead>
-                <TableHead>Close Date</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
+        <CardContent className="p-0">
+          <div className="responsive-overflow">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="min-w-[250px]">Opportunity</TableHead>
+                  <TableHead className="min-w-[120px]">Stage</TableHead>
+                  <TableHead className="min-w-[120px]">Value</TableHead>
+                  <TableHead className="min-w-[120px]">Probability</TableHead>
+                  <TableHead className="min-w-[130px]">MEDDPICC</TableHead>
+                  <TableHead className="min-w-[120px]">Close Date</TableHead>
+                  <TableHead className="min-w-[100px]">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
             <TableBody>
               {filteredOpportunities.map((opportunity) => {
                 const stageConfig = getStageConfig(opportunity.stage);
@@ -124,7 +125,7 @@ export function OpportunityList() {
                       <div>
                         <div className="font-medium">{opportunity.title}</div>
                         {opportunity.description && (
-                          <div className="text-sm text-muted-foreground truncate max-w-xs">
+                          <div className="text-sm text-muted-foreground truncate max-w-[300px]">
                             {opportunity.description}
                           </div>
                         )}
@@ -171,6 +172,7 @@ export function OpportunityList() {
               })}
             </TableBody>
           </Table>
+          </div>
           
           {filteredOpportunities.length === 0 && (
             <div className="text-center py-12">

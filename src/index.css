@@ -329,6 +329,35 @@ textarea[class*="w-full"],
   }
 }
 
+/* Dashboard Layout Improvements */
+.dashboard-main-content {
+  width: 100%;
+  max-width: none !important;
+}
+
+/* Enhanced table layout for better space utilization */
+.responsive-overflow {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.responsive-overflow table {
+  min-width: 100%;
+  width: max-content;
+}
+
+@media (min-width: 1280px) {
+  .responsive-overflow table {
+    width: 100%;
+  }
+}
+
+/* Ensure sidebar + content layout uses full viewport width */
+.dashboard-container {
+  width: 100vw;
+  max-width: none;
+}
+
 /* Card stack for mobile */
 .card-stack {
   display: flex;
