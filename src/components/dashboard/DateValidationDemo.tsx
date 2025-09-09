@@ -22,36 +22,43 @@ export function DateValidationDemo() {
 
   const [validationResults, setValidationResults] = useState<Record<string, any>>({});
 
-  // Multi-date validation hook
-  const {
-    validateField,
-    validateAllFields,
-    clearAllValidations,
-    getNormalizedData,
-    fieldValidations,
-    allFieldsValid,
-    hasAnyErrors
-  } = useMultipleDateValidation({
-    opportunityClose: CommonDateFieldConfigs.opportunityCloseDate,
-    contractStart: CommonDateFieldConfigs.eventDate,
-    contractEnd: CommonDateFieldConfigs.eventDate,
-    lastContact: CommonDateFieldConfigs.createdAt,
-    birthDate: CommonDateFieldConfigs.birthDate,
-    projectDeadline: CommonDateFieldConfigs.opportunityCloseDate
-  });
+  // Individual date validation hooks
+  const opportunityClose = useDateValidation(CommonDateFieldConfigs.opportunityCloseDate);
+  const contractStart = useDateValidation(CommonDateFieldConfigs.eventDate);
+  const contractEnd = useDateValidation(CommonDateFieldConfigs.eventDate);
+  const lastContact = useDateValidation(CommonDateFieldConfigs.createdAt);
+  const birthDate = useDateValidation(CommonDateFieldConfigs.birthDate);
+  const projectDeadline = useDateValidation(CommonDateFieldConfigs.opportunityCloseDate);
+  
+  // Group all fields for easy management
+  const allFields = {
+    opportunityClose,
+    contractStart,
+    contractEnd,
+    lastContact,
+    birthDate,
+    projectDeadline
+  };
+  
+  const allFieldsValid = Object.values(allFields).every(field => field.isValid);
+  const hasAnyErrors = Object.values(allFields).some(field => field.error !== null);
 
   const handleDateChange = (field: string, value: string | null, isValid: boolean) => {
     setSampleData(prev => ({ ...prev, [field]: value || '' }));
-    validateField(field, value);
+    if (allFields[field as keyof typeof allFields]) {
+      allFields[field as keyof typeof allFields].setValue(value);
+    }
   };
 
   const handleValidateAll = () => {
-    const result = validateAllFields(sampleData);
-    setValidationResults(result);
+    const isValid = Object.values(allFields).every(field => field.validate());
     
-    if (result.allValid) {
+    if (isValid) {
       toast.success('All dates are valid!');
-      const normalized = getNormalizedData();
+      const normalized = Object.entries(allFields).reduce((acc, [key, field]) => {
+        acc[key] = field.value.date;
+        return acc;
+      }, {} as Record<string, Date | null>);
       console.log('Normalized data:', normalized);
     } else {
       toast.error('Some dates have validation errors');
@@ -67,7 +74,7 @@ export function DateValidationDemo() {
       birthDate: '',
       projectDeadline: ''
     });
-    clearAllValidations();
+    Object.values(allFields).forEach(field => field.reset());
     setValidationResults({});
   };
 
@@ -107,13 +114,13 @@ export function DateValidationDemo() {
           </Badge>
           <Badge variant="outline" className="flex items-center gap-1">
             <CalendarIcon size={14} />
-            {Object.keys(fieldValidations).length} Fields
+            {Object.keys(allFields).length} Fields
           </Badge>
         </div>
       </div>
 
       {/* Summary Alert */}
-      {Object.keys(fieldValidations).length > 0 && (
+      {Object.keys(allFields).length > 0 && (
         <Alert variant={allFieldsValid ? 'default' : hasAnyErrors ? 'destructive' : 'default'}>
           {allFieldsValid ? <CheckCircleIcon className="h-4 w-4" /> : 
            hasAnyErrors ? <WarningIcon className="h-4 w-4" /> : 
@@ -122,7 +129,7 @@ export function DateValidationDemo() {
             {allFieldsValid ? 
               'All date fields are valid and properly normalized.' :
               hasAnyErrors ?
-                `${Object.values(fieldValidations).filter(v => !v.isValid).length} field(s) have validation errors.` :
+                `${Object.values(allFields).filter(v => !v.isValid).length} field(s) have validation errors.` :
                 'Enter dates to see validation results.'}
           </AlertDescription>
         </Alert>
@@ -147,45 +154,75 @@ export function DateValidationDemo() {
               <div className="grid gap-6 md:grid-cols-2">
                 <OpportunityCloseDateInput
                   label="Opportunity Close Date"
-                  value={sampleData.opportunityClose}
-                  onChange={(value, isValid) => handleDateChange('opportunityClose', value, isValid)}
+                  value={opportunityClose.rawValue}
+                  onChange={(value) => {
+                    opportunityClose.setValue(value);
+                    handleDateChange('opportunityClose', value, opportunityClose.isValid);
+                  }}
+                  onBlur={() => opportunityClose.setTouched(true)}
                   placeholder="Select expected close date..."
+                  error={opportunityClose.error}
                 />
 
                 <EventDateInput
                   label="Contract Start Date"
-                  value={sampleData.contractStart}
-                  onChange={(value, isValid) => handleDateChange('contractStart', value, isValid)}
+                  value={contractStart.rawValue}
+                  onChange={(value) => {
+                    contractStart.setValue(value);
+                    handleDateChange('contractStart', value, contractStart.isValid);
+                  }}
+                  onBlur={() => contractStart.setTouched(true)}
                   placeholder="Select contract start..."
+                  error={contractStart.error}
                 />
 
                 <EventDateInput
                   label="Contract End Date"
-                  value={sampleData.contractEnd}
-                  onChange={(value, isValid) => handleDateChange('contractEnd', value, isValid)}
+                  value={contractEnd.rawValue}
+                  onChange={(value) => {
+                    contractEnd.setValue(value);
+                    handleDateChange('contractEnd', value, contractEnd.isValid);
+                  }}
+                  onBlur={() => contractEnd.setTouched(true)}
                   placeholder="Select contract end..."
+                  error={contractEnd.error}
                 />
 
                 <BusinessDateInput
                   label="Last Contact Date"
-                  value={sampleData.lastContact}
-                  onChange={(value, isValid) => handleDateChange('lastContact', value, isValid)}
+                  value={lastContact.rawValue}
+                  onChange={(value) => {
+                    lastContact.setValue(value);
+                    handleDateChange('lastContact', value, lastContact.isValid);
+                  }}
+                  onBlur={() => lastContact.setTouched(true)}
                   placeholder="When did you last contact them?"
+                  error={lastContact.error}
                 />
 
                 <BirthDateInput
                   label="Contact Birth Date"
-                  value={sampleData.birthDate}
-                  onChange={(value, isValid) => handleDateChange('birthDate', value, isValid)}
+                  value={birthDate.rawValue}
+                  onChange={(value) => {
+                    birthDate.setValue(value);
+                    handleDateChange('birthDate', value, birthDate.isValid);
+                  }}
+                  onBlur={() => birthDate.setTouched(true)}
                   placeholder="Optional birth date..."
                   required={false}
+                  error={birthDate.error}
                 />
 
                 <OpportunityCloseDateInput
                   label="Project Deadline"
-                  value={sampleData.projectDeadline}
-                  onChange={(value, isValid) => handleDateChange('projectDeadline', value, isValid)}
+                  value={projectDeadline.rawValue}
+                  onChange={(value) => {
+                    projectDeadline.setValue(value);
+                    handleDateChange('projectDeadline', value, projectDeadline.isValid);
+                  }}
+                  onBlur={() => projectDeadline.setTouched(true)}
                   placeholder="Project completion date..."
+                  error={projectDeadline.error}
                 />
               </div>
 
@@ -322,7 +359,7 @@ export function DateValidationDemo() {
       </Tabs>
 
       {/* Validation Results */}
-      {Object.keys(fieldValidations).length > 0 && (
+      {Object.keys(allFields).length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>Current Validation State</CardTitle>
@@ -332,20 +369,20 @@ export function DateValidationDemo() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {Object.entries(fieldValidations).map(([field, validation]) => (
+              {Object.entries(allFields).map(([field, validation]) => (
                 <div key={field} className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="space-y-1">
                     <div className="font-medium">{field}</div>
                     <div className="text-sm text-muted-foreground">
-                      {validation.normalizedValue ? (
-                        <>Normalized: {new Date(validation.normalizedValue).toLocaleDateString()}</>
+                      {validation.value.date ? (
+                        <>Normalized: {validation.value.date.toLocaleDateString()}</>
                       ) : (
                         'No valid date'
                       )}
                     </div>
-                    {validation.warnings && validation.warnings.length > 0 && (
-                      <div className="text-xs text-orange-600">
-                        Warnings: {validation.warnings.join(', ')}
+                    {validation.rawValue && (
+                      <div className="text-xs text-muted-foreground">
+                        Raw: {validation.rawValue}
                       </div>
                     )}
                   </div>

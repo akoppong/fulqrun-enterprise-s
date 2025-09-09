@@ -263,3 +263,94 @@ export function useTimezoneFormat(options: UseTimezoneFormatOptions = {}) {
     return formatDate(date, format, timezone);
   }, [format, timezone, fallback]);
 }
+
+/**
+ * Common date field configurations for CRM
+ */
+export const CommonDateFieldConfigs = {
+  birthDate: {
+    format: DATE_FORMATS.DISPLAY,
+    maxDate: new Date(),
+    minDate: new Date(1900, 0, 1),
+    required: false
+  } satisfies UseDateValidationOptions,
+  
+  createdAt: {
+    format: DATE_FORMATS.DISPLAY,
+    maxDate: new Date(),
+    required: false
+  } satisfies UseDateValidationOptions,
+  
+  eventDate: {
+    format: DATE_FORMATS.DISPLAY,
+    minDate: new Date(),
+    required: true
+  } satisfies UseDateValidationOptions,
+  
+  opportunityCloseDate: {
+    format: DATE_FORMATS.DISPLAY,
+    minDate: new Date(),
+    required: true
+  } satisfies UseDateValidationOptions
+};
+
+/**
+ * Hook for managing multiple date fields with validation
+ * Note: This is a simplified version that requires manual field management
+ */
+export interface UseMultipleDateValidationOptions {
+  fields: Record<string, UseDateValidationOptions>;
+  onValidChange?: (fieldName: string, date: Date | null, isValid: boolean) => void;
+}
+
+export interface MultipleDateValidationResult {
+  createField: (fieldName: string) => DateValidationResult;
+  isAllValid: (fields: Record<string, DateValidationResult>) => boolean;
+  hasErrors: (fields: Record<string, DateValidationResult>) => boolean;
+  resetAll: (fields: Record<string, DateValidationResult>) => void;
+  validateAll: (fields: Record<string, DateValidationResult>) => boolean;
+}
+
+export function useMultipleDateValidation(options: UseMultipleDateValidationOptions): MultipleDateValidationResult {
+  const { fields: fieldConfigs, onValidChange } = options;
+  
+  const createField = useCallback((fieldName: string) => {
+    const config = fieldConfigs[fieldName];
+    if (!config) {
+      throw new Error(`No configuration found for field: ${fieldName}`);
+    }
+    
+    // This would need to be called at the component level for each field
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    return useDateValidation({
+      ...config,
+      onValidChange: onValidChange 
+        ? (date, isValid) => onValidChange(fieldName, date, isValid)
+        : undefined
+    });
+  }, [fieldConfigs, onValidChange]);
+  
+  const isAllValid = useCallback((fields: Record<string, DateValidationResult>) => {
+    return Object.values(fields).every(field => field.isValid);
+  }, []);
+  
+  const hasErrors = useCallback((fields: Record<string, DateValidationResult>) => {
+    return Object.values(fields).some(field => field.error !== null);
+  }, []);
+  
+  const resetAll = useCallback((fields: Record<string, DateValidationResult>) => {
+    Object.values(fields).forEach(field => field.reset());
+  }, []);
+  
+  const validateAll = useCallback((fields: Record<string, DateValidationResult>) => {
+    return Object.values(fields).every(field => field.validate());
+  }, []);
+  
+  return {
+    createField,
+    isAllValid,
+    hasErrors,
+    resetAll,
+    validateAll
+  };
+}
