@@ -166,30 +166,30 @@ export function PipelineConfigurationSelector({
               </div>
             </div>
 
-            <div className="space-y-3">
-              <h4 className="text-sm font-medium">Pipeline Stages</h4>
-              <div className="space-y-2">
-                {selectedPipeline.stages.map((stage, index) => (
-                  <div key={stage.id} className="flex items-center justify-between p-2 bg-muted/30 rounded-md">
-                    <div className="flex items-center gap-2">
-                      <Badge className={stage.color} variant="secondary">
-                        {stage.name}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {stage.probability}% win probability
-                      </span>
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 text-sm">
+              <div className="space-y-3">
+                <h4 className="text-sm font-medium">Pipeline Stages</h4>
+                <div className="space-y-2">
+                  {selectedPipeline.stages.map((stage, index) => (
+                    <div key={stage.id} className="flex items-center justify-between p-2 bg-muted/30 rounded-md">
+                      <div className="flex items-center gap-2">
+                        <Badge className={stage.color} variant="secondary">
+                          {stage.name}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {stage.probability}% win probability
+                        </span>
+                      </div>
+                      {index < selectedPipeline.stages.length - 1 && (
+                        <span className="text-muted-foreground text-sm">→</span>
+                      )}
                     </div>
-                    {index < selectedPipeline.stages.length - 1 && (
-                      <span className="text-muted-foreground text-sm">→</span>
-                    )}
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-sm">
+              
               <div>
-                <h5 className="font-medium mb-2 text-sm">Stage Conversion Targets</h5>
+                <h5 className="font-medium mb-3 text-sm">Stage Conversion Targets</h5>
                 <div className="space-y-2">
                   {Object.entries(selectedPipeline.conversionTargets).slice(0, 4).map(([key, value]) => (
                     <div key={key} className="flex justify-between p-2 bg-muted/20 rounded">
@@ -201,8 +201,9 @@ export function PipelineConfigurationSelector({
                   ))}
                 </div>
               </div>
+              
               <div>
-                <h5 className="font-medium mb-2 text-sm">Time Targets (Days)</h5>
+                <h5 className="font-medium mb-3 text-sm">Time Targets (Days)</h5>
                 <div className="space-y-2">
                   {Object.entries(selectedPipeline.salesCycleTargets).slice(0, 4).map(([key, value]) => (
                     <div key={key} className="flex justify-between p-2 bg-muted/20 rounded">
