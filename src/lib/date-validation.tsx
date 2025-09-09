@@ -398,7 +398,7 @@ export function withDateValidation<T extends Record<string, any>>(
       }
     });
 
-    return <Component {...validatedProps} />;
+    return React.createElement(Component, validatedProps);
   };
 }
 
