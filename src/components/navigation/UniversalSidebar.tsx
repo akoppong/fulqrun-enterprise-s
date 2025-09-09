@@ -22,7 +22,8 @@ import {
   Plug,
   ChevronRight,
   ChevronDown,
-  HardDrives
+  HardDrives,
+  Users
 } from '@phosphor-icons/react';
 
 interface NavigationItem {
@@ -67,10 +68,41 @@ export function UniversalSidebar({
           description: 'Overview and key metrics'
         },
         {
-          id: 'full-crm',
-          label: 'CRM Suite',
+          id: 'pipeline',
+          label: 'Pipeline',
+          icon: Target,
+          description: 'Sales pipeline with PEAK methodology'
+        },
+        {
+          id: 'opportunities',
+          label: 'Opportunities',
+          icon: Star,
+          description: 'Deal management & MEDDPICC'
+        },
+        {
+          id: 'contacts',
+          label: 'Contacts',
+          icon: Users,
+          description: 'Customer relationships'
+        },
+        {
+          id: 'companies',
+          label: 'Companies',
+          icon: Building2,
+          description: 'Company profiles & data'
+        },
+        {
+          id: 'analytics',
+          label: 'Analytics',
           icon: BarChart3,
-          description: 'Complete customer management'
+          description: 'Reports & performance insights'
+        },
+        {
+          id: 'dashboard-builder',
+          label: 'Dashboard Builder',
+          icon: TrendingUp,
+          description: 'Customizable dashboards',
+          isNew: true
         }
       ]
     },

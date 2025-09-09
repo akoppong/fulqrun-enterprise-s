@@ -17,7 +17,9 @@ import {
   Shield,
   CheckCircle,
   Workflow,
-  Bot
+  Bot,
+  Users,
+  TrendingUp
 } from '@phosphor-icons/react';
 
 interface MobileNavigationProps {
@@ -45,10 +47,40 @@ export function MobileNavigation({ activeTab, onTabChange, userName, userRole }:
       isNew: true
     },
     {
-      id: 'pipeline-builder',
-      label: 'Pipeline Builder',
-      icon: Workflow,
-      description: 'Design custom sales pipelines with automation',
+      id: 'pipeline',
+      label: 'Pipeline',
+      icon: Target,
+      description: 'Sales pipeline with PEAK methodology'
+    },
+    {
+      id: 'opportunities',
+      label: 'Opportunities',
+      icon: Star,
+      description: 'Deal management & MEDDPICC'
+    },
+    {
+      id: 'contacts',
+      label: 'Contacts',
+      icon: Users,
+      description: 'Customer relationships'
+    },
+    {
+      id: 'companies',
+      label: 'Companies',
+      icon: Building2,
+      description: 'Company profiles & data'
+    },
+    {
+      id: 'analytics',
+      label: 'Analytics',
+      icon: BarChart3,
+      description: 'Reports & performance insights'
+    },
+    {
+      id: 'dashboard-builder',
+      label: 'Dashboard Builder',
+      icon: TrendingUp,
+      description: 'Customizable dashboards',
       isNew: true
     },
     {
@@ -77,13 +109,6 @@ export function MobileNavigation({ activeTab, onTabChange, userName, userRole }:
       label: 'Deal Risk Analysis',
       icon: Shield,
       description: 'AI-powered risk assessment and mitigation',
-      isNew: true
-    },
-    {
-      id: 'full-crm',
-      label: 'Full CRM Suite',
-      icon: BarChart3,
-      description: 'Complete CRM with AI-powered features',
       isNew: true
     }
   ];

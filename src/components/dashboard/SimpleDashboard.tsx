@@ -10,6 +10,7 @@ import { MobileNavigation } from '../navigation/MobileNavigation';
 import { EnhancedMEDDPICCQualification } from '../pipeline/EnhancedMEDDPICCQualification';
 import { EnhancedLearningPlatform } from './EnhancedLearningPlatform';
 import { Dashboard } from './Dashboard';
+import { CRMContent } from './CRMContent';
 import { CustomizableDashboard } from './CustomizableDashboard';
 import { AIQualificationDashboard, AILeadScoring, AIDealRiskAssessment, AIQualificationDemo } from '../ai-qualification';
 import { AdministrationModule } from '../administration/AdministrationModule';
@@ -38,7 +39,8 @@ import {
   Share,
   MoreHorizontal,
   Grid,
-  HardDrives
+  HardDrives,
+  Users
 } from '@phosphor-icons/react';
 
 interface SimpleDashboardProps {
@@ -50,17 +52,9 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
   const [activeTab, setActiveTab] = useState('overview');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  // Navigation mappings for sub-items
+  // Navigation mappings for sub-items - REMOVED FULL-CRM MAPPING
   const getSubNavigationItems = (mainTab: string) => {
     const subNavMappings: Record<string, any[]> = {
-      'full-crm': [
-        { id: 'dashboard-builder', label: 'Dashboard Builder', description: 'Customizable widgets', isNew: true },
-        { id: 'pipeline', label: 'Pipeline', description: 'Sales pipeline overview' },
-        { id: 'opportunities', label: 'Opportunities', description: 'Deal management' },
-        { id: 'contacts', label: 'Contacts', description: 'Contact management' },
-        { id: 'companies', label: 'Companies', description: 'Company profiles' },
-        { id: 'analytics', label: 'Analytics', description: 'Reports & insights' },
-      ],
       'meddpicc': [
         { id: 'meddpicc-form', label: 'Qualification Form', description: 'Complete assessment' },
         { id: 'meddpicc-insights', label: 'AI Insights', description: 'Intelligent tips', isNew: true },
@@ -200,7 +194,12 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
     const titles: Record<string, string> = {
       'overview': 'Dashboard Overview',
       'ai-demo': 'AI Demonstration Center',
-      'full-crm': 'CRM Suite',
+      'pipeline': 'Sales Pipeline',
+      'opportunities': 'Opportunities',
+      'contacts': 'Contacts',
+      'companies': 'Companies',
+      'analytics': 'Analytics & Reports',
+      'dashboard-builder': 'Dashboard Builder',
       'meddpicc': 'MEDDPICC Qualification',
       'ai-qualification': 'AI Qualification System',
       'ai-scoring': 'AI Lead Scoring',
@@ -216,13 +215,12 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
     const descriptions: Record<string, string> = {
       'overview': 'Monitor your sales performance, pipeline health, and key metrics at a glance.',
       'ai-demo': 'Experience the power of AI-driven sales qualification and insights.',
-      'full-crm': 'Complete customer relationship management with AI-enhanced features and customizable dashboards.',
-      'dashboard-builder': 'Create and customize dashboard layouts with drag-and-drop widgets.',
-      'pipeline': 'Track and manage your sales pipeline with visual insights.',
-      'opportunities': 'Manage active deals and track progress through your sales process.',
+      'pipeline': 'Track and manage your sales pipeline with visual insights and PEAK methodology.',
+      'opportunities': 'Manage active deals and track progress through your sales process with MEDDPICC.',
       'contacts': 'Maintain relationships with customers and prospects.',
       'companies': 'Organize and track company information and engagement history.',
       'analytics': 'Gain insights with comprehensive reports and data visualization.',
+      'dashboard-builder': 'Create and customize dashboard layouts with drag-and-drop widgets.',
       'meddpicc': 'Enhanced MEDDPICC qualification with AI-powered insights.',
       'meddpicc-form': 'Complete MEDDPICC qualification assessment for deals.',
       'meddpicc-insights': 'Get AI-generated tips and recommendations for better qualification.',
@@ -280,15 +278,20 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
             {commonActions}
           </div>
         );
-      case 'full-crm':
+      case 'pipeline':
+      case 'opportunities':
+      case 'contacts':
+      case 'companies':
+      case 'analytics':
+      case 'dashboard-builder':
         return (
           <div className="flex items-center gap-2">
             <Button size="sm">
               <Plus size={16} />
-              {subTab === 'dashboard-builder' ? 'Add Widget' : 
-               subTab === 'opportunities' ? 'New Opportunity' : 
-               subTab === 'contacts' ? 'New Contact' : 
-               subTab === 'companies' ? 'New Company' : 'New Record'}
+              {mainTab === 'dashboard-builder' ? 'Add Widget' : 
+               mainTab === 'opportunities' ? 'New Opportunity' : 
+               mainTab === 'contacts' ? 'New Contact' : 
+               mainTab === 'companies' ? 'New Company' : 'New Record'}
             </Button>
             <Button variant="outline" size="sm">
               <Filter size={16} />
@@ -315,8 +318,18 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
         return <OverviewContent />;
       case 'ai-demo':
         return <AIQualificationDemo />;
-      case 'full-crm':
-        return <Dashboard user={user} />;
+      case 'pipeline':
+        return <CRMContent user={user} view="pipeline" />;
+      case 'opportunities':
+        return <CRMContent user={user} view="opportunities" />;
+      case 'contacts':
+        return <CRMContent user={user} view="contacts" />;
+      case 'companies':
+        return <CRMContent user={user} view="companies" />;
+      case 'analytics':
+        return <CRMContent user={user} view="analytics" />;
+      case 'dashboard-builder':
+        return <CustomizableDashboard user={user} />;
       case 'meddpicc':
         return <EnhancedMEDDPICCQualification opportunityId="demo-opp-1" />;
       case 'ai-qualification':
@@ -343,16 +356,6 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
 
   function renderSubContent(subTab: string) {
     switch (subTab) {
-      // CRM Sub-sections
-      case 'dashboard-builder':
-        return <CustomizableDashboard user={user} />;
-      case 'pipeline':
-      case 'opportunities':
-      case 'contacts':
-      case 'companies':
-      case 'analytics':
-        return <Dashboard user={user} initialView={subTab} />;
-      
       // MEDDPICC Sub-sections
       case 'meddpicc-form':
         return <EnhancedMEDDPICCQualification opportunityId="demo-opp-1" />;
@@ -482,6 +485,24 @@ function OverviewContent() {
           
           <ContentGrid columns="md:grid-cols-2 xl:grid-cols-3">
             <QuickActionCard
+              icon={<Target size={24} className="text-blue-600" />}
+              title="Sales Pipeline"
+              description="Track deals through the PEAK methodology sales process"
+              bgColor="bg-blue-100"
+            />
+            <QuickActionCard
+              icon={<Star size={24} className="text-purple-600" />}
+              title="Opportunities"
+              description="Manage active deals with MEDDPICC qualification framework"
+              bgColor="bg-purple-100"
+            />
+            <QuickActionCard
+              icon={<Users size={24} className="text-emerald-600" />}
+              title="Contacts & Companies"
+              description="Maintain customer relationships and company profiles"
+              bgColor="bg-emerald-100"
+            />
+            <QuickActionCard
               icon={<Grid size={24} className="text-blue-600" />}
               title="Dashboard Builder (New!)"
               description="Create customizable dashboards with drag-and-drop widgets"
@@ -494,28 +515,10 @@ function OverviewContent() {
               bgColor="bg-emerald-100"
             />
             <QuickActionCard
-              icon={<Workflow size={24} className="text-blue-600" />}
-              title="Pipeline Builder"
-              description="Design custom sales pipelines with drag-and-drop automation"
-              bgColor="bg-blue-100"
-            />
-            <QuickActionCard
               icon={<CheckCircle size={24} className="text-purple-600" />}
               title="MEDDPICC Enhanced"
               description="AI-powered deal qualification with intelligent insights"
               bgColor="bg-purple-100"
-            />
-            <QuickActionCard
-              icon={<Brain size={24} className="text-emerald-600" />}
-              title="AI Qualification"
-              description="Intelligent MEDDPICC analysis with AI insights"
-              bgColor="bg-emerald-100"
-            />
-            <QuickActionCard
-              icon={<Star size={24} className="text-orange-600" />}
-              title="AI Lead Scoring"
-              description="Predictive lead scoring and prioritization"
-              bgColor="bg-orange-100"
             />
           </ContentGrid>
         </div>
