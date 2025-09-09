@@ -7,6 +7,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { DashboardView } from './Dashboard';
+import { hasPermission } from '@/lib/rolePermissions';
+import { User } from '@/lib/types';
 import { 
   Menu,
   FunnelSimple, 
@@ -30,13 +32,20 @@ import {
   MagicWand,
   CaretDown,
   CaretRight,
-  X
+  X,
+  Users,
+  Settings,
+  Activity,
+  Database,
+  Lock,
+  FileText,
+  Crown
 } from '@phosphor-icons/react';
 
 interface SidebarProps {
   currentView: DashboardView;
   onViewChange: (view: DashboardView) => void;
-  userRole: 'rep' | 'manager' | 'admin';
+  user: User;
 }
 
 interface NavSection {
@@ -52,18 +61,20 @@ interface NavItem {
   label: string;
   icon: React.ComponentType<any>;
   description: string;
-  roles: string[];
+  permissionId?: string;
+  action?: string;
   isNew?: boolean;
   isAI?: boolean;
   isBeta?: boolean;
 }
 
-export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
+export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     core: true,
     ai: true,
     advanced: false,
+    admin: false,
     testing: false
   });
 
@@ -91,35 +102,40 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
           label: 'Pipeline',
           icon: FunnelSimple,
           description: 'PEAK methodology pipeline',
-          roles: ['rep', 'manager', 'admin']
+          permissionId: 'pipeline',
+          action: 'read'
         },
         {
           id: 'opportunities',
           label: 'Opportunities',
           icon: Target,
           description: 'MEDDPICC qualification',
-          roles: ['rep', 'manager', 'admin']
+          permissionId: 'opportunities',
+          action: 'read'
         },
         {
           id: 'contacts',
           label: 'Contacts',
           icon: AddressBook,
           description: 'Customer relationships',
-          roles: ['rep', 'manager', 'admin']
+          permissionId: 'contacts',
+          action: 'read'
         },
         {
           id: 'companies',
           label: 'Companies',
           icon: Building2,
           description: 'Company database',
-          roles: ['rep', 'manager', 'admin']
+          permissionId: 'companies',
+          action: 'read'
         },
         {
           id: 'segments',
           label: 'Customer Segments',
           icon: Building2,
           description: 'Strategic segmentation',
-          roles: ['manager', 'admin'],
+          permissionId: 'segments',
+          action: 'read',
           isNew: true
         },
         {
@@ -127,7 +143,8 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
           label: 'Analytics',
           icon: ChartLine,
           description: 'Performance insights',
-          roles: ['manager', 'admin']
+          permissionId: 'team-analytics',
+          action: 'read'
         }
       ]
     },
@@ -142,7 +159,8 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
           label: 'AI Insights',
           icon: Brain,
           description: 'AI-powered analytics',
-          roles: ['rep', 'manager', 'admin'],
+          permissionId: 'ai-insights',
+          action: 'read',
           isNew: true,
           isAI: true
         },
@@ -151,7 +169,8 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
           label: 'Lead Scoring',
           icon: Star,
           description: 'AI lead qualification',
-          roles: ['rep', 'manager', 'admin'],
+          permissionId: 'lead-scoring',
+          action: 'read',
           isNew: true,
           isAI: true
         },
@@ -160,7 +179,8 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
           label: 'Risk Assessment',
           icon: Shield,
           description: 'AI risk analysis',
-          roles: ['rep', 'manager', 'admin'],
+          permissionId: 'deal-risk',
+          action: 'read',
           isNew: true,
           isAI: true
         }
@@ -177,7 +197,8 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
           label: 'CSTPV Dashboard',
           icon: TrendingUp,
           description: 'AI-powered metrics',
-          roles: ['rep', 'manager', 'admin'],
+          permissionId: 'personal-kpis',
+          action: 'read',
           isNew: true
         },
         {
@@ -185,7 +206,8 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
           label: 'Financial',
           icon: DollarSign,
           description: 'Revenue & POS tracking',
-          roles: ['rep', 'manager', 'admin'],
+          permissionId: 'financial-reporting',
+          action: 'read',
           isNew: true
         },
         {
@@ -193,7 +215,8 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
           label: 'KPI Targets',
           icon: Crosshair,
           description: 'Goal tracking & KPIs',
-          roles: ['rep', 'manager', 'admin'],
+          permissionId: 'personal-kpis',
+          action: 'read',
           isNew: true
         },
         {
@@ -201,7 +224,8 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
           label: 'Dashboard Builder',
           icon: GridNine,
           description: 'Custom KPI dashboards',
-          roles: ['rep', 'manager', 'admin'],
+          permissionId: 'personal-kpis',
+          action: 'write',
           isNew: true
         },
         {
@@ -209,7 +233,8 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
           label: 'Workflows',
           icon: Workflow,
           description: 'Pipeline automation',
-          roles: ['manager', 'admin'],
+          permissionId: 'workflows',
+          action: 'read',
           isNew: true
         },
         {
@@ -217,7 +242,8 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
           label: 'Learning',
           icon: GraduationCap,
           description: 'Certifications & training',
-          roles: ['rep', 'manager', 'admin'],
+          permissionId: 'learning',
+          action: 'read',
           isNew: true
         },
         {
@@ -225,7 +251,70 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
           label: 'Integrations',
           icon: Plugs,
           description: 'Connect external tools',
-          roles: ['manager', 'admin'],
+          permissionId: 'integrations-view',
+          action: 'read',
+          isNew: true
+        }
+      ]
+    },
+    {
+      id: 'admin',
+      title: 'System Administration',
+      icon: Crown,
+      defaultOpen: false,
+      items: [
+        {
+          id: 'admin-users',
+          label: 'User Management',
+          icon: Users,
+          description: 'Manage users and roles',
+          permissionId: 'user-management',
+          action: 'read',
+          isNew: true
+        },
+        {
+          id: 'admin-system',
+          label: 'System Configuration',
+          icon: Settings,
+          description: 'System-wide settings',
+          permissionId: 'system-config',
+          action: 'read',
+          isNew: true
+        },
+        {
+          id: 'admin-security',
+          label: 'Security & Compliance',
+          icon: Lock,
+          description: 'Security policies',
+          permissionId: 'security-compliance',
+          action: 'read',
+          isNew: true
+        },
+        {
+          id: 'admin-monitoring',
+          label: 'System Monitoring',
+          icon: Activity,
+          description: 'Performance monitoring',
+          permissionId: 'system-monitoring',
+          action: 'read',
+          isNew: true
+        },
+        {
+          id: 'admin-data',
+          label: 'Data Management',
+          icon: Database,
+          description: 'Import/export data',
+          permissionId: 'data-management',
+          action: 'read',
+          isNew: true
+        },
+        {
+          id: 'admin-audit',
+          label: 'Audit Logs',
+          icon: FileText,
+          description: 'System audit trails',
+          permissionId: 'audit-logs',
+          action: 'read',
           isNew: true
         }
       ]
@@ -241,7 +330,7 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
           label: 'Interactive Demo',
           icon: MagicWand,
           description: 'Comprehensive auto-save testing',
-          roles: ['rep', 'manager', 'admin'],
+          permissionId: 'pipeline', // Basic permission for testing
           isBeta: true
         },
         {
@@ -249,7 +338,7 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
           label: 'Field Type Lab',
           icon: TestTube,
           description: 'Comprehensive field validation testing',
-          roles: ['rep', 'manager', 'admin'],
+          permissionId: 'pipeline',
           isBeta: true
         },
         {
@@ -257,7 +346,7 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
           label: 'Test Suite',
           icon: Shield,
           description: 'Advanced validation test suite',
-          roles: ['rep', 'manager', 'admin'],
+          permissionId: 'pipeline',
           isBeta: true
         },
         {
@@ -265,7 +354,7 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
           label: 'Validation Demo',
           icon: MagicWand,
           description: 'Interactive validation testing',
-          roles: ['rep', 'manager', 'admin'],
+          permissionId: 'pipeline',
           isBeta: true
         },
         {
@@ -273,7 +362,7 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
           label: 'Auto-Save Demo',
           icon: FloppyDisk,
           description: 'Form auto-save features',
-          roles: ['rep', 'manager', 'admin'],
+          permissionId: 'pipeline',
           isBeta: true
         },
         {
@@ -281,7 +370,7 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
           label: 'Auto-Save Tests',
           icon: TestTube,
           description: 'Test auto-save functionality',
-          roles: ['rep', 'manager', 'admin'],
+          permissionId: 'pipeline',
           isBeta: true
         },
         {
@@ -289,16 +378,23 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
           label: 'Manual Testing',
           icon: ClipboardList,
           description: 'Step-by-step auto-save testing',
-          roles: ['rep', 'manager', 'admin'],
+          permissionId: 'pipeline',
           isBeta: true
         }
       ]
     }
   ];
 
+  // Filter sections based on user permissions
   const filteredSections = navigationSections.map(section => ({
     ...section,
-    items: section.items.filter(item => item.roles.includes(userRole))
+    items: section.items.filter(item => {
+      // If no permission specified, show to everyone
+      if (!item.permissionId) return true;
+      
+      // Check if user has the required permission
+      return hasPermission(user, item.permissionId, item.action);
+    })
   })).filter(section => section.items.length > 0);
 
   const SidebarContent = () => (
@@ -317,6 +413,13 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
                 <p className="text-xs text-muted-foreground">Enterprise CRM</p>
                 <Badge className="text-xs bg-accent/20 text-accent-foreground">
                   v2.0
+                </Badge>
+                <Badge className={`text-xs ${
+                  user.role === 'admin' ? 'bg-red-100 text-red-800' :
+                  user.role === 'manager' ? 'bg-blue-100 text-blue-800' :
+                  'bg-green-100 text-green-800'
+                }`}>
+                  {user.role}
                 </Badge>
               </div>
             </div>

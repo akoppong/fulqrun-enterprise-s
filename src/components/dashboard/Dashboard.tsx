@@ -27,6 +27,9 @@ import { LeadScoringDashboard } from './LeadScoringDashboard';
 import { DealRiskDashboard } from './DealRiskDashboard';
 import { CustomerSegmentsList } from '../segments/CustomerSegmentsList';
 import { CompaniesView } from './CompaniesView';
+import { UserManagement } from '../admin/UserManagement';
+import { SystemConfiguration } from '../admin/SystemConfiguration';
+import { SystemMonitoring } from '../admin/SystemMonitoring';
 
 interface DashboardProps {
   user: User;
@@ -34,7 +37,7 @@ interface DashboardProps {
   initialView?: string;
 }
 
-export type DashboardView = 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'autosave-demo' | 'autosave-test' | 'autosave-manual' | 'autosave-interactive' | 'field-testing' | 'comprehensive-testing' | 'validation-demo';
+export type DashboardView = 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'autosave-demo' | 'autosave-test' | 'autosave-manual' | 'autosave-interactive' | 'field-testing' | 'comprehensive-testing' | 'validation-demo' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit';
 
 export function Dashboard({ user, onLogout, initialView }: DashboardProps) {
   const [currentView, setCurrentView] = useState<DashboardView>(
@@ -179,6 +182,52 @@ export function Dashboard({ user, onLogout, initialView }: DashboardProps) {
         );
       case 'segments':
         return <CustomerSegmentsList />;
+      
+      // Admin Components
+      case 'admin-users':
+        return <UserManagement currentUser={user} />;
+      case 'admin-system':
+        return <SystemConfiguration />;
+      case 'admin-security':
+        return (
+          <div className="text-center py-12">
+            <h3 className="text-2xl font-bold mb-4">Security & Compliance</h3>
+            <p className="text-muted-foreground mb-8">
+              Manage security policies, compliance settings, and audit controls
+            </p>
+            <div className="text-muted-foreground">
+              Security management interface coming soon...
+            </div>
+          </div>
+        );
+      case 'admin-monitoring':
+        return <SystemMonitoring />;
+      case 'admin-data':
+        return (
+          <div className="text-center py-12">
+            <h3 className="text-2xl font-bold mb-4">Data Management</h3>
+            <p className="text-muted-foreground mb-8">
+              Import/export data, manage backups, and data maintenance
+            </p>
+            <div className="text-muted-foreground">
+              Data management interface coming soon...
+            </div>
+          </div>
+        );
+      case 'admin-audit':
+        return (
+          <div className="text-center py-12">
+            <h3 className="text-2xl font-bold mb-4">Audit Logs</h3>
+            <p className="text-muted-foreground mb-8">
+              View system audit trails and compliance logs
+            </p>
+            <div className="text-muted-foreground">
+              Audit log interface coming soon...
+            </div>
+          </div>
+        );
+      
+      // Testing Components
       case 'autosave-demo':
         return <AutoSaveDemo />;
       case 'autosave-test':
@@ -204,7 +253,7 @@ export function Dashboard({ user, onLogout, initialView }: DashboardProps) {
       <Sidebar 
         currentView={currentView} 
         onViewChange={setCurrentView}
-        userRole={user.role}
+        user={user}
       />
       
       {/* Main content area with improved mobile layout */}

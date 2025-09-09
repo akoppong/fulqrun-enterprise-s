@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { User } from './lib/types';
 import { LoginForm } from './components/auth/LoginForm';
-import { SimpleDashboard } from './components/dashboard/SimpleDashboard';
+import { Dashboard } from './components/dashboard/Dashboard';
 import { Toaster } from './components/ui/sonner';
 
 function App() {
@@ -20,7 +20,7 @@ function App() {
       {!currentUser ? (
         <LoginForm onLogin={handleLogin} />
       ) : (
-        <SimpleDashboard user={currentUser} onLogout={handleLogout} />
+        <Dashboard user={currentUser} onLogout={handleLogout} />
       )}
       <Toaster />
     </div>
