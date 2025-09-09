@@ -1,4 +1,5 @@
 import { PipelineMetrics, Opportunity } from './types';
+import { safeGetTime } from './utils';
 
 export const calculatePipelineMetrics = (opportunities: Opportunity[]): PipelineMetrics => {
   const totalValue = opportunities.reduce((sum, opp) => sum + opp.value, 0);
@@ -12,11 +13,11 @@ export const calculatePipelineMetrics = (opportunities: Opportunity[]): Pipeline
   // Calculate average sales cycle (mock implementation)
   const averageSalesCycle = opportunities.length > 0 
     ? opportunities.reduce((sum, opp) => {
-        const createdDate = new Date(opp.createdAt);
-        if (isNaN(createdDate.getTime())) {
+        const createdTime = safeGetTime(opp.createdAt);
+        if (createdTime === 0) {
           return sum; // Skip invalid dates
         }
-        const daysSinceCreated = Math.floor((Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+        const daysSinceCreated = Math.floor((Date.now() - createdTime) / (1000 * 60 * 60 * 24));
         return sum + daysSinceCreated;
       }, 0) / opportunities.length
     : 0;

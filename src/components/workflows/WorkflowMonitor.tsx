@@ -33,6 +33,7 @@ import {
 import { WorkflowExecution, WorkflowTemplate, ExecutionResult, WorkflowStep } from '@/lib/types';
 import { WorkflowEngine } from '@/lib/workflow-engine';
 import { useKV } from '@github/spark/hooks';
+import { safeGetTime } from '@/lib/utils';
 import { toast } from 'sonner';
 
 interface WorkflowMonitorProps {
@@ -183,16 +184,14 @@ export function WorkflowMonitor({ className }: WorkflowMonitorProps) {
   };
 
   const calculateDuration = (startDate: Date | string, endDate?: Date | string) => {
-    // Ensure we have valid Date objects
-    const start = new Date(startDate);
-    const end = endDate ? new Date(endDate) : new Date();
+    const startTime = safeGetTime(startDate);
+    const endTime = safeGetTime(endDate) || new Date().getTime();
     
-    // Validate the dates
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+    if (startTime === 0 || endTime === 0) {
       return '0h 0m';
     }
     
-    const diff = end.getTime() - start.getTime();
+    const diff = endTime - startTime;
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     return `${hours}h ${minutes}m`;
