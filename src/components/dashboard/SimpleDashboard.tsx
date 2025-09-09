@@ -6,6 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MobileNavigation } from '../navigation/MobileNavigation';
 import { AdvancedPipelineManagement } from '../pipeline/AdvancedPipelineManagement';
+import { AdvancedPipelineBuilder } from '../pipeline/AdvancedPipelineBuilder';
+import { EnhancedMEDDPICCQualification } from '../pipeline/EnhancedMEDDPICCQualification';
+import { IntegrationHub } from './IntegrationHub';
+import { EnhancedLearningPlatform } from './EnhancedLearningPlatform';
 import { Dashboard } from './Dashboard';
 import { 
   BarChart3, 
@@ -13,7 +17,11 @@ import {
   Users, 
   TrendingUp,
   Home,
-  Settings
+  Settings,
+  Workflow,
+  CheckCircle,
+  Plug,
+  GraduationCap
 } from '@phosphor-icons/react';
 
 interface SimpleDashboardProps {
@@ -40,8 +48,8 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
       <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 p-4 mobile-header sticky top-0 z-40">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="ml-16 lg:ml-0">
-            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold">FulQrun CRM</h1>
-            <p className="text-xs sm:text-sm text-muted-foreground">Professional Enterprise Sales Platform</p>
+            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold">FulQrun CRM v2.0</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">Phase 2: Advanced Pipeline & AI Integration Platform</p>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
             <div className="text-right hidden sm:block">
@@ -60,15 +68,30 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
 
       <main className="p-3 sm:p-4 lg:p-6 max-w-7xl mx-auto">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 lg:space-y-6">
-          <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 gap-1 h-auto">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1 h-auto">
             <TabsTrigger value="overview" className="flex items-center gap-2 p-3">
               <Home size={16} />
               <span className="hidden sm:inline">Overview</span>
             </TabsTrigger>
-            <TabsTrigger value="pipeline" className="flex items-center gap-2 p-3">
-              <Target size={16} />
-              <span className="hidden sm:inline">Advanced Pipeline</span>
-              <span className="sm:hidden">Pipeline</span>
+            <TabsTrigger value="pipeline-builder" className="flex items-center gap-2 p-3">
+              <Workflow size={16} />
+              <span className="hidden sm:inline">Pipeline Builder</span>
+              <span className="sm:hidden">Builder</span>
+            </TabsTrigger>
+            <TabsTrigger value="meddpicc" className="flex items-center gap-2 p-3">
+              <CheckCircle size={16} />
+              <span className="hidden sm:inline">MEDDPICC</span>
+              <span className="sm:hidden">Qual</span>
+            </TabsTrigger>
+            <TabsTrigger value="integrations" className="flex items-center gap-2 p-3">
+              <Plug size={16} />
+              <span className="hidden sm:inline">Integrations</span>
+              <span className="sm:hidden">Apps</span>
+            </TabsTrigger>
+            <TabsTrigger value="learning" className="flex items-center gap-2 p-3">
+              <GraduationCap size={16} />
+              <span className="hidden sm:inline">Learning</span>
+              <span className="sm:hidden">Learn</span>
             </TabsTrigger>
             <TabsTrigger value="full-crm" className="flex items-center gap-2 p-3">
               <BarChart3 size={16} />
@@ -139,29 +162,69 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
               <CardContent>
                 <div className="space-y-4">
                   <p className="text-muted-foreground">
-                    Your enterprise sales platform with advanced pipeline management is now ready. 
-                    Choose from the powerful features below to get started.
+                    FulQrun CRM Phase 2 is now complete! Your enterprise sales platform features advanced 
+                    pipeline building, AI-enhanced MEDDPICC qualification, integrated learning platform, 
+                    and connections to 10+ external tools. Ready for Phase 3 enterprise scaling.
                   </p>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                     <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow" 
-                          onClick={() => setActiveTab('pipeline')}>
+                          onClick={() => setActiveTab('pipeline-builder')}>
                       <div className="flex items-center gap-3 mb-2">
                         <div className="p-2 bg-blue-100 rounded-lg">
-                          <Target size={20} className="text-blue-600" />
+                          <Workflow size={20} className="text-blue-600" />
                         </div>
-                        <h3 className="font-semibold">Advanced Pipeline</h3>
+                        <h3 className="font-semibold">Pipeline Builder</h3>
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Drag-and-drop deal management with workflow automation and analytics
+                        Design custom sales pipelines with drag-and-drop automation
+                      </p>
+                    </Card>
+
+                    <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow" 
+                          onClick={() => setActiveTab('meddpicc')}>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-purple-100 rounded-lg">
+                          <CheckCircle size={20} className="text-purple-600" />
+                        </div>
+                        <h3 className="font-semibold">MEDDPICC Enhanced</h3>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        AI-powered deal qualification with intelligent insights
+                      </p>
+                    </Card>
+
+                    <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow" 
+                          onClick={() => setActiveTab('integrations')}>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-green-100 rounded-lg">
+                          <Plug size={20} className="text-green-600" />
+                        </div>
+                        <h3 className="font-semibold">Integration Hub</h3>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Connect Slack, DocuSign, Gong, and 10+ tools
+                      </p>
+                    </Card>
+
+                    <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow" 
+                          onClick={() => setActiveTab('learning')}>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-yellow-100 rounded-lg">
+                          <GraduationCap size={20} className="text-yellow-600" />
+                        </div>
+                        <h3 className="font-semibold">Learning Platform</h3>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        PEAK & MEDDPICC certifications with AI coaching
                       </p>
                     </Card>
 
                     <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow"
                           onClick={() => setActiveTab('full-crm')}>
                       <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-green-100 rounded-lg">
-                          <BarChart3 size={20} className="text-green-600" />
+                        <div className="p-2 bg-indigo-100 rounded-lg">
+                          <BarChart3 size={20} className="text-indigo-600" />
                         </div>
                         <h3 className="font-semibold">Full CRM Suite</h3>
                       </div>
@@ -170,21 +233,37 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
                       </p>
                     </Card>
 
-                    <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow opacity-75 md:col-span-2 xl:col-span-1">
+                    <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow opacity-75">
                       <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-purple-100 rounded-lg">
-                          <Settings size={20} className="text-purple-600" />
+                        <div className="p-2 bg-red-100 rounded-lg">
+                          <Settings size={20} className="text-red-600" />
                         </div>
                         <h3 className="font-semibold">Enterprise Features</h3>
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Advanced reporting, team management, and integrations
+                        Advanced reporting, team management (Phase 3)
                       </p>
                     </Card>
                   </div>
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="pipeline-builder" className="space-y-4 lg:space-y-6">
+            <AdvancedPipelineBuilder />
+          </TabsContent>
+
+          <TabsContent value="meddpicc" className="space-y-4 lg:space-y-6">
+            <EnhancedMEDDPICCQualification opportunityId="demo-opp-1" />
+          </TabsContent>
+
+          <TabsContent value="integrations" className="space-y-4 lg:space-y-6">
+            <IntegrationHub />
+          </TabsContent>
+
+          <TabsContent value="learning" className="space-y-4 lg:space-y-6">
+            <EnhancedLearningPlatform />
           </TabsContent>
 
           <TabsContent value="pipeline" className="space-y-4 lg:space-y-6">
