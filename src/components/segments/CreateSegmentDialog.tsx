@@ -200,6 +200,38 @@ export function CreateSegmentDialog({ isOpen, onClose, onSubmit }: CreateSegment
     }
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      // Validate required fields
+      if (!formData.name.trim()) {
+        toast.error('Segment name is required');
+        return;
+      }
+
+      if (!formData.description.trim()) {
+        toast.error('Segment description is required');
+        return;
+      }
+
+      // Submit the segment data
+      onSubmit(formData);
+      
+      toast.success('Customer segment created successfully!', {
+        description: `"${formData.name}" has been added to your segments.`
+      });
+      
+      onClose();
+    } catch (error) {
+      errorHandler.handleError(error as Error, 'medium', { 
+        context: 'CreateSegment',
+        formData 
+      });
+      toast.error('Failed to create segment. Please try again.');
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
