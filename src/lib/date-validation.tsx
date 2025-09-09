@@ -1,18 +1,32 @@
 /**
  * Date Validation Middleware
  * Ensures consistent date formats and validation across all FulQrun CRM components
+ * Now powered by advanced date-utils with timezone support
  */
 
 import React from 'react';
+import {
+  parseDate,
+  formatDate as formatDateUtil,
+  validateDateConstraints,
+  getBusinessDaysBetween,
+  calculateAge,
+  getRelativeTime,
+  isDateInRange,
+  getStartOfDay,
+  getEndOfDay,
+  DATE_FORMATS,
+  TIMEZONES,
+  DateConstraints,
+  getLocalTimezone,
+  addDays
+} from './date-utils';
 
-export interface DateValidationOptions {
+export interface DateValidationOptions extends DateConstraints {
   allowPast?: boolean;
   allowFuture?: boolean;
-  minDate?: Date | string;
-  maxDate?: Date | string;
   required?: boolean;
-  format?: 'ISO' | 'local' | 'timestamp';
-  timezone?: string;
+  format?: keyof typeof DATE_FORMATS;
 }
 
 export interface DateValidationResult {
@@ -32,12 +46,12 @@ export class DateValidator {
     allowPast: true,
     allowFuture: true,
     required: false,
-    format: 'ISO',
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+    format: 'DISPLAY',
+    timezone: getLocalTimezone()
   };
 
   /**
-   * Validates and normalizes a date input
+   * Validates and normalizes a date input using advanced date-utils
    */
   static validate(
     input: DateInput,
@@ -56,14 +70,13 @@ export class DateValidator {
       return result;
     }
 
-    // Parse the input date
-    let dateObj: Date;
+    // Parse the input date using advanced parser
+    let dateObj: Date | null;
     try {
       if (input instanceof Date) {
-        dateObj = new Date(input);
+        dateObj = input;
       } else if (typeof input === 'string') {
-        // Handle various string formats
-        dateObj = this.parseStringDate(input);
+        dateObj = parseDate(input);
       } else if (typeof input === 'number') {
         // Handle timestamp (assume milliseconds if > 10^10, otherwise seconds)
         const timestamp = input > 10000000000 ? input : input * 1000;
@@ -77,7 +90,7 @@ export class DateValidator {
     }
 
     // Validate the parsed date
-    if (isNaN(dateObj.getTime())) {
+    if (!dateObj || isNaN(dateObj.getTime())) {
       result.error = 'Invalid date value';
       return result;
     }
@@ -94,21 +107,18 @@ export class DateValidator {
       return result;
     }
 
-    // Check min/max date constraints
-    if (opts.minDate) {
-      const minDate = opts.minDate instanceof Date ? opts.minDate : new Date(opts.minDate);
-      if (dateObj < minDate) {
-        result.error = `Date must be after ${this.formatDate(minDate, 'local')}`;
-        return result;
-      }
-    }
+    // Use advanced constraint validation
+    const constraintResult = validateDateConstraints(dateObj, {
+      minDate: opts.minDate,
+      maxDate: opts.maxDate,
+      allowWeekends: opts.allowWeekends,
+      allowedDaysOfWeek: opts.allowedDaysOfWeek,
+      timezone: opts.timezone
+    });
 
-    if (opts.maxDate) {
-      const maxDate = opts.maxDate instanceof Date ? opts.maxDate : new Date(opts.maxDate);
-      if (dateObj > maxDate) {
-        result.error = `Date must be before ${this.formatDate(maxDate, 'local')}`;
-        return result;
-      }
+    if (!constraintResult.isValid) {
+      result.error = constraintResult.errors[0] || 'Invalid date';
+      return result;
     }
 
     // Add warnings for edge cases
@@ -126,99 +136,40 @@ export class DateValidator {
     }
 
     // Success - populate all formats
+    const formatKey = opts.format || 'DISPLAY';
+    const formatStr = DATE_FORMATS[formatKey] || DATE_FORMATS.DISPLAY;
+    
     result.isValid = true;
     result.normalizedDate = dateObj;
     result.isoString = dateObj.toISOString();
-    result.localString = dateObj.toLocaleDateString();
+    result.localString = formatDateUtil(dateObj, formatStr, opts.timezone);
     result.timestamp = dateObj.getTime();
 
     return result;
   }
 
   /**
-   * Parses string dates with various format support
-   */
-  private static parseStringDate(dateString: string): Date {
-    const cleanString = dateString.trim();
-
-    // ISO format (preferred)
-    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/.test(cleanString)) {
-      return new Date(cleanString);
-    }
-
-    // Date only (YYYY-MM-DD)
-    if (/^\d{4}-\d{2}-\d{2}$/.test(cleanString)) {
-      return new Date(cleanString + 'T00:00:00.000Z');
-    }
-
-    // US format (MM/DD/YYYY)
-    const usMatch = cleanString.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-    if (usMatch) {
-      const [, month, day, year] = usMatch;
-      return new Date(Number(year), Number(month) - 1, Number(day));
-    }
-
-    // European format (DD/MM/YYYY)
-    const euMatch = cleanString.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-    if (euMatch) {
-      const [, day, month, year] = euMatch;
-      const date = new Date(Number(year), Number(month) - 1, Number(day));
-      // Validate that the parsed date components match input
-      if (date.getDate() === Number(day) && date.getMonth() === Number(month) - 1) {
-        return date;
-      }
-    }
-
-    // Fallback to native Date parsing
-    const fallbackDate = new Date(cleanString);
-    if (!isNaN(fallbackDate.getTime())) {
-      return fallbackDate;
-    }
-
-    throw new Error(`Unsupported date format: ${cleanString}`);
-  }
-
-  /**
-   * Formats a date according to specified format
+   * Formats a date according to specified format with timezone support
    */
   static formatDate(
     date: Date,
-    format: 'ISO' | 'local' | 'timestamp' | 'display' | 'compact' = 'ISO',
+    format: keyof typeof DATE_FORMATS | 'local' | 'timestamp' = 'DISPLAY',
     timezone?: string
   ): string {
     if (!date || isNaN(date.getTime())) {
       return 'Invalid Date';
     }
 
-    switch (format) {
-      case 'ISO':
-        return date.toISOString();
-      
-      case 'local':
-        return date.toLocaleDateString();
-      
-      case 'timestamp':
-        return date.getTime().toString();
-      
-      case 'display':
-        return date.toLocaleDateString(undefined, {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          timeZone: timezone
-        });
-      
-      case 'compact':
-        return date.toLocaleDateString(undefined, {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric',
-          timeZone: timezone
-        });
-      
-      default:
-        return date.toISOString();
+    if (format === 'local') {
+      return date.toLocaleDateString();
     }
+    
+    if (format === 'timestamp') {
+      return date.getTime().toString();
+    }
+
+    const formatStr = DATE_FORMATS[format as keyof typeof DATE_FORMATS] || DATE_FORMATS.DISPLAY;
+    return formatDateUtil(date, formatStr, timezone);
   }
 
   /**
@@ -273,37 +224,26 @@ export class DateValidator {
 }
 
 /**
- * Utility functions for common date operations
+ * Enhanced utility functions using advanced date-utils
  */
 export class DateUtils {
   /**
-   * Gets business days between two dates
+   * Gets business days between two dates using optimized calculation
    */
   static getBusinessDaysBetween(startDate: Date, endDate: Date): number {
-    let count = 0;
-    const current = new Date(startDate);
-    
-    while (current <= endDate) {
-      const dayOfWeek = current.getDay();
-      if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Not Sunday (0) or Saturday (6)
-        count++;
-      }
-      current.setDate(current.getDate() + 1);
-    }
-    
-    return count;
+    return getBusinessDaysBetween(startDate, endDate);
   }
 
   /**
    * Adds business days to a date
    */
   static addBusinessDays(date: Date, days: number): Date {
-    const result = new Date(date);
+    let result = new Date(date);
     let remainingDays = Math.abs(days);
     const increment = days > 0 ? 1 : -1;
 
     while (remainingDays > 0) {
-      result.setDate(result.getDate() + increment);
+      result = addDays(result, increment);
       const dayOfWeek = result.getDay();
       if (dayOfWeek !== 0 && dayOfWeek !== 6) {
         remainingDays--;
@@ -314,21 +254,17 @@ export class DateUtils {
   }
 
   /**
-   * Gets the start of day for a date
+   * Gets the start of day for a date with timezone support
    */
-  static startOfDay(date: Date): Date {
-    const result = new Date(date);
-    result.setHours(0, 0, 0, 0);
-    return result;
+  static startOfDay(date: Date, timezone?: string): Date | null {
+    return getStartOfDay(date, timezone);
   }
 
   /**
-   * Gets the end of day for a date
+   * Gets the end of day for a date with timezone support
    */
-  static endOfDay(date: Date): Date {
-    const result = new Date(date);
-    result.setHours(23, 59, 59, 999);
-    return result;
+  static endOfDay(date: Date, timezone?: string): Date | null {
+    return getEndOfDay(date, timezone);
   }
 
   /**
@@ -336,26 +272,31 @@ export class DateUtils {
    */
   static isToday(date: Date): boolean {
     const today = new Date();
-    return this.startOfDay(date).getTime() === this.startOfDay(today).getTime();
+    const startOfToday = getStartOfDay(today);
+    const startOfDate = getStartOfDay(date);
+    
+    return startOfToday?.getTime() === startOfDate?.getTime();
   }
 
   /**
-   * Gets relative time string (e.g., "2 days ago", "in 3 weeks")
+   * Gets relative time string using advanced formatting
    */
   static getRelativeTime(date: Date): string {
-    const now = new Date();
-    const diffMs = date.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    return getRelativeTime(date);
+  }
 
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Tomorrow';
-    if (diffDays === -1) return 'Yesterday';
-    if (diffDays > 0 && diffDays <= 7) return `In ${diffDays} days`;
-    if (diffDays < 0 && diffDays >= -7) return `${Math.abs(diffDays)} days ago`;
-    if (diffDays > 7 && diffDays <= 30) return `In ${Math.ceil(diffDays / 7)} weeks`;
-    if (diffDays < -7 && diffDays >= -30) return `${Math.ceil(Math.abs(diffDays) / 7)} weeks ago`;
-    
-    return this.formatDate(date, 'compact');
+  /**
+   * Calculate age from birth date
+   */
+  static calculateAge(birthDate: Date, referenceDate?: Date): number {
+    return calculateAge(birthDate, referenceDate);
+  }
+
+  /**
+   * Check if date is within range
+   */
+  static isInRange(date: Date, startDate: Date, endDate: Date): boolean {
+    return isDateInRange(date, startDate, endDate);
   }
 
   private static formatDate(date: Date, format: string): string {
@@ -402,7 +343,7 @@ export function withDateValidation<T extends Record<string, any>>(
   };
 }
 
-// Export commonly used validation schemas
+// Export commonly used validation schemas with new format options
 export const CommonDateValidations = {
   futureDate: {
     allowPast: false,
@@ -421,7 +362,8 @@ export const CommonDateValidations = {
     allowFuture: true,
     minDate: new Date('1900-01-01'),
     maxDate: new Date('2100-12-31'),
-    required: true
+    required: true,
+    allowWeekends: false
   } as DateValidationOptions,
   
   opportunityCloseDate: {
@@ -429,6 +371,25 @@ export const CommonDateValidations = {
     allowFuture: true,
     minDate: new Date(),
     maxDate: DateUtils.addBusinessDays(new Date(), 730), // 2 years business days
-    required: true
+    required: true,
+    allowWeekends: false
+  } as DateValidationOptions,
+
+  // New timezone-aware validations
+  meetingDate: {
+    allowPast: false,
+    allowFuture: true,
+    minDate: new Date(),
+    maxDate: addDays(new Date(), 365),
+    required: true,
+    timezone: getLocalTimezone()
+  } as DateValidationOptions,
+
+  contractDate: {
+    allowPast: true,
+    allowFuture: true,
+    minDate: new Date('2000-01-01'),
+    required: true,
+    format: 'ISO'
   } as DateValidationOptions
 };

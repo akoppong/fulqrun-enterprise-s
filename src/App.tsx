@@ -4,13 +4,14 @@ import { User } from './lib/types';
 import { SimpleLoginForm } from './components/auth/SimpleLoginForm';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { ValidationDemo } from './components/demo/ValidationDemo';
+import { AdvancedDateDemo } from './components/demo/AdvancedDateDemo';
 import { Toaster } from './components/ui/sonner';
 import { Button } from './components/ui/button';
-import { TestTube, LayoutDashboard } from '@phosphor-icons/react';
+import { TestTube, LayoutDashboard, Calendar } from '@phosphor-icons/react';
 
 function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [currentView, setCurrentView] = useState<'login' | 'dashboard' | 'demo'>('login');
+  const [currentView, setCurrentView] = useState<'login' | 'dashboard' | 'demo' | 'date-demo'>('login');
 
   const handleLogin = (user: User) => {
     setCurrentUser(user);
@@ -25,6 +26,10 @@ function App() {
   const renderView = () => {
     if (currentView === 'demo') {
       return <ValidationDemo />;
+    }
+    
+    if (currentView === 'date-demo') {
+      return <AdvancedDateDemo />;
     }
     
     if (!currentUser) {
@@ -47,6 +52,14 @@ function App() {
             >
               <TestTube className="w-4 h-4 mr-1" />
               Validation Demo
+            </Button>
+            <Button
+              variant={currentView === 'date-demo' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setCurrentView('date-demo')}
+            >
+              <Calendar className="w-4 h-4 mr-1" />
+              Date Demo
             </Button>
             {currentUser && (
               <Button
