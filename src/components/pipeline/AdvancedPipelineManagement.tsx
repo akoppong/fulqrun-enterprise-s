@@ -5,7 +5,7 @@ import { EnhancedPipelineView } from './EnhancedPipelineView';
 import { WorkflowAutomationEngine } from './WorkflowAutomationEngine';
 import { PipelineAnalyticsDashboard } from './PipelineAnalyticsDashboard';
 import { 
-  Settings, 
+  Gear, 
   BarChart, 
   Zap, 
   Target 
@@ -32,7 +32,7 @@ export function AdvancedPipelineManagement() {
             Pipeline View
           </TabsTrigger>
           <TabsTrigger value="builder" className="flex items-center gap-2">
-            <Settings size={16} />
+            <Gear size={16} />
             Pipeline Builder
           </TabsTrigger>
           <TabsTrigger value="automation" className="flex items-center gap-2">

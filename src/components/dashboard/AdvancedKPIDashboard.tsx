@@ -5,12 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
-  Settings, 
+  Gear, 
   Maximize2, 
   Minimize2, 
   RotateCcw,
   Save,
-  Trash2
+  Trash
 } from '@phosphor-icons/react';
 import { KPITarget, DashboardLayout } from '@/lib/types';
 import { KPIWidgetRenderer } from './KPIWidgetRenderer';
@@ -212,7 +212,7 @@ export function AdvancedKPIDashboard({
                         onClick={() => removeWidget(kpi.id)}
                         className="h-6 w-6 p-0 text-destructive hover:text-destructive"
                       >
-                        <Trash2 className="h-3 w-3" />
+                        <Trash className="h-3 w-3" />
                       </Button>
                     </div>
                   </>

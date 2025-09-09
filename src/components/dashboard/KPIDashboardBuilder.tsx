@@ -22,7 +22,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Settings, Eye, Edit, Trash2, Grid } from '@phosphor-icons/react';
+import { Plus, Gear, Eye, Edit, Trash, Grid } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { KPIDashboard, DashboardLayout, KPITarget, User } from '@/lib/types';
 import { DraggableWidget } from './DraggableWidget';
@@ -324,7 +324,7 @@ export function KPIDashboardBuilder({ currentUser, kpiTargets }: KPIDashboardBui
                         deleteDashboard(dashboard.id);
                       }}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash className="h-4 w-4" />
                     </Button>
                   </div>
                 </CardTitle>
@@ -341,7 +341,7 @@ export function KPIDashboardBuilder({ currentUser, kpiTargets }: KPIDashboardBui
           {dashboards.length === 0 && (
             <Card className="col-span-full">
               <CardContent className="text-center py-8">
-                <Settings className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <Gear className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No Dashboards Yet</h3>
                 <p className="text-muted-foreground mb-4">
                   Create your first KPI dashboard to start tracking performance

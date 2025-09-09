@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AutoSaveStatus } from '@/components/ui/auto-save-indicator';
 import { useAutoSave } from '@/hooks/use-auto-save';
 import { User } from '@/lib/types';
-import { Building2 } from '@phosphor-icons/react';
+import { Building } from '@phosphor-icons/react';
 
 interface LoginFormProps {
   onLogin: (user: User) => void;
@@ -66,7 +66,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-4">
           <div className="mx-auto w-12 h-12 bg-primary rounded-xl flex items-center justify-center">
-            <Building2 size={24} className="text-primary-foreground" />
+            <Building size={24} className="text-primary-foreground" />
           </div>
           <div>
             <CardTitle className="text-2xl font-bold">Welcome to FulQrun</CardTitle>

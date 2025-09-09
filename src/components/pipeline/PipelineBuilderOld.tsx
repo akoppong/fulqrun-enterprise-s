@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -53,16 +53,23 @@ interface PipelineBuilderProps {
 
 export function PipelineBuilder({ onSave }: PipelineBuilderProps) {
   const [pipelines, setPipelines] = useKV<PipelineConfiguration[]>('pipeline-configs', [createDefaultPipelineConfiguration()]);
-  const [selectedPipeline, setSelectedPipeline] = useState<PipelineConfiguration | null>(null);
+  const [selectedPipeline, setSelectedPipeline] = useState<PipelineConfiguration>(() => 
+    pipelines.length > 0 ? pipelines[0] : createDefaultPipelineConfiguration()
+  );
   const [editingStage, setEditingStage] = useState<PipelineStage | null>(null);
   const [isStageDialogOpen, setIsStageDialogOpen] = useState(false);
 
-  // Initialize selected pipeline
+  // Update selected pipeline when pipelines change
   useEffect(() => {
-    if (pipelines.length > 0 && !selectedPipeline) {
-      setSelectedPipeline(pipelines[0]);
+    if (pipelines.length > 0) {
+      const found = pipelines.find(p => p.id === selectedPipeline?.id);
+      if (found) {
+        setSelectedPipeline(found);
+      } else {
+        setSelectedPipeline(pipelines[0]);
+      }
     }
-  }, [pipelines, selectedPipeline]);
+  }, [pipelines, selectedPipeline?.id]);
 
   const colors = [
     'bg-blue-100 text-blue-800',
@@ -207,24 +214,17 @@ export function PipelineBuilder({ onSave }: PipelineBuilderProps) {
     setSelectedPipeline(newPipeline);
   };
 
-  if (!selectedPipeline) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="text-2xl font-semibold mb-2">Loading Pipeline Builder...</div>
-          <div className="text-muted-foreground">Setting up your pipeline configuration</div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold">Pipeline Builder</h2>
-          <p className="text-muted-foreground">Design and customize your sales pipeline stages</p>
-        </div>
+      {!selectedPipeline ? (
+        <div className="text-center py-8">Loading pipeline...</div>
+      ) : (
+        <>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-3xl font-bold">Pipeline Builder</h2>
+              <p className="text-muted-foreground">Design and customize your sales pipeline stages</p>
+            </div>
         <div className="flex items-center gap-3">
           <Select 
             value={selectedPipeline.id} 
@@ -417,6 +417,8 @@ export function PipelineBuilder({ onSave }: PipelineBuilderProps) {
         stage={editingStage}
         availableColors={colors}
       />
+        </>
+      )}
     </div>
   );
 }
@@ -501,12 +503,6 @@ interface StageEditDialogProps {
 function StageEditDialog({ isOpen, onClose, onSave, stage, availableColors }: StageEditDialogProps) {
   const [formData, setFormData] = useState<Partial<PipelineStage>>({});
 
-  useEffect(() => {
-    if (stage) {
-      setFormData(stage);
-    }
-  }, [stage]);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave(formData);
@@ -516,11 +512,18 @@ function StageEditDialog({ isOpen, onClose, onSave, stage, availableColors }: St
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  // Reset form when stage changes
+  useEffect(() => {
+    if (stage) {
+      setFormData(stage);
+    }
+  }, [stage]);
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{stage?.id?.includes('new') || stage?.id?.startsWith('stage-' + Date.now().toString().slice(-6)) ? 'Add New Stage' : 'Edit Stage'}</DialogTitle>
+          <DialogTitle>{stage?.id.startsWith('stage-new') ? 'Add New Stage' : 'Edit Stage'}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -582,7 +585,7 @@ function StageEditDialog({ isOpen, onClose, onSave, stage, availableColors }: St
               Cancel
             </Button>
             <Button type="submit">
-              {stage?.id?.includes('new') || stage?.id?.startsWith('stage-' + Date.now().toString().slice(-6)) ? 'Add Stage' : 'Save Changes'}
+              {stage?.id.startsWith('stage-new') ? 'Add Stage' : 'Save Changes'}
             </Button>
           </div>
         </form>

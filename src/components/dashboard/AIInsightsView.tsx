@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Brain, TrendingUp, AlertTriangle, Target, Users, DollarSign, Clock, Shield } from '@phosphor-icons/react';
+import { Brain, TrendUp, Warning, Target, Users, CurrencyDollar, Clock, Shield } from '@phosphor-icons/react';
 import { LeadScore, DealRiskAssessment, Opportunity, Contact, Company } from '@/lib/types';
 import { AIService } from '@/lib/ai-service';
 import { useKV } from '@github/spark/hooks';
@@ -158,7 +158,7 @@ export function AIInsightsView({ opportunities, contacts, companies, onRefresh }
                   {pipelineForecast?.healthScore || 75}%
                 </p>
               </div>
-              <TrendingUp className="h-8 w-8 text-green-600" />
+              <TrendUp className="h-8 w-8 text-green-600" />
             </div>
           </CardContent>
         </Card>
@@ -186,7 +186,7 @@ export function AIInsightsView({ opportunities, contacts, companies, onRefresh }
                   {highRiskDeals.length}
                 </p>
               </div>
-              <AlertTriangle className="h-8 w-8 text-red-600" />
+              <Warning className="h-8 w-8 text-red-600" />
             </div>
           </CardContent>
         </Card>
@@ -377,7 +377,7 @@ export function AIInsightsView({ opportunities, contacts, companies, onRefresh }
               {/* High-Risk Deals Alert */}
               {highRiskDeals.length > 0 && (
                 <Alert>
-                  <AlertTriangle className="h-4 w-4" />
+                  <Warning className="h-4 w-4" />
                   <AlertDescription>
                     <strong>{highRiskDeals.length} high-risk deals</strong> require immediate attention to prevent loss.
                   </AlertDescription>
@@ -516,7 +516,7 @@ export function AIInsightsView({ opportunities, contacts, companies, onRefresh }
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center">
-                      <TrendingUp className="h-5 w-5 mr-2" />
+                      <TrendUp className="h-5 w-5 mr-2" />
                       Pipeline Health Analysis
                     </CardTitle>
                   </CardHeader>
@@ -548,7 +548,7 @@ export function AIInsightsView({ opportunities, contacts, companies, onRefresh }
                     <div className="space-y-2">
                       {pipelineForecast.earlyWarnings?.map((warning: string, index: number) => (
                         <div key={index} className="flex items-start space-x-2">
-                          <AlertTriangle className="h-4 w-4 text-orange-500 mt-0.5" />
+                          <Warning className="h-4 w-4 text-orange-500 mt-0.5" />
                           <span className="text-sm">{warning}</span>
                         </div>
                       ))}
@@ -577,7 +577,7 @@ export function AIInsightsView({ opportunities, contacts, companies, onRefresh }
           ) : (
             <Card>
               <CardContent className="p-12 text-center">
-                <TrendingUp className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                <TrendUp className="h-12 w-12 mx-auto text-gray-400 mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Analyzing Pipeline...</h3>
                 <p className="text-gray-600">Pipeline forecast will be generated automatically</p>
               </CardContent>

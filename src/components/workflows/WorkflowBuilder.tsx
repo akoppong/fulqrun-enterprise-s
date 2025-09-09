@@ -13,10 +13,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { 
   Plus, 
-  Trash2, 
+  Trash, 
   ArrowUp, 
   ArrowDown, 
-  Settings, 
+  Gear, 
   Users, 
   Bot, 
   CheckCircle, 
@@ -333,10 +333,10 @@ export function WorkflowBuilder({ template, onSave, onCancel, isOpen }: Workflow
                                     <ArrowDown className="h-3 w-3" />
                                   </Button>
                                   <Button size="sm" variant="ghost" onClick={() => editStep(index)}>
-                                    <Settings className="h-3 w-3" />
+                                    <Gear className="h-3 w-3" />
                                   </Button>
                                   <Button size="sm" variant="ghost" onClick={() => deleteStep(index)}>
-                                    <Trash2 className="h-3 w-3" />
+                                    <Trash className="h-3 w-3" />
                                   </Button>
                                 </div>
                               </div>
@@ -394,10 +394,10 @@ export function WorkflowBuilder({ template, onSave, onCancel, isOpen }: Workflow
                                 <div className="flex items-center gap-2">
                                   <Switch checked={rule.isActive} />
                                   <Button size="sm" variant="ghost">
-                                    <Settings className="h-3 w-3" />
+                                    <Gear className="h-3 w-3" />
                                   </Button>
                                   <Button size="sm" variant="ghost">
-                                    <Trash2 className="h-3 w-3" />
+                                    <Trash className="h-3 w-3" />
                                   </Button>
                                 </div>
                               </div>

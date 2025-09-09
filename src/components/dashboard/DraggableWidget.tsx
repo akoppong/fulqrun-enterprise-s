@@ -3,7 +3,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { GripVertical, Settings, Trash2 } from '@phosphor-icons/react';
+import { DotsSixVertical, Gear, Trash } from '@phosphor-icons/react';
 import { KPITarget, DashboardLayout } from '@/lib/types';
 
 interface DraggableWidgetProps {
@@ -76,7 +76,7 @@ export function DraggableWidget({
             {...attributes}
             {...listeners}
           >
-            <GripVertical className="h-4 w-4" />
+            <DotsSixVertical className="h-4 w-4" />
           </button>
           <CardTitle className="text-sm font-medium truncate">
             {kpi.name}
@@ -107,7 +107,7 @@ export function DraggableWidget({
             onClick={() => onRemove(kpi.id)}
             className="h-8 w-8 p-0 text-destructive hover:text-destructive"
           >
-            <Trash2 className="h-3 w-3" />
+            <Trash className="h-3 w-3" />
           </Button>
         </div>
       </CardHeader>
