@@ -207,7 +207,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
       <div className="dashboard-main-content flex-1 flex flex-col overflow-hidden">
         <Header user={user} onLogout={onLogout} />
         <main className="flex-1 overflow-auto p-3 sm:p-4 lg:p-6">
-          <div className="pt-16 lg:pt-0">
+          <div className="max-w-7xl mx-auto pt-16 lg:pt-0">
             {renderView()}
           </div>
         </main>

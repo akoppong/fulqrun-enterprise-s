@@ -22,11 +22,11 @@ export function Header({ user, onLogout }: HeaderProps) {
   const roleBadge = getRoleBadge(user.role);
 
   return (
-    <header className="border-b bg-card px-6 py-4">
-      <div className="flex items-center justify-between">
+    <header className="border-b bg-card px-3 sm:px-4 lg:px-6 py-4">
+      <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">FulQrun CRM</h1>
-          <p className="text-sm text-muted-foreground">Professional Enterprise Sales Platform</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">FulQrun CRM</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground">Professional Enterprise Sales Platform</p>
         </div>
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm">
