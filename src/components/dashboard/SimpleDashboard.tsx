@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MobileNavigation } from '../navigation/MobileNavigation';
-import { AdvancedPipelineManagement } from '../pipeline/AdvancedPipelineManagement';
 import { EnhancedMEDDPICCQualification } from '../pipeline/EnhancedMEDDPICCQualification';
 import { EnhancedLearningPlatform } from './EnhancedLearningPlatform';
 import { Dashboard } from './Dashboard';
@@ -73,7 +72,7 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
 
       <main className="p-3 sm:p-4 lg:p-6 max-w-7xl mx-auto">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 lg:space-y-6">
-          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 lg:grid-cols-11 gap-1 h-auto">
+          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 lg:grid-cols-9 gap-1 h-auto">
             <TabsTrigger value="overview" className="flex items-center gap-2 p-3">
               <Home size={16} />
               <span className="hidden sm:inline">Overview</span>
@@ -116,7 +115,6 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
             <TabsTrigger value="administration" className="flex items-center gap-2 p-3">
               <Wrench size={16} />
               <span className="hidden sm:inline">Admin</span>
-              <span className="sm:hidden">Admin</span>
             </TabsTrigger>
           </TabsList>
 
@@ -204,7 +202,7 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
                     </Card>
 
                     <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow" 
-                          onClick={() => setActiveTab('pipeline-builder')}>
+                          onClick={() => setActiveTab('administration')}>
                       <div className="flex items-center gap-3 mb-2">
                         <div className="p-2 bg-blue-100 rounded-lg">
                           <Workflow size={20} className="text-blue-600" />
@@ -212,7 +210,7 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
                         <h3 className="font-semibold">Pipeline Builder</h3>
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Design custom sales pipelines with drag-and-drop automation
+                        Design custom sales pipelines with drag-and-drop automation (in Admin)
                       </p>
                     </Card>
 
@@ -269,7 +267,7 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
                     </Card>
 
                     <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow" 
-                          onClick={() => setActiveTab('integrations')}>
+                          onClick={() => setActiveTab('administration')}>
                       <div className="flex items-center gap-3 mb-2">
                         <div className="p-2 bg-green-100 rounded-lg">
                           <Plug size={20} className="text-green-600" />
@@ -277,7 +275,7 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
                         <h3 className="font-semibold">Integration Hub</h3>
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Connect Slack, DocuSign, Gong, and 10+ tools
+                        Connect Slack, DocuSign, Gong, and 10+ tools (in Admin)
                       </p>
                     </Card>
 
@@ -331,9 +329,7 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
             <AIQualificationDemo />
           </TabsContent>
 
-          <TabsContent value="pipeline-builder" className="space-y-4 lg:space-y-6">
-            <AdvancedPipelineBuilder />
-          </TabsContent>
+
 
           <TabsContent value="meddpicc" className="space-y-4 lg:space-y-6">
             <EnhancedMEDDPICCQualification opportunityId="demo-opp-1" />
@@ -362,9 +358,7 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
             />
           </TabsContent>
 
-          <TabsContent value="pipeline" className="space-y-4 lg:space-y-6">
-            <AdvancedPipelineManagement />
-          </TabsContent>
+
 
           <TabsContent value="full-crm" className="space-y-4 lg:space-y-6">
             <Dashboard user={user} />
