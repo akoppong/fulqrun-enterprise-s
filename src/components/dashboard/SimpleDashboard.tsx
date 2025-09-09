@@ -6,12 +6,11 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MobileNavigation } from '../navigation/MobileNavigation';
 import { AdvancedPipelineManagement } from '../pipeline/AdvancedPipelineManagement';
-import { AdvancedPipelineBuilder } from '../pipeline/AdvancedPipelineBuilder';
 import { EnhancedMEDDPICCQualification } from '../pipeline/EnhancedMEDDPICCQualification';
-import { IntegrationHub } from './IntegrationHub';
 import { EnhancedLearningPlatform } from './EnhancedLearningPlatform';
 import { Dashboard } from './Dashboard';
 import { AIQualificationDashboard, AILeadScoring, AIDealRiskAssessment, AIQualificationDemo } from '../ai-qualification';
+import { AdministrationModule } from '../administration/AdministrationModule';
 import { 
   BarChart3, 
   Target, 
@@ -26,7 +25,8 @@ import {
   Brain,
   Star,
   Shield,
-  Bot
+  Bot,
+  Wrench
 } from '@phosphor-icons/react';
 
 interface SimpleDashboardProps {
@@ -73,7 +73,7 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
 
       <main className="p-3 sm:p-4 lg:p-6 max-w-7xl mx-auto">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 lg:space-y-6">
-          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 lg:grid-cols-10 gap-1 h-auto">
+          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 lg:grid-cols-11 gap-1 h-auto">
             <TabsTrigger value="overview" className="flex items-center gap-2 p-3">
               <Home size={16} />
               <span className="hidden sm:inline">Overview</span>
@@ -82,11 +82,6 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
               <Bot size={16} />
               <span className="hidden sm:inline">AI Demo</span>
               <span className="sm:hidden">Demo</span>
-            </TabsTrigger>
-            <TabsTrigger value="pipeline-builder" className="flex items-center gap-2 p-3">
-              <Workflow size={16} />
-              <span className="hidden sm:inline">Pipeline</span>
-              <span className="sm:hidden">Pipe</span>
             </TabsTrigger>
             <TabsTrigger value="meddpicc" className="flex items-center gap-2 p-3">
               <CheckCircle size={16} />
@@ -108,11 +103,6 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
               <span className="hidden sm:inline">Risk Analysis</span>
               <span className="sm:hidden">Risk</span>
             </TabsTrigger>
-            <TabsTrigger value="integrations" className="flex items-center gap-2 p-3">
-              <Plug size={16} />
-              <span className="hidden sm:inline">Integrations</span>
-              <span className="sm:hidden">Apps</span>
-            </TabsTrigger>
             <TabsTrigger value="learning" className="flex items-center gap-2 p-3">
               <GraduationCap size={16} />
               <span className="hidden sm:inline">Learning</span>
@@ -122,6 +112,11 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
               <BarChart3 size={16} />
               <span className="hidden sm:inline">Full CRM</span>
               <span className="sm:hidden">CRM</span>
+            </TabsTrigger>
+            <TabsTrigger value="administration" className="flex items-center gap-2 p-3">
+              <Wrench size={16} />
+              <span className="hidden sm:inline">Admin</span>
+              <span className="sm:hidden">Admin</span>
             </TabsTrigger>
           </TabsList>
 
@@ -312,15 +307,18 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
                       </p>
                     </Card>
 
-                    <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow opacity-75">
+                    <Card 
+                      className="p-4 cursor-pointer hover:shadow-md transition-shadow" 
+                      onClick={() => setActiveTab('administration')}
+                    >
                       <div className="flex items-center gap-3 mb-2">
                         <div className="p-2 bg-red-100 rounded-lg">
-                          <Settings size={20} className="text-red-600" />
+                          <Wrench size={20} className="text-red-600" />
                         </div>
-                        <h3 className="font-semibold">Enterprise Features</h3>
+                        <h3 className="font-semibold">Administration</h3>
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Advanced reporting, team management (Phase 3)
+                        Enterprise settings, user management, and system configuration
                       </p>
                     </Card>
                   </div>
@@ -353,12 +351,15 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
             <AIDealRiskAssessment />
           </TabsContent>
 
-          <TabsContent value="integrations" className="space-y-4 lg:space-y-6">
-            <IntegrationHub />
-          </TabsContent>
-
           <TabsContent value="learning" className="space-y-4 lg:space-y-6">
             <EnhancedLearningPlatform />
+          </TabsContent>
+
+          <TabsContent value="administration" className="space-y-4 lg:space-y-6">
+            <AdministrationModule 
+              userRole={user.role} 
+              isOwner={user.email === 'admin@fulqrun.com'} 
+            />
           </TabsContent>
 
           <TabsContent value="pipeline" className="space-y-4 lg:space-y-6">
