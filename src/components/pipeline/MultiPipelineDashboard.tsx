@@ -246,75 +246,76 @@ export function MultiPipelineDashboard() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="card-grid-balanced">
-                <div className="lg:col-span-1">
-                  <h4 className="font-semibold mb-4 text-lg">Pipeline Stages</h4>
-                  <div className="space-y-3">
+              <div className="w-full space-y-8">
+                <div>
+                  <h4 className="font-semibold mb-6 text-xl">Pipeline Stages</h4>
+                  <div className="space-y-4">
                     {activePipeline.stages.map((stage, index) => (
-                      <div key={stage.id} className="flex items-center justify-between p-3 bg-card rounded-lg border">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                      <div key={stage.id} className="flex items-center justify-between p-4 bg-card rounded-lg border">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
                             {index + 1}
                           </div>
-                          <Badge className={stage.color} variant="secondary">
+                          <Badge className={stage.color} variant="secondary" className="text-sm px-3 py-1">
                             {stage.name}
                           </Badge>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-4">
                           <span className="text-sm text-muted-foreground font-medium">
                             {stage.probability}%
                           </span>
                           <Progress 
                             value={stage.probability} 
-                            className="w-20 h-2"
+                            className="w-24 h-3"
                           />
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
-                <div className="lg:col-span-1">
-                  <h4 className="font-semibold mb-4 text-lg">Performance Metrics</h4>
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3 p-3 bg-card rounded-lg border">
-                      <div className="p-2 bg-blue-100 rounded-lg">
-                        <Users size={18} className="text-blue-600" />
+                
+                <div>
+                  <h4 className="font-semibold mb-6 text-xl">Performance Metrics</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="flex items-center gap-4 p-4 bg-card rounded-lg border">
+                      <div className="p-3 bg-blue-100 rounded-lg">
+                        <Users size={20} className="text-blue-600" />
                       </div>
                       <div>
-                        <div className="font-semibold">
+                        <div className="text-xl font-semibold">
                           {getPipelineStats(activePipeline.id).totalCount}
                         </div>
                         <div className="text-sm text-muted-foreground">Active opportunities</div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 p-3 bg-card rounded-lg border">
-                      <div className="p-2 bg-green-100 rounded-lg">
-                        <DollarSign size={18} className="text-green-600" />
+                    <div className="flex items-center gap-4 p-4 bg-card rounded-lg border">
+                      <div className="p-3 bg-green-100 rounded-lg">
+                        <DollarSign size={20} className="text-green-600" />
                       </div>
                       <div>
-                        <div className="font-semibold">
+                        <div className="text-xl font-semibold">
                           ${(getPipelineStats(activePipeline.id).totalValue / 1000).toFixed(0)}K
                         </div>
                         <div className="text-sm text-muted-foreground">Total pipeline value</div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 p-3 bg-card rounded-lg border">
-                      <div className="p-2 bg-orange-100 rounded-lg">
-                        <Clock size={18} className="text-orange-600" />
+                    <div className="flex items-center gap-4 p-4 bg-card rounded-lg border">
+                      <div className="p-3 bg-orange-100 rounded-lg">
+                        <Clock size={20} className="text-orange-600" />
                       </div>
                       <div>
-                        <div className="font-semibold">
+                        <div className="text-xl font-semibold">
                           {getSalesCycleDays(activePipeline)} days
                         </div>
                         <div className="text-sm text-muted-foreground">Average sales cycle</div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 p-3 bg-card rounded-lg border">
-                      <div className="p-2 bg-purple-100 rounded-lg">
-                        <TrendUp size={18} className="text-purple-600" />
+                    <div className="flex items-center gap-4 p-4 bg-card rounded-lg border">
+                      <div className="p-3 bg-purple-100 rounded-lg">
+                        <TrendUp size={20} className="text-purple-600" />
                       </div>
                       <div>
-                        <div className="font-semibold">
+                        <div className="text-xl font-semibold">
                           {getAverageConversion(activePipeline).toFixed(0)}%
                         </div>
                         <div className="text-sm text-muted-foreground">Expected conversion rate</div>
@@ -424,68 +425,65 @@ export function MultiPipelineDashboard() {
         </TabsContent>
 
         <TabsContent value="analysis" className="space-y-6">
-          <div className="card-grid-balanced ratio-3-2">
-            <div className="lg:col-span-1">
-              <PipelineConfigurationSelector
-                pipelines={allPipelines}
-                selectedPipeline={selectedPipelineForAnalysis}
-                onPipelineSelect={setSelectedPipelineForAnalysis}
-                showDetails={true}
-              />
-            </div>
-            <div className="lg:col-span-1">
-              {selectedPipelineForAnalysis && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{selectedPipelineForAnalysis.name}</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      Detailed stage analysis and performance metrics
-                    </p>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {selectedPipelineForAnalysis.stages.map((stage) => {
-                        const stageStats = getPipelineStats(selectedPipelineForAnalysis.id);
-                        const stageCount = stageStats.stageDistribution[stage.id] || 0;
-                        const stagePercentage = stageStats.totalCount > 0 
-                          ? (stageCount / stageStats.totalCount) * 100 
-                          : 0;
+          <div className="w-full space-y-6">
+            <PipelineConfigurationSelector
+              pipelines={allPipelines}
+              selectedPipeline={selectedPipelineForAnalysis}
+              onPipelineSelect={setSelectedPipelineForAnalysis}
+              showDetails={true}
+            />
+            
+            {selectedPipelineForAnalysis && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-2xl">{selectedPipelineForAnalysis.name}</CardTitle>
+                  <p className="text-muted-foreground">
+                    Detailed stage analysis and performance metrics
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {selectedPipelineForAnalysis.stages.map((stage) => {
+                      const stageStats = getPipelineStats(selectedPipelineForAnalysis.id);
+                      const stageCount = stageStats.stageDistribution[stage.id] || 0;
+                      const stagePercentage = stageStats.totalCount > 0 
+                        ? (stageCount / stageStats.totalCount) * 100 
+                        : 0;
 
-                        return (
-                          <div key={stage.id} className="space-y-3 p-4 border rounded-lg bg-muted/20">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <Badge className={stage.color} variant="secondary">
-                                  {stage.name}
-                                </Badge>
-                                <span className="text-sm text-muted-foreground">
-                                  {stage.probability}% win probability
-                                </span>
-                              </div>
-                              <div className="text-sm font-medium">
-                                <span className="text-lg">{stageCount}</span>
-                                <span className="text-muted-foreground ml-1">
-                                  deals ({stagePercentage.toFixed(0)}%)
-                                </span>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-3 mb-2">
-                              <Progress value={stagePercentage} className="flex-1 h-2" />
-                              <span className="text-xs font-medium min-w-[3ch]">
-                                {stagePercentage.toFixed(0)}%
+                      return (
+                        <div key={stage.id} className="space-y-3 p-6 border rounded-lg bg-muted/20">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <Badge className={stage.color} variant="secondary">
+                                {stage.name}
+                              </Badge>
+                              <span className="text-sm text-muted-foreground">
+                                {stage.probability}% win probability
                               </span>
                             </div>
-                            <p className="text-xs text-muted-foreground leading-relaxed">
-                              {stage.description}
-                            </p>
+                            <div className="text-sm font-medium">
+                              <span className="text-lg">{stageCount}</span>
+                              <span className="text-muted-foreground ml-1">
+                                deals ({stagePercentage.toFixed(0)}%)
+                              </span>
+                            </div>
                           </div>
-                        );
-                      })}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+                          <div className="flex items-center gap-3 mb-2">
+                            <Progress value={stagePercentage} className="flex-1 h-3" />
+                            <span className="text-sm font-medium min-w-[3ch]">
+                              {stagePercentage.toFixed(0)}%
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            {stage.description}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </TabsContent>
       </Tabs>
