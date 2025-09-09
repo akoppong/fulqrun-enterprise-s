@@ -173,9 +173,9 @@ export function UniversalSidebar({
       items: [
         {
           id: 'administration',
-          label: 'System Admin',
+          label: 'Administration',
           icon: Wrench,
-          description: 'Enterprise configuration'
+          description: 'Enterprise system configuration & management'
         }
       ]
     }

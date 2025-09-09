@@ -19,7 +19,10 @@ import {
   Workflow,
   Bot,
   Users,
-  TrendingUp
+  TrendingUp,
+  Wrench,
+  GraduationCap,
+  HardDrives
 } from '@phosphor-icons/react';
 
 interface MobileNavigationProps {
@@ -110,6 +113,24 @@ export function MobileNavigation({ activeTab, onTabChange, userName, userRole }:
       icon: Shield,
       description: 'AI-powered risk assessment and mitigation',
       isNew: true
+    },
+    {
+      id: 'learning',
+      label: 'Learning Platform',
+      icon: GraduationCap,
+      description: 'Training and certification'
+    },
+    {
+      id: 'data-hub',
+      label: 'Real-Time Data Hub',
+      icon: HardDrives,
+      description: 'Live CRM & BI connections'
+    },
+    {
+      id: 'administration',
+      label: 'Administration',
+      icon: Wrench,
+      description: 'Enterprise system configuration & management'
     }
   ];
 

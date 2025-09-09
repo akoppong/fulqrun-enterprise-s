@@ -205,7 +205,7 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
       'ai-risk': 'Deal Risk Analysis',
       'learning': 'Learning Platform',
       'data-hub': 'Real-Time Data Hub',
-      'administration': 'System Administration',
+      'administration': 'Administration',
     };
     return titles[tab] || 'FulQrun CRM';
   }
@@ -240,7 +240,7 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
       'real-time-sync': 'Configure and monitor live data connections with Salesforce, HubSpot, Power BI and more.',
       'automation-workflows': 'Create automated data synchronization workflows between systems.',
       'data-quality': 'Monitor data health, performance metrics, and integration quality.',
-      'administration': 'Enterprise-grade system configuration and management.',
+      'administration': 'Enterprise system configuration and management tools.',
       'pipeline-builder': 'Design and customize sales pipelines with automation.',
       'integration-hub': 'Connect with third-party tools and services.',
       'user-management': 'Manage user accounts, roles, and permissions.',

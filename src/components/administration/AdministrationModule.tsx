@@ -74,7 +74,7 @@ export function AdministrationModule({ userRole, isOwner = false, initialView = 
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
-            You don't have sufficient permissions to access the Administration Module. 
+            You don't have sufficient permissions to access the Administration section. 
             Please contact your system administrator.
           </p>
         </CardContent>
@@ -87,9 +87,9 @@ export function AdministrationModule({ userRole, isOwner = false, initialView = 
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Administration Module</h2>
+          <h2 className="text-3xl font-bold tracking-tight">Administration</h2>
           <p className="text-muted-foreground">
-            Enterprise-grade system configuration and management
+            Enterprise system configuration and management tools
           </p>
         </div>
         <div className="flex items-center gap-2">
