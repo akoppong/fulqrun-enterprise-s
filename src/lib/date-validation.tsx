@@ -3,6 +3,8 @@
  * Ensures consistent date formats and validation across all FulQrun CRM components
  */
 
+import React from 'react';
+
 export interface DateValidationOptions {
   allowPast?: boolean;
   allowFuture?: boolean;
