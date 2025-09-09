@@ -28,40 +28,45 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
       <header className="border-b bg-card p-4">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div>
-            <h1 className="text-2xl font-bold">FulQrun CRM</h1>
-            <p className="text-sm text-muted-foreground">Professional Enterprise Sales Platform</p>
+            <h1 className="text-xl sm:text-2xl font-bold">FulQrun CRM</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">Professional Enterprise Sales Platform</p>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <div className="text-right hidden sm:block">
               <p className="font-medium">{user.name}</p>
               <Badge variant="secondary">{user.role}</Badge>
             </div>
-            <Button onClick={onLogout} variant="outline">
+            <div className="text-right block sm:hidden">
+              <Badge variant="secondary" className="text-xs">{user.role}</Badge>
+            </div>
+            <Button onClick={onLogout} variant="outline" size="sm">
               Logout
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="p-6 max-w-7xl mx-auto">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="overview" className="flex items-center gap-2">
+      <main className="p-3 sm:p-4 lg:p-6 max-w-7xl mx-auto">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 lg:space-y-6">
+          <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 gap-1 h-auto">
+            <TabsTrigger value="overview" className="flex items-center gap-2 p-3">
               <Home size={16} />
-              Overview
+              <span className="hidden sm:inline">Overview</span>
             </TabsTrigger>
-            <TabsTrigger value="pipeline" className="flex items-center gap-2">
+            <TabsTrigger value="pipeline" className="flex items-center gap-2 p-3">
               <Target size={16} />
-              Advanced Pipeline
+              <span className="hidden sm:inline">Advanced Pipeline</span>
+              <span className="sm:hidden">Pipeline</span>
             </TabsTrigger>
-            <TabsTrigger value="full-crm" className="flex items-center gap-2">
+            <TabsTrigger value="full-crm" className="flex items-center gap-2 p-3">
               <BarChart3 size={16} />
-              Full CRM
+              <span className="hidden sm:inline">Full CRM</span>
+              <span className="sm:hidden">CRM</span>
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <TabsContent value="overview" className="space-y-4 lg:space-y-6">
+            <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Pipeline Value</CardTitle>
@@ -126,7 +131,7 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
                     Choose from the powerful features below to get started.
                   </p>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                     <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow" 
                           onClick={() => setActiveTab('pipeline')}>
                       <div className="flex items-center gap-3 mb-2">
@@ -153,7 +158,7 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
                       </p>
                     </Card>
 
-                    <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow opacity-75">
+                    <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow opacity-75 md:col-span-2 xl:col-span-1">
                       <div className="flex items-center gap-3 mb-2">
                         <div className="p-2 bg-purple-100 rounded-lg">
                           <Settings size={20} className="text-purple-600" />
@@ -170,11 +175,11 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
             </Card>
           </TabsContent>
 
-          <TabsContent value="pipeline" className="space-y-6">
+          <TabsContent value="pipeline" className="space-y-4 lg:space-y-6">
             <AdvancedPipelineManagement />
           </TabsContent>
 
-          <TabsContent value="full-crm" className="space-y-6">
+          <TabsContent value="full-crm" className="space-y-4 lg:space-y-6">
             <Dashboard user={user} />
           </TabsContent>
         </Tabs>

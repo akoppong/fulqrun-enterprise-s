@@ -202,10 +202,12 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
         onViewChange={setCurrentView}
         userRole={user.role}
       />
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
         <Header user={user} onLogout={onLogout} />
-        <main className="flex-1 overflow-auto p-6">
-          {renderView()}
+        <main className="flex-1 overflow-auto p-3 sm:p-4 lg:p-6">
+          <div className="lg:pl-0 pt-16 lg:pt-0">
+            {renderView()}
+          </div>
         </main>
       </div>
       <FinancialAlerts opportunities={opportunities} />

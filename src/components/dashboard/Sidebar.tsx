@@ -1,8 +1,10 @@
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { DashboardView } from './Dashboard';
 import { 
+  Menu,
   FunnelSimple, 
   Target, 
   AddressBook, 
@@ -31,6 +33,42 @@ interface SidebarProps {
 }
 
 export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
+  const SidebarContent = () => (
+    <>
+      <div className="p-6 border-b">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+            <Building2 size={20} className="text-primary-foreground" />
+          </div>
+          <div>
+            <h2 className="font-bold text-lg">FulQrun</h2>
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-muted-foreground">Enterprise CRM</p>
+              <Badge className="text-xs bg-accent/20 text-accent-foreground">
+                v2.0
+              </Badge>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <nav className="flex-1 p-4 space-y-6 overflow-y-auto">
+        {renderNavSection(coreItems, 'Core Features')}
+        {aiItems.length > 0 && renderNavSection(aiItems, 'AI-Powered Features')}
+        {advancedItems.length > 0 && renderNavSection(advancedItems, 'Advanced Features')}
+      </nav>
+      
+      <div className="p-4 border-t">
+        <div className="text-xs text-muted-foreground">
+          <div className="font-medium mb-1 flex items-center gap-2">
+            <Brain size={12} />
+            PEAK + AI-Powered
+          </div>
+          <div>Prospect → Engage → Acquire → Keep</div>
+        </div>
+      </div>
+    </>
+  );
   const navigationItems = [
     {
       id: 'pipeline' as DashboardView,
@@ -292,39 +330,31 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
   );
 
   return (
-    <div className="w-64 bg-card border-r flex flex-col">
-      <div className="p-6 border-b">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-            <Building2 size={20} className="text-primary-foreground" />
-          </div>
-          <div>
-            <h2 className="font-bold text-lg">FulQrun</h2>
-            <div className="flex items-center gap-2">
-              <p className="text-xs text-muted-foreground">Enterprise CRM</p>
-              <Badge className="text-xs bg-accent/20 text-accent-foreground">
-                v2.0
-              </Badge>
+    <>
+      {/* Mobile Navigation */}
+      <div className="lg:hidden">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="fixed top-4 left-4 z-50 bg-background border shadow-md lg:hidden"
+            >
+              <Menu size={20} />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-80 p-0">
+            <div className="flex flex-col h-full bg-card">
+              <SidebarContent />
             </div>
-          </div>
-        </div>
+          </SheetContent>
+        </Sheet>
       </div>
-      
-      <nav className="flex-1 p-4 space-y-6 overflow-y-auto">
-        {renderNavSection(coreItems, 'Core Features')}
-        {aiItems.length > 0 && renderNavSection(aiItems, 'AI-Powered Features')}
-        {advancedItems.length > 0 && renderNavSection(advancedItems, 'Advanced Features')}
-      </nav>
-      
-      <div className="p-4 border-t">
-        <div className="text-xs text-muted-foreground">
-          <div className="font-medium mb-1 flex items-center gap-2">
-            <Brain size={12} />
-            PEAK + AI-Powered
-          </div>
-          <div>Prospect → Engage → Acquire → Keep</div>
-        </div>
+
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:flex w-64 bg-card border-r flex-col">
+        <SidebarContent />
       </div>
-    </div>
+    </>
   );
 }
