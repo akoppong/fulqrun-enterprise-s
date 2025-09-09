@@ -34,6 +34,11 @@ import { AutoSaveTestRunner } from '@/components/dashboard/AutoSaveTestRunner';
 import { ComprehensiveValidationTestSuite } from '@/components/dashboard/ComprehensiveValidationTestSuite';
 import { FieldTypeTestingLab } from '@/components/dashboard/FieldTypeTestingLab';
 
+// Import new real-time data integration components
+import { RealTimeDataHub } from '@/components/integrations/RealTimeDataHub';
+import { DataQualityDashboard } from '@/components/integrations/DataQualityDashboard';
+import { AutomationWorkflows } from '@/components/integrations/AutomationWorkflows';
+
 // Import administration sub-components
 import { SystemSettings } from './SystemSettings';
 import { UserManagement } from './UserManagement';
@@ -378,14 +383,38 @@ export function AdministrationModule({ userRole, isOwner = false, initialView = 
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Plug className="text-green-500" />
-                Integration Hub Management
+                Real-Time Data Integration Hub
               </CardTitle>
               <CardDescription>
-                Configure external integrations, API connections, and data synchronization settings
+                Configure external integrations, API connections, data synchronization, and automation workflows
               </CardDescription>
             </CardHeader>
           </Card>
-          <IntegrationHub />
+
+          <Tabs defaultValue="data-hub" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
+              <TabsTrigger value="data-hub">Data Hub</TabsTrigger>
+              <TabsTrigger value="automation">Automation</TabsTrigger>
+              <TabsTrigger value="data-quality">Data Quality</TabsTrigger>
+              <TabsTrigger value="legacy-hub">Legacy Hub</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="data-hub">
+              <RealTimeDataHub />
+            </TabsContent>
+
+            <TabsContent value="automation">
+              <AutomationWorkflows />
+            </TabsContent>
+
+            <TabsContent value="data-quality">
+              <DataQualityDashboard />
+            </TabsContent>
+
+            <TabsContent value="legacy-hub">
+              <IntegrationHub />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
 
         {/* Testing & Validation Suite */}

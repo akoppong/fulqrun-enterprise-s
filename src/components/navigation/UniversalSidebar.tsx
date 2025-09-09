@@ -160,6 +160,23 @@ export function UniversalSidebar({
       ]
     },
     {
+      id: 'integrations',
+      title: 'Data & Integrations',
+      items: [
+        {
+          id: 'data-hub',
+          label: 'Real-Time Data Hub',
+          icon: Database,
+          description: 'Live CRM & BI connections',
+          children: [
+            { id: 'real-time-sync', label: 'Data Connections', description: 'Salesforce, HubSpot, Power BI integrations', isNew: true },
+            { id: 'automation-workflows', label: 'Automation Workflows', description: 'Data sync automation', isNew: true },
+            { id: 'data-quality', label: 'Data Quality', description: 'Monitor data health & performance', isNew: true },
+          ]
+        }
+      ]
+    },
+    {
       id: 'admin',
       title: 'Administration',
       items: [
@@ -170,7 +187,7 @@ export function UniversalSidebar({
           description: 'Enterprise configuration',
           children: [
             { id: 'pipeline-builder', label: 'Pipeline Builder', description: 'Custom pipeline design', isNew: true },
-            { id: 'integration-hub', label: 'Integration Hub', description: 'Third-party connections', isNew: true },
+            { id: 'integration-hub', label: 'Data Integration', description: 'Real-time CRM & BI connections', isNew: true },
             { id: 'user-management', label: 'User Management', description: 'User roles and permissions' },
             { id: 'system-settings', label: 'System Settings', description: 'Platform configuration' },
           ]

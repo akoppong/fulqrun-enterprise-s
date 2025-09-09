@@ -13,6 +13,7 @@ import { Dashboard } from './Dashboard';
 import { CustomizableDashboard } from './CustomizableDashboard';
 import { AIQualificationDashboard, AILeadScoring, AIDealRiskAssessment, AIQualificationDemo } from '../ai-qualification';
 import { AdministrationModule } from '../administration/AdministrationModule';
+import { RealTimeDataHub, DataQualityDashboard, AutomationWorkflows } from '../integrations';
 import { 
   BarChart3, 
   Target, 
@@ -36,7 +37,8 @@ import {
   Download,
   Share,
   MoreHorizontal,
-  Grid
+  Grid,
+  Database
 } from '@phosphor-icons/react';
 
 interface SimpleDashboardProps {
@@ -82,9 +84,14 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
       ],
       'administration': [
         { id: 'pipeline-builder', label: 'Pipeline Builder', description: 'Custom design', isNew: true },
-        { id: 'integration-hub', label: 'Integration Hub', description: 'Connections', isNew: true },
+        { id: 'integration-hub', label: 'Data Integration', description: 'Real-time connections', isNew: true },
         { id: 'user-management', label: 'User Management', description: 'User roles' },
         { id: 'system-settings', label: 'System Settings', description: 'Platform config' },
+      ],
+      'data-hub': [
+        { id: 'real-time-sync', label: 'Data Connections', description: 'CRM & BI integrations', isNew: true },
+        { id: 'automation-workflows', label: 'Automation', description: 'Data sync workflows', isNew: true },
+        { id: 'data-quality', label: 'Data Quality', description: 'Health monitoring', isNew: true },
       ],
     };
     
@@ -199,6 +206,7 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
       'ai-scoring': 'AI Lead Scoring',
       'ai-risk': 'Deal Risk Analysis',
       'learning': 'Learning Platform',
+      'data-hub': 'Real-Time Data Hub',
       'administration': 'System Administration',
     };
     return titles[tab] || 'FulQrun CRM';
@@ -231,6 +239,10 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
       'courses': 'Access comprehensive training courses and materials.',
       'certifications': 'Earn professional certifications in sales methodologies.',
       'coaching': 'Receive personalized AI-powered sales coaching.',
+      'data-hub': 'Real-time data connections with CRM systems and business intelligence tools.',
+      'real-time-sync': 'Configure and monitor live data connections with Salesforce, HubSpot, Power BI and more.',
+      'automation-workflows': 'Create automated data synchronization workflows between systems.',
+      'data-quality': 'Monitor data health, performance metrics, and integration quality.',
       'administration': 'Enterprise-grade system configuration and management.',
       'pipeline-builder': 'Design and customize sales pipelines with automation.',
       'integration-hub': 'Connect with third-party tools and services.',
@@ -315,6 +327,8 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
         return <AIDealRiskAssessment />;
       case 'learning':
         return <EnhancedLearningPlatform />;
+      case 'data-hub':
+        return <RealTimeDataHub />;
       case 'administration':
         return (
           <AdministrationModule 
@@ -381,6 +395,14 @@ export function SimpleDashboard({ user, onLogout }: SimpleDashboardProps) {
             initialView={subTab}
           />
         );
+      
+      // Data Hub Sub-sections
+      case 'real-time-sync':
+        return <RealTimeDataHub />;
+      case 'automation-workflows':
+        return <AutomationWorkflows />;
+      case 'data-quality':
+        return <DataQualityDashboard />;
       
       default:
         return <DefaultContent activeTab={subTab} />;
