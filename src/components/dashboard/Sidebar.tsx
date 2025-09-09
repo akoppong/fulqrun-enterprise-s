@@ -302,9 +302,9 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
   })).filter(section => section.items.length > 0);
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full sidebar-container">
       {/* Header */}
-      <div className="p-4 lg:p-6 border-b bg-card">
+      <div className="p-4 lg:p-6 border-b bg-card flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 lg:w-10 lg:h-10 bg-primary rounded-lg flex items-center justify-center">
@@ -338,8 +338,10 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
       </div>
 
       {/* Navigation */}
-      <ScrollArea className="flex-1 p-3 lg:p-4">
-        <nav className="space-y-2 lg:space-y-4">
+      <div className="sidebar-navigation-area" style={{ height: 'calc(100vh - 200px)' }}>
+        <ScrollArea className="h-full sidebar-scroll-area">
+          <div className="p-3 lg:p-4">
+            <nav className="space-y-2 lg:space-y-4 pb-8">
           {filteredSections.map((section) => {
             const SectionIcon = section.icon;
             const isExpanded = expandedSections[section.id];
@@ -426,10 +428,12 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
             );
           })}
         </nav>
-      </ScrollArea>
+          </div>
+        </ScrollArea>
+      </div>
 
       {/* Footer */}
-      <div className="p-4 border-t bg-muted/30">
+      <div className="p-4 border-t bg-muted/30 flex-shrink-0">
         <div className="text-xs text-muted-foreground">
           <div className="font-medium mb-1 flex items-center gap-2">
             <Brain size={12} />
@@ -455,16 +459,18 @@ export function Sidebar({ currentView, onViewChange, userRole }: SidebarProps) {
             <span className="sr-only">Open navigation menu</span>
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-80 p-0 bg-background">
+        <SheetContent side="left" className="w-80 p-0 bg-background h-full">
           <SheetHeader className="sr-only">
             <SheetTitle>Navigation Menu</SheetTitle>
           </SheetHeader>
-          <SidebarContent />
+          <div className="h-full">
+            <SidebarContent />
+          </div>
         </SheetContent>
       </Sheet>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex w-80 bg-card border-r flex-col">
+      <aside className="hidden lg:flex w-80 bg-card border-r flex-col sidebar-container">
         <SidebarContent />
       </aside>
     </>

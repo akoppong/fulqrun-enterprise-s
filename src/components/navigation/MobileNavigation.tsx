@@ -70,9 +70,9 @@ export function MobileNavigation({ activeTab, onTabChange, userName, userRole }:
           <SheetTitle>Navigation Menu</SheetTitle>
         </SheetHeader>
         
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full mobile-nav-content">
           {/* Header */}
-          <div className="p-4 border-b bg-card">
+          <div className="p-4 border-b bg-card flex-shrink-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
@@ -99,7 +99,7 @@ export function MobileNavigation({ activeTab, onTabChange, userName, userRole }:
           </div>
 
           {/* User Info */}
-          <div className="p-4 bg-muted/30">
+          <div className="p-4 bg-muted/30 flex-shrink-0">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
                 <span className="text-sm font-medium text-primary-foreground">
@@ -118,8 +118,10 @@ export function MobileNavigation({ activeTab, onTabChange, userName, userRole }:
           <Separator />
 
           {/* Navigation */}
-          <ScrollArea className="flex-1 p-4 sidebar-scroll-area">
-            <nav className="space-y-2">
+          <div className="mobile-nav-scroll" style={{ height: 'calc(100vh - 250px)' }}>
+            <ScrollArea className="h-full sidebar-scroll-area">
+              <div className="p-4">
+                <nav className="space-y-2 pb-8">
               <div className="px-2 mb-4">
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider nav-section-header">
                   Navigation
@@ -168,10 +170,12 @@ export function MobileNavigation({ activeTab, onTabChange, userName, userRole }:
                 );
               })}
             </nav>
-          </ScrollArea>
+              </div>
+            </ScrollArea>
+          </div>
 
           {/* Footer */}
-          <div className="p-4 border-t bg-muted/30">
+          <div className="p-4 border-t bg-muted/30 flex-shrink-0">
             <div className="text-xs text-muted-foreground">
               <div className="font-medium mb-1 flex items-center gap-2">
                 <BarChart3 size={12} />
