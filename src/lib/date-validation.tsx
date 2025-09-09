@@ -300,7 +300,7 @@ export class DateUtils {
   }
 
   private static formatDate(date: Date, format: string): string {
-    return DateValidator.formatDate(date, format as any);
+    return formatDateUtil(date, format);
   }
 }
 

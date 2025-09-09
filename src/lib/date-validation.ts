@@ -355,11 +355,11 @@ export class DateUtils {
     if (diffDays > 7 && diffDays <= 30) return `In ${Math.ceil(diffDays / 7)} weeks`;
     if (diffDays < -7 && diffDays >= -30) return `${Math.ceil(Math.abs(diffDays) / 7)} weeks ago`;
     
-    return this.formatDate(date, 'compact');
+    return DateUtils.formatDate(date, 'compact');
   }
 
   private static formatDate(date: Date, format: string): string {
-    return DateValidator.formatDate(date, format as any);
+    return DateValidator.formatDate(date, format as 'ISO' | 'local' | 'timestamp' | 'display' | 'compact');
   }
 }
 

@@ -395,7 +395,8 @@ export function toISOStringWithTimezone(date: Date | string, timezone?: string):
 
   if (timezone) {
     const zonedDate = toZonedTime(parsedDate, timezone);
-    return formatTz(zonedDate, DATE_FORMATS.DATETIME_ISO, { timeZone: timezone });
+    // Use the native toISOString method to avoid format string issues
+    return zonedDate.toISOString();
   }
 
   return parsedDate.toISOString();
