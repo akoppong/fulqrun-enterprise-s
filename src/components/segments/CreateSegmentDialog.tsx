@@ -1,18 +1,15 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { CustomerSegment } from '@/lib/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ValidatedInput } from '@/components/ui/validated-input';
-import { ValidatedForm } from '@/components/ui/validated-form';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { segmentValidationSchema } from '@/lib/validation';
-import { errorHandler } from '@/lib/error-handling';
-import { Plus, X, AlertTriangle, Info } from '@phosphor-icons/react';
+import { X, AlertTriangle } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 
 interface CreateSegmentDialogProps {
@@ -43,9 +40,6 @@ const GEOGRAPHIES = [
 ];
 
 export function CreateSegmentDialog({ isOpen, onClose, onSubmit }: CreateSegmentDialogProps) {
-  const [currentTab, setCurrentTab] = useState('basic');
-  const [newItem, setNewItem] = useState({ type: '', value: '' });
-
   const initialFormData = {
     name: '',
     description: '',
@@ -82,105 +76,87 @@ export function CreateSegmentDialog({ isOpen, onClose, onSubmit }: CreateSegment
     }
   };
 
-  const handleFormSubmit = async (data: Record<string, any>, { setSubmitting, setError }: any) => {
-    try {
-      // Additional business logic validation
-      if (data.criteria?.revenue?.min && data.criteria?.revenue?.max && 
-          data.criteria.revenue.min >= data.criteria.revenue.max) {
-        setError('Minimum revenue must be less than maximum revenue');
-        return;
+  const [currentTab, setCurrentTab] = useState('basic');
+  const [formData, setFormData] = useState(initialFormData);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleFieldChange = (field: string, value: any) => {
+    const fieldPath = field.split('.');
+    setFormData(current => {
+      if (fieldPath.length === 1) {
+        return { ...current, [fieldPath[0]]: value };
+      } else if (fieldPath.length === 2) {
+        return {
+          ...current,
+          [fieldPath[0]]: {
+            ...current[fieldPath[0] as keyof typeof current],
+            [fieldPath[1]]: value
+          }
+        };
+      } else if (fieldPath.length === 3) {
+        return {
+          ...current,
+          [fieldPath[0]]: {
+            ...current[fieldPath[0] as keyof typeof current],
+            [fieldPath[1]]: {
+              ...(current[fieldPath[0] as keyof typeof current] as any)[fieldPath[1]],
+              [fieldPath[2]]: value
+            }
+          }
+        };
       }
-
-      if (data.criteria?.companySize?.min && data.criteria?.companySize?.max && 
-          data.criteria.companySize.min >= data.criteria.companySize.max) {
-        setError('Minimum company size must be less than maximum company size');
-        return;
-      }
-
-      // Prepare segment data
-      const segment: Omit<CustomerSegment, 'id' | 'createdBy' | 'createdAt' | 'updatedAt'> = {
-        ...data,
-        // Ensure arrays are properly formatted
-        criteria: {
-          ...data.criteria,
-          industry: Array.isArray(data.criteria?.industry) ? data.criteria.industry : [],
-          geography: Array.isArray(data.criteria?.geography) ? data.criteria.geography : [],
-          businessModel: Array.isArray(data.criteria?.businessModel) ? data.criteria.businessModel : []
-        }
-      };
-
-      await onSubmit(segment);
-      
-      toast.success('Customer segment created successfully!', {
-        description: `"${data.name}" is now ready for customer assignment.`
+      return current;
+    });
+    
+    // Clear validation error when user starts typing
+    if (validationErrors[field]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
       });
-      
-      onClose();
-    } catch (error) {
-      errorHandler.handleError(error as Error, 'medium', { context: 'CreateSegment' });
-      setError('Failed to create segment. Please try again.');
     }
   };
 
+  const getTabErrors = (tab: string) => {
+    const tabFields = {
+      'basic': ['name', 'description'],
+      'criteria': ['criteria.revenue.min', 'criteria.revenue.max', 'criteria.companySize.min', 'criteria.companySize.max'],
+      'characteristics': ['characteristics.avgDealSize', 'characteristics.avgSalesCycle'],
+      'strategy': ['strategy.touchpoints']
+    };
+    
+    return tabFields[tab as keyof typeof tabFields]?.some(field => validationErrors[field]) || false;
+  };
+
+  const hasFormErrors = () => {
+    return Object.keys(validationErrors).length > 0 || !formData.name || !formData.description;
+  };
+
   const resetForm = () => {
-    setFormData({
-      name: '',
-      description: '',
-      color: SEGMENT_COLORS[0],
-      icon: SEGMENT_ICONS[0],
-      isActive: true,
-      criteria: {
-        revenue: { min: undefined, max: undefined },
-        industry: [],
-        companySize: { min: undefined, max: undefined },
-        geography: [],
-        businessModel: [],
-        customFields: []
-      },
-      characteristics: {
-        avgDealSize: 0,
-        avgSalesCycle: 30,
-        decisionMakers: [],
-        commonPainPoints: [],
-        buyingProcess: '',
-        competitiveThreats: [],
-        successFactors: [],
-        churnRisk: 'medium'
-      },
-      strategy: {
-        messaging: [],
-        channels: [],
-        touchpoints: 5,
-        cadence: 'weekly',
-        resources: [],
-        playbooks: [],
-        contentLibrary: [],
-        kpis: []
-      }
-    });
+    setFormData(initialFormData);
     setValidationErrors({});
-    setTouchedFields({});
     setCurrentTab('basic');
   };
 
-  const addArrayItem = (field: string, subField?: string) => {
-    if (!newItem.value.trim()) return;
+  const addArrayItem = (field: string, value: string, subField?: string) => {
+    if (!value.trim()) return;
 
     if (subField) {
       setFormData(current => ({
         ...current,
         [field]: {
           ...current[field as keyof typeof current],
-          [subField]: [...(current[field as keyof typeof current] as any)[subField], newItem.value]
+          [subField]: [...(current[field as keyof typeof current] as any)[subField], value]
         }
       }));
     } else {
       setFormData(current => ({
         ...current,
-        [field]: [...(current[field as keyof typeof current] as string[]), newItem.value]
+        [field]: [...(current[field as keyof typeof current] as string[]), value]
       }));
     }
-    setNewItem({ type: '', value: '' });
   };
 
   const removeArrayItem = (field: string, index: number, subField?: string) => {
@@ -200,37 +176,156 @@ export function CreateSegmentDialog({ isOpen, onClose, onSubmit }: CreateSegment
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (isSubmitting) return;
+    
+    setIsSubmitting(true);
     
     try {
       // Validate required fields
+      const errors: Record<string, string> = {};
+      
       if (!formData.name.trim()) {
-        toast.error('Segment name is required');
-        return;
+        errors.name = 'Segment name is required';
       }
 
       if (!formData.description.trim()) {
-        toast.error('Segment description is required');
+        errors.description = 'Segment description is required';
+      }
+      
+      // Validate revenue range
+      if (formData.criteria.revenue.min && formData.criteria.revenue.max && 
+          formData.criteria.revenue.min >= formData.criteria.revenue.max) {
+        errors['criteria.revenue.max'] = 'Maximum must be greater than minimum';
+      }
+      
+      // Validate company size range
+      if (formData.criteria.companySize.min && formData.criteria.companySize.max && 
+          formData.criteria.companySize.min >= formData.criteria.companySize.max) {
+        errors['criteria.companySize.max'] = 'Maximum must be greater than minimum';
+      }
+
+      if (Object.keys(errors).length > 0) {
+        setValidationErrors(errors);
+        const firstTab = Object.keys(errors).some(key => ['name', 'description'].includes(key)) ? 'basic' :
+                         Object.keys(errors).some(key => key.startsWith('criteria')) ? 'criteria' :
+                         Object.keys(errors).some(key => key.startsWith('characteristics')) ? 'characteristics' : 'strategy';
+        setCurrentTab(firstTab);
         return;
       }
 
       // Submit the segment data
-      onSubmit(formData);
+      await onSubmit(formData);
       
       toast.success('Customer segment created successfully!', {
         description: `"${formData.name}" has been added to your segments.`
       });
       
+      resetForm();
       onClose();
     } catch (error) {
-      errorHandler.handleError(error as Error, 'medium', { 
-        context: 'CreateSegment',
-        formData 
-      });
+      console.error('Failed to create segment:', error);
       toast.error('Failed to create segment. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  // Simple inline components to replace missing ones
+  const FormSection = ({ title, description, children }: { title: string; description: string; children: React.ReactNode }) => (
+    <div className="space-y-4">
+      <div>
+        <h3 className="text-lg font-semibold">{title}</h3>
+        <p className="text-sm text-muted-foreground">{description}</p>
+      </div>
+      {children}
+    </div>
+  );
+
+  const FormGrid = ({ columns, children }: { columns: number; children: React.ReactNode }) => (
+    <div className={`grid gap-4 ${columns === 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
+      {children}
+    </div>
+  );
+
+  const InputField = ({ 
+    id, label, value, onChange, onBlur, error, placeholder, required, helpText, type = 'text', min, max 
+  }: {
+    id: string; label: string; value: any; onChange: (value: string) => void; 
+    onBlur?: () => void; error?: string; placeholder?: string; required?: boolean; 
+    helpText?: string; type?: string; min?: number; max?: number;
+  }) => (
+    <div className="space-y-2">
+      <Label htmlFor={id} className={required ? 'after:content-["*"] after:text-destructive after:ml-1' : ''}>
+        {label}
+      </Label>
+      <Input
+        id={id}
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onBlur={onBlur}
+        placeholder={placeholder}
+        min={min}
+        max={max}
+        className={error ? 'border-destructive' : ''}
+      />
+      {error && <p className="text-sm text-destructive">{error}</p>}
+      {helpText && <p className="text-sm text-muted-foreground">{helpText}</p>}
+    </div>
+  );
+
+  const TextareaField = ({ 
+    id, label, value, onChange, onBlur, error, placeholder, required, helpText, rows = 3 
+  }: {
+    id: string; label: string; value: string; onChange: (value: string) => void; 
+    onBlur?: () => void; error?: string; placeholder?: string; required?: boolean; 
+    helpText?: string; rows?: number;
+  }) => (
+    <div className="space-y-2">
+      <Label htmlFor={id} className={required ? 'after:content-["*"] after:text-destructive after:ml-1' : ''}>
+        {label}
+      </Label>
+      <Textarea
+        id={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onBlur={onBlur}
+        placeholder={placeholder}
+        rows={rows}
+        className={error ? 'border-destructive' : ''}
+      />
+      {error && <p className="text-sm text-destructive">{error}</p>}
+      {helpText && <p className="text-sm text-muted-foreground">{helpText}</p>}
+    </div>
+  );
+
+  const SelectField = ({ 
+    id, label, value, onChange, options, required 
+  }: {
+    id: string; label: string; value: string; onChange: (value: string) => void; 
+    options: { value: string; label: string }[]; required?: boolean;
+  }) => (
+    <div className="space-y-2">
+      <Label htmlFor={id} className={required ? 'after:content-["*"] after:text-destructive after:ml-1' : ''}>
+        {label}
+      </Label>
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger>
+          <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map(option => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
