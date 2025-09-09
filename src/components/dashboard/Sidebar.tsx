@@ -99,6 +99,14 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
       defaultOpen: true,
       items: [
         {
+          id: 'dashboard',
+          label: 'Dashboard',
+          icon: GridNine,
+          description: 'Main overview dashboard',
+          permissionId: 'dashboard',
+          action: 'read'
+        },
+        {
           id: 'pipeline',
           label: 'Pipeline',
           icon: FunnelSimple,

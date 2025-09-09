@@ -12,6 +12,7 @@ import { DemoDataGenerator } from '@/lib/demo-data';
 import { useKV } from '@github/spark/hooks';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { CustomizableDashboard } from './CustomizableDashboard';
 import { PipelineView } from './PipelineView';
 import { OpportunityList } from './OpportunityList';
 import { ContactsView } from './ContactsView';
@@ -38,11 +39,11 @@ interface DashboardProps {
   initialView?: string;
 }
 
-export type DashboardView = 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'autosave-demo' | 'autosave-test' | 'autosave-manual' | 'autosave-interactive' | 'field-testing' | 'comprehensive-testing' | 'validation-demo' | 'date-validation' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit';
+export type DashboardView = 'dashboard' | 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'autosave-demo' | 'autosave-test' | 'autosave-manual' | 'autosave-interactive' | 'field-testing' | 'comprehensive-testing' | 'validation-demo' | 'date-validation' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit';
 
 export function Dashboard({ user, onLogout, initialView }: DashboardProps) {
   const [currentView, setCurrentView] = useState<DashboardView>(
-    (initialView as DashboardView) || 'pipeline'
+    (initialView as DashboardView) || 'dashboard'
   );
   const [opportunities, setOpportunities] = useKV<Opportunity[]>('opportunities', []);
   const [contacts, setContacts] = useKV<Contact[]>('contacts', []);
@@ -98,6 +99,8 @@ export function Dashboard({ user, onLogout, initialView }: DashboardProps) {
 
   const renderView = () => {
     switch (currentView) {
+      case 'dashboard':
+        return <CustomizableDashboard user={user} />;
       case 'pipeline':
         return <PipelineView />;
       case 'opportunities':

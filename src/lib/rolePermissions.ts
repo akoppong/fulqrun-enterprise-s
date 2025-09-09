@@ -27,6 +27,16 @@ export const ROLE_PERMISSIONS: Record<string, RolePermissions> = {
     role: 'rep',
     permissions: [
       {
+        id: 'dashboard',
+        name: 'Dashboard Access',
+        description: 'Access to main dashboard overview',
+        module: 'core',
+        actions: [
+          { action: 'read', description: 'View dashboard' },
+          { action: 'write', description: 'Customize dashboard' }
+        ]
+      },
+      {
         id: 'pipeline',
         name: 'Pipeline Management',
         description: 'View and manage own pipeline',
