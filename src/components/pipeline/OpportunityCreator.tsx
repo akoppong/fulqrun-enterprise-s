@@ -117,7 +117,7 @@ export function OpportunityCreator({ onOpportunityCreated }: OpportunityCreatorP
           Create Demo Opportunity
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle>Create New Opportunity</DialogTitle>
         </DialogHeader>

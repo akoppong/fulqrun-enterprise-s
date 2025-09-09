@@ -195,7 +195,7 @@ export function KPIDashboardBuilder({ currentUser, kpiTargets }: KPIDashboardBui
                 New Dashboard
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-lg">
               <DialogHeader>
                 <DialogTitle>Create New Dashboard</DialogTitle>
               </DialogHeader>

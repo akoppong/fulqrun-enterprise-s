@@ -63,7 +63,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-accent/5 p-4">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-lg">
         <CardHeader className="text-center space-y-4">
           <div className="mx-auto w-12 h-12 bg-primary rounded-xl flex items-center justify-center">
             <Building size={24} className="text-primary-foreground" />
