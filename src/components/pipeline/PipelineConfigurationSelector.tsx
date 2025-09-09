@@ -166,9 +166,16 @@ export function PipelineConfigurationSelector({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 text-sm">
-              <div className="space-y-3">
-                <h4 className="text-sm font-medium">Pipeline Stages</h4>
+            <div className="space-y-4">
+              {/* Headers in a single row */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pb-3 border-b">
+                <h4 className="text-sm font-medium text-center">Pipeline Stages</h4>
+                <h4 className="text-sm font-medium text-center">Stage Conversion Targets</h4>
+                <h4 className="text-sm font-medium text-center">Time Targets (Days)</h4>
+              </div>
+
+              {/* Details in side-by-side columns */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-sm">
                 <div className="space-y-2">
                   {selectedPipeline.stages.map((stage, index) => (
                     <div key={stage.id} className="flex items-center justify-between p-2 bg-muted/30 rounded-md">
@@ -186,10 +193,7 @@ export function PipelineConfigurationSelector({
                     </div>
                   ))}
                 </div>
-              </div>
-              
-              <div>
-                <h5 className="font-medium mb-3 text-sm">Stage Conversion Targets</h5>
+                
                 <div className="space-y-2">
                   {Object.entries(selectedPipeline.conversionTargets).slice(0, 4).map(([key, value]) => (
                     <div key={key} className="flex justify-between p-2 bg-muted/20 rounded">
@@ -200,10 +204,7 @@ export function PipelineConfigurationSelector({
                     </div>
                   ))}
                 </div>
-              </div>
-              
-              <div>
-                <h5 className="font-medium mb-3 text-sm">Time Targets (Days)</h5>
+                
                 <div className="space-y-2">
                   {Object.entries(selectedPipeline.salesCycleTargets).slice(0, 4).map(([key, value]) => (
                     <div key={key} className="flex justify-between p-2 bg-muted/20 rounded">
