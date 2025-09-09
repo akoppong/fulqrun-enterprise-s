@@ -32,15 +32,6 @@ interface NavigationItem {
   description?: string;
   isNew?: boolean;
   badge?: string;
-  children?: SubNavigationItem[];
-}
-
-interface SubNavigationItem {
-  id: string;
-  label: string;
-  description?: string;
-  isNew?: boolean;
-  badge?: string;
 }
 
 interface UniversalSidebarProps {
@@ -79,14 +70,7 @@ export function UniversalSidebar({
           id: 'full-crm',
           label: 'CRM Suite',
           icon: BarChart3,
-          description: 'Complete customer management',
-          children: [
-            { id: 'pipeline', label: 'Pipeline Management', description: 'Sales pipeline overview' },
-            { id: 'opportunities', label: 'Opportunities', description: 'Deal tracking and management' },
-            { id: 'contacts', label: 'Contacts', description: 'Customer contact management' },
-            { id: 'companies', label: 'Companies', description: 'Company profiles and data' },
-            { id: 'analytics', label: 'Analytics & Reports', description: 'Insights and reporting' },
-          ]
+          description: 'Complete customer management'
         }
       ]
     },
@@ -105,41 +89,25 @@ export function UniversalSidebar({
           id: 'meddpicc',
           label: 'MEDDPICC Enhanced',
           icon: CheckCircle,
-          description: 'AI-powered deal qualification',
-          children: [
-            { id: 'meddpicc-form', label: 'Qualification Form', description: 'Complete MEDDPICC assessment' },
-            { id: 'meddpicc-insights', label: 'AI Insights', description: 'Intelligent qualification tips' },
-          ]
+          description: 'AI-powered deal qualification'
         },
         {
           id: 'ai-qualification',
           label: 'AI Qualification',
           icon: Brain,
-          description: 'Intelligent deal analysis',
-          children: [
-            { id: 'qualification-dashboard', label: 'Qualification Dashboard', description: 'AI-powered qualification overview' },
-            { id: 'insights-engine', label: 'Insights Engine', description: 'Deep AI analysis and recommendations' },
-          ]
+          description: 'Intelligent deal analysis'
         },
         {
           id: 'ai-scoring',
           label: 'AI Lead Scoring',
           icon: Star,
-          description: 'Predictive lead prioritization',
-          children: [
-            { id: 'lead-scores', label: 'Lead Scores', description: 'AI-generated lead rankings' },
-            { id: 'scoring-model', label: 'Scoring Model', description: 'Configure scoring parameters' },
-          ]
+          description: 'Predictive lead prioritization'
         },
         {
           id: 'ai-risk',
           label: 'Deal Risk Analysis',
           icon: Shield,
-          description: 'AI risk assessment',
-          children: [
-            { id: 'risk-dashboard', label: 'Risk Dashboard', description: 'Deal risk overview and alerts' },
-            { id: 'mitigation-plans', label: 'Mitigation Plans', description: 'Risk reduction strategies' },
-          ]
+          description: 'AI risk assessment'
         }
       ]
     },
@@ -151,12 +119,7 @@ export function UniversalSidebar({
           id: 'learning',
           label: 'Learning Platform',
           icon: GraduationCap,
-          description: 'Training and certification',
-          children: [
-            { id: 'courses', label: 'Training Courses', description: 'PEAK & MEDDPICC training' },
-            { id: 'certifications', label: 'Certifications', description: 'Professional certifications' },
-            { id: 'coaching', label: 'AI Coaching', description: 'Personalized AI coaching' },
-          ]
+          description: 'Training and certification'
         }
       ]
     },
@@ -168,12 +131,7 @@ export function UniversalSidebar({
           id: 'data-hub',
           label: 'Real-Time Data Hub',
           icon: HardDrives,
-          description: 'Live CRM & BI connections',
-          children: [
-            { id: 'real-time-sync', label: 'Data Connections', description: 'Salesforce, HubSpot, Power BI integrations', isNew: true },
-            { id: 'automation-workflows', label: 'Automation Workflows', description: 'Data sync automation', isNew: true },
-            { id: 'data-quality', label: 'Data Quality', description: 'Monitor data health & performance', isNew: true },
-          ]
+          description: 'Live CRM & BI connections'
         }
       ]
     },
@@ -185,13 +143,7 @@ export function UniversalSidebar({
           id: 'administration',
           label: 'System Admin',
           icon: Wrench,
-          description: 'Enterprise configuration',
-          children: [
-            { id: 'pipeline-builder', label: 'Pipeline Builder', description: 'Custom pipeline design', isNew: true },
-            { id: 'integration-hub', label: 'Data Integration', description: 'Real-time CRM & BI connections', isNew: true },
-            { id: 'user-management', label: 'User Management', description: 'User roles and permissions' },
-            { id: 'system-settings', label: 'System Settings', description: 'Platform configuration' },
-          ]
+          description: 'Enterprise configuration'
         }
       ]
     }
@@ -210,23 +162,6 @@ export function UniversalSidebar({
   const handleItemClick = (itemId: string) => {
     onTabChange(itemId);
   };
-
-  const getActiveParent = (activeTab: string): string | null => {
-    for (const section of navigationSections) {
-      for (const item of section.items) {
-        if (item.children) {
-          for (const child of item.children) {
-            if (child.id === activeTab) {
-              return item.id;
-            }
-          }
-        }
-      }
-    }
-    return null;
-  };
-
-  const activeParent = getActiveParent(activeTab);
 
   return (
     <div className={cn(
@@ -311,94 +246,50 @@ export function UniversalSidebar({
                         <div className="space-y-1 mt-2">
                           {section.items.map((item) => {
                             const Icon = item.icon;
-                            const isActive = activeTab === item.id || activeParent === item.id;
+                            const isActive = activeTab === item.id;
                             
                             return (
-                              <div key={item.id}>
-                                <Button
-                                  variant={isActive ? 'default' : 'ghost'}
-                                  className={cn(
-                                    'w-full justify-start h-auto p-3 nav-item',
-                                    isActive && 'bg-primary text-primary-foreground shadow-sm',
-                                    !isActive && 'hover:bg-muted/50'
-                                  )}
-                                  onClick={() => handleItemClick(item.id)}
-                                >
-                                  <div className="flex items-center gap-3 w-full min-w-0">
-                                    <Icon size={18} className={cn(
-                                      isActive ? 'text-primary-foreground' : 'text-muted-foreground'
-                                    )} />
-                                    <div className="flex-1 min-w-0 text-left">
-                                      <div className="flex items-center gap-2 flex-wrap">
-                                        <span className="font-medium text-sm truncate nav-item-text">
-                                          {item.label}
-                                        </span>
-                                        {item.isNew && (
-                                          <Badge className="text-xs h-4 px-1.5 bg-green-100 text-green-800 nav-badge">
-                                            New
-                                          </Badge>
-                                        )}
-                                        {item.badge && (
-                                          <Badge className="text-xs h-4 px-1.5 nav-section-count">
-                                            {item.badge}
-                                          </Badge>
-                                        )}
-                                      </div>
-                                      {item.description && (
-                                        <div className={cn(
-                                          "text-xs leading-tight mt-0.5 nav-item-description",
-                                          isActive ? 'text-primary-foreground/80' : 'text-muted-foreground'
-                                        )}>
-                                          {item.description}
-                                        </div>
+                              <Button
+                                key={item.id}
+                                variant={isActive ? 'default' : 'ghost'}
+                                className={cn(
+                                  'w-full justify-start h-auto p-3 nav-item',
+                                  isActive && 'bg-primary text-primary-foreground shadow-sm',
+                                  !isActive && 'hover:bg-muted/50'
+                                )}
+                                onClick={() => handleItemClick(item.id)}
+                              >
+                                <div className="flex items-center gap-3 w-full min-w-0">
+                                  <Icon size={18} className={cn(
+                                    isActive ? 'text-primary-foreground' : 'text-muted-foreground'
+                                  )} />
+                                  <div className="flex-1 min-w-0 text-left">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <span className="font-medium text-sm truncate nav-item-text">
+                                        {item.label}
+                                      </span>
+                                      {item.isNew && (
+                                        <Badge className="text-xs h-4 px-1.5 bg-green-100 text-green-800 nav-badge">
+                                          New
+                                        </Badge>
+                                      )}
+                                      {item.badge && (
+                                        <Badge className="text-xs h-4 px-1.5 nav-section-count">
+                                          {item.badge}
+                                        </Badge>
                                       )}
                                     </div>
+                                    {item.description && (
+                                      <div className={cn(
+                                        "text-xs leading-tight mt-0.5 nav-item-description",
+                                        isActive ? 'text-primary-foreground/80' : 'text-muted-foreground'
+                                      )}>
+                                        {item.description}
+                                      </div>
+                                    )}
                                   </div>
-                                </Button>
-                                
-                                {/* Sub-navigation items */}
-                                {item.children && (isActive || activeParent === item.id) && (
-                                  <div className="ml-4 mt-1 space-y-1">
-                                    {item.children.map((child) => {
-                                      const isChildActive = activeTab === child.id;
-                                      return (
-                                        <Button
-                                          key={child.id}
-                                          variant={isChildActive ? 'secondary' : 'ghost'}
-                                          size="sm"
-                                          className={cn(
-                                            'w-full justify-start h-auto p-2 pl-4',
-                                            isChildActive && 'bg-secondary/80',
-                                            !isChildActive && 'hover:bg-muted/30'
-                                          )}
-                                          onClick={() => handleItemClick(child.id)}
-                                        >
-                                          <div className="flex items-center gap-2 w-full min-w-0">
-                                            <div className="w-1 h-1 bg-muted-foreground rounded-full" />
-                                            <div className="flex-1 min-w-0 text-left">
-                                              <div className="flex items-center gap-2">
-                                                <span className="text-xs font-medium truncate">
-                                                  {child.label}
-                                                </span>
-                                                {child.isNew && (
-                                                  <Badge className="text-xs h-3 px-1 bg-green-100 text-green-800">
-                                                    New
-                                                  </Badge>
-                                                )}
-                                              </div>
-                                              {child.description && (
-                                                <div className="text-xs text-muted-foreground leading-tight mt-0.5">
-                                                  {child.description}
-                                                </div>
-                                              )}
-                                            </div>
-                                          </div>
-                                        </Button>
-                                      );
-                                    })}
-                                  </div>
-                                )}
-                              </div>
+                                </div>
+                              </Button>
                             );
                           })}
                         </div>
@@ -411,7 +302,7 @@ export function UniversalSidebar({
                     <div className="space-y-1">
                       {section.items.map((item) => {
                         const Icon = item.icon;
-                        const isActive = activeTab === item.id || activeParent === item.id;
+                        const isActive = activeTab === item.id;
                         
                         return (
                           <Button
