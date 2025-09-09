@@ -59,6 +59,11 @@ export function FinancialAlerts({ opportunities }: FinancialAlertsProps) {
         .filter(opp => opp.value > 50000 && opp.stage === 'acquire')
         .forEach(opp => {
           const expectedCloseDate = new Date(opp.expectedCloseDate);
+          // Validate the date before calling getTime()
+          if (isNaN(expectedCloseDate.getTime())) {
+            return; // Skip invalid dates
+          }
+          
           const daysUntilClose = Math.ceil((expectedCloseDate.getTime() - now) / (1000 * 60 * 60 * 24));
           
           if (daysUntilClose <= 7 && daysUntilClose > 0 && !alerts.find(alert => 

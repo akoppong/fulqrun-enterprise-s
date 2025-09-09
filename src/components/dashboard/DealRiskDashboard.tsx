@@ -70,8 +70,9 @@ export function DealRiskDashboard({ opportunities, contacts, companies, onOpport
         if (contact && company) {
           // Check if we already have a recent assessment
           const existingAssessment = riskAssessments.find(r => r.opportunityId === opp.id);
-          const isRecentAssessment = existingAssessment && 
-            (new Date().getTime() - new Date(existingAssessment.lastAssessment).getTime()) < 24 * 60 * 60 * 1000; // 24 hours
+          const lastAssessment = existingAssessment ? new Date(existingAssessment.lastAssessment) : null;
+          const isRecentAssessment = existingAssessment && lastAssessment && !isNaN(lastAssessment.getTime()) &&
+            (new Date().getTime() - lastAssessment.getTime()) < 24 * 60 * 60 * 1000; // 24 hours
           
           if (!isRecentAssessment) {
             const assessment = await AIService.assessDealRisk(opp, contact, company);

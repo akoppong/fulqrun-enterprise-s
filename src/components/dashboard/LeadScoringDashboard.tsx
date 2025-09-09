@@ -195,8 +195,9 @@ export function LeadScoringDashboard({ contacts, companies, onContactSelect }: L
         if (company) {
           // Check if we already have a recent score
           const existingScore = leadScores.find(s => s.contactId === contact.id);
-          const isRecentScore = existingScore && 
-            (new Date().getTime() - new Date(existingScore.lastUpdated).getTime()) < 24 * 60 * 60 * 1000; // 24 hours
+          const lastUpdated = existingScore ? new Date(existingScore.lastUpdated) : null;
+          const isRecentScore = existingScore && lastUpdated && !isNaN(lastUpdated.getTime()) &&
+            (new Date().getTime() - lastUpdated.getTime()) < 24 * 60 * 60 * 1000; // 24 hours
           
           if (!isRecentScore) {
             const score = await AIService.calculateLeadScore(contact, company);
@@ -302,7 +303,10 @@ export function LeadScoringDashboard({ contacts, companies, onContactSelect }: L
     const interval = setInterval(() => {
       // Refresh scores that are older than 4 hours
       const staleLeads = leadScores.filter(lead => {
-        const hoursSinceUpdate = (new Date().getTime() - new Date(lead.lastUpdated).getTime()) / (1000 * 60 * 60);
+        const lastUpdated = new Date(lead.lastUpdated);
+        if (isNaN(lastUpdated.getTime())) return false; // Skip invalid dates
+        
+        const hoursSinceUpdate = (new Date().getTime() - lastUpdated.getTime()) / (1000 * 60 * 60);
         return hoursSinceUpdate >= 4;
       });
       

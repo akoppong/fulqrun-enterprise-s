@@ -228,6 +228,11 @@ export function EnhancedPipelineView() {
 
   const getDaysUntilClose = (opportunity: Opportunity): number => {
     const closeDate = new Date(opportunity.expectedCloseDate);
+    // Validate the date before calling getTime()
+    if (isNaN(closeDate.getTime())) {
+      return 0; // Return 0 for invalid dates
+    }
+    
     const today = new Date();
     const diffTime = closeDate.getTime() - today.getTime();
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
