@@ -1,6 +1,9 @@
 import { format, parse, isValid, parseISO, startOfDay, endOfDay, addDays, subDays, differenceInDays, differenceInHours, differenceInMinutes, formatDistanceToNow, isAfter, isBefore, isSameDay } from 'date-fns';
 import { toZonedTime, fromZonedTime, format as formatTz } from 'date-fns-tz';
 
+// Re-export commonly used date-fns functions
+export { addDays, subDays, isValid, parseISO, startOfDay, endOfDay, differenceInDays, differenceInHours, differenceInMinutes, formatDistanceToNow, isAfter, isBefore, isSameDay, format, parse };
+
 /**
  * Supported date formats for parsing and validation
  */

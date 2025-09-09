@@ -16,18 +16,18 @@ import { getRolePermissions, getPermissionSummary } from '@/lib/rolePermissions'
 import {
   UserPlus,
   Shield,
-  Settings,
+  Gear as Settings,
   Eye,
   EyeSlash,
   Lock,
   UserCheck,
   Crown,
   Users,
-  Search,
-  Filter,
-  Edit,
+  MagnifyingGlass as Search,
+  Funnel as Filter,
+  PencilSimple as Edit,
   Trash,
-  MoreVertical
+  DotsThreeVertical as MoreVertical
 } from '@phosphor-icons/react';
 
 interface UserManagementProps {
@@ -55,7 +55,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
   });
 
   // Filter users based on search and role
-  const filteredUsers = allUsers.filter(user => {
+  const filteredUsers = (allUsers || []).filter(user => {
     const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
@@ -64,11 +64,11 @@ export function UserManagement({ currentUser }: UserManagementProps) {
 
   // Role statistics
   const roleStats = {
-    rep: allUsers.filter(u => u.role === 'rep').length,
-    manager: allUsers.filter(u => u.role === 'manager').length,
-    admin: allUsers.filter(u => u.role === 'admin').length,
-    total: allUsers.length,
-    active: allUsers.filter(u => u.id !== 'inactive').length // Simplified active check
+    rep: (allUsers || []).filter(u => u.role === 'rep').length,
+    manager: (allUsers || []).filter(u => u.role === 'manager').length,
+    admin: (allUsers || []).filter(u => u.role === 'admin').length,
+    total: (allUsers || []).length,
+    active: (allUsers || []).filter(u => u.id !== 'inactive').length // Simplified active check
   };
 
   const handleCreateUser = () => {
@@ -82,18 +82,18 @@ export function UserManagement({ currentUser }: UserManagementProps) {
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.name}`
     };
 
-    setAllUsers(current => [...current, newUser]);
+    setAllUsers(current => [...(current || []), newUser]);
     setIsCreateDialogOpen(false);
     setFormData({ name: '', email: '', role: 'rep', active: true });
   };
 
   const handleDeleteUser = (userId: string) => {
-    setAllUsers(current => current.filter(u => u.id !== userId));
+    setAllUsers(current => (current || []).filter(u => u.id !== userId));
   };
 
   const handleRoleChange = (userId: string, newRole: 'rep' | 'manager' | 'admin') => {
     setAllUsers(current => 
-      current.map(u => u.id === userId ? { ...u, role: newRole } : u)
+      (current || []).map(u => u.id === userId ? { ...u, role: newRole } : u)
     );
   };
 

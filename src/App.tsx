@@ -7,7 +7,7 @@ import { ValidationDemo } from './components/demo/ValidationDemo';
 import { AdvancedDateDemo } from './components/demo/AdvancedDateDemo';
 import { Toaster } from './components/ui/sonner';
 import { Button } from './components/ui/button';
-import { TestTube, LayoutDashboard, Calendar } from '@phosphor-icons/react';
+import { TestTube, Layout, Calendar } from '@phosphor-icons/react';
 
 function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -67,7 +67,7 @@ function App() {
                 size="sm"
                 onClick={() => setCurrentView('dashboard')}
               >
-                <LayoutDashboard className="w-4 h-4 mr-1" />
+                <Layout className="w-4 h-4 mr-1" />
                 Dashboard
               </Button>
             )}

@@ -17,7 +17,7 @@ export function determineKPIStatus(kpi: KPITarget): KPITarget['status'] {
   
   // Check for valid dates
   if (isNaN(endDate.getTime()) || isNaN(startDate.getTime())) {
-    return 'at-risk'; // Default status for invalid dates
+    return 'at_risk'; // Default status for invalid dates
   }
   
   const timeRemaining = endDate.getTime() - now.getTime();

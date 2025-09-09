@@ -21,8 +21,8 @@ export class DemoDataGenerator {
           brand_influence: 8,
           industry_expertise: 9
         },
-        createdAt: new Date('2024-01-15'),
-        updatedAt: new Date('2024-01-20')
+        createdAt: '2024-01-15',
+        updatedAt: '2024-01-20'
       },
       {
         id: 'company-2',
@@ -38,8 +38,8 @@ export class DemoDataGenerator {
           industry_expertise: 8,
           reference_willingness: 'high'
         },
-        createdAt: new Date('2024-02-01'),
-        updatedAt: new Date('2024-02-10')
+        createdAt: '2024-02-01',
+        updatedAt: '2024-02-10'
       },
       {
         id: 'company-3',
@@ -55,8 +55,8 @@ export class DemoDataGenerator {
           brand_influence: 9,
           market_leadership: 'high'
         },
-        createdAt: new Date('2024-01-25'),
-        updatedAt: new Date('2024-02-05')
+        createdAt: '2024-01-25',
+        updatedAt: '2024-02-05'
       },
       {
         id: 'company-4',
@@ -72,8 +72,8 @@ export class DemoDataGenerator {
           industry_expertise: 7,
           reference_willingness: 'medium'
         },
-        createdAt: new Date('2024-02-10'),
-        updatedAt: new Date('2024-02-15')
+        createdAt: '2024-02-10',
+        updatedAt: '2024-02-15'
       },
       {
         id: 'company-5',
@@ -90,8 +90,8 @@ export class DemoDataGenerator {
           health_safety_priority: 9,
           government_sector: true
         },
-        createdAt: new Date('2024-01-05'),
-        updatedAt: new Date('2024-01-30')
+        createdAt: '2024-01-05',
+        updatedAt: '2024-01-30'
       },
       {
         id: 'company-6',
@@ -108,8 +108,8 @@ export class DemoDataGenerator {
           health_safety_priority: 8,
           guest_safety: 'critical'
         },
-        createdAt: new Date('2024-02-20'),
-        updatedAt: new Date('2024-02-25')
+        createdAt: '2024-02-20',
+        updatedAt: '2024-02-25'
       },
       {
         id: 'company-7',
@@ -126,8 +126,8 @@ export class DemoDataGenerator {
           reference_willingness: 'high',
           innovation_focus: 'high'
         },
-        createdAt: new Date('2024-01-30'),
-        updatedAt: new Date('2024-02-12')
+        createdAt: '2024-01-30',
+        updatedAt: '2024-02-12'
       },
       {
         id: 'company-8',
@@ -143,8 +143,8 @@ export class DemoDataGenerator {
           brand_influence: 9,
           market_reach: 'national'
         },
-        createdAt: new Date('2024-02-05'),
-        updatedAt: new Date('2024-02-18')
+        createdAt: '2024-02-05',
+        updatedAt: '2024-02-18'
       }
     ];
   }
@@ -160,8 +160,8 @@ export class DemoDataGenerator {
         phone: '+1-555-0101',
         title: 'Chief Technology Officer',
         role: 'decision-maker',
-        createdAt: new Date('2024-01-15'),
-        updatedAt: new Date('2024-01-20')
+        createdAt: '2024-01-15',
+        updatedAt: '2024-01-20'
       },
       {
         id: 'contact-2',
@@ -172,8 +172,8 @@ export class DemoDataGenerator {
         phone: '+1-555-0102',
         title: 'VP of Engineering',
         role: 'champion',
-        createdAt: new Date('2024-01-16'),
-        updatedAt: new Date('2024-01-22')
+        createdAt: '2024-01-16',
+        updatedAt: '2024-01-22'
       },
       {
         id: 'contact-3',
@@ -184,8 +184,8 @@ export class DemoDataGenerator {
         phone: '+1-555-0201',
         title: 'Chief Data Officer',
         role: 'decision-maker',
-        createdAt: new Date('2024-02-01'),
-        updatedAt: new Date('2024-02-10')
+        createdAt: '2024-02-01',
+        updatedAt: '2024-02-10'
       },
       {
         id: 'contact-4',
@@ -196,8 +196,8 @@ export class DemoDataGenerator {
         phone: '+1-555-0301',
         title: 'Head of Infrastructure',
         role: 'influencer',
-        createdAt: new Date('2024-01-25'),
-        updatedAt: new Date('2024-02-05')
+        createdAt: '2024-01-25',
+        updatedAt: '2024-02-05'
       },
       {
         id: 'contact-5',
@@ -208,8 +208,8 @@ export class DemoDataGenerator {
         phone: '+1-555-0401',
         title: 'Chief Financial Officer',
         role: 'decision-maker',
-        createdAt: new Date('2024-02-10'),
-        updatedAt: new Date('2024-02-15')
+        createdAt: '2024-02-10',
+        updatedAt: '2024-02-15'
       },
       {
         id: 'contact-6',
@@ -220,8 +220,8 @@ export class DemoDataGenerator {
         phone: '+1-555-0501',
         title: 'VP of Product',
         role: 'champion',
-        createdAt: new Date('2024-01-30'),
-        updatedAt: new Date('2024-02-12')
+        createdAt: '2024-01-30',
+        updatedAt: '2024-02-12'
       },
       {
         id: 'contact-7',
@@ -232,8 +232,8 @@ export class DemoDataGenerator {
         phone: '+1-555-0601',
         title: 'Chief Operating Officer',
         role: 'decision-maker',
-        createdAt: new Date('2024-02-05'),
-        updatedAt: new Date('2024-02-18')
+        createdAt: '2024-02-05',
+        updatedAt: '2024-02-18'
       }
     ];
   }
@@ -241,7 +241,7 @@ export class DemoDataGenerator {
   static generateMEDDPICCData(stage: string): MEDDPICC {
     const baseData = {
       score: Math.floor(Math.random() * 40) + 60, // 60-100
-      lastAiAnalysis: new Date()
+      lastAiAnalysis: new Date().toISOString()
     };
 
     switch (stage) {
@@ -327,11 +327,11 @@ export class DemoDataGenerator {
         value: 750000,
         stage: 'engage',
         probability: 75,
-        expectedCloseDate: new Date('2024-05-15'),
+        expectedCloseDate: '2024-05-15',
         ownerId: 'user-1',
         meddpicc: this.generateMEDDPICCData('engage'),
-        createdAt: new Date('2024-01-15'),
-        updatedAt: new Date('2024-02-20')
+        createdAt: '2024-01-15',
+        updatedAt: '2024-02-20'
       },
       {
         id: 'opp-2',
@@ -342,11 +342,11 @@ export class DemoDataGenerator {
         value: 450000,
         stage: 'prospect',
         probability: 35,
-        expectedCloseDate: new Date('2024-06-30'),
+        expectedCloseDate: '2024-06-30',
         ownerId: 'user-2',
         meddpicc: this.generateMEDDPICCData('prospect'),
-        createdAt: new Date('2024-02-01'),
-        updatedAt: new Date('2024-02-18')
+        createdAt: '2024-02-01',
+        updatedAt: '2024-02-18'
       },
       {
         id: 'opp-3',
@@ -357,11 +357,11 @@ export class DemoDataGenerator {
         value: 1200000,
         stage: 'acquire',
         probability: 90,
-        expectedCloseDate: new Date('2024-04-10'),
+        expectedCloseDate: '2024-04-10',
         ownerId: 'user-1',
         meddpicc: this.generateMEDDPICCData('acquire'),
-        createdAt: new Date('2024-01-25'),
-        updatedAt: new Date('2024-02-22')
+        createdAt: '2024-01-25',
+        updatedAt: '2024-02-22'
       },
       {
         id: 'opp-4',
@@ -372,11 +372,11 @@ export class DemoDataGenerator {
         value: 320000,
         stage: 'engage',
         probability: 65,
-        expectedCloseDate: new Date('2024-07-20'),
+        expectedCloseDate: '2024-07-20',
         ownerId: 'user-3',
         meddpicc: this.generateMEDDPICCData('engage'),
-        createdAt: new Date('2024-02-10'),
-        updatedAt: new Date('2024-02-20')
+        createdAt: '2024-02-10',
+        updatedAt: '2024-02-20'
       },
       {
         id: 'opp-5',
@@ -387,11 +387,11 @@ export class DemoDataGenerator {
         value: 890000,
         stage: 'prospect',
         probability: 25,
-        expectedCloseDate: new Date('2024-08-15'),
+        expectedCloseDate: '2024-08-15',
         ownerId: 'user-2',
         meddpicc: this.generateMEDDPICCData('prospect'),
-        createdAt: new Date('2024-01-30'),
-        updatedAt: new Date('2024-02-15')
+        createdAt: '2024-01-30',
+        updatedAt: '2024-02-15'
       },
       {
         id: 'opp-6',
@@ -402,11 +402,11 @@ export class DemoDataGenerator {
         value: 1500000,
         stage: 'keep',
         probability: 95,
-        expectedCloseDate: new Date('2024-03-30'),
+        expectedCloseDate: '2024-03-30',
         ownerId: 'user-1',
         meddpicc: this.generateMEDDPICCData('keep'),
-        createdAt: new Date('2024-02-05'),
-        updatedAt: new Date('2024-02-25')
+        createdAt: '2024-02-05',
+        updatedAt: '2024-02-25'
       }
     ];
 

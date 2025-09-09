@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useKV } from '@github/spark/hooks';
 import {
-  Settings,
+  Gear as Settings,
   Globe,
   Database,
   Envelope,
@@ -70,60 +70,67 @@ interface SystemConfig {
   };
 }
 
-export function SystemConfiguration() {
-  const [config, setConfig] = useKV<SystemConfig>('system-config', {
-    general: {
-      systemName: 'FulQrun CRM',
-      supportEmail: 'support@fulqrun.com',
-      timezone: 'UTC',
-      dateFormat: 'MM/DD/YYYY',
-      language: 'en',
-      enableRegistration: false,
-      maintenanceMode: false
-    },
-    security: {
-      passwordMinLength: 8,
-      requireMFA: false,
-      sessionTimeout: 480,
-      maxLoginAttempts: 5,
-      enableAuditLogging: true,
-      dataRetentionDays: 365
-    },
-    email: {
-      smtpHost: '',
-      smtpPort: 587,
-      smtpSecurity: 'tls',
-      enableEmailNotifications: true,
-      fromAddress: 'noreply@fulqrun.com',
-      fromName: 'FulQrun CRM'
-    },
-    integrations: {
-      enableSlack: false,
-      enableMicrosoftTeams: false,
-      enableSalesforce: false,
-      enableHubspot: false,
-      webhookUrl: '',
-      apiRateLimit: 1000
-    },
-    performance: {
-      cacheEnabled: true,
-      cacheTTL: 3600,
-      enableCompression: true,
-      maxFileUploadSize: 10,
-      backgroundJobsEnabled: true
-    }
-  });
+const defaultSystemConfig: SystemConfig = {
+  general: {
+    systemName: 'FulQrun CRM',
+    supportEmail: 'support@fulqrun.com',
+    timezone: 'UTC',
+    dateFormat: 'MM/DD/YYYY',
+    language: 'en',
+    enableRegistration: false,
+    maintenanceMode: false
+  },
+  security: {
+    passwordMinLength: 8,
+    requireMFA: false,
+    sessionTimeout: 30,
+    maxLoginAttempts: 5,
+    enableAuditLogging: true,
+    dataRetentionDays: 90
+  },
+  email: {
+    smtpHost: '',
+    smtpPort: 587,
+    smtpSecurity: 'tls',
+    enableEmailNotifications: true,
+    fromAddress: 'noreply@fulqrun.com',
+    fromName: 'FulQrun CRM'
+  },
+  integrations: {
+    enableSlack: false,
+    enableMicrosoftTeams: false,
+    enableSalesforce: false,
+    enableHubspot: false,
+    webhookUrl: '',
+    apiRateLimit: 1000
+  },
+  performance: {
+    cacheEnabled: true,
+    cacheTTL: 3600,
+    enableCompression: true,
+    maxFileUploadSize: 10,
+    backgroundJobsEnabled: true
+  }
+};
 
+export function SystemConfiguration() {
+  const [config, setConfig] = useKV<SystemConfig>('system-config', defaultSystemConfig);
   const [unsavedChanges, setUnsavedChanges] = useState(false);
 
   const updateConfig = (section: keyof SystemConfig, field: string, value: any) => {
-    setConfig(current => ({
-      ...current,
-      [section]: {
-        ...current[section],
-        [field]: value
+    setConfig(current => {
+      if (!current) {
+        // Initialize with default config if current is undefined
+        return defaultSystemConfig;
       }
-    }));
+      return {
+        ...current,
+        [section]: {
+          ...current[section],
+          [field]: value
+        }
+      };
+    });
     setUnsavedChanges(true);
   };
 
@@ -154,6 +161,15 @@ export function SystemConfiguration() {
 
   return (
     <div className="p-6 space-y-6">
+      {/* Loading check */}
+      {!config && (
+        <div className="flex items-center justify-center py-8">
+          <div className="text-muted-foreground">Loading configuration...</div>
+        </div>
+      )}
+      
+      {config && (
+        <>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -660,6 +676,8 @@ export function SystemConfiguration() {
           </Card>
         </TabsContent>
       </Tabs>
+      </>
+      )}
     </div>
   );
 }

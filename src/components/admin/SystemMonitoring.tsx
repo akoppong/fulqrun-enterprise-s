@@ -10,16 +10,16 @@ import {
   Activity,
   Cpu,
   HardDrive,
-  MemoryStick,
+  Memory as MemoryStick,
   Globe,
   Database,
   Clock,
-  TrendingUp,
-  AlertTriangle,
+  TrendUp as TrendingUp,
+  WarningCircle as AlertTriangle,
   CheckCircle,
   XCircle,
   Eye,
-  Refresh
+  ArrowClockwise as Refresh
 } from '@phosphor-icons/react';
 
 interface SystemMetrics {

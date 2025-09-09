@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { DateValidator } from './date-validation'
+import { DATE_FORMATS } from './date-utils'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -43,7 +44,7 @@ export function safeFormatDate(
  */
 export function formatDateSafe(
   date: string | Date | number | null | undefined,
-  format: 'ISO' | 'display' | 'compact' = 'display',
+  format: keyof typeof DATE_FORMATS | 'local' | 'timestamp' = 'DISPLAY',
   fallback: string = 'Invalid Date'
 ): string {
   const result = DateValidator.validate(date);

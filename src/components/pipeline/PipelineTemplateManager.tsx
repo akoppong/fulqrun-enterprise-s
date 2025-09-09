@@ -143,7 +143,7 @@ export function PipelineTemplateManager({ onPipelineSelect }: PipelineTemplateMa
                         {stage.name}
                       </Badge>
                     ))}
-                    )}
+                    {pipeline.stages.length > 3 && (
                       <Badge variant="outline" className="text-xs">
                         +{pipeline.stages.length - 3} more
                       </Badge>

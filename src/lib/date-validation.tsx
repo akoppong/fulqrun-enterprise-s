@@ -183,7 +183,7 @@ export class DateValidator {
   /**
    * Normalizes dates for display to users
    */
-  static normalizeForDisplay(input: DateInput, format: 'display' | 'compact' = 'display'): string {
+  static normalizeForDisplay(input: DateInput, format: keyof typeof DATE_FORMATS = 'DISPLAY'): string {
     const result = this.validate(input);
     if (!result.isValid || !result.normalizedDate) {
       return 'Invalid Date';
