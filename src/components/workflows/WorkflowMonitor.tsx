@@ -182,9 +182,17 @@ export function WorkflowMonitor({ className }: WorkflowMonitorProps) {
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   };
 
-  const calculateDuration = (startDate: Date, endDate?: Date) => {
-    const end = endDate || new Date();
-    const diff = end.getTime() - startDate.getTime();
+  const calculateDuration = (startDate: Date | string, endDate?: Date | string) => {
+    // Ensure we have valid Date objects
+    const start = new Date(startDate);
+    const end = endDate ? new Date(endDate) : new Date();
+    
+    // Validate the dates
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return '0h 0m';
+    }
+    
+    const diff = end.getTime() - start.getTime();
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     return `${hours}h ${minutes}m`;
@@ -320,7 +328,7 @@ export function WorkflowMonitor({ className }: WorkflowMonitorProps) {
                       <div>
                         <CardTitle className="text-lg">{template?.name || 'Unknown Workflow'}</CardTitle>
                         <CardDescription>
-                          Opportunity: {execution.opportunityId} • Started {execution.startedAt.toLocaleString()}
+                          Opportunity: {execution.opportunityId} • Started {new Date(execution.startedAt).toLocaleString()}
                         </CardDescription>
                       </div>
                     </div>
@@ -446,12 +454,12 @@ export function WorkflowMonitor({ className }: WorkflowMonitorProps) {
                                     <div className="grid grid-cols-2 gap-4 text-sm">
                                       <div>
                                         <span className="font-medium">Started:</span>
-                                        <span className="ml-2">{result.startedAt.toLocaleString()}</span>
+                                        <span className="ml-2">{new Date(result.startedAt).toLocaleString()}</span>
                                       </div>
                                       {result.completedAt && (
                                         <div>
                                           <span className="font-medium">Completed:</span>
-                                          <span className="ml-2">{result.completedAt.toLocaleString()}</span>
+                                          <span className="ml-2">{new Date(result.completedAt).toLocaleString()}</span>
                                         </div>
                                       )}
                                       {result.assignedTo && (
@@ -484,7 +492,7 @@ export function WorkflowMonitor({ className }: WorkflowMonitorProps) {
                           <Play className="h-4 w-4 text-blue-500" />
                           <div>
                             <p className="font-medium">Workflow Started</p>
-                            <p className="text-sm text-muted-foreground">{selectedExecution.startedAt.toLocaleString()}</p>
+                            <p className="text-sm text-muted-foreground">{new Date(selectedExecution.startedAt).toLocaleString()}</p>
                           </div>
                         </div>
                         {getExecutionComments(selectedExecution.id)
@@ -494,7 +502,7 @@ export function WorkflowMonitor({ className }: WorkflowMonitorProps) {
                               <AlertTriangle className="h-4 w-4 text-yellow-500" />
                               <div>
                                 <p className="font-medium">{comment.message}</p>
-                                <p className="text-sm text-muted-foreground">{comment.timestamp.toLocaleString()}</p>
+                                <p className="text-sm text-muted-foreground">{new Date(comment.timestamp).toLocaleString()}</p>
                               </div>
                             </div>
                           ))}
@@ -503,7 +511,7 @@ export function WorkflowMonitor({ className }: WorkflowMonitorProps) {
                             <CheckCircle className="h-4 w-4 text-green-500" />
                             <div>
                               <p className="font-medium">Workflow Completed</p>
-                              <p className="text-sm text-muted-foreground">{selectedExecution.completedAt.toLocaleString()}</p>
+                              <p className="text-sm text-muted-foreground">{new Date(selectedExecution.completedAt).toLocaleString()}</p>
                             </div>
                           </div>
                         )}
