@@ -433,7 +433,7 @@ export function OpportunityList() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Values</SelectItem>
-                  <SelectItem value="small">< $10K</SelectItem>
+                  <SelectItem value="small">&lt; $10K</SelectItem>
                   <SelectItem value="medium">$10K - $100K</SelectItem>
                   <SelectItem value="large">$100K - $1M</SelectItem>
                   <SelectItem value="enterprise">$1M+</SelectItem>
