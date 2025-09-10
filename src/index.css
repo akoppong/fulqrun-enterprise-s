@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 @import "tw-animate-css";
+@import "react-grid-layout/css/styles.css";
+@import "react-resizable/css/styles.css";
 
 /* === BASE STYLES === */
 
@@ -260,19 +262,18 @@ body {
   cursor: se-resize;
   width: 20px;
   height: 20px;
-  background: linear-gradient(-45deg, transparent 0%, transparent 40%, hsl(var(--primary)) 40%, hsl(var(--primary)) 60%, transparent 60%);
+  background: transparent;
   border-top-left-radius: 4px;
-  opacity: 0;
-  transition: opacity 200ms ease;
+  opacity: 1;
+  z-index: 10;
 }
 
 .react-grid-item:hover .react-resizable-handle-se {
-  opacity: 0.8;
+  opacity: 1;
 }
 
 .react-grid-item.resizing .react-resizable-handle-se {
   opacity: 1;
-  background: hsl(var(--primary));
 }
 
 /* Widget resize animations */

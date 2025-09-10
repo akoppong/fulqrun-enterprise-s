@@ -354,6 +354,8 @@ export function CustomKPILayoutDashboard({ user, className = '' }: CustomKPILayo
   const handleLayoutChange = useCallback((newLayout: Layout[]) => {
     if (!currentLayout || !isEditMode) return;
 
+    console.log('Layout change detected:', newLayout);
+
     const updatedKPIItems = currentLayout.kpiItems.map(item => {
       const layoutItem = newLayout.find(l => l.i === item.id);
       if (layoutItem) {
@@ -375,6 +377,8 @@ export function CustomKPILayoutDashboard({ user, className = '' }: CustomKPILayo
       kpiItems: updatedKPIItems,
       updatedAt: new Date(),
     };
+
+    console.log('Saving updated layout:', updatedLayout);
 
     setDashboardLayouts(current =>
       current.map(layout =>
@@ -475,6 +479,8 @@ export function CustomKPILayoutDashboard({ user, className = '' }: CustomKPILayo
 
   const confirmDeleteWidget = useCallback(() => {
     if (!deleteConfirmation || !currentLayout) return;
+
+    console.log('Deleting widget:', deleteConfirmation);
 
     const updatedLayout: CustomDashboardLayout = {
       ...currentLayout,
@@ -640,7 +646,9 @@ export function CustomKPILayoutDashboard({ user, className = '' }: CustomKPILayo
     minH: 1,
     maxW: 12,
     maxH: 8,
+    isDraggable: isEditMode,
     isResizable: isEditMode,
+    static: !isEditMode,
   }));
 
   return (
@@ -955,6 +963,8 @@ export function CustomKPILayoutDashboard({ user, className = '' }: CustomKPILayo
             preventCollision={false}
             autoSize={true}
             draggableHandle=".drag-handle"
+            resizeHandles={['se']}
+            compactType={null}
           >
             {currentLayout.kpiItems.filter(item => item.visible).map(item => {
               const kpiData = availableKPIs.find(kpi => kpi.id === item.kpiId);
@@ -964,8 +974,8 @@ export function CustomKPILayoutDashboard({ user, className = '' }: CustomKPILayo
                 <div key={item.id} className="relative group">
                   <Card className={`h-full transition-all duration-200 relative overflow-hidden ${
                     isEditMode 
-                      ? 'ring-2 ring-transparent hover:ring-primary/50 cursor-move group' 
-                      : 'hover:shadow-lg'
+                      ? 'ring-2 ring-primary/20 hover:ring-primary/50 cursor-move group border-primary/30' 
+                      : 'hover:shadow-lg border-border'
                   } ${!item.visible ? 'opacity-50' : ''}`}>
                     {isEditMode && (
                       <>
@@ -973,7 +983,7 @@ export function CustomKPILayoutDashboard({ user, className = '' }: CustomKPILayo
                         <div className="absolute inset-0 bg-gradient-to-br from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[5]" />
                         
                         {/* Top Controls */}
-                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-auto">
                           <WidgetResizeControls
                             itemId={item.id}
                             itemName={kpiData?.title || 'Widget'}
@@ -993,7 +1003,7 @@ export function CustomKPILayoutDashboard({ user, className = '' }: CustomKPILayo
                         </div>
 
                         {/* Drag Handle */}
-                        <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                        <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 drag-handle pointer-events-auto">
                           <WidgetDragHandle />
                         </div>
 
@@ -1006,9 +1016,13 @@ export function CustomKPILayoutDashboard({ user, className = '' }: CustomKPILayo
                         </div>
 
                         {/* Enhanced Resize Handle */}
-                        <div className="absolute bottom-0 right-0 w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <div className="w-full h-full bg-gradient-to-tl from-primary/30 to-transparent rounded-tl-lg flex items-center justify-center">
-                            <div className="w-3 h-3 border-r-2 border-b-2 border-primary/80 transform rotate-45" />
+                        <div className="absolute bottom-0 right-0 w-6 h-6 opacity-70 group-hover:opacity-100 transition-opacity cursor-se-resize">
+                          <div className="w-full h-full bg-gradient-to-tl from-primary/60 to-transparent rounded-tl-lg flex items-end justify-end">
+                            <div className="w-4 h-4 flex flex-col items-end justify-end gap-0.5 p-0.5">
+                              <div className="w-2 h-0.5 bg-primary/90 rounded-full" />
+                              <div className="w-1.5 h-0.5 bg-primary/90 rounded-full" />
+                              <div className="w-1 h-0.5 bg-primary/90 rounded-full" />
+                            </div>
                           </div>
                         </div>
 
@@ -1027,7 +1041,7 @@ export function CustomKPILayoutDashboard({ user, className = '' }: CustomKPILayo
                       data={kpiData}
                       size={item.customizations?.size || 'md'}
                       variant={item.customizations?.variant || 'default'}
-                      className="h-full border-0 shadow-none"
+                      className={`h-full border-0 shadow-none ${isEditMode ? 'pointer-events-none' : ''}`}
                     />
                   </Card>
                 </div>

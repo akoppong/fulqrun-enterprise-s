@@ -304,7 +304,7 @@ export function WidgetDragHandle({ className = '' }: { className?: string }) {
     <Button
       variant="secondary"
       size="sm"
-      className={`h-7 w-7 p-0 bg-background/95 backdrop-blur-sm border shadow-sm drag-handle cursor-move hover:scale-105 transition-transform ${className}`}
+      className={`h-7 w-7 p-0 bg-background/95 backdrop-blur-sm border shadow-sm cursor-move hover:scale-105 transition-transform ${className}`}
       title="Drag to move"
     >
       <Move className="h-3 w-3" />
