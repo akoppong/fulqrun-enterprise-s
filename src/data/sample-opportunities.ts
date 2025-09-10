@@ -105,6 +105,10 @@ export const sampleOpportunities: Opportunity[] = [
     probability: 75,
     expectedCloseDate: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString(), // 45 days from now
     ownerId: 'user-1',
+    priority: 'high',
+    industry: 'technology',
+    leadSource: 'referral',
+    tags: ['enterprise', 'crm', 'migration'],
     meddpicc: {
       metrics: 'Expecting 30% improvement in sales productivity and 25% reduction in customer onboarding time. ROI projected at $1.2M annually.',
       economicBuyer: 'Sarah Johnson (CTO) has budget authority up to $500K. Final approval over $400K requires board consent.',
@@ -140,6 +144,10 @@ export const sampleOpportunities: Opportunity[] = [
     probability: 85,
     expectedCloseDate: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString(), // 20 days from now
     ownerId: 'user-1',
+    priority: 'critical',
+    industry: 'manufacturing',
+    leadSource: 'trade show',
+    tags: ['automation', 'quality-control', 'production'],
     meddpicc: {
       metrics: 'Target 40% reduction in downtime, 20% increase in production efficiency. Expected payback in 18 months.',
       economicBuyer: 'CFO James Wilson has been identified as final decision maker. Budget approved in current fiscal year.',
@@ -175,6 +183,10 @@ export const sampleOpportunities: Opportunity[] = [
     probability: 35,
     expectedCloseDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(), // 90 days from now
     ownerId: 'user-1',
+    priority: 'medium',
+    industry: 'healthcare',
+    leadSource: 'website',
+    tags: ['healthcare', 'analytics', 'compliance'],
     meddpicc: {
       metrics: 'Targeting 15% improvement in patient outcomes, 25% reduction in administrative costs. Compliance benefits difficult to quantify.',
       economicBuyer: 'David Thompson (CIO) has budget authority. CEO approval required for strategic initiatives over $250K.',

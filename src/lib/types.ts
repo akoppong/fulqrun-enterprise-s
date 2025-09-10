@@ -70,6 +70,10 @@ export interface Opportunity {
   probability: number;
   expectedCloseDate: string; // ISO date string for reliable serialization
   ownerId: string;
+  priority?: 'low' | 'medium' | 'high' | 'critical';
+  industry?: string;
+  leadSource?: string;
+  tags?: string[];
   meddpicc: MEDDPICC;
   createdAt: string; // ISO date string for reliable serialization
   updatedAt: string; // ISO date string for reliable serialization

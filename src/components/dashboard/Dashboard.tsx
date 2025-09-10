@@ -18,6 +18,7 @@ import { CustomizableDashboard } from './CustomizableDashboard';
 import { CustomKPILayoutDashboard } from './CustomKPILayoutDashboard';
 import { PipelineView } from './PipelineView';
 import { OpportunityList } from './OpportunityList';
+import { OpportunitiesView } from '../opportunities/OpportunitiesView';
 import { ContactsView } from './ContactsView';
 import { AnalyticsView } from './AnalyticsView';
 import { CSTPVDashboard } from './CSTPVDashboard';
@@ -175,7 +176,7 @@ export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialV
       case 'pipeline':
         return <PipelineView />;
       case 'opportunities':
-        return <OpportunityList />;
+        return <OpportunitiesView />;
       case 'contacts':
         return <ContactsView />;
       case 'companies':
