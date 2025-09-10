@@ -1,390 +1,444 @@
-import React, { useState, useMemo } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
+import { PHARMA_SALES_KPI_TEMPLATES, PHARMA_DASHBOARD_TEMPLATES } from '@/data/pharma-kpi-templates';
 import { 
-  pharmaceuticalKPITemplates, 
-  getPharmaceuticalCategories, 
-  getPharmaceuticalTemplatesByCategory,
-  searchPharmaceuticalTemplates 
-} from '@/data/pharmaceutical-kpi-templates';
-import { KPITemplate, KPITemplateMetric } from '@/lib/types';
-import { Search, Plus, Target, TrendingUp, BarChart3, Activity, DollarSign, Users, FileText, Zap } from '@phosphor-icons/react';
-import { toast } from 'sonner';
+  DollarSign, 
+  Target, 
+  Activity, 
+  Shield, 
+  MapPin,
+  TrendingUp,
+  TrendingDown,
+  Users,
+  FileText,
+  Clock,
+  Award,
+  AlertTriangle,
+  CheckCircle
+} from '@phosphor-icons/react';
 
 interface PharmaceuticalKPITemplatesProps {
-  onSelectTemplate: (template: KPITemplate) => void;
+  onApplyTemplate: (templateData: any) => void;
+  onCreateKPI: (kpiData: any) => void;
 }
 
-export function PharmaceuticalKPITemplates({ onSelectTemplate }: PharmaceuticalKPITemplatesProps) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedTemplate, setSelectedTemplate] = useState<KPITemplate | null>(null);
-
-  const categories = getPharmaceuticalCategories();
-  
-  const filteredTemplates = useMemo(() => {
-    let templates = pharmaceuticalKPITemplates;
-    
-    if (searchTerm) {
-      templates = searchPharmaceuticalTemplates(searchTerm);
-    }
-    
-    if (selectedCategory !== 'all') {
-      templates = templates.filter(template => template.category === selectedCategory);
-    }
-    
-    return templates;
-  }, [searchTerm, selectedCategory]);
+export function PharmaceuticalKPITemplates({ onApplyTemplate, onCreateKPI }: PharmaceuticalKPITemplatesProps) {
+  const [selectedCategory, setSelectedCategory] = useState('revenue');
+  const [selectedDashboard, setSelectedDashboard] = useState('territory_manager');
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'Revenue & Financial': return <DollarSign className="w-4 h-4" />;
-      case 'Pipeline Management': return <BarChart3 className="w-4 h-4" />;
-      case 'Lead Management': return <Target className="w-4 h-4" />;
-      case 'Customer Success': return <Users className="w-4 h-4" />;
-      case 'Sales Performance': return <TrendingUp className="w-4 h-4" />;
-      case 'Compliance & Quality': return <FileText className="w-4 h-4" />;
-      case 'Product Management': return <Activity className="w-4 h-4" />;
-      case 'Digital Marketing': return <Zap className="w-4 h-4" />;
-      default: return <BarChart3 className="w-4 h-4" />;
+      case 'revenue': return <DollarSign className="w-5 h-5" />;
+      case 'market_access': return <Target className="w-5 h-5" />;
+      case 'clinical': return <Activity className="w-5 h-5" />;
+      case 'compliance': return <Shield className="w-5 h-5" />;
+      case 'territory': return <MapPin className="w-5 h-5" />;
+      default: return <Award className="w-5 h-5" />;
     }
   };
 
-  const getMetricIcon = (type: string) => {
-    switch (type) {
-      case 'currency': return <DollarSign className="w-3 h-3" />;
-      case 'percentage': return <TrendingUp className="w-3 h-3" />;
-      case 'number': return <BarChart3 className="w-3 h-3" />;
-      default: return <Activity className="w-3 h-3" />;
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'revenue': return 'text-green-600 bg-green-100';
+      case 'market_access': return 'text-blue-600 bg-blue-100';
+      case 'clinical': return 'text-purple-600 bg-purple-100';
+      case 'compliance': return 'text-red-600 bg-red-100';
+      case 'territory': return 'text-orange-600 bg-orange-100';
+      default: return 'text-gray-600 bg-gray-100';
     }
   };
 
-  const formatMetricValue = (metric: KPITemplateMetric) => {
-    if (metric.type === 'currency') {
-      return new Intl.NumberFormat('en-US', { 
-        style: 'currency', 
-        currency: 'USD',
-        notation: metric.current >= 1000000 ? 'compact' : 'standard'
-      }).format(metric.current);
-    }
-    if (metric.type === 'percentage') {
-      return `${metric.current}%`;
-    }
-    return new Intl.NumberFormat('en-US', { 
-      notation: metric.current >= 1000 ? 'compact' : 'standard' 
-    }).format(metric.current);
+  const formatBenchmark = (value: number, unit: string) => {
+    return unit === '$' ? `$${value.toLocaleString()}` : `${value}${unit}`;
   };
 
-  const getProgressPercentage = (metric: KPITemplateMetric) => {
-    if (metric.trend === 'lower-better') {
-      // For metrics where lower is better, flip the calculation
-      const efficiency = Math.min((metric.target / metric.current) * 100, 100);
-      return Math.max(efficiency, 0);
-    }
-    return Math.min((metric.current / metric.target) * 100, 100);
-  };
-
-  const getProgressColor = (percentage: number) => {
-    if (percentage >= 90) return 'bg-green-500';
-    if (percentage >= 70) return 'bg-yellow-500';
-    if (percentage >= 50) return 'bg-orange-500';
-    return 'bg-red-500';
-  };
-
-  const handleUseTemplate = (template: KPITemplate) => {
-    onSelectTemplate(template);
-    toast.success(`Applied "${template.name}" template successfully!`);
+  const getKPIPerformanceStatus = (current: number, target: number, unit: string) => {
+    const ratio = current / target;
+    if (ratio >= 1.1) return { status: 'excellent', color: 'text-green-600', icon: <TrendingUp /> };
+    if (ratio >= 1.0) return { status: 'good', color: 'text-blue-600', icon: <CheckCircle /> };
+    if (ratio >= 0.9) return { status: 'warning', color: 'text-yellow-600', icon: <AlertTriangle /> };
+    return { status: 'poor', color: 'text-red-600', icon: <TrendingDown /> };
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       {/* Header */}
-      <div className="space-y-4">
+      <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">
-            Pharmaceutical B2B Sales KPI Templates
-          </h2>
+          <h1 className="text-3xl font-bold">Pharmaceutical Sales KPI Templates</h1>
           <p className="text-muted-foreground">
-            Pre-configured KPI templates designed for high-performance pharmaceutical sales operations
+            Industry-specific KPI templates optimized for pharmaceutical B2B sales operations
           </p>
         </div>
-
-        {/* Search and Filter */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input
-              placeholder="Search templates..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full sm:w-auto">
-            <TabsList className="grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-9">
-              <TabsTrigger value="all" className="text-xs">All</TabsTrigger>
-              <TabsTrigger value="Revenue & Financial" className="text-xs">Revenue</TabsTrigger>
-              <TabsTrigger value="Pipeline Management" className="text-xs">Pipeline</TabsTrigger>
-              <TabsTrigger value="Lead Management" className="text-xs">Leads</TabsTrigger>
-              <TabsTrigger value="Customer Success" className="text-xs">Customer</TabsTrigger>
-              <TabsTrigger value="Sales Performance" className="text-xs">Sales</TabsTrigger>
-              <TabsTrigger value="Compliance & Quality" className="text-xs">Compliance</TabsTrigger>
-              <TabsTrigger value="Product Management" className="text-xs">Product</TabsTrigger>
-              <TabsTrigger value="Digital Marketing" className="text-xs">Digital</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
+        <Badge variant="outline" className="px-3 py-1">
+          <Activity className="w-4 h-4 mr-1" />
+          Pharma Optimized
+        </Badge>
       </div>
 
-      {/* Templates Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredTemplates.map((template) => (
-          <Card key={template.id} className="hover:shadow-lg transition-shadow duration-200">
-            <CardHeader className="space-y-3">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-2">
+      <Tabs defaultValue="kpi-library" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="kpi-library">KPI Library</TabsTrigger>
+          <TabsTrigger value="dashboard-templates">Dashboard Templates</TabsTrigger>
+          <TabsTrigger value="performance-simulator">Performance Simulator</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="kpi-library" className="space-y-6">
+          {/* Category Selection */}
+          <div className="flex flex-wrap gap-3">
+            {PHARMA_SALES_KPI_TEMPLATES.map((template) => (
+              <button
+                key={template.id}
+                onClick={() => setSelectedCategory(template.category)}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg border transition-all ${
+                  selectedCategory === template.category
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-border hover:bg-muted'
+                }`}
+              >
+                <div className={`p-1 rounded ${getCategoryColor(template.category)}`}>
                   {getCategoryIcon(template.category)}
-                  <Badge variant="secondary" className="text-xs">
-                    {template.category}
-                  </Badge>
                 </div>
-                <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700">
-                  {template.industry}
+                <span className="font-medium capitalize">
+                  {template.category.replace('_', ' ')}
+                </span>
+                <Badge variant="outline" className="ml-2">
+                  {template.kpis.length}
                 </Badge>
-              </div>
-              <CardTitle className="text-lg leading-tight">{template.name}</CardTitle>
-              <CardDescription className="text-sm line-clamp-2">
-                {template.description}
-              </CardDescription>
-            </CardHeader>
-            
-            <CardContent className="space-y-4">
-              {/* Preview Metrics */}
-              <div className="space-y-3">
-                <h4 className="text-sm font-medium text-muted-foreground">Key Metrics Preview:</h4>
-                {template.metrics.slice(0, 2).map((metric, index) => {
-                  const progress = getProgressPercentage(metric);
-                  return (
-                    <div key={index} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5">
-                          {getMetricIcon(metric.type)}
-                          <span className="text-xs font-medium truncate">{metric.name}</span>
-                        </div>
-                        <span className="text-xs font-bold text-primary">
-                          {formatMetricValue(metric)}
-                        </span>
-                      </div>
-                      <div className="w-full bg-muted rounded-full h-1.5">
-                        <div 
-                          className={`h-1.5 rounded-full transition-all duration-500 ${getProgressColor(progress)}`}
-                          style={{ width: `${progress}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-                {template.metrics.length > 2 && (
-                  <p className="text-xs text-muted-foreground">
-                    +{template.metrics.length - 2} more metrics
+              </button>
+            ))}
+          </div>
+
+          {/* KPI Details */}
+          {PHARMA_SALES_KPI_TEMPLATES.filter(t => t.category === selectedCategory).map((template) => (
+            <div key={template.id} className="space-y-4">
+              <div className="flex items-center space-x-3">
+                <div className={`p-2 rounded-lg ${getCategoryColor(template.category)}`}>
+                  {getCategoryIcon(template.category)}
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold capitalize">
+                    {template.category.replace('_', ' ')} KPIs
+                  </h3>
+                  <p className="text-muted-foreground">
+                    {template.kpis.length} key performance indicators
                   </p>
-                )}
+                </div>
               </div>
 
-              {/* Tags */}
-              <div className="flex flex-wrap gap-1">
-                {template.tags.slice(0, 3).map((tag) => (
-                  <Badge key={tag} variant="outline" className="text-xs px-2 py-0.5">
-                    {tag}
-                  </Badge>
-                ))}
-                {template.tags.length > 3 && (
-                  <Badge variant="outline" className="text-xs px-2 py-0.5">
-                    +{template.tags.length - 3}
-                  </Badge>
-                )}
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-2">
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="flex-1"
-                      onClick={() => setSelectedTemplate(template)}
-                    >
-                      Preview
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-4xl max-h-[90vh]">
-                    <DialogHeader>
-                      <DialogTitle className="flex items-center gap-2">
-                        {getCategoryIcon(template.category)}
-                        {template.name}
-                      </DialogTitle>
-                      <DialogDescription>
-                        {template.description}
-                      </DialogDescription>
-                    </DialogHeader>
-                    
-                    <ScrollArea className="max-h-[60vh]">
-                      <div className="space-y-6">
-                        {/* Template Overview */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div className="text-center p-3 bg-muted/50 rounded-lg">
-                            <div className="text-2xl font-bold text-primary">
-                              {template.metrics.length}
-                            </div>
-                            <div className="text-xs text-muted-foreground">Metrics</div>
-                          </div>
-                          <div className="text-center p-3 bg-muted/50 rounded-lg">
-                            <div className="text-2xl font-bold text-primary">
-                              {template.visualizations.length}
-                            </div>
-                            <div className="text-xs text-muted-foreground">Chart Types</div>
-                          </div>
-                          <div className="text-center p-3 bg-muted/50 rounded-lg">
-                            <div className="text-2xl font-bold text-primary">
-                              {template.tags.length}
-                            </div>
-                            <div className="text-xs text-muted-foreground">Focus Areas</div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {template.kpis.map((kpi, index) => (
+                  <Card key={index} className="border-2 hover:border-primary/30 transition-colors">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <CardTitle className="text-lg">{kpi.name}</CardTitle>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {kpi.description}
+                          </p>
+                        </div>
+                        <Badge variant="outline" className="capitalize">
+                          {kpi.frequency}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {/* Target and Benchmarks */}
+                      <div className="grid grid-cols-3 gap-4 text-center">
+                        <div>
+                          <div className="text-sm text-muted-foreground">Target</div>
+                          <div className="font-bold">
+                            {formatBenchmark(kpi.target, kpi.unit)}
                           </div>
                         </div>
-
-                        {/* All Metrics */}
                         <div>
-                          <h4 className="font-medium mb-3">Complete Metrics Set</h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {template.metrics.map((metric, index) => {
-                              const progress = getProgressPercentage(metric);
-                              return (
-                                <Card key={index}>
-                                  <CardContent className="p-4">
-                                    <div className="space-y-3">
-                                      <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                          {getMetricIcon(metric.type)}
-                                          <h5 className="font-medium text-sm">{metric.name}</h5>
-                                        </div>
-                                        <Badge variant="secondary" className="text-xs">
-                                          {metric.timeframe}
-                                        </Badge>
-                                      </div>
-                                      
-                                      <div className="flex items-center justify-between">
-                                        <div>
-                                          <div className="text-lg font-bold text-primary">
-                                            {formatMetricValue(metric)}
-                                          </div>
-                                          <div className="text-xs text-muted-foreground">
-                                            Target: {metric.type === 'currency' 
-                                              ? new Intl.NumberFormat('en-US', { 
-                                                  style: 'currency', 
-                                                  currency: 'USD',
-                                                  notation: metric.target >= 1000000 ? 'compact' : 'standard'
-                                                }).format(metric.target)
-                                              : metric.type === 'percentage'
-                                              ? `${metric.target}%`
-                                              : new Intl.NumberFormat('en-US', { 
-                                                  notation: metric.target >= 1000 ? 'compact' : 'standard' 
-                                                }).format(metric.target)
-                                            }
-                                          </div>
-                                        </div>
-                                        <div className="text-right">
-                                          <div className="text-sm font-medium">
-                                            {progress.toFixed(1)}%
-                                          </div>
-                                          <div className="w-16 bg-muted rounded-full h-2 mt-1">
-                                            <div 
-                                              className={`h-2 rounded-full ${getProgressColor(progress)}`}
-                                              style={{ width: `${Math.min(progress, 100)}%` }}
-                                            />
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </CardContent>
-                                </Card>
-                              );
-                            })}
+                          <div className="text-sm text-muted-foreground">Industry Avg</div>
+                          <div className="font-medium">
+                            {formatBenchmark(kpi.benchmark.industry, kpi.unit)}
                           </div>
                         </div>
-
-                        {/* Visualizations */}
                         <div>
-                          <h4 className="font-medium mb-3">Available Visualizations</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {template.visualizations.map((viz) => (
-                              <Badge key={viz} variant="outline" className="capitalize">
-                                {viz.replace('_', ' ')}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* All Tags */}
-                        <div>
-                          <h4 className="font-medium mb-3">Focus Areas</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {template.tags.map((tag) => (
-                              <Badge key={tag} variant="secondary" className="capitalize">
-                                {tag.replace('-', ' ')}
-                              </Badge>
-                            ))}
+                          <div className="text-sm text-muted-foreground">Top Quartile</div>
+                          <div className="font-medium text-green-600">
+                            {formatBenchmark(kpi.benchmark.topQuartile, kpi.unit)}
                           </div>
                         </div>
                       </div>
-                    </ScrollArea>
 
-                    <div className="flex justify-end pt-4">
-                      <Button onClick={() => handleUseTemplate(template)}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Use This Template
-                      </Button>
+                      {/* Formula */}
+                      <div>
+                        <div className="text-sm font-medium mb-1">Calculation Method:</div>
+                        <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
+                          {kpi.formula}
+                        </div>
+                      </div>
+
+                      {/* Drill-downs */}
+                      <div>
+                        <div className="text-sm font-medium mb-2">Available Drill-downs:</div>
+                        <div className="flex flex-wrap gap-1">
+                          {kpi.drillDowns.map((drillDown, drillIndex) => (
+                            <Badge key={drillIndex} variant="secondary" className="text-xs">
+                              {drillDown}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex space-x-2 pt-2">
+                        <Button
+                          size="sm"
+                          onClick={() => onCreateKPI({
+                            name: kpi.name,
+                            target: kpi.target,
+                            unit: kpi.unit,
+                            frequency: kpi.frequency,
+                            formula: kpi.formula,
+                            category: template.category
+                          })}
+                          className="flex-1"
+                        >
+                          <Target className="w-4 h-4 mr-1" />
+                          Add to Dashboard
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          <FileText className="w-4 h-4 mr-1" />
+                          Details
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          ))}
+        </TabsContent>
+
+        <TabsContent value="dashboard-templates" className="space-y-6">
+          {/* Dashboard Template Selection */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {Object.entries(PHARMA_DASHBOARD_TEMPLATES).map(([key, template]) => (
+              <Card 
+                key={key}
+                className={`cursor-pointer border-2 transition-all ${
+                  selectedDashboard === key 
+                    ? 'border-primary bg-primary/5' 
+                    : 'border-border hover:border-primary/30'
+                }`}
+                onClick={() => setSelectedDashboard(key)}
+              >
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg">{template.name}</CardTitle>
+                    <Badge variant="outline">
+                      {template.kpis.length} KPIs
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {template.description}
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium">Key Metrics:</div>
+                    <div className="flex flex-wrap gap-1">
+                      {template.kpis.slice(0, 3).map((kpi, index) => (
+                        <Badge key={index} variant="secondary" className="text-xs">
+                          {kpi}
+                        </Badge>
+                      ))}
+                      {template.kpis.length > 3 && (
+                        <Badge variant="outline" className="text-xs">
+                          +{template.kpis.length - 3} more
+                        </Badge>
+                      )}
                     </div>
-                  </DialogContent>
-                </Dialog>
-                
-                <Button 
-                  size="sm" 
-                  className="flex-1"
-                  onClick={() => handleUseTemplate(template)}
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Use Template
-                </Button>
+                  </div>
+                  {selectedDashboard === key && (
+                    <Button 
+                      className="w-full mt-4"
+                      onClick={() => onApplyTemplate({
+                        templateKey: key,
+                        template: template
+                      })}
+                    >
+                      Apply Template
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Selected Template Details */}
+          {selectedDashboard && (
+            <Card className="border-primary/20">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Users className="w-5 h-5 mr-2" />
+                  {PHARMA_DASHBOARD_TEMPLATES[selectedDashboard as keyof typeof PHARMA_DASHBOARD_TEMPLATES].name}
+                </CardTitle>
+                <p className="text-muted-foreground">
+                  Complete KPI breakdown for this role
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {PHARMA_DASHBOARD_TEMPLATES[selectedDashboard as keyof typeof PHARMA_DASHBOARD_TEMPLATES].kpis.map((kpiName, index) => {
+                    // Find the KPI details from the templates
+                    let kpiDetails = null;
+                    for (const template of PHARMA_SALES_KPI_TEMPLATES) {
+                      kpiDetails = template.kpis.find(k => k.name === kpiName);
+                      if (kpiDetails) break;
+                    }
+
+                    if (!kpiDetails) return null;
+
+                    return (
+                      <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div>
+                          <div className="font-medium">{kpiDetails.name}</div>
+                          <div className="text-sm text-muted-foreground">
+                            Target: {formatBenchmark(kpiDetails.target, kpiDetails.unit)} • {kpiDetails.frequency}
+                          </div>
+                        </div>
+                        <Badge variant="outline" className="capitalize">
+                          {kpiDetails.frequency}
+                        </Badge>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="performance-simulator" className="space-y-6">
+          {/* Performance Simulator */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Activity className="w-5 h-5 mr-2" />
+                Pharmaceutical Sales Performance Simulator
+              </CardTitle>
+              <p className="text-muted-foreground">
+                Simulate different performance scenarios to understand KPI relationships
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* Sample Performance Cards */}
+                <div className="space-y-4">
+                  <h4 className="font-medium">Territory Performance</h4>
+                  <div className="space-y-3">
+                    <div className="p-3 border rounded-lg">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm">Monthly Prescription Revenue</span>
+                        <TrendingUp className="w-4 h-4 text-green-600" />
+                      </div>
+                      <div className="text-lg font-bold">$2.3M</div>
+                      <Progress value={92} className="h-2 mt-1" />
+                      <div className="text-xs text-muted-foreground mt-1">
+                        92% of $2.5M target
+                      </div>
+                    </div>
+
+                    <div className="p-3 border rounded-lg">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm">HCP Coverage Rate</span>
+                        <CheckCircle className="w-4 h-4 text-green-600" />
+                      </div>
+                      <div className="text-lg font-bold">89%</div>
+                      <Progress value={89} className="h-2 mt-1" />
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Above 88% target
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="font-medium">Market Access</h4>
+                  <div className="space-y-3">
+                    <div className="p-3 border rounded-lg">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm">Formulary Win Rate</span>
+                        <AlertTriangle className="w-4 h-4 text-yellow-600" />
+                      </div>
+                      <div className="text-lg font-bold">72%</div>
+                      <Progress value={72} className="h-2 mt-1" />
+                      <div className="text-xs text-muted-foreground mt-1">
+                        72% vs 78% target
+                      </div>
+                    </div>
+
+                    <div className="p-3 border rounded-lg">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm">Market Access Coverage</span>
+                        <TrendingUp className="w-4 h-4 text-green-600" />
+                      </div>
+                      <div className="text-lg font-bold">87%</div>
+                      <Progress value={87} className="h-2 mt-1" />
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Above 85% target
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="font-medium">Compliance</h4>
+                  <div className="space-y-3">
+                    <div className="p-3 border rounded-lg">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm">Training Completion</span>
+                        <CheckCircle className="w-4 h-4 text-green-600" />
+                      </div>
+                      <div className="text-lg font-bold">100%</div>
+                      <Progress value={100} className="h-2 mt-1" />
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Meets 100% requirement
+                      </div>
+                    </div>
+
+                    <div className="p-3 border rounded-lg">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm">AE Reporting</span>
+                        <CheckCircle className="w-4 h-4 text-green-600" />
+                      </div>
+                      <div className="text-lg font-bold">99%</div>
+                      <Progress value={99} className="h-2 mt-1" />
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Above 98% target
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-start space-x-3">
+                  <Activity className="w-5 h-5 text-blue-600 mt-0.5" />
+                  <div>
+                    <h4 className="font-medium text-blue-900">Performance Insights</h4>
+                    <p className="text-sm text-blue-700 mt-1">
+                      Based on current performance, focus on improving formulary win rate through enhanced
+                      payer engagement strategies. Your strong HCP coverage provides a solid foundation for
+                      market access improvements.
+                    </p>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
-        ))}
-      </div>
-
-      {/* No Results */}
-      {filteredTemplates.length === 0 && (
-        <div className="text-center py-12">
-          <div className="text-muted-foreground mb-4">
-            <BarChart3 className="w-12 h-12 mx-auto mb-2 opacity-50" />
-            <p>No templates found matching your criteria.</p>
-          </div>
-          <Button 
-            variant="outline" 
-            onClick={() => {
-              setSearchTerm('');
-              setSelectedCategory('all');
-            }}
-          >
-            Clear Filters
-          </Button>
-        </div>
-      )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -2,8 +2,13 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'rep' | 'manager' | 'admin';
+  role: 'rep' | 'manager' | 'bu_head' | 'executive' | 'admin';
   avatar?: string;
+  teamId?: string;
+  managerId?: string;
+  territory?: string;
+  quota?: number;
+  targets?: UserTargets;
 }
 
 export interface Company {
@@ -1112,3 +1117,181 @@ export const CUSTOMER_SEGMENT_TEMPLATES: Omit<CustomerSegment, 'id' | 'createdBy
     icon: 'Shield'
   }
 ];
+
+// User and Team Management Types
+export interface UserTargets {
+  monthly: number;
+  quarterly: number;
+  annual: number;
+}
+
+export interface Team {
+  id: string;
+  name: string;
+  managerId: string;
+  members: string[];
+  targets: UserTargets;
+  region: string;
+}
+
+// Role-Specific Dashboard Types
+export interface RoleDashboardConfig {
+  role: User['role'];
+  widgets: DashboardWidget[];
+  layout: DashboardLayout[];
+  permissions: string[];
+}
+
+export interface DashboardWidget {
+  id: string;
+  type: 'kpi' | 'chart' | 'table' | 'gauge' | 'trend' | 'pipeline' | 'activity' | 'forecast';
+  title: string;
+  dataSource: string;
+  config: Record<string, any>;
+  refreshInterval: number;
+  permissions: string[];
+}
+
+// Sales Performance Types
+export interface SalesPerformanceMetrics {
+  userId: string;
+  period: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+  revenue: {
+    actual: number;
+    target: number;
+    percentage: number;
+  };
+  deals: {
+    closed: number;
+    target: number;
+    percentage: number;
+  };
+  pipeline: {
+    value: number;
+    count: number;
+    velocity: number;
+  };
+  activities: {
+    calls: number;
+    emails: number;
+    meetings: number;
+    demos: number;
+  };
+  conversion: {
+    leadToOpportunity: number;
+    opportunityToClose: number;
+    averageDealSize: number;
+    salesCycle: number;
+  };
+  ranking: {
+    position: number;
+    totalReps: number;
+    percentile: number;
+  };
+}
+
+export interface TeamPerformanceMetrics {
+  teamId: string;
+  managerId: string;
+  period: 'monthly' | 'quarterly' | 'yearly';
+  team: {
+    revenue: {
+      actual: number;
+      target: number;
+      percentage: number;
+    };
+    deals: {
+      closed: number;
+      target: number;
+      percentage: number;
+    };
+    pipeline: {
+      value: number;
+      count: number;
+      velocity: number;
+    };
+  };
+  individual: SalesPerformanceMetrics[];
+  topPerformers: {
+    userId: string;
+    name: string;
+    achievement: number;
+    metric: string;
+  }[];
+  underperformers: {
+    userId: string;
+    name: string;
+    gap: number;
+    riskFactors: string[];
+  }[];
+}
+
+export interface ExecutiveDashboardMetrics {
+  period: 'monthly' | 'quarterly' | 'yearly';
+  global: {
+    revenue: {
+      actual: number;
+      target: number;
+      forecast: number;
+      growth: number;
+    };
+    deals: {
+      closed: number;
+      pipeline: number;
+      forecast: number;
+    };
+    performance: {
+      attainment: number;
+      velocity: number;
+      conversion: number;
+    };
+  };
+  regions: {
+    id: string;
+    name: string;
+    revenue: number;
+    target: number;
+    growth: number;
+  }[];
+  segments: {
+    id: string;
+    name: string;
+    contribution: number;
+    growth: number;
+    opportunities: number;
+  }[];
+  trends: {
+    period: string;
+    revenue: number;
+    deals: number;
+    velocity: number;
+  }[];
+  risks: {
+    type: 'pipeline' | 'forecast' | 'competitive' | 'market';
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    description: string;
+    impact: number;
+    mitigation: string[];
+  }[];
+}
+
+// Pharmaceutical Industry KPI Templates
+export interface PharmaSalesKPITemplate {
+  id: string;
+  category: 'revenue' | 'market_access' | 'clinical' | 'compliance' | 'territory';
+  kpis: PharmaSalesKPI[];
+}
+
+export interface PharmaSalesKPI {
+  name: string;
+  description: string;
+  formula: string;
+  target: number;
+  unit: string;
+  frequency: 'daily' | 'weekly' | 'monthly' | 'quarterly';
+  benchmark: {
+    industry: number;
+    topQuartile: number;
+  };
+  drillDowns: string[];
+}
