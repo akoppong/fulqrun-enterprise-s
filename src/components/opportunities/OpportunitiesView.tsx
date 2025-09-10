@@ -213,15 +213,15 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
   };
 
   return (
-    <div className={`w-full max-w-none ${className}`}>
+    <div className={`w-full max-w-full ${className}`}>
       {/* Modern Header with Glass Effect */}
-      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border/50 px-8 py-6 mb-8">
-        <div className="flex items-center justify-between max-w-none">
+      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border/50 px-4 lg:px-6 py-6 mb-6">
+        <div className="flex items-center justify-between w-full">
           <div className="space-y-1">
-            <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+            <h1 className="text-3xl lg:text-4xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
               Sales Opportunities
             </h1>
-            <p className="text-lg text-muted-foreground">
+            <p className="text-base lg:text-lg text-muted-foreground">
               Track and manage your sales pipeline with PEAK methodology and MEDDPICC qualification
             </p>
           </div>
@@ -229,14 +229,14 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
             <Button 
               onClick={() => setIsTestViewOpen(true)}
               variant="outline"
-              className="h-11 px-6 font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+              className="h-11 px-4 lg:px-6 font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
               size="lg"
             >
               🧪 Test Detail View
             </Button>
             <Button 
               onClick={handleCreateOpportunity} 
-              className="h-11 px-6 font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+              className="h-11 px-4 lg:px-6 font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
               size="lg"
             >
               <Plus size={18} className="mr-2" />
@@ -246,7 +246,7 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
         </div>
       </div>
 
-      <div className="px-8 space-y-8">
+      <div className="px-4 lg:px-6 space-y-6 lg:space-y-8">
         {/* Enhanced Metrics Dashboard */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-blue-50 to-blue-100/50 hover:shadow-xl transition-all duration-300">
@@ -324,10 +324,10 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
 
         {/* Modern Control Panel */}
         <Card className="border-0 shadow-lg bg-card/50 backdrop-blur-sm">
-          <CardContent className="p-6">
-            <div className="flex flex-col xl:flex-row xl:items-center gap-6">
+          <CardContent className="p-4 lg:p-6">
+            <div className="flex flex-col xl:flex-row xl:items-center gap-4 lg:gap-6">
               {/* Search Bar */}
-              <div className="flex-1 max-w-md">
+              <div className="flex-1 max-w-full xl:max-w-md">
                 <div className="relative">
                   <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
                   <Input
@@ -340,9 +340,9 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
               </div>
               
               {/* Filter Controls */}
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <Select value={stageFilter} onValueChange={setStageFilter}>
-                  <SelectTrigger className="w-52 h-12 border-0 bg-background/80 backdrop-blur-sm shadow-sm">
+                  <SelectTrigger className="w-44 lg:w-52 h-12 border-0 bg-background/80 backdrop-blur-sm shadow-sm">
                     <Filter size={16} className="mr-2 text-muted-foreground" />
                     <SelectValue placeholder="All Stages" />
                   </SelectTrigger>
@@ -360,7 +360,7 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
                 </Select>
 
                 <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                  <SelectTrigger className="w-44 h-12 border-0 bg-background/80 backdrop-blur-sm shadow-sm">
+                  <SelectTrigger className="w-40 lg:w-44 h-12 border-0 bg-background/80 backdrop-blur-sm shadow-sm">
                     <Star size={16} className="mr-2 text-muted-foreground" />
                     <SelectValue placeholder="All Priorities" />
                   </SelectTrigger>
@@ -374,7 +374,7 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
                 </Select>
 
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-44 h-12 border-0 bg-background/80 backdrop-blur-sm shadow-sm">
+                  <SelectTrigger className="w-40 lg:w-44 h-12 border-0 bg-background/80 backdrop-blur-sm shadow-sm">
                     <SortAscending size={16} className="mr-2 text-muted-foreground" />
                     <SelectValue />
                   </SelectTrigger>
@@ -393,19 +393,19 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
                     variant={viewMode === 'list' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setViewMode('list')}
-                    className="h-10 px-4"
+                    className="h-10 px-3 lg:px-4"
                   >
-                    <List size={16} className="mr-2" />
-                    List
+                    <List size={16} className="mr-1 lg:mr-2" />
+                    <span className="hidden sm:inline">List</span>
                   </Button>
                   <Button
                     variant={viewMode === 'grid' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setViewMode('grid')}
-                    className="h-10 px-4"
+                    className="h-10 px-3 lg:px-4"
                   >
-                    <GridFour size={16} className="mr-2" />
-                    Grid
+                    <GridFour size={16} className="mr-1 lg:mr-2" />
+                    <span className="hidden sm:inline">Grid</span>
                   </Button>
                 </div>
               </div>
@@ -416,19 +416,19 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
         {/* Enhanced Opportunities Table */}
         <Card className="border-0 shadow-xl bg-card/70 backdrop-blur-sm overflow-hidden">
           {sortedOpportunities.length === 0 ? (
-            <div className="text-center py-24">
+            <div className="text-center py-16 lg:py-24">
               <div className="mb-6">
-                <div className="mx-auto w-24 h-24 bg-gradient-to-br from-muted to-muted/50 rounded-full flex items-center justify-center">
-                  <Target size={32} className="text-muted-foreground" />
+                <div className="mx-auto w-20 h-20 lg:w-24 lg:h-24 bg-gradient-to-br from-muted to-muted/50 rounded-full flex items-center justify-center">
+                  <Target size={28} className="text-muted-foreground lg:w-8 lg:h-8" />
                 </div>
               </div>
-              <h3 className="text-2xl font-semibold mb-3">
+              <h3 className="text-xl lg:text-2xl font-semibold mb-3">
                 {searchTerm || stageFilter !== 'all' || priorityFilter !== 'all'
                   ? 'No matching opportunities'
                   : 'Ready to start your sales journey?'
                 }
               </h3>
-              <p className="text-muted-foreground text-lg mb-8 max-w-md mx-auto">
+              <p className="text-muted-foreground text-base lg:text-lg mb-6 lg:mb-8 max-w-md mx-auto">
                 {searchTerm || stageFilter !== 'all' || priorityFilter !== 'all'
                   ? 'Try adjusting your search criteria or filters to find what you\'re looking for.'
                   : 'Create your first opportunity and start building your pipeline with our PEAK methodology.'
@@ -438,7 +438,7 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
                 <Button 
                   onClick={handleCreateOpportunity} 
                   size="lg"
-                  className="h-12 px-8 font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                  className="h-12 px-6 lg:px-8 font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
                 >
                   <Plus size={18} className="mr-2" />
                   Create Your First Opportunity
@@ -450,28 +450,28 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
               <Table>
                 <TableHeader className="bg-muted/30 backdrop-blur-sm">
                   <TableRow className="border-border/50 hover:bg-transparent">
-                    <TableHead className="font-semibold text-foreground py-4 px-6 min-w-[350px]">
+                    <TableHead className="font-semibold text-foreground py-4 px-4 lg:px-6 min-w-[300px] lg:min-w-[350px]">
                       Opportunity Details
                     </TableHead>
-                    <TableHead className="font-semibold text-foreground py-4 px-6 min-w-[180px]">
+                    <TableHead className="font-semibold text-foreground py-4 px-4 lg:px-6 min-w-[160px] lg:min-w-[180px]">
                       Company & Contact
                     </TableHead>
-                    <TableHead className="font-semibold text-foreground py-4 px-6 min-w-[140px]">
+                    <TableHead className="font-semibold text-foreground py-4 px-4 lg:px-6 min-w-[120px] lg:min-w-[140px]">
                       Stage & Progress
                     </TableHead>
-                    <TableHead className="font-semibold text-foreground py-4 px-6 min-w-[140px] text-right">
+                    <TableHead className="font-semibold text-foreground py-4 px-4 lg:px-6 min-w-[120px] lg:min-w-[140px] text-right">
                       Deal Value
                     </TableHead>
-                    <TableHead className="font-semibold text-foreground py-4 px-6 min-w-[160px]">
+                    <TableHead className="font-semibold text-foreground py-4 px-4 lg:px-6 min-w-[140px] lg:min-w-[160px]">
                       Win Probability
                     </TableHead>
-                    <TableHead className="font-semibold text-foreground py-4 px-6 min-w-[120px]">
+                    <TableHead className="font-semibold text-foreground py-4 px-4 lg:px-6 min-w-[100px] lg:min-w-[120px]">
                       Priority
                     </TableHead>
-                    <TableHead className="font-semibold text-foreground py-4 px-6 min-w-[140px]">
+                    <TableHead className="font-semibold text-foreground py-4 px-4 lg:px-6 min-w-[120px] lg:min-w-[140px]">
                       Timeline
                     </TableHead>
-                    <TableHead className="font-semibold text-foreground py-4 px-6 min-w-[120px] text-center">
+                    <TableHead className="font-semibold text-foreground py-4 px-4 lg:px-6 min-w-[100px] lg:min-w-[120px] text-center">
                       Actions
                     </TableHead>
                   </TableRow>
@@ -489,12 +489,12 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
                         className="group border-border/30 hover:bg-muted/20 cursor-pointer transition-all duration-200"
                         onClick={() => handleViewOpportunity(opportunity)}
                       >
-                        <TableCell className="py-6 px-6">
+                        <TableCell className="py-4 lg:py-6 px-4 lg:px-6">
                           <div className="space-y-2">
-                            <div className="font-semibold text-base text-foreground group-hover:text-primary transition-colors">
+                            <div className="font-semibold text-sm lg:text-base text-foreground group-hover:text-primary transition-colors">
                               {opportunity.title}
                             </div>
-                            <div className="text-sm text-muted-foreground line-clamp-2 max-w-md">
+                            <div className="text-xs lg:text-sm text-muted-foreground line-clamp-2 max-w-sm lg:max-w-md">
                               {opportunity.description || 'No description provided'}
                             </div>
                             {opportunity.tags && opportunity.tags.length > 0 && (
@@ -521,14 +521,14 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
                           </div>
                         </TableCell>
                         
-                        <TableCell className="py-6 px-6">
+                        <TableCell className="py-4 lg:py-6 px-4 lg:px-6">
                           <div className="space-y-3">
                             <div className="flex items-center gap-3">
                               <div className="p-2 bg-blue-50 rounded-lg">
                                 <Building size={16} className="text-blue-600" />
                               </div>
                               <div>
-                                <div className="font-medium text-foreground">{company?.name || 'Unknown Company'}</div>
+                                <div className="font-medium text-xs lg:text-sm text-foreground">{company?.name || 'Unknown Company'}</div>
                                 <div className="text-xs text-muted-foreground">
                                   {company?.industry || 'Industry not specified'}
                                 </div>
@@ -542,7 +542,7 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
                                   </AvatarFallback>
                                 </Avatar>
                                 <div className="text-sm">
-                                  <div className="text-foreground">{contact.firstName} {contact.lastName}</div>
+                                  <div className="text-xs lg:text-sm text-foreground">{contact.firstName} {contact.lastName}</div>
                                   <div className="text-xs text-muted-foreground">{contact.title || 'Contact'}</div>
                                 </div>
                               </div>
@@ -550,11 +550,11 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
                           </div>
                         </TableCell>
                         
-                        <TableCell className="py-6 px-6">
+                        <TableCell className="py-4 lg:py-6 px-4 lg:px-6">
                           <div className="space-y-3">
                             <Badge 
                               variant="secondary" 
-                              className={`${stageConfig.color} font-medium px-3 py-1`}
+                              className={`${stageConfig.color} font-medium px-2 lg:px-3 py-1 text-xs`}
                             >
                               {stageConfig.label}
                             </Badge>
@@ -571,9 +571,9 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
                           </div>
                         </TableCell>
                         
-                        <TableCell className="py-6 px-6 text-right">
+                        <TableCell className="py-4 lg:py-6 px-4 lg:px-6 text-right">
                           <div className="space-y-1">
-                            <div className="text-xl font-bold text-foreground">
+                            <div className="text-lg lg:text-xl font-bold text-foreground">
                               {formatCurrency(opportunity.value)}
                             </div>
                             <div className="text-xs text-muted-foreground">
@@ -582,7 +582,7 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
                           </div>
                         </TableCell>
                         
-                        <TableCell className="py-6 px-6">
+                        <TableCell className="py-4 lg:py-6 px-4 lg:px-6">
                           <div className="space-y-3">
                             <div className="flex items-center gap-3">
                               <div className="flex-1">
@@ -610,19 +610,19 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
                           </div>
                         </TableCell>
                         
-                        <TableCell className="py-6 px-6">
+                        <TableCell className="py-4 lg:py-6 px-4 lg:px-6">
                           <Badge 
                             variant="secondary" 
-                            className={`${priorityBadge.className} font-medium px-3 py-1`}
+                            className={`${priorityBadge.className} font-medium px-2 lg:px-3 py-1 text-xs`}
                           >
                             {(opportunity.priority || 'medium').charAt(0).toUpperCase() + 
                              (opportunity.priority || 'medium').slice(1)}
                           </Badge>
                         </TableCell>
                         
-                        <TableCell className="py-6 px-6">
+                        <TableCell className="py-4 lg:py-6 px-4 lg:px-6">
                           <div className="space-y-1">
-                            <div className="flex items-center gap-2 text-sm">
+                            <div className="flex items-center gap-2 text-xs lg:text-sm">
                               <Calendar size={14} className="text-muted-foreground" />
                               <span className="font-medium">
                                 {format(new Date(opportunity.expectedCloseDate), 'MMM dd, yyyy')}
@@ -634,7 +634,7 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
                           </div>
                         </TableCell>
                         
-                        <TableCell className="py-6 px-6">
+                        <TableCell className="py-4 lg:py-6 px-4 lg:px-6">
                           <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200">
                             <Button 
                               variant="ghost" 
@@ -749,9 +749,9 @@ function OpportunityDetailDialog({ isOpen, onClose, opportunity, onEdit, onDelet
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[98vw] max-h-[98vh] w-full h-full p-0 gap-0">
         {/* Modern Header with Gradient */}
-        <div className="sticky top-0 z-10 bg-gradient-to-r from-background via-background to-background/95 backdrop-blur-xl border-b border-border/50 p-8">
+        <div className="sticky top-0 z-10 bg-gradient-to-r from-background via-background to-background/95 backdrop-blur-xl border-b border-border/50 p-4 lg:p-6">
           <div className="flex items-center justify-between">
-            <div className="space-y-4">
+            <div className="space-y-3 lg:space-y-4">
               <div className="flex items-center gap-4">
                 <Button 
                   variant="ghost" 
@@ -763,31 +763,31 @@ function OpportunityDetailDialog({ isOpen, onClose, opportunity, onEdit, onDelet
                 </Button>
               </div>
               
-              <div className="space-y-3">
-                <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+              <div className="space-y-2 lg:space-y-3">
+                <h1 className="text-2xl lg:text-4xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
                   {opportunity.title}
                 </h1>
                 
-                <div className="flex items-center gap-6 text-muted-foreground">
+                <div className="flex items-center gap-4 lg:gap-6 text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <div className="p-2 bg-blue-50 rounded-lg">
-                      <Building size={18} className="text-blue-600" />
+                      <Building size={16} className="text-blue-600 lg:w-5 lg:h-5" />
                     </div>
                     <div>
-                      <div className="font-medium text-foreground">{company?.name || 'Unknown Company'}</div>
-                      <div className="text-sm">{company?.industry || 'Industry not specified'}</div>
+                      <div className="font-medium text-sm lg:text-base text-foreground">{company?.name || 'Unknown Company'}</div>
+                      <div className="text-xs lg:text-sm">{company?.industry || 'Industry not specified'}</div>
                     </div>
                   </div>
                   
                   <Badge 
                     variant="secondary" 
-                    className={`${stageConfig.color} px-3 py-1 font-medium text-sm`}
+                    className={`${stageConfig.color} px-3 py-1 font-medium text-xs lg:text-sm`}
                   >
                     {stageConfig.label}
                   </Badge>
                   
-                  <div className="flex items-center gap-2 text-sm">
-                    <Calendar size={14} />
+                  <div className="flex items-center gap-2 text-xs lg:text-sm">
+                    <Calendar size={12} className="lg:w-4 lg:h-4" />
                     <span>Created {format(new Date(opportunity.createdAt), 'MMM dd, yyyy')}</span>
                   </div>
                 </div>
@@ -797,9 +797,9 @@ function OpportunityDetailDialog({ isOpen, onClose, opportunity, onEdit, onDelet
             <div className="flex items-center gap-3">
               <Button 
                 onClick={onEdit} 
-                className="h-11 px-6 font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                className="h-10 lg:h-11 px-4 lg:px-6 font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
               >
-                <PencilSimple size={18} className="mr-2" />
+                <PencilSimple size={16} className="mr-2 lg:w-5 lg:h-5" />
                 Edit Opportunity
               </Button>
             </div>
@@ -807,7 +807,7 @@ function OpportunityDetailDialog({ isOpen, onClose, opportunity, onEdit, onDelet
         </div>
 
         <ScrollArea className="flex-1 h-full">
-          <div className="px-8 py-8 space-y-8">
+          <div className="px-4 lg:px-6 py-6 lg:py-8 space-y-6 lg:space-y-8">
             {/* Enhanced Key Metrics - Full Width */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-emerald-50 to-emerald-100/50 hover:shadow-xl transition-all duration-300">
