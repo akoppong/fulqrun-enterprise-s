@@ -553,6 +553,8 @@ export function CustomKPILayoutDashboard({ user, className = '' }: CustomKPILayo
     const actionText = sizeChange === 'custom' ? 'resized' : (sizeChange === 'increase' ? 'enlarged' : 'shrunk');
     toast.success(`Widget ${actionText}`);
   }, [currentLayout, setDashboardLayouts]);
+
+  const duplicateLayout = useCallback(() => {
     if (!currentLayout) return;
 
     const duplicatedLayout: CustomDashboardLayout = {
