@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useKV } from '@github/spark/hooks';
+import { Responsive, WidthProvider } from 'react-grid-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,11 +26,15 @@ import {
   BarChart3,
   TrendingUp,
   Award,
-  Settings
+  Settings,
+  Move,
+  Maximize
 } from '@phosphor-icons/react';
 import { PersonalizedKPICard, PersonalizedKPIData, generateSampleKPIData } from './PersonalizedKPICard';
 import { KPIBuilderDialog } from './KPIBuilderDialog';
 import { toast } from 'sonner';
+
+const ResponsiveGridLayout = WidthProvider(Responsive);
 
 interface KPIDashboardGalleryProps {
   onAddToLayout?: (kpi: PersonalizedKPIData) => void;
@@ -46,8 +51,8 @@ const CATEGORY_FILTERS = [
 ];
 
 const VIEW_MODES = [
-  { label: 'Grid', value: 'grid', icon: Grid },
-  { label: 'List', value: 'list', icon: List },
+  { label: 'Resizable Grid', value: 'grid', icon: Grid },
+  { label: 'List View', value: 'list', icon: List },
 ];
 
 export function KPIDashboardGallery({ onAddToLayout }: KPIDashboardGalleryProps) {
@@ -157,7 +162,97 @@ export function KPIDashboardGallery({ onAddToLayout }: KPIDashboardGalleryProps)
     reader.readAsText(file);
   };
 
-  const renderKPICard = (kpi: PersonalizedKPIData, isCustom: boolean) => {
+  const renderResizableKPICard = (kpi: PersonalizedKPIData, isCustom: boolean) => {
+    const isFavorite = favoriteKPIs.includes(kpi.id);
+
+    return (
+      <div key={kpi.id} className="relative group h-full">
+        <PersonalizedKPICard 
+          data={kpi}
+          variant="compact"
+          className="h-full transition-all duration-200 group-hover:shadow-lg"
+        />
+        
+        {/* Action Overlay */}
+        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex gap-1">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-6 w-6 p-0 bg-white/90 hover:bg-white"
+            onClick={() => handleToggleFavorite(kpi.id)}
+            title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+          >
+            <Star className={`h-3 w-3 ${isFavorite ? 'text-yellow-500 fill-yellow-500' : ''}`} />
+          </Button>
+          
+          {onAddToLayout && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-6 w-6 p-0 bg-white/90 hover:bg-white"
+              onClick={() => onAddToLayout(kpi)}
+              title="Add to dashboard"
+            >
+              <Plus className="h-3 w-3" />
+            </Button>
+          )}
+
+          {isCustom && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-6 w-6 p-0 bg-white/90 hover:bg-white"
+                onClick={() => handleEditKPI(kpi)}
+                title="Edit KPI"
+              >
+                <Edit className="h-3 w-3" />
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-6 w-6 p-0 bg-white/90 hover:bg-white text-destructive hover:text-destructive"
+                onClick={() => handleDeleteKPI(kpi.id)}
+                title="Delete KPI"
+              >
+                <Trash className="h-3 w-3" />
+              </Button>
+            </>
+          )}
+        </div>
+
+        {/* Badges */}
+        <div className="absolute top-2 left-2">
+          {isFavorite && (
+            <Badge variant="secondary" className="text-xs">
+              <Star className="h-3 w-3 mr-1 text-yellow-500 fill-yellow-500" />
+              Favorite
+            </Badge>
+          )}
+        </div>
+
+        {/* Resize Handle */}
+        <div className="absolute bottom-0 right-0 w-6 h-6 opacity-70 group-hover:opacity-100 transition-opacity cursor-se-resize">
+          <div className="w-full h-full bg-gradient-to-tl from-primary/60 to-transparent rounded-tl-lg flex items-end justify-end">
+            <div className="w-4 h-4 flex flex-col items-end justify-end gap-0.5 p-0.5">
+              <div className="w-2 h-0.5 bg-primary/90 rounded-full" />
+              <div className="w-1.5 h-0.5 bg-primary/90 rounded-full" />
+              <div className="w-1 h-0.5 bg-primary/90 rounded-full" />
+            </div>
+          </div>
+        </div>
+
+        {/* Size indicator */}
+        <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Badge variant="outline" className="text-xs bg-white/90 backdrop-blur-sm">
+            <Maximize className="h-3 w-3 mr-1" />
+            Resizable
+          </Badge>
+        </div>
+      </div>
+    );
+  };
     const isFavorite = favoriteKPIs.includes(kpi.id);
 
     return (
@@ -317,14 +412,60 @@ export function KPIDashboardGallery({ onAddToLayout }: KPIDashboardGalleryProps)
     </div>
   );
 
-  const renderGridView = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-      {filteredKPIs.map(kpi => {
+  const renderGridView = () => {
+    // Create grid layout for each KPI card with resize capabilities
+    const generateGridItems = () => {
+      return filteredKPIs.map((kpi, index) => {
         const isCustom = customKPIs.some(custom => custom.id === kpi.id);
-        return renderKPICard(kpi, isCustom);
-      })}
-    </div>
-  );
+        return {
+          i: kpi.id,
+          x: (index % 4) * 3,
+          y: Math.floor(index / 4) * 3,
+          w: 3,
+          h: 3,
+          minW: 2,
+          minH: 2,
+          maxW: 6,
+          maxH: 6,
+          kpi,
+          isCustom
+        };
+      });
+    };
+
+    const gridItems = generateGridItems();
+
+    return (
+      <div className="min-h-[400px] relative">
+        <ResponsiveGridLayout
+          className="layout"
+          layouts={{
+            lg: gridItems,
+            md: gridItems,
+            sm: gridItems,
+            xs: gridItems,
+            xxs: gridItems,
+          }}
+          breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+          cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
+          rowHeight={80}
+          margin={[16, 16]}
+          containerPadding={[0, 0]}
+          isDraggable={false}
+          isResizable={true}
+          useCSSTransforms={true}
+          preventCollision={false}
+          autoSize={true}
+          resizeHandles={['se']}
+          compactType="vertical"
+        >
+          {gridItems.map(({ kpi, isCustom }) => 
+            renderResizableKPICard(kpi, isCustom)
+          )}
+        </ResponsiveGridLayout>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -409,6 +550,19 @@ export function KPIDashboardGallery({ onAddToLayout }: KPIDashboardGalleryProps)
               {searchTerm && ` matching "${searchTerm}"`}
             </p>
           </div>
+
+          {/* Help tip for resizable grid */}
+          {viewMode === 'grid' && filteredKPIs.length > 0 && (
+            <div className="bg-primary/10 border border-primary/20 rounded-lg p-3">
+              <div className="flex items-center gap-2 text-sm">
+                <Maximize className="h-4 w-4 text-primary" />
+                <span className="text-primary font-medium">Resize Tip:</span>
+                <span className="text-muted-foreground">
+                  Hover over cards and drag the resize handle in the bottom-right corner to adjust size
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* KPI Grid/List */}
           {filteredKPIs.length > 0 ? (
