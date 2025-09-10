@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Code, Key, Settings } from '@phosphor-icons/react';
+import { Code, Key, Gear as Settings } from '@phosphor-icons/react';
 
 interface ApiManagementProps {
   hasAdminAccess: boolean;

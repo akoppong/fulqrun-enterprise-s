@@ -327,6 +327,8 @@ export function CustomizableDashboard({ user, onConfigChange }: CustomizableDash
     setIsKPIGalleryOpen(false);
     toast.success(`Added "${kpiData.title}" to dashboard`);
   }, [activeDashboard, setDashboards]);
+
+  const addWidget = useCallback(() => {
     if (!activeDashboard || !newWidgetTitle.trim()) {
       toast.error('Widget title is required');
       return;

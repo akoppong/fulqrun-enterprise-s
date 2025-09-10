@@ -10,8 +10,8 @@ import {
   HardDrives, 
   Download, 
   Upload, 
-  Trash2, 
-  RefreshCw,
+  Trash, 
+  ArrowClockwise as RefreshCw,
   Archive,
   HardDrive,
   FileText,
@@ -23,7 +23,7 @@ interface DataManagementProps {
 }
 
 export function DataManagement({ hasAdminAccess }: DataManagementProps) {
-  const [backups] = useKV('system-backups', [
+  const [backups] = useKV<any[]>('system-backups', [
     { id: '1', name: 'Daily Backup', date: '2024-01-15T02:00:00', size: '2.4 GB', type: 'Automated', status: 'Completed' },
     { id: '2', name: 'Weekly Backup', date: '2024-01-14T01:00:00', size: '2.3 GB', type: 'Automated', status: 'Completed' },
     { id: '3', name: 'Manual Backup', date: '2024-01-13T15:30:00', size: '2.2 GB', type: 'Manual', status: 'Completed' }
@@ -183,7 +183,7 @@ export function DataManagement({ hasAdminAccess }: DataManagementProps) {
                               variant="ghost"
                               size="sm"
                             >
-                              <Trash2 className="h-4 w-4 text-red-500" />
+                              <Trash className="h-4 w-4 text-red-500" />
                             </Button>
                           </div>
                         </TableCell>

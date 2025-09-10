@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { 
-  Settings, 
+  Gear as Settings, 
   Users, 
   Shield, 
   HardDrives, 
@@ -15,15 +15,15 @@ import {
   Bell, 
   HardDrive, 
   Activity,
-  Workflow,
+  FunnelSimple as Workflow,
   Plug,
   TestTube,
   Wrench,
   Lock,
   UserCheck,
-  Server,
-  AlertTriangle,
-  BarChart3
+  Database,
+  Warning as AlertTriangle,
+  ChartBar as BarChart3
 } from '@phosphor-icons/react';
 
 // Import existing components that will be moved here
@@ -279,7 +279,7 @@ export function AdministrationModule({ userRole, isOwner = false, initialView = 
                   </div>
                   
                   <div className="flex items-center gap-3 p-2 bg-blue-50 rounded-lg">
-                    <Server className="h-4 w-4 text-blue-600" />
+                    <Database className="h-4 w-4 text-blue-600" />
                     <div className="flex-1">
                       <p className="text-sm font-medium">Backup Completed</p>
                       <p className="text-xs text-muted-foreground">Daily backup successful</p>

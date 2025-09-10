@@ -32,6 +32,9 @@ import { CompaniesView } from './CompaniesView';
 import { UserManagement } from '../admin/UserManagement';
 import { SystemConfiguration } from '../admin/SystemConfiguration';
 import { SystemMonitoring } from '../admin/SystemMonitoring';
+import { PersonalizedKPIManager } from './PersonalizedKPIManager';
+import { PersonalizedKPIDashboard } from './PersonalizedKPIDashboard';
+import { KPIDashboardBuilder } from './KPIDashboardBuilder';
 
 interface DashboardProps {
   user: User;
@@ -39,7 +42,7 @@ interface DashboardProps {
   initialView?: string;
 }
 
-export type DashboardView = 'dashboard' | 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'kpi-gallery' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'autosave-demo' | 'autosave-test' | 'autosave-manual' | 'autosave-interactive' | 'field-testing' | 'comprehensive-testing' | 'validation-demo' | 'date-validation' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit';
+export type DashboardView = 'dashboard' | 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'kpi-gallery' | 'kpi-manager' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'autosave-demo' | 'autosave-test' | 'autosave-manual' | 'autosave-interactive' | 'field-testing' | 'comprehensive-testing' | 'validation-demo' | 'date-validation' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit';
 
 export function Dashboard({ user, onLogout, initialView }: DashboardProps) {
   const [currentView, setCurrentView] = useState<DashboardView>(
@@ -142,6 +145,8 @@ export function Dashboard({ user, onLogout, initialView }: DashboardProps) {
         );
       case 'kpi-gallery':
         return <KPIDashboardGallery />;
+      case 'kpi-manager':
+        return <PersonalizedKPIDashboard />;
       case 'learning':
         return (
           <LearningPlatform 

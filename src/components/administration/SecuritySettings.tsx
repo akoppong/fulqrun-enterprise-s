@@ -18,9 +18,9 @@ import {
   EyeSlash,
   UserCheck,
   Clock,
-  AlertTriangle,
+  Warning as AlertTriangle,
   CheckCircle,
-  Save
+  FloppyDisk as Save
 } from '@phosphor-icons/react';
 
 interface SecuritySettingsProps {
@@ -28,7 +28,7 @@ interface SecuritySettingsProps {
 }
 
 export function SecuritySettings({ hasAdminAccess }: SecuritySettingsProps) {
-  const [authSettings, setAuthSettings] = useKV('security-auth-settings', {
+  const [authSettings, setAuthSettings] = useKV<any>('security-auth-settings', {
     requireMfa: false,
     passwordMinLength: 8,
     passwordRequireSpecial: true,
@@ -41,7 +41,7 @@ export function SecuritySettings({ hasAdminAccess }: SecuritySettingsProps) {
     passwordExpiryDays: 90
   });
 
-  const [accessSettings, setAccessSettings] = useKV('security-access-settings', {
+  const [accessSettings, setAccessSettings] = useKV<any>('security-access-settings', {
     enableIpWhitelist: false,
     allowedIps: '',
     requireVpn: false,
