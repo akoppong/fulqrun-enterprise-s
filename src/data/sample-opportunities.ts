@@ -40,6 +40,19 @@ export const sampleCompanies: Company[] = [
     createdAt: new Date('2024-01-08'),
     updatedAt: new Date('2024-01-22'),
   },
+  {
+    id: '4',
+    name: 'Unknown Company',
+    industry: 'not specified',
+    size: 'Unknown',
+    website: '',
+    address: '',
+    revenue: 0,
+    employees: 0,
+    geography: 'Unknown',
+    createdAt: new Date('2024-02-05'),
+    updatedAt: new Date('2024-02-05'),
+  },
 ];
 
 export const sampleContacts: Contact[] = [
@@ -90,6 +103,18 @@ export const sampleContacts: Contact[] = [
     role: 'decision-maker',
     createdAt: new Date('2024-01-08'),
     updatedAt: new Date('2024-01-22'),
+  },
+  {
+    id: '5',
+    companyId: '4',
+    firstName: 'Unknown',
+    lastName: 'Contact',
+    email: 'unknown@example.com',
+    phone: '',
+    title: '',
+    role: 'prospect',
+    createdAt: new Date('2024-02-05'),
+    updatedAt: new Date('2024-02-05'),
   },
 ];
 
@@ -209,6 +234,45 @@ export const sampleOpportunities: Opportunity[] = [
       confidenceLevel: 'medium',
       competitorAnalysis: 'Large field of competitors including Epic, Cerner, and smaller specialized vendors. Differentiation needs to be clearer.',
       lastAiUpdate: new Date('2024-01-26').toISOString()
+    }
+  },
+  {
+    id: '4',
+    companyId: '4',
+    contactId: '5',
+    title: 'Retail Operations Optimization',
+    description: 'AI-powered retail inventory and supply chain optimization',
+    value: 1500000,
+    stage: 'keep',
+    probability: 95,
+    expectedCloseDate: new Date('2024-03-30').toISOString(),
+    ownerId: 'user-1',
+    priority: 'critical',
+    industry: 'retail',
+    leadSource: 'partner',
+    tags: ['retail', 'ai', 'optimization'],
+    meddpicc: {
+      metrics: 'Increase operational efficiency by 30%, reduce inventory costs by $500K annually',
+      economicBuyer: 'CEO and CFO have final budget authority for this initiative',
+      decisionCriteria: 'ROI within 18 months, proven retail industry experience, cloud-native architecture',
+      decisionProcess: 'Technical evaluation → Budget approval → Legal review → Final decision by Q1 2025',
+      paperProcess: 'Standard procurement process, requires 3 vendor quotes, legal review for contracts >$1M',
+      implicatePain: 'Current manual processes causing $2M annual losses, customer satisfaction declining',
+      champion: 'CTO is our strong advocate, has influence with executive team',
+      score: 100
+    },
+    createdAt: new Date('2024-02-05').toISOString(),
+    updatedAt: new Date('2024-02-25').toISOString(),
+    aiInsights: {
+      riskScore: 5,
+      nextBestActions: [
+        'Finalize contract terms and legal review',
+        'Schedule implementation kickoff meeting',
+        'Prepare change management plan for rollout'
+      ],
+      confidenceLevel: 'very high',
+      competitorAnalysis: 'Strong competitive position, solution fits requirements perfectly',
+      lastAiUpdate: new Date('2024-02-25').toISOString()
     }
   },
 ];

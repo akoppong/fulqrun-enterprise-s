@@ -512,6 +512,59 @@ textarea[class*="w-full"],
   .grid-cols-12 { grid-template-columns: 1fr !important; }
 }
 
+/* === OPPORTUNITY DETAIL VIEW === */
+
+.opportunity-header {
+  min-height: 0;
+}
+
+.opportunity-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .opportunity-metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .opportunity-metrics-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.opportunity-detail-tabs {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.opportunity-detail-tabs .tab-trigger {
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-width: 60px;
+}
+
+@media (min-width: 640px) {
+  .opportunity-detail-tabs .tab-trigger {
+    min-width: 120px;
+  }
+}
+
+.opportunity-content-area {
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.opportunity-badge {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
 /* === DASHBOARD === */
 
 .dashboard-grid {
