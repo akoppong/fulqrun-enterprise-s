@@ -12,6 +12,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
 import { 
   Search, 
   Plus, 
@@ -46,8 +48,6 @@ import { OpportunityEditForm } from './OpportunityEditForm';
 import { formatCurrency, getMEDDPICCScore, getStageProgress } from '@/lib/crm-utils';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
 
 interface OpportunitiesViewProps {
   className?: string;
