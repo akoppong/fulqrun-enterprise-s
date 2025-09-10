@@ -213,6 +213,7 @@ export function FieldTypeTestingLab() {
     
     toast.success(`Stress test complete! ${passedTests}/${totalTests} tests passed (${((passedTests/totalTests) * 100).toFixed(1)}%)`);
   };
+
   const validateEmail = (email: string): ValidationResult => {
     if (!email) return { isValid: true, message: '', type: 'info' };
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
