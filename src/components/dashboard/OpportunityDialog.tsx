@@ -254,7 +254,7 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
   return (
     <>
       <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="max-w-5xl w-[95vw] h-[95vh] flex flex-col p-0">
+        <DialogContent className="max-w-7xl w-[96vw] h-[95vh] flex flex-col p-0">
           <DialogHeader className="px-6 py-4 border-b flex-shrink-0">
             <div className="flex items-center justify-between">
               <DialogTitle className="flex items-center gap-2">

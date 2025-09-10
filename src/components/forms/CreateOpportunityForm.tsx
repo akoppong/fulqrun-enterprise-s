@@ -178,7 +178,7 @@ export function CreateOpportunityForm({ onSubmit, initialData = {} }: CreateOppo
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
+    <Card className="w-full max-w-6xl mx-auto">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Target className="w-5 h-5" />
@@ -250,7 +250,7 @@ export function CreateOpportunityForm({ onSubmit, initialData = {} }: CreateOppo
                   <h3 className="font-semibold">Financial Details</h3>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <ValidatedInput
                     id="value"
                     label="Deal Value"
@@ -363,7 +363,7 @@ export function CreateOpportunityForm({ onSubmit, initialData = {} }: CreateOppo
                   <h3 className="font-semibold">Contact & Company</h3>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <ValidatedInput
                     id="contactName"
                     label="Primary Contact"
