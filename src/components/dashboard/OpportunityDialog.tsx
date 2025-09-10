@@ -254,8 +254,8 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
   return (
     <>
       <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="max-w-5xl w-[95vw] h-[95vh] flex flex-col p-0">
+          <DialogHeader className="px-6 py-4 border-b flex-shrink-0">
             <div className="flex items-center justify-between">
               <DialogTitle className="flex items-center gap-2">
                 <Target size={24} className="text-primary" />
@@ -275,10 +275,11 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
             </div>
           </DialogHeader>
           
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+            <div className="flex-1 overflow-y-auto px-6 py-4 dialog-scrollable-content">
             {/* Date validation alert */}
             {closeDateValidation.isTouched && closeDateValidation.error && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="mb-4">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
                   Expected close date: {closeDateValidation.error}
@@ -286,8 +287,8 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
               </Alert>
             )}
 
-            <Tabs defaultValue="basic" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-6">
+            <Tabs defaultValue="basic" className="w-full space-y-6">
+              <TabsList className="grid w-full grid-cols-3 dialog-tabs-sticky">
                 <TabsTrigger value="basic">Basic Information</TabsTrigger>
                 <TabsTrigger value="meddpicc" className="flex items-center gap-2">
                   MEDDPICC
@@ -301,20 +302,21 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
                 </TabsTrigger>
               </TabsList>
               
-              <TabsContent value="basic" className="space-y-6">
+              <TabsContent value="basic" className="space-y-8 mt-0">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="title">Opportunity Title</Label>
+                    <Label htmlFor="title">Opportunity Title <span className="text-destructive">*</span></Label>
                     <Input
                       id="title"
                       value={formData.title || ''}
                       onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                       placeholder="Enter opportunity title"
                       required
+                      className="h-10"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="value">Deal Value</Label>
+                    <Label htmlFor="value">Deal Value <span className="text-destructive">*</span></Label>
                     <Input
                       id="value"
                       type="number"
@@ -322,21 +324,22 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
                       onChange={(e) => setFormData(prev => ({ ...prev, value: Number(e.target.value) }))}
                       placeholder="0"
                       required
+                      className="h-10"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="company">Company</Label>
+                    <Label htmlFor="company">Company <span className="text-destructive">*</span></Label>
                     <Select 
                       value={formData.companyId || ''} 
                       onValueChange={(value) => setFormData(prev => ({ ...prev, companyId: value }))}
                     >
-                      <SelectTrigger id="company">
+                      <SelectTrigger id="company" className="h-10">
                         <SelectValue placeholder="Select company" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="max-h-60">
                         {companies.map((company) => (
                           <SelectItem key={company.id} value={company.id}>
                             {company.name} ({company.industry})
@@ -346,15 +349,15 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="contact">Primary Contact</Label>
+                    <Label htmlFor="contact">Primary Contact <span className="text-destructive">*</span></Label>
                     <Select 
                       value={formData.contactId || ''} 
                       onValueChange={(value) => setFormData(prev => ({ ...prev, contactId: value }))}
                     >
-                      <SelectTrigger id="contact">
+                      <SelectTrigger id="contact" className="h-10">
                         <SelectValue placeholder="Select contact" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="max-h-60">
                         {contacts
                           .filter(contact => !formData.companyId || contact.companyId === formData.companyId)
                           .map((contact) => (
@@ -374,25 +377,25 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
                     value={formData.description || ''}
                     onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                     placeholder="Enter opportunity description"
-                    rows={3}
-                    className="resize-none"
+                    rows={4}
+                    className="resize-none min-h-20"
                   />
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="stage">PEAK Stage</Label>
+                    <Label htmlFor="stage">PEAK Stage <span className="text-destructive">*</span></Label>
                     <Select 
                       value={formData.stage || 'prospect'} 
                       onValueChange={(value) => setFormData(prev => ({ ...prev, stage: value as any }))}
                     >
-                      <SelectTrigger id="stage">
+                      <SelectTrigger id="stage" className="h-10">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="max-h-60">
                         {PEAK_STAGES.map((stage) => (
                           <SelectItem key={stage.value} value={stage.value}>
-                            <div className="flex flex-col items-start">
+                            <div className="flex flex-col items-start py-1">
                               <span className="font-medium">{stage.label}</span>
                               <span className="text-xs text-muted-foreground">{stage.description}</span>
                             </div>
@@ -403,7 +406,7 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="probability">Win Probability (%)</Label>
+                    <Label htmlFor="probability">Win Probability (%) <span className="text-destructive">*</span></Label>
                     <Input
                       id="probability"
                       type="number"
@@ -412,6 +415,7 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
                       value={formData.probability || 25}
                       onChange={(e) => setFormData(prev => ({ ...prev, probability: Number(e.target.value) }))}
                       placeholder="25"
+                      className="h-10"
                     />
                   </div>
                   
@@ -443,15 +447,15 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
                       }}
                       required={true}
                       showRelativeTime={true}
-                      className="w-full"
+                      className="w-full h-10"
                     />
                   </div>
                 </div>
               </TabsContent>
               
-              <TabsContent value="meddpicc" className="space-y-6">
+              <TabsContent value="meddpicc" className="space-y-6 mt-0">
                 <Card>
-                  <CardHeader>
+                  <CardHeader className="pb-4">
                     <CardTitle className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <TrendUp size={20} />
@@ -565,9 +569,9 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
                 </Card>
               </TabsContent>
 
-              <TabsContent value="ai-insights" className="space-y-6">
+              <TabsContent value="ai-insights" className="space-y-6 mt-0">
                 <Card>
-                  <CardHeader>
+                  <CardHeader className="pb-4">
                     <CardTitle className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Brain size={20} />
@@ -666,8 +670,9 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
                 </Card>
               </TabsContent>
             </Tabs>
+            </div>
             
-            <div className="flex justify-end gap-3 pt-4 border-t">
+            <div className="flex justify-end gap-3 px-6 py-4 border-t bg-background/80 backdrop-blur-sm flex-shrink-0 dialog-footer-fixed">
               <Button type="button" variant="outline" onClick={handleClose}>
                 Cancel
               </Button>

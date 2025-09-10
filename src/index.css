@@ -18,24 +18,25 @@
   --card-foreground: oklch(0.2 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.2 0 0);
-  --primary: oklch(0.45 0.15 240);
+  --primary: oklch(60% 0.118 184.704);
   --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.85 0.08 240);
   --secondary-foreground: oklch(0.2 0 0);
   --muted: oklch(0.95 0 0);
   --muted-foreground: oklch(0.65 0 0);
-  --accent: oklch(0.65 0.18 45);
+  --accent: oklch(77.7% 0.152 181.912);
   --accent-foreground: oklch(1 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(1 0 0);
   --border: oklch(0.9 0 0);
   --input: oklch(0.9 0 0);
   --ring: oklch(0.45 0.15 240);
-  --radius: 0.5rem;
+  --radius: 0.25rem;
+  --font-sans: Cabin;
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
 @theme {
@@ -321,6 +322,67 @@ body {
   min-width: min(90vw, 32rem);
 }
 
+/* Enhanced dialog styles for better form UX */
+[data-radix-dialog-content] {
+  display: flex !important;
+  flex-direction: column !important;
+  max-height: 95vh !important;
+  overflow: hidden !important;
+}
+
+[data-radix-dialog-content] form {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+  overflow: hidden !important;
+}
+
+.dialog-scrollable-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 2px; /* Prevent content from touching scrollbar */
+}
+
+.dialog-scrollable-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dialog-scrollable-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dialog-scrollable-content::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--border));
+  border-radius: 3px;
+}
+
+.dialog-scrollable-content::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--border) / 0.8);
+}
+
+/* Sticky tabs for better navigation */
+.dialog-tabs-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: hsl(var(--background));
+  border-bottom: 1px solid hsl(var(--border));
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+}
+
+/* Fixed footer for form actions */
+.dialog-footer-fixed {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  background: hsl(var(--background) / 0.95);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid hsl(var(--border));
+  margin-top: auto;
+}
+
 input[class*="w-full"], 
 textarea[class*="w-full"], 
 [data-radix-select-trigger] {
@@ -384,6 +446,27 @@ textarea[class*="w-full"],
     min-width: unset;
   }
   
+  /* Enhanced mobile dialog styles */
+  [data-radix-dialog-content] {
+    width: calc(100vw - 1rem) !important;
+    height: calc(100vh - 1rem) !important;
+    max-width: none !important;
+    max-height: none !important;
+    min-width: unset !important;
+    margin: 0.5rem !important;
+  }
+  
+  .dialog-scrollable-content {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+  
+  .dialog-footer-fixed,
+  .dialog-tabs-sticky {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+  
   input[class*="w-full"], 
   textarea[class*="w-full"], 
   [data-radix-select-trigger] {
@@ -395,6 +478,15 @@ textarea[class*="w-full"],
     left: 0.75rem;
     width: 2.5rem;
     height: 2.5rem;
+  }
+  
+  /* Stack form columns on mobile */
+  .grid.grid-cols-1.lg\\:grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .grid.grid-cols-1.sm\\:grid-cols-2.lg\\:grid-cols-3 {
+    grid-template-columns: 1fr !important;
   }
 }
 
