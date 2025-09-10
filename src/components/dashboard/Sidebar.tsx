@@ -265,6 +265,15 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           isNew: true
         },
         {
+          id: 'advanced-analytics',
+          label: 'Advanced Analytics',
+          icon: TrendingUp,
+          description: 'KPI drill-down & detailed insights',
+          permissionId: 'team-analytics',
+          action: 'read',
+          isNew: true
+        },
+        {
           id: 'workflows',
           label: 'Workflows',
           icon: Workflow,
