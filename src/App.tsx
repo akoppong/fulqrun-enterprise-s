@@ -7,13 +7,20 @@ import { Toaster } from './components/ui/sonner';
 
 function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [originalUser, setOriginalUser] = useState<User | null>(null);
 
   const handleLogin = (user: User) => {
     setCurrentUser(user);
+    setOriginalUser(user); // Keep track of the original logged-in user
   };
 
   const handleLogout = () => {
     setCurrentUser(null);
+    setOriginalUser(null);
+  };
+
+  const handleRoleSwitch = (user: User) => {
+    setCurrentUser(user);
   };
 
   return (
@@ -22,7 +29,12 @@ function App() {
         {!currentUser ? (
           <SimpleLoginForm onLogin={handleLogin} />
         ) : (
-          <Dashboard user={currentUser} onLogout={handleLogout} />
+          <Dashboard 
+            user={currentUser} 
+            originalUser={originalUser}
+            onLogout={handleLogout}
+            onRoleSwitch={handleRoleSwitch}
+          />
         )}
         <Toaster />
       </div>

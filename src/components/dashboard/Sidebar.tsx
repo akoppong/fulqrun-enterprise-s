@@ -158,6 +158,23 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
       ]
     },
     {
+      id: 'testing-quick',
+      title: 'Experience & Testing',
+      icon: Crown,
+      defaultOpen: true,
+      items: [
+        {
+          id: 'role-testing',
+          label: 'Role-Based Views',
+          icon: Crown,
+          description: 'Experience different user dashboards',
+          permissionId: 'dashboard',
+          action: 'read',
+          isNew: true
+        }
+      ]
+    },
+    {
       id: 'ai',
       title: 'AI-Powered Features',
       icon: Brain,
@@ -380,6 +397,14 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
       icon: TestTube,
       defaultOpen: false,
       items: [
+        {
+          id: 'role-testing',
+          label: 'Role-Based Dashboards',
+          icon: Crown,
+          description: 'Test different user role dashboards',
+          permissionId: 'dashboard',
+          isNew: true
+        },
         {
           id: 'autosave-interactive',
           label: 'Interactive Demo',

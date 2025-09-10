@@ -1,37 +1,51 @@
 import { User } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { SignOut, Bell } from '@phosphor-icons/react';
+import { SignOut, Bell, Eye } from '@phosphor-icons/react';
 import { Badge } from '@/components/ui/badge';
 
 interface HeaderProps {
   user: User;
+  originalUser?: User | null;
   onLogout: () => void;
 }
 
-export function Header({ user, onLogout }: HeaderProps) {
+export function Header({ user, originalUser, onLogout }: HeaderProps) {
   const getRoleBadge = (role: string) => {
     const roleConfig = {
       rep: { label: 'Sales Rep', variant: 'secondary' as const },
       manager: { label: 'Manager', variant: 'default' as const },
+      bu_head: { label: 'BU Head', variant: 'default' as const },
+      executive: { label: 'Executive', variant: 'default' as const },
       admin: { label: 'Admin', variant: 'destructive' as const }
     };
     return roleConfig[role as keyof typeof roleConfig] || roleConfig.rep;
   };
 
   const roleBadge = getRoleBadge(user.role);
+  const isDemoMode = originalUser && originalUser.id !== user.id;
 
   return (
     <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 px-3 sm:px-4 lg:px-6 py-4 sticky top-0 z-40">
       <div className="flex items-center justify-between">
         {/* Title - hidden on mobile when sidebar is present */}
         <div className="ml-16 lg:ml-0">
-          <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground truncate">
-            FulQrun CRM
-          </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
-            Professional Enterprise Sales Platform
-          </p>
+          <div className="flex items-center space-x-3">
+            <div>
+              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground truncate">
+                FulQrun CRM
+              </h1>
+              <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
+                Professional Enterprise Sales Platform
+              </p>
+            </div>
+            {isDemoMode && (
+              <Badge variant="outline" className="px-2 py-1 text-xs bg-blue-50 text-blue-700 border-blue-200">
+                <Eye className="w-3 h-3 mr-1" />
+                Demo Mode
+              </Badge>
+            )}
+          </div>
         </div>
         
         {/* User controls */}

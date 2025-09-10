@@ -126,6 +126,67 @@ export function SimpleLoginForm({ onLogin }: SimpleLoginFormProps) {
             >
               {isLoading ? 'Signing In...' : 'Sign In'}
             </Button>
+
+            {/* Quick Demo Access */}
+            <div className="pt-4 border-t">
+              <p className="text-center text-sm text-muted-foreground mb-3">
+                Quick Demo Access
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setEmail('demo@fulqrun.com');
+                    setRole('rep');
+                    handleSubmit(new Event('submit') as any);
+                  }}
+                  disabled={isLoading}
+                >
+                  Sales Rep Demo
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setEmail('manager@fulqrun.com');
+                    setRole('manager');
+                    handleSubmit(new Event('submit') as any);
+                  }}
+                  disabled={isLoading}
+                >
+                  Manager Demo
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setEmail('bu.head@fulqrun.com');
+                    setRole('bu_head');
+                    handleSubmit(new Event('submit') as any);
+                  }}
+                  disabled={isLoading}
+                >
+                  BU Head Demo
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setEmail('ceo@fulqrun.com');
+                    setRole('executive');
+                    handleSubmit(new Event('submit') as any);
+                  }}
+                  disabled={isLoading}
+                >
+                  Executive Demo
+                </Button>
+              </div>
+            </div>
           </form>
         </CardContent>
       </Card>

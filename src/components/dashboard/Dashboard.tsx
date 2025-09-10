@@ -39,16 +39,20 @@ import { PersonalizedKPIDashboard } from './PersonalizedKPIDashboard';
 import { KPIDashboardBuilder } from './KPIDashboardBuilder';
 import { AdvancedKPIAnalytics } from './AdvancedKPIAnalytics';
 import { PharmaceuticalKPITemplates } from './PharmaceuticalKPITemplates';
+import { RoleTestingDashboard } from './RoleTestingDashboard';
+import { RoleShowcase } from './RoleShowcase';
 
 interface DashboardProps {
   user: User;
+  originalUser?: User | null;
   onLogout?: () => void;
+  onRoleSwitch?: (user: User) => void;
   initialView?: string;
 }
 
-export type DashboardView = 'dashboard' | 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'advanced-analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'kpi-gallery' | 'kpi-manager' | 'kpi-layout' | 'pharma-kpi-templates' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'autosave-demo' | 'autosave-test' | 'autosave-manual' | 'autosave-interactive' | 'field-testing' | 'comprehensive-testing' | 'validation-demo' | 'date-validation' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit';
+export type DashboardView = 'dashboard' | 'role-testing' | 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'advanced-analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'kpi-gallery' | 'kpi-manager' | 'kpi-layout' | 'pharma-kpi-templates' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'autosave-demo' | 'autosave-test' | 'autosave-manual' | 'autosave-interactive' | 'field-testing' | 'comprehensive-testing' | 'validation-demo' | 'date-validation' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit';
 
-export function Dashboard({ user, onLogout, initialView }: DashboardProps) {
+export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialView }: DashboardProps) {
   const [currentView, setCurrentView] = useState<DashboardView>(
     (initialView as DashboardView) || 'dashboard'
   );
@@ -142,6 +146,13 @@ export function Dashboard({ user, onLogout, initialView }: DashboardProps) {
     switch (currentView) {
       case 'dashboard':
         return <RoleBasedDashboard user={user} />;
+      case 'role-testing':
+        return (
+          <RoleShowcase 
+            currentUser={originalUser || user} 
+            onRoleSwitch={onRoleSwitch || (() => {})}
+          />
+        );
       case 'pipeline':
         return <PipelineView />;
       case 'opportunities':
@@ -324,7 +335,11 @@ export function Dashboard({ user, onLogout, initialView }: DashboardProps) {
       
       {/* Main content area with improved mobile layout */}
       <div className="flex-1 flex flex-col min-w-0">
-        <Header user={user} onLogout={onLogout} />
+        <Header 
+          user={user} 
+          originalUser={originalUser}
+          onLogout={onLogout} 
+        />
         <main className="flex-1 overflow-auto">
           <div className="p-3 sm:p-4 lg:p-6 w-full">
             {renderView()}
