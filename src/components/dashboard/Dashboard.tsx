@@ -13,6 +13,7 @@ import { useKV } from '@github/spark/hooks';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { CustomizableDashboard } from './CustomizableDashboard';
+import { CustomKPILayoutDashboard } from './CustomKPILayoutDashboard';
 import { PipelineView } from './PipelineView';
 import { OpportunityList } from './OpportunityList';
 import { ContactsView } from './ContactsView';
@@ -42,7 +43,7 @@ interface DashboardProps {
   initialView?: string;
 }
 
-export type DashboardView = 'dashboard' | 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'kpi-gallery' | 'kpi-manager' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'autosave-demo' | 'autosave-test' | 'autosave-manual' | 'autosave-interactive' | 'field-testing' | 'comprehensive-testing' | 'validation-demo' | 'date-validation' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit';
+export type DashboardView = 'dashboard' | 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'kpi-gallery' | 'kpi-manager' | 'kpi-layout' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'autosave-demo' | 'autosave-test' | 'autosave-manual' | 'autosave-interactive' | 'field-testing' | 'comprehensive-testing' | 'validation-demo' | 'date-validation' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit';
 
 export function Dashboard({ user, onLogout, initialView }: DashboardProps) {
   const [currentView, setCurrentView] = useState<DashboardView>(
@@ -147,6 +148,8 @@ export function Dashboard({ user, onLogout, initialView }: DashboardProps) {
         return <KPIDashboardGallery />;
       case 'kpi-manager':
         return <PersonalizedKPIDashboard />;
+      case 'kpi-layout':
+        return <CustomKPILayoutDashboard user={user} />;
       case 'learning':
         return (
           <LearningPlatform 

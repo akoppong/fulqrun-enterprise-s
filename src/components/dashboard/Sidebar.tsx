@@ -256,6 +256,15 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           isNew: true
         },
         {
+          id: 'kpi-layout',
+          label: 'Custom KPI Layouts',
+          icon: GridNine,
+          description: 'Drag & drop KPI positioning',
+          permissionId: 'personal-kpis',
+          action: 'write',
+          isNew: true
+        },
+        {
           id: 'workflows',
           label: 'Workflows',
           icon: Workflow,

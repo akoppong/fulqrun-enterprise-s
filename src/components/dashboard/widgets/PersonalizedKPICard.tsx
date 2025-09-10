@@ -101,6 +101,7 @@ export interface PersonalizedKPIData {
 const ICON_MAP = {
   target: Target,
   dollar: DollarSign,
+  'currency-dollar': DollarSign,
   users: Users,
   activity: Activity,
   calendar: Calendar,
@@ -112,12 +113,15 @@ const ICON_MAP = {
   alert: AlertTriangle,
   clock: Clock,
   chart: BarChart3,
+  'chart-bar': BarChart3,
   zap: Zap,
   star: Star,
   heart: Heart,
   shield: Shield,
   trending_up: TrendingUp,
+  'trending-up': TrendingUp,
   trending_down: TrendingDown,
+  'trending-down': TrendingDown,
   arrow_up: ArrowUp,
   arrow_down: ArrowDown,
   arrow_right: ArrowRight,
@@ -125,6 +129,9 @@ const ICON_MAP = {
   lightning: Lightning,
   fire: Fire,
   sparkle: Sparkle,
+  funnel: Target, // Using Target as placeholder for funnel
+  handshake: Award, // Using Award as placeholder for handshake
+  'crystal-ball': Sparkle, // Using Sparkle as placeholder for crystal-ball
 };
 
 interface PersonalizedKPICardProps {
@@ -526,6 +533,39 @@ export function PersonalizedKPICard({
               />
             );
           })}
+        </svg>
+      </div>
+    );
+  };
+
+  const renderSparkline = () => {
+    if (!data.showSparkline || !data.sparklineData?.length) return null;
+
+    const sparkData = data.sparklineData;
+    const max = Math.max(...sparkData);
+    const min = Math.min(...sparkData);
+    const range = max - min || 1;
+    const width = 100;
+    const height = 30;
+
+    const points = sparkData.map((value, index) => {
+      const x = (index / (sparkData.length - 1)) * width;
+      const y = height - ((value - min) / range) * height;
+      return `${x},${y}`;
+    }).join(' ');
+
+    return (
+      <div className="mt-2">
+        <svg width={width} height={height} className="opacity-70">
+          <polyline
+            points={points}
+            fill="none"
+            stroke={data.color || '#3b82f6'}
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="transition-all duration-300"
+          />
         </svg>
       </div>
     );
