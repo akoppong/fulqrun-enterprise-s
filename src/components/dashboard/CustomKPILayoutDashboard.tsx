@@ -472,17 +472,19 @@ export function CustomKPILayoutDashboard({ user, className = '' }: CustomKPILayo
 
     toast.success(`Widget ${visible ? 'shown' : 'hidden'}`);
   }, [currentLayout, setDashboardLayouts]);
-    if (!deleteConfirmation) return;
+
+  const confirmDeleteWidget = useCallback(() => {
+    if (!deleteConfirmation || !currentLayout) return;
 
     const updatedLayout: CustomDashboardLayout = {
-      ...currentLayout!,
-      kpiItems: currentLayout!.kpiItems.filter(item => item.id !== deleteConfirmation.itemId),
+      ...currentLayout,
+      kpiItems: currentLayout.kpiItems.filter(item => item.id !== deleteConfirmation.itemId),
       updatedAt: new Date(),
     };
 
     setDashboardLayouts(current =>
       current.map(layout =>
-        layout.id === currentLayout!.id ? updatedLayout : layout
+        layout.id === currentLayout.id ? updatedLayout : layout
       )
     );
 
