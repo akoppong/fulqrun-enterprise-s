@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { User, Opportunity, Contact, Company, KPITarget } from '@/lib/types';
 import { DemoDataGenerator } from '@/lib/demo-data';
+import { initializeSampleData } from '@/data/sample-opportunities';
 import { useKV } from '@github/spark/hooks';
 import { PipelineView } from './PipelineView';
 import { OpportunityList } from './OpportunityList';
@@ -75,11 +76,21 @@ export function CRMContent({ user, view }: CRMContentProps) {
   useEffect(() => {
     const initializeDemoData = async () => {
       if (companies.length === 0 || contacts.length === 0 || opportunities.length === 0) {
-        const demoData = await DemoDataGenerator.initializeDemoData();
-        
-        if (companies.length === 0) setCompanies(demoData.companies);
-        if (contacts.length === 0) setContacts(demoData.contacts);
-        if (opportunities.length === 0) setOpportunities(demoData.opportunities);
+        // Try to use sample data first for better demonstration
+        try {
+          const sampleData = await initializeSampleData();
+          
+          if (companies.length === 0) setCompanies(sampleData.companies);
+          if (contacts.length === 0) setContacts(sampleData.contacts);  
+          if (opportunities.length === 0) setOpportunities(sampleData.opportunities);
+        } catch (error) {
+          // Fallback to demo data generator if sample data fails
+          const demoData = await DemoDataGenerator.initializeDemoData();
+          
+          if (companies.length === 0) setCompanies(demoData.companies);
+          if (contacts.length === 0) setContacts(demoData.contacts);
+          if (opportunities.length === 0) setOpportunities(demoData.opportunities);
+        }
       }
     };
     
