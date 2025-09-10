@@ -256,6 +256,16 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           isNew: true
         },
         {
+          id: 'pharma-kpi-templates',
+          label: 'Pharma KPI Templates',
+          icon: Activity,
+          description: 'Industry-specific pharmaceutical B2B templates',
+          permissionId: 'personal-kpis',
+          action: 'read',
+          isNew: true,
+          badge: 'NEW'
+        },
+        {
           id: 'kpi-layout',
           label: 'Custom KPI Layouts',
           icon: GridNine,

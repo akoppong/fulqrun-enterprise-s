@@ -969,6 +969,353 @@ export function generateSampleKPIData(): PersonalizedKPIData[] {
 
 // Enhanced KPI Template presets with advanced styling
 export const KPI_TEMPLATES = {
+  // === PHARMACEUTICAL B2B SALES OPERATIONS TEMPLATES ===
+  
+  // Market Access & Formulary Performance
+  formularyAccess: {
+    title: 'Formulary Access Rate',
+    subtitle: 'Products covered by health plans',
+    format: 'percentage' as const,
+    icon: 'shield',
+    color: '#059669',
+    style: 'modern' as const,
+    borderRadius: 'large' as const,
+    shadow: 'medium' as const,
+    animation: 'slide' as const,
+    showTrend: true,
+    showProgress: true,
+    trendChart: {
+      type: 'area' as const,
+      data: [78, 82, 85, 88, 90, 92],
+      color: '#059669',
+      height: 60,
+    },
+    goals: {
+      current: 92,
+      target: 95,
+      milestones: [
+        { value: 85, label: 'Baseline', reached: true },
+        { value: 90, label: 'Target', reached: true },
+        { value: 95, label: 'Excellence', reached: false },
+      ],
+    },
+    customFields: [
+      { label: 'Tier 1 Plans', value: '95%', icon: 'star' },
+      { label: 'Tier 2 Plans', value: '88%', icon: 'award' },
+    ],
+  },
+
+  // Hospital System Penetration
+  hospitalPenetration: {
+    title: 'Hospital System Penetration',
+    subtitle: 'Key accounts with active products',
+    format: 'percentage' as const,
+    icon: 'building',
+    color: '#0ea5e9',
+    style: 'glassmorphic' as const,
+    borderRadius: 'large' as const,
+    shadow: 'glow' as const,
+    animation: 'fade' as const,
+    showTrend: true,
+    showProgress: true,
+    backgroundColor: 'linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(6, 182, 212, 0.1))',
+    trendChart: {
+      type: 'bar' as const,
+      data: [65, 68, 72, 75, 78, 82],
+      color: '#0ea5e9',
+      height: 60,
+    },
+    customFields: [
+      { label: 'Tier 1 Systems', value: '24/30', icon: 'building' },
+      { label: 'New Accounts', value: '3', icon: 'target' },
+    ],
+  },
+
+  // Prescription Volume Growth
+  prescriptionVolume: {
+    title: 'Prescription Volume',
+    subtitle: 'Monthly total Rx volume',
+    format: 'number' as const,
+    unit: 'TRx',
+    icon: 'chart',
+    color: '#7c3aed',
+    style: 'gradient' as const,
+    borderRadius: 'large' as const,
+    shadow: 'large' as const,
+    animation: 'slide' as const,
+    backgroundColor: 'linear-gradient(135deg, #7c3aed, #a855f7)',
+    textColor: '#ffffff',
+    showTrend: true,
+    showSparkline: true,
+    sparklineData: [145000, 152000, 148000, 163000, 170000, 175000],
+    trendChart: {
+      type: 'area' as const,
+      data: [145000, 152000, 148000, 163000, 170000, 175000],
+      color: '#ffffff',
+      height: 60,
+    },
+    customFields: [
+      { label: 'New Rx', value: '28,500', icon: 'sparkle' },
+      { label: 'Refills', value: '146,500', icon: 'activity' },
+    ],
+  },
+
+  // Market Share
+  marketShare: {
+    title: 'Market Share',
+    subtitle: 'Therapeutic area dominance',
+    format: 'percentage' as const,
+    icon: 'target',
+    color: '#dc2626',
+    style: 'modern' as const,
+    borderRadius: 'medium' as const,
+    shadow: 'medium' as const,
+    animation: 'pulse' as const,
+    showTrend: true,
+    showProgress: true,
+    trendChart: {
+      type: 'donut' as const,
+      data: [24.5],
+      color: '#dc2626',
+      height: 80,
+    },
+    alerts: [
+      {
+        threshold: 22,
+        type: 'below' as const,
+        message: 'Market share below competitive threshold',
+      },
+    ],
+    customFields: [
+      { label: 'vs Competitor A', value: '+2.3%', icon: 'trending-up' },
+      { label: 'vs Competitor B', value: '-0.8%', icon: 'trending-down' },
+    ],
+  },
+
+  // Payer Coverage
+  payerCoverage: {
+    title: 'Payer Coverage',
+    subtitle: 'Lives covered across plans',
+    format: 'number' as const,
+    unit: 'M Lives',
+    icon: 'users',
+    color: '#059669',
+    style: 'classic' as const,
+    borderRadius: 'medium' as const,
+    shadow: 'medium' as const,
+    showTrend: true,
+    showProgress: true,
+    trendChart: {
+      type: 'gauge' as const,
+      data: [78],
+      color: '#059669',
+      height: 80,
+    },
+    goals: {
+      current: 78,
+      target: 85,
+      milestones: [
+        { value: 70, label: 'Baseline', reached: true },
+        { value: 80, label: 'Growth', reached: false },
+        { value: 85, label: 'Target', reached: false },
+      ],
+    },
+    customFields: [
+      { label: 'Commercial', value: '45.2M', icon: 'building' },
+      { label: 'Medicare', value: '32.8M', icon: 'shield' },
+    ],
+  },
+
+  // Clinical Trial Enrollment
+  clinicalEnrollment: {
+    title: 'Clinical Trial Enrollment',
+    subtitle: 'Patient recruitment rate',
+    format: 'number' as const,
+    icon: 'activity',
+    color: '#0891b2',
+    style: 'modern' as const,
+    borderRadius: 'large' as const,
+    shadow: 'medium' as const,
+    animation: 'slide' as const,
+    showTrend: true,
+    showProgress: true,
+    trendChart: {
+      type: 'bar' as const,
+      data: [145, 162, 158, 174, 189, 195],
+      color: '#0891b2',
+      height: 60,
+    },
+    customFields: [
+      { label: 'Phase III', value: '123', icon: 'star' },
+      { label: 'Phase II', value: '72', icon: 'award' },
+    ],
+    alerts: [
+      {
+        threshold: 150,
+        type: 'below' as const,
+        message: 'Enrollment below monthly target',
+      },
+    ],
+  },
+
+  // Regulatory Compliance
+  regulatoryCompliance: {
+    title: 'Regulatory Compliance',
+    subtitle: 'Audit readiness score',
+    format: 'percentage' as const,
+    icon: 'shield',
+    color: '#16a34a',
+    style: 'glassmorphic' as const,
+    borderRadius: 'large' as const,
+    shadow: 'glow' as const,
+    animation: 'fade' as const,
+    backgroundColor: 'linear-gradient(135deg, rgba(22, 163, 74, 0.1), rgba(21, 128, 61, 0.1))',
+    showTrend: true,
+    showProgress: true,
+    trendChart: {
+      type: 'gauge' as const,
+      data: [98],
+      color: '#16a34a',
+      height: 80,
+    },
+    customFields: [
+      { label: 'FDA Ready', value: '✓', icon: 'check' },
+      { label: 'EMA Ready', value: '✓', icon: 'check' },
+    ],
+  },
+
+  // Key Opinion Leader Engagement
+  kolEngagement: {
+    title: 'KOL Engagement Score',
+    subtitle: 'Key opinion leader relationships',
+    format: 'number' as const,
+    suffix: '/100',
+    icon: 'users',
+    color: '#ea580c',
+    style: 'gradient' as const,
+    borderRadius: 'full' as const,
+    shadow: 'large' as const,
+    animation: 'slide' as const,
+    backgroundColor: 'linear-gradient(135deg, #ea580c, #f97316)',
+    textColor: '#ffffff',
+    showTrend: true,
+    showSparkline: true,
+    sparklineData: [82, 85, 88, 86, 91, 94],
+    customFields: [
+      { label: 'Tier 1 KOLs', value: '15/18', icon: 'star' },
+      { label: 'Advisory Boards', value: '4', icon: 'users' },
+    ],
+  },
+
+  // Launch Performance
+  launchPerformance: {
+    title: 'Product Launch Velocity',
+    subtitle: 'New product market uptake',
+    format: 'currency' as const,
+    icon: 'zap',
+    color: '#dc2626',
+    style: 'modern' as const,
+    borderRadius: 'medium' as const,
+    shadow: 'glow' as const,
+    animation: 'pulse' as const,
+    showTrend: true,
+    showProgress: true,
+    trendChart: {
+      type: 'area' as const,
+      data: [0, 125000, 285000, 450000, 685000, 890000],
+      color: '#dc2626',
+      height: 60,
+    },
+    goals: {
+      current: 890000,
+      target: 1200000,
+      milestones: [
+        { value: 500000, label: 'Month 3', reached: true },
+        { value: 800000, label: 'Month 6', reached: true },
+        { value: 1200000, label: 'Month 9', reached: false },
+      ],
+    },
+    customFields: [
+      { label: 'Uptake Rate', value: '74%', icon: 'trending-up' },
+      { label: 'Target Met', value: '89%', icon: 'target' },
+    ],
+  },
+
+  // Medical Affairs Engagement
+  medicalEngagement: {
+    title: 'Medical Affairs Impact',
+    subtitle: 'Scientific engagement activities',
+    format: 'number' as const,
+    icon: 'award',
+    color: '#7c2d12',
+    style: 'classic' as const,
+    borderRadius: 'medium' as const,
+    shadow: 'medium' as const,
+    showTrend: true,
+    showProgress: true,
+    trendChart: {
+      type: 'bar' as const,
+      data: [28, 32, 35, 38, 42, 45],
+      color: '#7c2d12',
+      height: 60,
+    },
+    customFields: [
+      { label: 'Publications', value: '12', icon: 'star' },
+      { label: 'Conferences', value: '8', icon: 'calendar' },
+      { label: 'MSL Contacts', value: '156', icon: 'users' },
+    ],
+  },
+
+  // Patient Support Programs
+  patientSupport: {
+    title: 'Patient Support Enrollment',
+    subtitle: 'Hub services utilization',
+    format: 'number' as const,
+    icon: 'heart',
+    color: '#be185d',
+    style: 'gradient' as const,
+    borderRadius: 'large' as const,
+    shadow: 'large' as const,
+    animation: 'fade' as const,
+    backgroundColor: 'linear-gradient(135deg, #be185d, #ec4899)',
+    textColor: '#ffffff',
+    showTrend: true,
+    showSparkline: true,
+    sparklineData: [1250, 1385, 1420, 1580, 1650, 1720],
+    customFields: [
+      { label: 'Copay Cards', value: '1,234', icon: 'dollar' },
+      { label: 'Prior Auth', value: '486', icon: 'shield' },
+    ],
+  },
+
+  // Competitive Intelligence
+  competitiveIntel: {
+    title: 'Competitive Position',
+    subtitle: 'Market position strength',
+    format: 'number' as const,
+    suffix: '/10',
+    icon: 'gauge',
+    color: '#7c3aed',
+    style: 'modern' as const,
+    borderRadius: 'large' as const,
+    shadow: 'medium' as const,
+    animation: 'slide' as const,
+    showTrend: true,
+    trendChart: {
+      type: 'gauge' as const,
+      data: [8.4],
+      color: '#7c3aed',
+      height: 80,
+    },
+    customFields: [
+      { label: 'Price Advantage', value: '+15%', icon: 'dollar' },
+      { label: 'Efficacy Score', value: '9.2/10', icon: 'star' },
+      { label: 'Safety Profile', value: 'Superior', icon: 'shield' },
+    ],
+  },
+
+  // === GENERAL B2B SALES TEMPLATES ===
+  
   modernSales: {
     title: 'Sales Performance',
     format: 'currency' as const,

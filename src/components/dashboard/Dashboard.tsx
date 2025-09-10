@@ -37,6 +37,7 @@ import { PersonalizedKPIManager } from './PersonalizedKPIManager';
 import { PersonalizedKPIDashboard } from './PersonalizedKPIDashboard';
 import { KPIDashboardBuilder } from './KPIDashboardBuilder';
 import { AdvancedKPIAnalytics } from './AdvancedKPIAnalytics';
+import { PharmaceuticalKPITemplates } from './PharmaceuticalKPITemplates';
 
 interface DashboardProps {
   user: User;
@@ -44,7 +45,7 @@ interface DashboardProps {
   initialView?: string;
 }
 
-export type DashboardView = 'dashboard' | 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'advanced-analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'kpi-gallery' | 'kpi-manager' | 'kpi-layout' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'autosave-demo' | 'autosave-test' | 'autosave-manual' | 'autosave-interactive' | 'field-testing' | 'comprehensive-testing' | 'validation-demo' | 'date-validation' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit';
+export type DashboardView = 'dashboard' | 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'advanced-analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'kpi-gallery' | 'kpi-manager' | 'kpi-layout' | 'pharma-kpi-templates' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'autosave-demo' | 'autosave-test' | 'autosave-manual' | 'autosave-interactive' | 'field-testing' | 'comprehensive-testing' | 'validation-demo' | 'date-validation' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit';
 
 export function Dashboard({ user, onLogout, initialView }: DashboardProps) {
   const [currentView, setCurrentView] = useState<DashboardView>(
@@ -153,6 +154,17 @@ export function Dashboard({ user, onLogout, initialView }: DashboardProps) {
         return <PersonalizedKPIDashboard />;
       case 'kpi-layout':
         return <CustomKPILayoutDashboard user={user} />;
+      case 'pharma-kpi-templates':
+        return <PharmaceuticalKPITemplates 
+          onApplyTemplate={(templateData) => {
+            // This could integrate with the KPI manager if needed
+            console.log('Template applied:', templateData);
+          }}
+          onCreateKPI={(kpiData) => {
+            // This could integrate with the KPI manager if needed
+            console.log('KPI created:', kpiData);
+          }}
+        />;
       case 'learning':
         return (
           <LearningPlatform 
