@@ -16,6 +16,7 @@ import {
   Gear,
   Edit,
   Eye,
+  EyeSlash,
   Save,
   RotateCcw,
   Trash,
@@ -26,6 +27,7 @@ import {
   TrendingUp,
   TrendingDown,
   Minus,
+  Plus,
   Copy,
   Download,
   Upload,
@@ -33,15 +35,18 @@ import {
   Layout as LayoutIcon,
   Move,
   Maximize,
+  Minimize,
   Settings2,
   Sparkles,
   Zap,
-  Award
+  Award,
+  Warning
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { User } from '@/lib/types';
 import { PersonalizedKPICard, PersonalizedKPIData } from './widgets/PersonalizedKPICard';
 import { KPIDashboardGallery } from './widgets/KPIDashboardGallery';
+import { WidgetResizeControls, WidgetDragHandle, WidgetInfoBadge } from './widgets/WidgetResizeControls';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -308,6 +313,7 @@ export function CustomKPILayoutDashboard({ user, className = '' }: CustomKPILayo
   const [selectedTemplate, setSelectedTemplate] = useState<keyof typeof LAYOUT_TEMPLATES>('sales-dashboard');
   const [newLayoutName, setNewLayoutName] = useState('');
   const [newLayoutDescription, setNewLayoutDescription] = useState('');
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{ itemId: string; itemName: string } | null>(null);
 
   const currentLayout = useMemo(() => {
     return dashboardLayouts.find(layout => layout.id === currentLayoutId) || 
@@ -446,12 +452,16 @@ export function CustomKPILayoutDashboard({ user, className = '' }: CustomKPILayo
     toast.success(`Added "${kpi.title}" to layout`);
   }, [currentLayout, setDashboardLayouts]);
 
-  const removeKPIFromLayout = useCallback((itemId: string) => {
+  const toggleWidgetVisibility = useCallback((itemId: string, visible: boolean) => {
     if (!currentLayout) return;
+
+    const updatedKPIItems = currentLayout.kpiItems.map(item =>
+      item.id === itemId ? { ...item, visible } : item
+    );
 
     const updatedLayout: CustomDashboardLayout = {
       ...currentLayout,
-      kpiItems: currentLayout.kpiItems.filter(item => item.id !== itemId),
+      kpiItems: updatedKPIItems,
       updatedAt: new Date(),
     };
 
@@ -461,10 +471,87 @@ export function CustomKPILayoutDashboard({ user, className = '' }: CustomKPILayo
       )
     );
 
-    toast.success('KPI removed from layout');
+    toast.success(`Widget ${visible ? 'shown' : 'hidden'}`);
   }, [currentLayout, setDashboardLayouts]);
+    if (!deleteConfirmation) return;
 
-  const duplicateLayout = useCallback(() => {
+    const updatedLayout: CustomDashboardLayout = {
+      ...currentLayout!,
+      kpiItems: currentLayout!.kpiItems.filter(item => item.id !== deleteConfirmation.itemId),
+      updatedAt: new Date(),
+    };
+
+    setDashboardLayouts(current =>
+      current.map(layout =>
+        layout.id === currentLayout!.id ? updatedLayout : layout
+      )
+    );
+
+    toast.success(`"${deleteConfirmation.itemName}" removed from layout`);
+    setDeleteConfirmation(null);
+  }, [deleteConfirmation, currentLayout, setDashboardLayouts]);
+
+  const requestDeleteWidget = useCallback((itemId: string, itemName: string) => {
+    setDeleteConfirmation({ itemId, itemName });
+  }, []);
+
+  const removeKPIFromLayout = useCallback((itemId: string, itemName?: string) => {
+    if (!currentLayout) return;
+
+    const kpiItem = currentLayout.kpiItems.find(item => item.id === itemId);
+    const kpiData = kpiItem ? availableKPIs.find(kpi => kpi.id === kpiItem.kpiId) : null;
+    const displayName = itemName || kpiData?.title || 'KPI';
+
+    // Show confirmation dialog for better UX
+    requestDeleteWidget(itemId, displayName);
+  }, [currentLayout, availableKPIs, requestDeleteWidget]);
+
+  const resizeWidget = useCallback((itemId: string, sizeChange: 'increase' | 'decrease' | 'custom', customSize?: { w: number; h: number; minW?: number; minH?: number; maxW?: number; maxH?: number }) => {
+    if (!currentLayout) return;
+
+    const updatedKPIItems = currentLayout.kpiItems.map(item => {
+      if (item.id === itemId) {
+        let newWidth = item.layout.w;
+        let newHeight = item.layout.h;
+
+        if (sizeChange === 'custom' && customSize) {
+          newWidth = customSize.w;
+          newHeight = customSize.h;
+        } else if (sizeChange === 'increase') {
+          newWidth = Math.min(item.layout.w + 1, 12);
+          newHeight = Math.min(item.layout.h + 1, 8);
+        } else {
+          newWidth = Math.max(item.layout.w - 1, 2);
+          newHeight = Math.max(item.layout.h - 1, 1);
+        }
+
+        return {
+          ...item,
+          layout: {
+            ...item.layout,
+            w: newWidth,
+            h: newHeight,
+          }
+        };
+      }
+      return item;
+    });
+
+    const updatedLayout: CustomDashboardLayout = {
+      ...currentLayout,
+      kpiItems: updatedKPIItems,
+      updatedAt: new Date(),
+    };
+
+    setDashboardLayouts(current =>
+      current.map(layout =>
+        layout.id === currentLayout.id ? updatedLayout : layout
+      )
+    );
+
+    const actionText = sizeChange === 'custom' ? 'resized' : (sizeChange === 'increase' ? 'enlarged' : 'shrunk');
+    toast.success(`Widget ${actionText}`);
+  }, [currentLayout, setDashboardLayouts]);
     if (!currentLayout) return;
 
     const duplicatedLayout: CustomDashboardLayout = {
@@ -548,8 +635,9 @@ export function CustomKPILayoutDashboard({ user, className = '' }: CustomKPILayo
     h: item.layout.h,
     minW: 2,
     minH: 1,
-    maxW: 8,
-    maxH: 6,
+    maxW: 12,
+    maxH: 8,
+    isResizable: isEditMode,
   }));
 
   return (
@@ -871,31 +959,66 @@ export function CustomKPILayoutDashboard({ user, className = '' }: CustomKPILayo
 
               return (
                 <div key={item.id} className="relative group">
-                  <Card className={`h-full transition-all duration-200 ${
+                  <Card className={`h-full transition-all duration-200 relative overflow-hidden ${
                     isEditMode 
-                      ? 'ring-2 ring-transparent hover:ring-primary/50 cursor-move' 
+                      ? 'ring-2 ring-transparent hover:ring-primary/50 cursor-move group' 
                       : 'hover:shadow-lg'
-                  }`}>
+                  } ${!item.visible ? 'opacity-50' : ''}`}>
                     {isEditMode && (
-                      <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-6 w-6 p-0 drag-handle cursor-move"
-                          title="Drag to move"
-                        >
-                          <Move className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-6 w-6 p-0"
-                          onClick={() => removeKPIFromLayout(item.id)}
-                          title="Remove KPI"
-                        >
-                          <Trash className="h-3 w-3 text-destructive" />
-                        </Button>
-                      </div>
+                      <>
+                        {/* Widget Controls Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[5]" />
+                        
+                        {/* Top Controls */}
+                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                          <WidgetResizeControls
+                            itemId={item.id}
+                            itemName={kpiData?.title || 'Widget'}
+                            currentSize={{
+                              w: item.layout.w,
+                              h: item.layout.h,
+                              minW: 2,
+                              minH: 1,
+                              maxW: 12,
+                              maxH: 8
+                            }}
+                            visible={item.visible}
+                            onResize={resizeWidget}
+                            onDelete={removeKPIFromLayout}
+                            onVisibilityToggle={toggleWidgetVisibility}
+                          />
+                        </div>
+
+                        {/* Drag Handle */}
+                        <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                          <WidgetDragHandle />
+                        </div>
+
+                        {/* Size Indicator */}
+                        <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                          <WidgetInfoBadge 
+                            width={item.layout.w} 
+                            height={item.layout.h} 
+                          />
+                        </div>
+
+                        {/* Enhanced Resize Handle */}
+                        <div className="absolute bottom-0 right-0 w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="w-full h-full bg-gradient-to-tl from-primary/30 to-transparent rounded-tl-lg flex items-center justify-center">
+                            <div className="w-3 h-3 border-r-2 border-b-2 border-primary/80 transform rotate-45" />
+                          </div>
+                        </div>
+
+                        {/* Visibility Indicator */}
+                        {!item.visible && (
+                          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[6]">
+                            <Badge variant="secondary" className="bg-background/90 backdrop-blur-sm">
+                              <EyeSlash className="h-3 w-3 mr-1" />
+                              Hidden
+                            </Badge>
+                          </div>
+                        )}
+                      </>
                     )}
                     <PersonalizedKPICard
                       data={kpiData}
@@ -926,6 +1049,41 @@ export function CustomKPILayoutDashboard({ user, className = '' }: CustomKPILayo
           </CardContent>
         </Card>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!deleteConfirmation} onOpenChange={(open) => !open && setDeleteConfirmation(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Warning className="h-5 w-5 text-destructive" />
+              Remove Widget
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-muted-foreground">
+              Are you sure you want to remove "{deleteConfirmation?.itemName}" from your dashboard layout?
+            </p>
+            <p className="text-sm text-muted-foreground">
+              This action cannot be undone, but you can always add the widget back later.
+            </p>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteConfirmation(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDeleteWidget}
+            >
+              <Trash className="h-4 w-4 mr-2" />
+              Remove Widget
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

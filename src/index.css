@@ -232,11 +232,14 @@ body {
 .react-grid-item.resizing {
   transition: none;
   z-index: 1;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
 .react-grid-item.react-draggable-dragging {
   transition: none;
   z-index: 3;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+  transform: rotate(2deg) !important;
 }
 
 .react-grid-item.react-grid-placeholder {
@@ -244,6 +247,11 @@ body {
   opacity: 0.2;
   border: 2px dashed hsl(59 130 246 / 0.4);
   border-radius: 8px;
+  animation: pulse 2s infinite;
+}
+
+.react-resizable-handle {
+  position: absolute;
 }
 
 .react-resizable-handle-se {
@@ -252,14 +260,56 @@ body {
   cursor: se-resize;
   width: 20px;
   height: 20px;
-  background: hsl(59 130 246 / 0.1);
+  background: linear-gradient(-45deg, transparent 0%, transparent 40%, hsl(var(--primary)) 40%, hsl(var(--primary)) 60%, transparent 60%);
   border-top-left-radius: 4px;
   opacity: 0;
   transition: opacity 200ms ease;
 }
 
 .react-grid-item:hover .react-resizable-handle-se {
+  opacity: 0.8;
+}
+
+.react-grid-item.resizing .react-resizable-handle-se {
   opacity: 1;
+  background: hsl(var(--primary));
+}
+
+/* Widget resize animations */
+.widget-resize-animation {
+  animation: widgetResize 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes widgetResize {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Widget delete animation */
+.widget-delete-animation {
+  animation: widgetDelete 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes widgetDelete {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.95) rotate(1deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.8) rotate(2deg);
+  }
 }
 
 /* === FORMS & DIALOGS === */
