@@ -31,12 +31,23 @@ import {
   List,
   SortAscending,
   Phone,
-  Envelope
+  Envelope,
+  CheckCircle,
+  Circle,
+  Warning,
+  Trophy,
+  ClockCounterClockwise,
+  User,
+  CurrencyDollar,
+  FileText,
+  ChartLineUp
 } from '@phosphor-icons/react';
 import { OpportunityEditForm } from './OpportunityEditForm';
-import { formatCurrency, getMEDDPICCScore } from '@/lib/crm-utils';
+import { formatCurrency, getMEDDPICCScore, getStageProgress } from '@/lib/crm-utils';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
 
 interface OpportunitiesViewProps {
   className?: string;
@@ -539,11 +550,14 @@ interface OpportunityDetailDialogProps {
 function OpportunityDetailDialog({ isOpen, onClose, opportunity, onEdit, onDelete }: OpportunityDetailDialogProps) {
   const [companies] = useKV<Company[]>('companies', []);
   const [contacts] = useKV<Contact[]>('contacts', []);
+  const [activeTab, setActiveTab] = useState('overview');
   
   const company = companies.find(c => c.id === opportunity.companyId);
   const contact = contacts.find(c => c.id === opportunity.contactId);
   const stageConfig = PEAK_STAGES.find(s => s.value === opportunity.stage) || PEAK_STAGES[0];
   const priorityBadge = getPriorityBadge(opportunity.priority);
+  const meddpicScore = getMEDDPICCScore(opportunity.meddpicc);
+  const stageProgress = getStageProgress(opportunity.stage);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -572,7 +586,7 @@ function OpportunityDetailDialog({ isOpen, onClose, opportunity, onEdit, onDelet
                 </div>
                 <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
-                    <span>📊 Not specified</span>
+                    <span>📊 {stageConfig.label}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Calendar size={14} />
@@ -619,12 +633,12 @@ function OpportunityDetailDialog({ isOpen, onClose, opportunity, onEdit, onDelet
               <Card className="bg-card border-border">
                 <CardContent className="p-6 text-center">
                   <div className="mb-2">
-                    <TrendingUp size={24} className="mx-auto text-red-500" />
+                    <TrendingUp size={24} className={`mx-auto ${meddpicScore < 50 ? 'text-red-500' : meddpicScore < 80 ? 'text-yellow-500' : 'text-green-500'}`} />
                   </div>
-                  <div className="text-2xl font-bold text-red-600 mb-1">
-                    {getMEDDPICCScore(opportunity.meddpicc)}%
+                  <div className={`text-2xl font-bold mb-1 ${meddpicScore < 50 ? 'text-red-600' : meddpicScore < 80 ? 'text-yellow-600' : 'text-green-600'}`}>
+                    {meddpicScore}%
                   </div>
-                  <div className="text-sm text-muted-foreground">Deal Health</div>
+                  <div className="text-sm text-muted-foreground">MEDDPICC Score</div>
                 </CardContent>
               </Card>
               
@@ -641,165 +655,455 @@ function OpportunityDetailDialog({ isOpen, onClose, opportunity, onEdit, onDelet
               </Card>
             </div>
 
-            {/* Navigation Tabs */}
-            <div className="border-b border-border">
-              <div className="flex space-x-8">
-                <button className="border-b-2 border-primary text-primary font-medium py-2 px-1">
-                  Overview
-                </button>
-                <button className="text-muted-foreground hover:text-foreground py-2 px-1">
-                  PEAK
-                </button>
-                <button className="text-muted-foreground hover:text-foreground py-2 px-1">
-                  MEDDPICC
-                </button>
-                <button className="text-muted-foreground hover:text-foreground py-2 px-1">
-                  Activities
-                </button>
-                <button className="text-muted-foreground hover:text-foreground py-2 px-1">
-                  Contacts
-                </button>
-                <button className="text-muted-foreground hover:text-foreground py-2 px-1">
-                  Analytics
-                </button>
-              </div>
-            </div>
+            {/* Interactive Tabs */}
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-6">
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="peak">PEAK</TabsTrigger>
+                <TabsTrigger value="meddpicc">MEDDPICC</TabsTrigger>
+                <TabsTrigger value="activities">Activities</TabsTrigger>
+                <TabsTrigger value="contacts">Contacts</TabsTrigger>
+                <TabsTrigger value="analytics">Analytics</TabsTrigger>
+              </TabsList>
 
-            {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Opportunity Details */}
-              <Card className="bg-card border-border">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-lg font-semibold">Opportunity Details</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <div className="text-sm font-medium text-muted-foreground mb-1">Stage</div>
-                      <Badge className={`${stageConfig.color} text-primary bg-primary/10`}>
-                        {stageConfig.label.toLowerCase()}
-                      </Badge>
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium text-muted-foreground mb-1">Priority</div>
-                      <Badge variant="secondary" className={priorityBadge.className}>
-                        {(opportunity.priority || 'medium').toLowerCase()}
-                      </Badge>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <div className="text-sm font-medium text-muted-foreground mb-1">Source</div>
-                      <div className="text-sm">Not Specified</div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium text-muted-foreground mb-1">Industry</div>
-                      <div className="text-sm">Not Specified</div>
-                    </div>
-                  </div>
-
-                  {opportunity.description && (
-                    <div>
-                      <div className="text-sm font-medium text-muted-foreground mb-1">Description</div>
-                      <p className="text-sm text-foreground">
-                        {opportunity.description}
-                      </p>
-                    </div>
-                  )}
-
-                  {opportunity.tags && opportunity.tags.length > 0 && (
-                    <div>
-                      <div className="text-sm font-medium text-muted-foreground mb-2">Tags</div>
-                      <div className="flex flex-wrap gap-1">
-                        {opportunity.tags.map((tag, index) => (
-                          <Badge key={index} variant="secondary" className="text-xs bg-muted">
-                            {tag}
+              {/* Overview Tab */}
+              <TabsContent value="overview" className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Opportunity Details */}
+                  <Card className="bg-card border-border">
+                    <CardHeader className="pb-4">
+                      <CardTitle className="text-lg font-semibold">Opportunity Details</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <div className="text-sm font-medium text-muted-foreground mb-1">Stage</div>
+                          <Badge className={`${stageConfig.color} text-primary bg-primary/10`}>
+                            {stageConfig.label.toLowerCase()}
                           </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Primary Contact */}
-              <Card className="bg-card border-border">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-lg font-semibold">Primary Contact</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {contact ? (
-                    <div className="space-y-4">
-                      <div className="flex items-start gap-4">
-                        <Avatar className="h-12 w-12">
-                          <AvatarFallback className="bg-muted">
-                            {contact.firstName[0]}{contact.lastName[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="font-medium text-foreground">
-                            {contact.firstName} {contact.lastName}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {contact.title || 'No title specified'}
-                          </div>
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-muted-foreground mb-1">Priority</div>
+                          <Badge variant="secondary" className={priorityBadge.className}>
+                            {(opportunity.priority || 'medium').toLowerCase()}
+                          </Badge>
                         </div>
                       </div>
                       
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Envelope size={14} />
-                          <span>{contact.email}</span>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <div className="text-sm font-medium text-muted-foreground mb-1">Source</div>
+                          <div className="text-sm">{opportunity.leadSource || 'Not Specified'}</div>
                         </div>
-                        {contact.phone && (
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Phone size={14} />
-                            <span>{contact.phone}</span>
+                        <div>
+                          <div className="text-sm font-medium text-muted-foreground mb-1">Industry</div>
+                          <div className="text-sm">{opportunity.industry || 'Not Specified'}</div>
+                        </div>
+                      </div>
+
+                      {opportunity.description && (
+                        <div>
+                          <div className="text-sm font-medium text-muted-foreground mb-1">Description</div>
+                          <p className="text-sm text-foreground">
+                            {opportunity.description}
+                          </p>
+                        </div>
+                      )}
+
+                      {opportunity.tags && opportunity.tags.length > 0 && (
+                        <div>
+                          <div className="text-sm font-medium text-muted-foreground mb-2">Tags</div>
+                          <div className="flex flex-wrap gap-1">
+                            {opportunity.tags.map((tag, index) => (
+                              <Badge key={index} variant="secondary" className="text-xs bg-muted">
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Primary Contact */}
+                  <Card className="bg-card border-border">
+                    <CardHeader className="pb-4">
+                      <CardTitle className="text-lg font-semibold">Primary Contact</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {contact ? (
+                        <div className="space-y-4">
+                          <div className="flex items-start gap-4">
+                            <Avatar className="h-12 w-12">
+                              <AvatarFallback className="bg-muted">
+                                {contact.firstName[0]}{contact.lastName[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1">
+                              <div className="font-medium text-foreground">
+                                {contact.firstName} {contact.lastName}
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                {contact.title || 'No title specified'}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Envelope size={14} />
+                              <span>{contact.email}</span>
+                            </div>
+                            {contact.phone && (
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <Phone size={14} />
+                                <span>{contact.phone}</span>
+                              </div>
+                            )}
+                          </div>
+                          
+                          <Button variant="outline" size="sm" className="w-full">
+                            View Contact Details
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <div className="mb-4">
+                            <Users size={48} className="mx-auto text-muted-foreground opacity-40" />
+                          </div>
+                          <div className="text-muted-foreground mb-4">
+                            No primary contact assigned
+                          </div>
+                          <Button variant="outline" size="sm">
+                            Add Contact
+                          </Button>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              {/* PEAK Tab */}
+              <TabsContent value="peak" className="space-y-6">
+                <Card className="bg-card border-border">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg font-semibold">PEAK Methodology</CardTitle>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">Progress:</span>
+                        <span className="text-sm font-medium">{stageProgress}%</span>
+                      </div>
+                    </div>
+                    <Progress value={stageProgress} className="w-full" />
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {PEAK_STAGES.map((stage, index) => {
+                      const isCurrentStage = stage.value === opportunity.stage;
+                      const isPastStage = PEAK_STAGES.findIndex(s => s.value === opportunity.stage) > index;
+                      
+                      return (
+                        <div key={stage.value} className={`p-4 rounded-lg border ${
+                          isCurrentStage ? 'border-primary bg-primary/5' : 
+                          isPastStage ? 'border-green-200 bg-green-50' : 
+                          'border-border bg-muted/30'
+                        }`}>
+                          <div className="flex items-start gap-3">
+                            <div className={`p-2 rounded-full ${
+                              isCurrentStage ? 'bg-primary text-primary-foreground' :
+                              isPastStage ? 'bg-green-500 text-white' :
+                              'bg-muted text-muted-foreground'
+                            }`}>
+                              {isPastStage ? <CheckCircle size={20} /> :
+                               isCurrentStage ? <ClockCounterClockwise size={20} /> :
+                               <Circle size={20} />}
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-lg mb-1">{stage.label}</h3>
+                              <p className="text-muted-foreground mb-3">{stage.description}</p>
+                              
+                              {/* Stage-specific content */}
+                              {stage.value === 'prospect' && (
+                                <div className="space-y-2">
+                                  <div className="text-sm">
+                                    <span className="font-medium">Key Activities:</span> Lead qualification, initial contact, needs assessment
+                                  </div>
+                                  <div className="text-sm">
+                                    <span className="font-medium">Success Criteria:</span> Qualified lead, contact established, basic needs identified
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {stage.value === 'engage' && (
+                                <div className="space-y-2">
+                                  <div className="text-sm">
+                                    <span className="font-medium">Key Activities:</span> Discovery calls, stakeholder mapping, solution presentation
+                                  </div>
+                                  <div className="text-sm">
+                                    <span className="font-medium">Success Criteria:</span> Requirements understood, decision makers identified, proposal requested
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {stage.value === 'acquire' && (
+                                <div className="space-y-2">
+                                  <div className="text-sm">
+                                    <span className="font-medium">Key Activities:</span> Proposal development, negotiation, contract finalization
+                                  </div>
+                                  <div className="text-sm">
+                                    <span className="font-medium">Success Criteria:</span> Proposal accepted, terms agreed, contract signed
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {stage.value === 'keep' && (
+                                <div className="space-y-2">
+                                  <div className="text-sm">
+                                    <span className="font-medium">Key Activities:</span> Onboarding, relationship management, expansion opportunities
+                                  </div>
+                                  <div className="text-sm">
+                                    <span className="font-medium">Success Criteria:</span> Successful implementation, satisfied customer, renewal/expansion
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* MEDDPICC Tab */}
+              <TabsContent value="meddpicc" className="space-y-6">
+                <Card className="bg-card border-border">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg font-semibold">MEDDPICC Qualification</CardTitle>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">Score:</span>
+                        <span className={`text-lg font-bold ${
+                          meddpicScore < 50 ? 'text-red-600' : 
+                          meddpicScore < 80 ? 'text-yellow-600' : 
+                          'text-green-600'
+                        }`}>{meddpicScore}%</span>
+                      </div>
+                    </div>
+                    <Progress value={meddpicScore} className="w-full" />
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Metrics */}
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <ChartLineUp size={18} className="text-primary" />
+                          <h3 className="font-semibold">Metrics</h3>
+                          {opportunity.meddpicc.metrics ? (
+                            <CheckCircle size={16} className="text-green-500" />
+                          ) : (
+                            <Warning size={16} className="text-yellow-500" />
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">What economic impact can we measure?</p>
+                        <p className="text-sm">{opportunity.meddpicc.metrics || 'Not defined'}</p>
+                      </div>
+
+                      {/* Economic Buyer */}
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <User size={18} className="text-primary" />
+                          <h3 className="font-semibold">Economic Buyer</h3>
+                          {opportunity.meddpicc.economicBuyer ? (
+                            <CheckCircle size={16} className="text-green-500" />
+                          ) : (
+                            <Warning size={16} className="text-yellow-500" />
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">Who has the economic authority?</p>
+                        <p className="text-sm">{opportunity.meddpicc.economicBuyer || 'Not identified'}</p>
+                      </div>
+
+                      {/* Decision Criteria */}
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <FileText size={18} className="text-primary" />
+                          <h3 className="font-semibold">Decision Criteria</h3>
+                          {opportunity.meddpicc.decisionCriteria ? (
+                            <CheckCircle size={16} className="text-green-500" />
+                          ) : (
+                            <Warning size={16} className="text-yellow-500" />
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">What criteria will they use to decide?</p>
+                        <p className="text-sm">{opportunity.meddpicc.decisionCriteria || 'Not defined'}</p>
+                      </div>
+
+                      {/* Decision Process */}
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Target size={18} className="text-primary" />
+                          <h3 className="font-semibold">Decision Process</h3>
+                          {opportunity.meddpicc.decisionProcess ? (
+                            <CheckCircle size={16} className="text-green-500" />
+                          ) : (
+                            <Warning size={16} className="text-yellow-500" />
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">How will they make the decision?</p>
+                        <p className="text-sm">{opportunity.meddpicc.decisionProcess || 'Not defined'}</p>
+                      </div>
+
+                      {/* Paper Process */}
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <FileText size={18} className="text-primary" />
+                          <h3 className="font-semibold">Paper Process</h3>
+                          {opportunity.meddpicc.paperProcess ? (
+                            <CheckCircle size={16} className="text-green-500" />
+                          ) : (
+                            <Warning size={16} className="text-yellow-500" />
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">What's the approval/procurement process?</p>
+                        <p className="text-sm">{opportunity.meddpicc.paperProcess || 'Not defined'}</p>
+                      </div>
+
+                      {/* Implicate Pain */}
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Warning size={18} className="text-primary" />
+                          <h3 className="font-semibold">Implicate Pain</h3>
+                          {opportunity.meddpicc.implicatePain ? (
+                            <CheckCircle size={16} className="text-green-500" />
+                          ) : (
+                            <Warning size={16} className="text-yellow-500" />
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">What pain are we addressing?</p>
+                        <p className="text-sm">{opportunity.meddpicc.implicatePain || 'Not identified'}</p>
+                      </div>
+
+                      {/* Champion */}
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Trophy size={18} className="text-primary" />
+                          <h3 className="font-semibold">Champion</h3>
+                          {opportunity.meddpicc.champion ? (
+                            <CheckCircle size={16} className="text-green-500" />
+                          ) : (
+                            <Warning size={16} className="text-yellow-500" />
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">Who is actively selling for us?</p>
+                        <p className="text-sm">{opportunity.meddpicc.champion || 'Not identified'}</p>
+                      </div>
+
+                      {/* Competition */}
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Users size={18} className="text-primary" />
+                          <h3 className="font-semibold">Competition</h3>
+                          <Warning size={16} className="text-yellow-500" />
+                        </div>
+                        <p className="text-sm text-muted-foreground">What competition are we facing?</p>
+                        <p className="text-sm">Not tracked</p>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t">
+                      <h3 className="font-semibold mb-3">Qualification Health</h3>
+                      <div className="space-y-2">
+                        {meddpicScore >= 80 && (
+                          <div className="flex items-center gap-2 text-green-600">
+                            <CheckCircle size={16} />
+                            <span className="text-sm">Excellent qualification - deal is well qualified</span>
+                          </div>
+                        )}
+                        {meddpicScore >= 50 && meddpicScore < 80 && (
+                          <div className="flex items-center gap-2 text-yellow-600">
+                            <Warning size={16} />
+                            <span className="text-sm">Good qualification - some areas need attention</span>
+                          </div>
+                        )}
+                        {meddpicScore < 50 && (
+                          <div className="flex items-center gap-2 text-red-600">
+                            <Warning size={16} />
+                            <span className="text-sm">Poor qualification - significant gaps need to be addressed</span>
                           </div>
                         )}
                       </div>
-                      
-                      <Button variant="outline" size="sm" className="w-full">
-                        Add Contact
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Activities Tab */}
+              <TabsContent value="activities" className="space-y-6">
+                <Card className="bg-card border-border">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-lg font-semibold">Recent Activities</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center py-12">
+                      <div className="mb-4">
+                        <TrendingUp size={48} className="mx-auto text-muted-foreground opacity-40" />
+                      </div>
+                      <div className="text-muted-foreground mb-4">
+                        No activities recorded
+                      </div>
+                      <Button variant="outline" size="sm">
+                        Add Activity
                       </Button>
                     </div>
-                  ) : (
-                    <div className="text-center py-8">
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Contacts Tab */}
+              <TabsContent value="contacts" className="space-y-6">
+                <Card className="bg-card border-border">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-lg font-semibold">Deal Contacts</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center py-12">
                       <div className="mb-4">
                         <Users size={48} className="mx-auto text-muted-foreground opacity-40" />
                       </div>
                       <div className="text-muted-foreground mb-4">
-                        No primary contact assigned
+                        No additional contacts added
                       </div>
                       <Button variant="outline" size="sm">
                         Add Contact
                       </Button>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-            {/* Recent Activities */}
-            <Card className="bg-card border-border">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-semibold">Recent Activities</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12">
-                  <div className="mb-4">
-                    <TrendingUp size={48} className="mx-auto text-muted-foreground opacity-40" />
-                  </div>
-                  <div className="text-muted-foreground mb-4">
-                    No activities recorded
-                  </div>
-                  <Button variant="outline" size="sm">
-                    Add Activity
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+              {/* Analytics Tab */}
+              <TabsContent value="analytics" className="space-y-6">
+                <Card className="bg-card border-border">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-lg font-semibold">Deal Analytics</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center py-12">
+                      <div className="mb-4">
+                        <ChartBar size={48} className="mx-auto text-muted-foreground opacity-40" />
+                      </div>
+                      <div className="text-muted-foreground mb-4">
+                        Analytics coming soon
+                      </div>
+                      <Button variant="outline" size="sm" disabled>
+                        View Analytics
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </div>
         </ScrollArea>
 
