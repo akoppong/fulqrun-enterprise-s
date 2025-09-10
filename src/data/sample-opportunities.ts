@@ -214,6 +214,12 @@ export const sampleOpportunities: Opportunity[] = [
 ];
 
 export const initializeSampleData = async () => {
+  // Initialize sample data and trigger OpportunityService initialization
+  if (typeof window !== 'undefined') {
+    const { OpportunityService } = await import('../lib/opportunity-service');
+    await OpportunityService.initializeSampleData();
+  }
+  
   // This function can be used to populate sample data for demonstration
   return {
     companies: sampleCompanies,
