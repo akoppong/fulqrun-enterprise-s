@@ -42,24 +42,29 @@ import { PersonalizedKPIData, PersonalizedKPICard, KPI_TEMPLATES } from './widge
 import { useKV } from '@github/spark/hooks';
 import { toast } from 'sonner';
 
-// Color palette for KPI customization
+// Enhanced color palette for KPI customization
 const COLOR_PALETTE = [
   '#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4',
   '#84cc16', '#ec4899', '#f97316', '#6366f1', '#14b8a6', '#eab308',
-  '#64748b', '#71717a', '#374151', '#1f2937'
+  '#64748b', '#71717a', '#374151', '#1f2937', '#dc2626', '#059669',
+  '#7c3aed', '#db2777', '#9333ea', '#0ea5e9', '#22c55e', '#f97316'
 ];
 
-// Gradient options
+// Enhanced gradient options
 const GRADIENT_OPTIONS = [
-  { name: 'Ocean', value: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
-  { name: 'Sunset', value: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
-  { name: 'Forest', value: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' },
-  { name: 'Aurora', value: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' },
-  { name: 'Fire', value: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' },
-  { name: 'Night', value: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)' },
+  { name: 'Ocean Blue', value: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
+  { name: 'Sunset Orange', value: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
+  { name: 'Forest Green', value: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' },
+  { name: 'Aurora Mint', value: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' },
+  { name: 'Fire Coral', value: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' },
+  { name: 'Purple Haze', value: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)' },
+  { name: 'Electric Blue', value: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
+  { name: 'Golden Hour', value: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)' },
+  { name: 'Mystic Purple', value: 'linear-gradient(135deg, #8360c3 0%, #2ebf91 100%)' },
+  { name: 'Arctic Ice', value: 'linear-gradient(135deg, #74b9ff 0%, #0984e3 100%)' },
 ];
 
-// Available icons
+// Enhanced available icons
 const ICON_OPTIONS = [
   { value: 'target', label: 'Target' },
   { value: 'dollar', label: 'Dollar' },
@@ -78,6 +83,51 @@ const ICON_OPTIONS = [
   { value: 'star', label: 'Star' },
   { value: 'heart', label: 'Heart' },
   { value: 'shield', label: 'Shield' },
+  { value: 'gauge', label: 'Gauge' },
+  { value: 'lightning', label: 'Lightning' },
+  { value: 'fire', label: 'Fire' },
+  { value: 'sparkle', label: 'Sparkle' },
+];
+
+// Style options
+const STYLE_OPTIONS = [
+  { value: 'modern', label: 'Modern', description: 'Clean, contemporary design' },
+  { value: 'classic', label: 'Classic', description: 'Traditional business style' },
+  { value: 'minimal', label: 'Minimal', description: 'Simple and clean' },
+  { value: 'gradient', label: 'Gradient', description: 'Colorful gradient backgrounds' },
+  { value: 'glassmorphic', label: 'Glassmorphic', description: 'Frosted glass effect' },
+];
+
+const BORDER_RADIUS_OPTIONS = [
+  { value: 'none', label: 'None' },
+  { value: 'small', label: 'Small' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'large', label: 'Large' },
+  { value: 'full', label: 'Rounded' },
+];
+
+const SHADOW_OPTIONS = [
+  { value: 'none', label: 'None' },
+  { value: 'small', label: 'Small' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'large', label: 'Large' },
+  { value: 'glow', label: 'Glow Effect' },
+];
+
+const ANIMATION_OPTIONS = [
+  { value: 'none', label: 'None' },
+  { value: 'pulse', label: 'Pulse' },
+  { value: 'bounce', label: 'Bounce' },
+  { value: 'slide', label: 'Slide' },
+  { value: 'fade', label: 'Fade' },
+];
+
+const CHART_TYPE_OPTIONS = [
+  { value: 'line', label: 'Line Chart' },
+  { value: 'area', label: 'Area Chart' },
+  { value: 'bar', label: 'Bar Chart' },
+  { value: 'gauge', label: 'Gauge' },
+  { value: 'donut', label: 'Donut Chart' },
 ];
 
 interface PersonalizedKPIManagerProps {
@@ -100,7 +150,7 @@ export function PersonalizedKPIManager({ onKPIUpdate }: PersonalizedKPIManagerPr
     }
   }, [kpis, onKPIUpdate]);
 
-  // Initialize with sample KPIs if empty
+  // Initialize with enhanced sample KPIs if empty
   useEffect(() => {
     if (kpis.length === 0) {
       const sampleKPIs: PersonalizedKPIData[] = [
@@ -118,10 +168,20 @@ export function PersonalizedKPIManager({ onKPIUpdate }: PersonalizedKPIManagerPr
           status: 'success',
           icon: 'dollar',
           color: '#10b981',
+          style: 'modern',
+          borderRadius: 'large',
+          shadow: 'medium',
+          animation: 'slide',
           showProgress: true,
           showTrend: true,
-          showSparkline: true,
+          showSparkline: false,
           sparklineData: [120000, 128000, 132000, 138000, 142000, 145200],
+          trendChart: {
+            type: 'area',
+            data: [120000, 128000, 132000, 138000, 142000, 145200],
+            color: '#10b981',
+            height: 60,
+          },
           lastUpdated: new Date(),
         },
         {
@@ -135,11 +195,58 @@ export function PersonalizedKPIManager({ onKPIUpdate }: PersonalizedKPIManagerPr
           status: 'info',
           icon: 'target',
           color: '#3b82f6',
+          style: 'glassmorphic',
+          borderRadius: 'medium',
+          shadow: 'glow',
+          animation: 'fade',
           showTrend: true,
+          trendChart: {
+            type: 'bar',
+            data: [28, 30, 32, 29, 31, 34],
+            color: '#3b82f6',
+            height: 50,
+          },
           customFields: [
             { label: 'Qualified', value: '22', icon: 'check' },
             { label: 'In Review', value: '12', icon: 'clock' },
           ],
+          lastUpdated: new Date(),
+        },
+        {
+          id: 'performance-kpi',
+          title: 'Team Performance',
+          subtitle: 'Overall team score',
+          value: 87,
+          target: 100,
+          format: 'percentage',
+          trend: 'up',
+          trendValue: '+3.2%',
+          trendLabel: 'this week',
+          status: 'success',
+          icon: 'gauge',
+          color: '#8b5cf6',
+          style: 'gradient',
+          borderRadius: 'large',
+          shadow: 'large',
+          animation: 'pulse',
+          backgroundColor: 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)',
+          textColor: '#ffffff',
+          showTrend: true,
+          trendChart: {
+            type: 'gauge',
+            data: [87],
+            color: '#ffffff',
+            height: 80,
+          },
+          goals: {
+            current: 87,
+            target: 100,
+            milestones: [
+              { value: 75, label: 'Good', reached: true },
+              { value: 90, label: 'Great', reached: false },
+              { value: 100, label: 'Perfect', reached: false },
+            ],
+          },
           lastUpdated: new Date(),
         },
       ];
@@ -241,10 +348,11 @@ export function PersonalizedKPIManager({ onKPIUpdate }: PersonalizedKPIManagerPr
   const renderKPIForm = () => (
     <div className="space-y-6">
       <Tabs defaultValue="basic" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="basic">Basic</TabsTrigger>
           <TabsTrigger value="styling">Styling</TabsTrigger>
           <TabsTrigger value="trends">Trends</TabsTrigger>
+          <TabsTrigger value="charts">Charts</TabsTrigger>
           <TabsTrigger value="advanced">Advanced</TabsTrigger>
         </TabsList>
 
@@ -341,34 +449,58 @@ export function PersonalizedKPIManager({ onKPIUpdate }: PersonalizedKPIManagerPr
           </div>
         </TabsContent>
 
-        <TabsContent value="styling" className="space-y-4 mt-4">
-          <div>
-            <Label htmlFor="icon">Icon</Label>
-            <Select
-              value={formData.icon || 'target'}
-              onValueChange={(value) => setFormData({ ...formData, icon: value })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {ICON_OPTIONS.map((icon) => (
-                  <SelectItem key={icon.value} value={icon.value}>
-                    {icon.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        <TabsContent value="styling" className="space-y-6 mt-4">
+          <div className="grid grid-cols-2 gap-6">
+            <div>
+              <Label htmlFor="icon">Icon</Label>
+              <Select
+                value={formData.icon || 'target'}
+                onValueChange={(value) => setFormData({ ...formData, icon: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ICON_OPTIONS.map((icon) => (
+                    <SelectItem key={icon.value} value={icon.value}>
+                      {icon.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="style">Style</Label>
+              <Select
+                value={formData.style || 'modern'}
+                onValueChange={(value) => setFormData({ ...formData, style: value as any })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {STYLE_OPTIONS.map((style) => (
+                    <SelectItem key={style.value} value={style.value}>
+                      <div>
+                        <div className="font-medium">{style.label}</div>
+                        <div className="text-xs text-muted-foreground">{style.description}</div>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div>
-            <Label>Color</Label>
+            <Label>Primary Color</Label>
             <div className="flex flex-wrap gap-2 mt-2">
               {COLOR_PALETTE.map((color) => (
                 <button
                   key={color}
-                  className={`w-8 h-8 rounded-full border-2 ${
-                    formData.color === color ? 'border-primary' : 'border-transparent'
+                  className={`w-10 h-10 rounded-lg border-2 transition-all ${
+                    formData.color === color ? 'border-primary ring-2 ring-primary/20' : 'border-border hover:border-primary/50'
                   }`}
                   style={{ backgroundColor: color }}
                   onClick={() => setFormData({ ...formData, color })}
@@ -379,39 +511,98 @@ export function PersonalizedKPIManager({ onKPIUpdate }: PersonalizedKPIManagerPr
 
           <div>
             <Label>Background Style</Label>
-            <div className="grid grid-cols-2 gap-2 mt-2">
+            <div className="grid grid-cols-2 gap-2 mt-2 mb-4">
               <Button
                 variant={!formData.backgroundColor?.includes('gradient') ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setFormData({ ...formData, backgroundColor: '#ffffff' })}
+                onClick={() => setFormData({ ...formData, backgroundColor: undefined, style: 'modern' })}
               >
                 Solid Color
               </Button>
               <Button
                 variant={formData.backgroundColor?.includes('gradient') ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setFormData({ ...formData, backgroundColor: GRADIENT_OPTIONS[0].value })}
+                onClick={() => setFormData({ ...formData, backgroundColor: GRADIENT_OPTIONS[0].value, style: 'gradient' })}
               >
                 Gradient
               </Button>
             </div>
             
             {formData.backgroundColor?.includes('gradient') && (
-              <div className="grid grid-cols-2 gap-2 mt-2">
+              <div className="grid grid-cols-2 gap-2">
                 {GRADIENT_OPTIONS.map((gradient) => (
                   <button
                     key={gradient.name}
-                    className={`h-8 rounded border-2 ${
-                      formData.backgroundColor === gradient.value ? 'border-primary' : 'border-border'
+                    className={`h-12 rounded-lg border-2 transition-all flex items-center justify-center text-white text-xs font-medium ${
+                      formData.backgroundColor === gradient.value ? 'border-primary ring-2 ring-primary/20' : 'border-border hover:border-primary/50'
                     }`}
                     style={{ background: gradient.value }}
                     onClick={() => setFormData({ ...formData, backgroundColor: gradient.value })}
                   >
-                    <span className="text-xs text-white font-medium">{gradient.name}</span>
+                    {gradient.name}
                   </button>
                 ))}
               </div>
             )}
+          </div>
+
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="borderRadius">Border Radius</Label>
+              <Select
+                value={formData.borderRadius || 'medium'}
+                onValueChange={(value) => setFormData({ ...formData, borderRadius: value as any })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {BORDER_RADIUS_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="shadow">Shadow</Label>
+              <Select
+                value={formData.shadow || 'medium'}
+                onValueChange={(value) => setFormData({ ...formData, shadow: value as any })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SHADOW_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="animation">Animation</Label>
+              <Select
+                value={formData.animation || 'none'}
+                onValueChange={(value) => setFormData({ ...formData, animation: value as any })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ANIMATION_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div>
@@ -529,7 +720,165 @@ export function PersonalizedKPIManager({ onKPIUpdate }: PersonalizedKPIManagerPr
           )}
         </TabsContent>
 
-        <TabsContent value="advanced" className="space-y-4 mt-4">
+        <TabsContent value="charts" className="space-y-4 mt-4">
+          <div className="flex items-center space-x-2">
+            <Switch
+              checked={!!formData.trendChart}
+              onCheckedChange={(checked) => {
+                if (checked) {
+                  setFormData({
+                    ...formData,
+                    trendChart: {
+                      type: 'line',
+                      data: [10, 20, 15, 30, 25, 35],
+                      color: formData.color || '#3b82f6',
+                      height: 60,
+                    }
+                  });
+                } else {
+                  const { trendChart, ...rest } = formData;
+                  setFormData(rest);
+                }
+              }}
+            />
+            <Label>Advanced Chart Visualization</Label>
+          </div>
+
+          {formData.trendChart && (
+            <div className="space-y-4 pl-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="chartType">Chart Type</Label>
+                  <Select
+                    value={formData.trendChart.type || 'line'}
+                    onValueChange={(value) => setFormData({
+                      ...formData,
+                      trendChart: { ...formData.trendChart!, type: value as any }
+                    })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CHART_TYPE_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label>Chart Height ({formData.trendChart.height || 60}px)</Label>
+                  <Slider
+                    value={[formData.trendChart.height || 60]}
+                    onValueChange={([value]) => setFormData({
+                      ...formData,
+                      trendChart: { ...formData.trendChart!, height: value }
+                    })}
+                    min={40}
+                    max={120}
+                    step={10}
+                    className="mt-2"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label>Chart Data (comma-separated)</Label>
+                <Input
+                  value={formData.trendChart.data?.join(', ') || ''}
+                  onChange={(e) => {
+                    const values = e.target.value.split(',').map(v => parseFloat(v.trim())).filter(v => !isNaN(v));
+                    setFormData({
+                      ...formData,
+                      trendChart: { ...formData.trendChart!, data: values }
+                    });
+                  }}
+                  placeholder="10, 20, 15, 30, 25, 35"
+                />
+              </div>
+
+              <div>
+                <Label>Chart Color</Label>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {COLOR_PALETTE.slice(0, 12).map((color) => (
+                    <button
+                      key={color}
+                      className={`w-8 h-8 rounded-full border-2 ${
+                        formData.trendChart?.color === color ? 'border-primary' : 'border-transparent'
+                      }`}
+                      style={{ backgroundColor: color }}
+                      onClick={() => setFormData({
+                        ...formData,
+                        trendChart: { ...formData.trendChart!, color }
+                      })}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="advanced" className="space-y-6 mt-4">
+          <div>
+            <Label>Goal Tracking</Label>
+            <div className="flex items-center space-x-2 mt-2">
+              <Switch
+                checked={!!formData.goals}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    setFormData({
+                      ...formData,
+                      goals: {
+                        current: typeof formData.value === 'number' ? formData.value : 0,
+                        target: formData.target || 100,
+                        milestones: []
+                      }
+                    });
+                  } else {
+                    const { goals, ...rest } = formData;
+                    setFormData(rest);
+                  }
+                }}
+              />
+              <Label>Enable Goal Progress Tracking</Label>
+            </div>
+
+            {formData.goals && (
+              <div className="space-y-4 pl-6 mt-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Current Value</Label>
+                    <Input
+                      type="number"
+                      value={formData.goals.current || 0}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        goals: { ...formData.goals!, current: parseFloat(e.target.value) || 0 }
+                      })}
+                    />
+                  </div>
+                  <div>
+                    <Label>Target Value</Label>
+                    <Input
+                      type="number"
+                      value={formData.goals.target || 0}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        goals: { ...formData.goals!, target: parseFloat(e.target.value) || 0 }
+                      })}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <Separator />
+
           <div>
             <Label>Custom Fields</Label>
             <div className="space-y-2 mt-2">
@@ -588,15 +937,21 @@ export function PersonalizedKPIManager({ onKPIUpdate }: PersonalizedKPIManagerPr
 
           <div>
             <Label>Templates</Label>
-            <div className="grid grid-cols-2 gap-2 mt-2">
+            <div className="grid grid-cols-1 gap-2 mt-2">
               {Object.entries(KPI_TEMPLATES).map(([key, template]) => (
                 <Button
                   key={key}
                   variant="outline"
                   size="sm"
+                  className="justify-start h-auto p-3"
                   onClick={() => handleApplyTemplate(key as keyof typeof KPI_TEMPLATES)}
                 >
-                  {template.title}
+                  <div className="text-left">
+                    <div className="font-medium">{template.title}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {template.style} style • {template.format} format
+                    </div>
+                  </div>
                 </Button>
               ))}
             </div>
@@ -604,25 +959,77 @@ export function PersonalizedKPIManager({ onKPIUpdate }: PersonalizedKPIManagerPr
         </TabsContent>
       </Tabs>
 
-      {/* Live Preview */}
+      {/* Enhanced Live Preview */}
       {(formData.title || editingKPI) && (
-        <div>
-          <Label>Preview</Label>
-          <div className="mt-2 max-w-sm">
-            <PersonalizedKPICard
-              data={{
-                id: 'preview',
-                title: 'Sample Title',
-                value: 1234,
-                format: 'number',
-                icon: 'target',
-                color: '#3b82f6',
-                lastUpdated: new Date(),
-                ...(editingKPI || {}),
-                ...formData,
-              }}
-              variant="default"
-            />
+        <div className="mt-8">
+          <div className="flex justify-between items-center mb-4">
+            <Label className="text-base font-medium">Live Preview</Label>
+            <div className="flex gap-2">
+              <Badge variant="outline" className="text-xs">
+                {formData.style || 'modern'} style
+              </Badge>
+              {formData.trendChart && (
+                <Badge variant="outline" className="text-xs">
+                  {formData.trendChart.type} chart
+                </Badge>
+              )}
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label className="text-sm text-muted-foreground">Compact</Label>
+              <PersonalizedKPICard
+                data={{
+                  id: 'preview-compact',
+                  title: 'Sample Title',
+                  value: 1234,
+                  format: 'number',
+                  icon: 'target',
+                  color: '#3b82f6',
+                  lastUpdated: new Date(),
+                  ...(editingKPI || {}),
+                  ...formData,
+                }}
+                variant="compact"
+                size="sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm text-muted-foreground">Default</Label>
+              <PersonalizedKPICard
+                data={{
+                  id: 'preview-default',
+                  title: 'Sample Title',
+                  value: 1234,
+                  format: 'number',
+                  icon: 'target',
+                  color: '#3b82f6',
+                  lastUpdated: new Date(),
+                  ...(editingKPI || {}),
+                  ...formData,
+                }}
+                variant="default"
+                size="md"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm text-muted-foreground">Minimal</Label>
+              <PersonalizedKPICard
+                data={{
+                  id: 'preview-minimal',
+                  title: 'Sample Title',
+                  value: 1234,
+                  format: 'number',
+                  icon: 'target',
+                  color: '#3b82f6',
+                  lastUpdated: new Date(),
+                  ...(editingKPI || {}),
+                  ...formData,
+                }}
+                variant="minimal"
+                size="sm"
+              />
+            </div>
           </div>
         </div>
       )}

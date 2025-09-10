@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,10 +26,14 @@ import {
   Shield,
   ArrowUp,
   ArrowDown,
-  ArrowRight
+  ArrowRight,
+  Gauge,
+  Lightning,
+  Fire,
+  Sparkle
 } from '@phosphor-icons/react';
 
-// Enhanced KPI data structure
+// Enhanced KPI data structure with advanced customization
 export interface PersonalizedKPIData {
   id: string;
   title: string;
@@ -66,9 +70,34 @@ export interface PersonalizedKPIData {
     value: string;
     icon?: string;
   }[];
+  // Enhanced styling options
+  style?: 'modern' | 'classic' | 'minimal' | 'gradient' | 'glassmorphic';
+  borderRadius?: 'none' | 'small' | 'medium' | 'large' | 'full';
+  shadow?: 'none' | 'small' | 'medium' | 'large' | 'glow';
+  animation?: 'none' | 'pulse' | 'bounce' | 'slide' | 'fade';
+  // Advanced trend visualization
+  trendChart?: {
+    type: 'line' | 'bar' | 'area' | 'gauge' | 'donut';
+    data: number[];
+    color?: string;
+    gradient?: string;
+    height?: number;
+  };
+  // Goal tracking
+  goals?: {
+    current: number;
+    target: number;
+    deadline?: Date;
+    milestones?: { value: number; label: string; reached: boolean }[];
+  };
+  // Time series data for advanced charts
+  timeSeriesData?: {
+    timestamp: Date;
+    value: number;
+  }[];
 }
 
-// Icon mapping
+// Icon mapping with more options
 const ICON_MAP = {
   target: Target,
   dollar: DollarSign,
@@ -92,6 +121,10 @@ const ICON_MAP = {
   arrow_up: ArrowUp,
   arrow_down: ArrowDown,
   arrow_right: ArrowRight,
+  gauge: Gauge,
+  lightning: Lightning,
+  fire: Fire,
+  sparkle: Sparkle,
 };
 
 interface PersonalizedKPICardProps {
@@ -115,6 +148,7 @@ export function PersonalizedKPICard({
 }: PersonalizedKPICardProps) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [currentValue, setCurrentValue] = useState(data.value);
+  const [isHovered, setIsHovered] = useState(false);
 
   // Auto-refresh functionality
   useEffect(() => {
@@ -135,6 +169,34 @@ export function PersonalizedKPICard({
       return () => clearTimeout(timer);
     }
   }, [data.value, currentValue]);
+
+  // Calculate dynamic styling based on data
+  const dynamicStyles = useMemo(() => {
+    const baseStyles: React.CSSProperties = {
+      backgroundColor: data.backgroundColor,
+      borderColor: data.color,
+      color: data.textColor,
+    };
+
+    // Apply gradient backgrounds
+    if (data.style === 'gradient' && data.backgroundColor?.includes('gradient')) {
+      baseStyles.background = data.backgroundColor;
+    }
+
+    // Glassmorphic effect
+    if (data.style === 'glassmorphic') {
+      baseStyles.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+      baseStyles.backdropFilter = 'blur(20px)';
+      baseStyles.border = '1px solid rgba(255, 255, 255, 0.2)';
+    }
+
+    // Glow effect
+    if (data.shadow === 'glow' && data.color) {
+      baseStyles.boxShadow = `0 0 20px ${data.color}33`;
+    }
+
+    return baseStyles;
+  }, [data.backgroundColor, data.color, data.textColor, data.style, data.shadow]);
 
   const formatValue = (value: string | number): string => {
     if (typeof value === 'string') return value;
@@ -189,15 +251,66 @@ export function PersonalizedKPICard({
   };
 
   const getStatusColor = () => {
+    if (data.style === 'glassmorphic') return '';
+    
     switch (data.status) {
       case 'success':
-        return 'border-emerald-200 bg-emerald-50';
+        return 'border-emerald-200 bg-emerald-50/50';
       case 'warning':
-        return 'border-amber-200 bg-amber-50';
+        return 'border-amber-200 bg-amber-50/50';
       case 'danger':
-        return 'border-red-200 bg-red-50';
+        return 'border-red-200 bg-red-50/50';
       case 'info':
-        return 'border-blue-200 bg-blue-50';
+        return 'border-blue-200 bg-blue-50/50';
+      default:
+        return '';
+    }
+  };
+
+  const getBorderRadiusClass = () => {
+    switch (data.borderRadius) {
+      case 'none':
+        return 'rounded-none';
+      case 'small':
+        return 'rounded-sm';
+      case 'large':
+        return 'rounded-xl';
+      case 'full':
+        return 'rounded-3xl';
+      default:
+        return 'rounded-lg';
+    }
+  };
+
+  const getShadowClass = () => {
+    switch (data.shadow) {
+      case 'none':
+        return '';
+      case 'small':
+        return 'shadow-sm';
+      case 'medium':
+        return 'shadow-md';
+      case 'large':
+        return 'shadow-lg';
+      case 'glow':
+        return 'shadow-xl';
+      default:
+        return 'shadow';
+    }
+  };
+
+  const getAnimationClass = () => {
+    if (!data.animation || data.animation === 'none') return '';
+    
+    switch (data.animation) {
+      case 'pulse':
+        return isHovered ? 'animate-pulse' : '';
+      case 'bounce':
+        return isHovered ? 'animate-bounce' : '';
+      case 'slide':
+        return 'transform transition-transform hover:translate-y-[-2px]';
+      case 'fade':
+        return 'transition-opacity hover:opacity-80';
       default:
         return '';
     }
@@ -205,47 +318,255 @@ export function PersonalizedKPICard({
 
   const IconComponent = data.icon ? ICON_MAP[data.icon as keyof typeof ICON_MAP] : null;
 
-  const cardStyle = {
-    backgroundColor: data.backgroundColor,
-    borderColor: data.color,
-    color: data.textColor,
-  };
-
   const getSizeClasses = () => {
     switch (size) {
       case 'sm':
         return 'min-h-[120px]';
       case 'lg':
-        return 'min-h-[200px]';
+        return 'min-h-[240px]';
       default:
-        return 'min-h-[160px]';
+        return 'min-h-[180px]';
     }
   };
 
-  const renderSparkline = () => {
-    if (!data.showSparkline || !data.sparklineData?.length) return null;
+  const renderAdvancedChart = () => {
+    if (!data.trendChart?.data?.length) return null;
 
-    const max = Math.max(...data.sparklineData);
-    const min = Math.min(...data.sparklineData);
+    const { type, data: chartData, color, height = 60 } = data.trendChart;
+    const chartColor = color || data.color || '#3b82f6';
+
+    switch (type) {
+      case 'gauge':
+        return renderGaugeChart(chartData[chartData.length - 1], 100, chartColor, height);
+      case 'donut':
+        return renderDonutChart(chartData[chartData.length - 1], 100, chartColor, height);
+      case 'area':
+        return renderAreaChart(chartData, chartColor, height);
+      case 'bar':
+        return renderBarChart(chartData, chartColor, height);
+      default:
+        return renderLineChart(chartData, chartColor, height);
+    }
+  };
+
+  const renderGaugeChart = (value: number, max: number, color: string, height: number) => {
+    const percentage = Math.min((value / max) * 100, 100);
+    const circumference = 2 * Math.PI * 40;
+    const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+    return (
+      <div className="flex items-center justify-center" style={{ height: `${height}px` }}>
+        <svg width="80" height="80" className="transform -rotate-90">
+          <circle
+            cx="40"
+            cy="40"
+            r="35"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="6"
+            className="opacity-20"
+          />
+          <circle
+            cx="40"
+            cy="40"
+            r="35"
+            fill="none"
+            stroke={color}
+            strokeWidth="6"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            className="transition-all duration-1000 ease-in-out"
+          />
+          <text
+            x="40"
+            y="45"
+            textAnchor="middle"
+            className="text-xs font-bold transform rotate-90"
+            fill="currentColor"
+          >
+            {Math.round(percentage)}%
+          </text>
+        </svg>
+      </div>
+    );
+  };
+
+  const renderDonutChart = (value: number, max: number, color: string, height: number) => {
+    const percentage = Math.min((value / max) * 100, 100);
+    const circumference = 2 * Math.PI * 25;
+    const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+    return (
+      <div className="flex items-center justify-center" style={{ height: `${height}px` }}>
+        <svg width="60" height="60" className="transform -rotate-90">
+          <circle
+            cx="30"
+            cy="30"
+            r="25"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="8"
+            className="opacity-10"
+          />
+          <circle
+            cx="30"
+            cy="30"
+            r="25"
+            fill="none"
+            stroke={color}
+            strokeWidth="8"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            className="transition-all duration-1000 ease-in-out"
+          />
+        </svg>
+      </div>
+    );
+  };
+
+  const renderAreaChart = (chartData: number[], color: string, height: number) => {
+    const max = Math.max(...chartData);
+    const min = Math.min(...chartData);
     const range = max - min || 1;
+    const width = 120;
 
-    const points = data.sparklineData.map((value, index) => {
-      const x = (index / (data.sparklineData!.length - 1)) * 60;
-      const y = 20 - ((value - min) / range) * 20;
+    const points = chartData.map((value, index) => {
+      const x = (index / (chartData.length - 1)) * width;
+      const y = height - ((value - min) / range) * (height - 10);
+      return `${x},${y}`;
+    }).join(' ');
+
+    const areaPoints = `0,${height} ${points} ${width},${height}`;
+
+    return (
+      <div className="mt-2">
+        <svg width={width} height={height} className="opacity-80">
+          <defs>
+            <linearGradient id={`gradient-${data.id}`} x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={color} stopOpacity="0.3" />
+              <stop offset="100%" stopColor={color} stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <polygon
+            points={areaPoints}
+            fill={`url(#gradient-${data.id})`}
+          />
+          <polyline
+            points={points}
+            fill="none"
+            stroke={color}
+            strokeWidth="2"
+            className="opacity-80"
+          />
+        </svg>
+      </div>
+    );
+  };
+
+  const renderBarChart = (chartData: number[], color: string, height: number) => {
+    const max = Math.max(...chartData);
+    const barWidth = 100 / chartData.length - 2;
+
+    return (
+      <div className="mt-2 flex items-end gap-1" style={{ height: `${height}px` }}>
+        {chartData.map((value, index) => (
+          <div
+            key={index}
+            className="transition-all duration-500 ease-in-out rounded-sm"
+            style={{
+              width: `${barWidth}%`,
+              height: `${(value / max) * height}px`,
+              backgroundColor: color,
+              opacity: 0.8,
+            }}
+          />
+        ))}
+      </div>
+    );
+  };
+
+  const renderLineChart = (chartData: number[], color: string, height: number) => {
+    const max = Math.max(...chartData);
+    const min = Math.min(...chartData);
+    const range = max - min || 1;
+    const width = 120;
+
+    const points = chartData.map((value, index) => {
+      const x = (index / (chartData.length - 1)) * width;
+      const y = height - ((value - min) / range) * height;
       return `${x},${y}`;
     }).join(' ');
 
     return (
       <div className="mt-2">
-        <svg width="60" height="20" className="opacity-60">
+        <svg width={width} height={height} className="opacity-80">
           <polyline
             points={points}
             fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            className="opacity-80"
+            stroke={color}
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="transition-all duration-500"
           />
+          {/* Data points */}
+          {chartData.map((value, index) => {
+            const x = (index / (chartData.length - 1)) * width;
+            const y = height - ((value - min) / range) * height;
+            return (
+              <circle
+                key={index}
+                cx={x}
+                cy={y}
+                r="2"
+                fill={color}
+                className="opacity-60"
+              />
+            );
+          })}
         </svg>
+      </div>
+    );
+  };
+
+  const renderGoalProgress = () => {
+    if (!data.goals) return null;
+
+    const { current, target, milestones } = data.goals;
+    const percentage = Math.min((current / target) * 100, 100);
+
+    return (
+      <div className="mt-3 space-y-2">
+        <div className="flex justify-between text-xs">
+          <span>Goal Progress</span>
+          <span>{Math.round(percentage)}% of {formatValue(target)}</span>
+        </div>
+        <div className="relative">
+          <Progress value={percentage} className="h-3" />
+          {milestones?.map((milestone, index) => {
+            const milestonePosition = (milestone.value / target) * 100;
+            return (
+              <div
+                key={index}
+                className="absolute top-0 transform -translate-x-1/2"
+                style={{ left: `${milestonePosition}%` }}
+              >
+                <div
+                  className={`w-3 h-3 rounded-full border-2 ${
+                    milestone.reached
+                      ? 'bg-emerald-500 border-emerald-500'
+                      : 'bg-white border-gray-300'
+                  }`}
+                />
+                <div className="absolute top-4 left-1/2 transform -translate-x-1/2 text-xs whitespace-nowrap">
+                  {milestone.label}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     );
   };
@@ -315,20 +636,34 @@ export function PersonalizedKPICard({
   if (variant === 'minimal') {
     return (
       <Card
-        className={`${className} ${getSizeClasses()} ${getStatusColor()} cursor-pointer hover:shadow-md transition-all duration-200`}
-        style={cardStyle}
+        className={`${className} ${getSizeClasses()} ${getStatusColor()} ${getBorderRadiusClass()} ${getShadowClass()} ${getAnimationClass()} cursor-pointer hover:shadow-lg transition-all duration-300`}
+        style={dynamicStyles}
         onClick={onClick}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
         <CardContent className="p-4 flex items-center justify-between">
-          <div>
-            <div className="text-sm text-muted-foreground">{data.title}</div>
-            <div className={`text-xl font-bold ${isAnimating ? 'animate-pulse' : ''}`}>
+          <div className="flex-1">
+            <div className="text-sm text-muted-foreground truncate">{data.title}</div>
+            <div className={`text-xl font-bold ${isAnimating ? 'animate-pulse' : ''} ${data.animation === 'pulse' && isHovered ? 'animate-pulse' : ''}`}>
               {data.prefix}{formatValue(currentValue)}{data.suffix}
             </div>
+            {data.showTrend && data.trendValue && (
+              <div className={`text-xs flex items-center gap-1 ${getTrendColor()}`}>
+                {getTrendIcon()}
+                <span>{data.trendValue}</span>
+              </div>
+            )}
           </div>
-          {IconComponent && (
-            <IconComponent className="h-6 w-6 text-muted-foreground" />
-          )}
+          <div className="flex flex-col items-center gap-2">
+            {IconComponent && (
+              <IconComponent 
+                className="h-6 w-6 text-muted-foreground" 
+                style={{ color: data.color }} 
+              />
+            )}
+            {data.trendChart && renderAdvancedChart()}
+          </div>
         </CardContent>
       </Card>
     );
@@ -337,34 +672,46 @@ export function PersonalizedKPICard({
   if (variant === 'compact') {
     return (
       <Card
-        className={`${className} ${getSizeClasses()} ${getStatusColor()} cursor-pointer hover:shadow-md transition-all duration-200`}
-        style={cardStyle}
+        className={`${className} ${getSizeClasses()} ${getStatusColor()} ${getBorderRadiusClass()} ${getShadowClass()} ${getAnimationClass()} cursor-pointer hover:shadow-lg transition-all duration-300`}
+        style={dynamicStyles}
         onClick={onClick}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
         <CardContent className="p-4">
-          <div className="flex items-start justify-between mb-2">
-            <div className="flex items-center gap-2">
+          <div className="flex items-start justify-between mb-3">
+            <div className="flex items-center gap-2 flex-1">
               {IconComponent && (
-                <IconComponent className="h-5 w-5" style={{ color: data.color }} />
+                <IconComponent className="h-5 w-5 flex-shrink-0" style={{ color: data.color }} />
               )}
-              <div className="text-sm font-medium">{data.title}</div>
+              <div className="text-sm font-medium truncate">{data.title}</div>
             </div>
             {data.showTrend && getTrendIcon()}
           </div>
           
-          <div className={`text-2xl font-bold ${isAnimating ? 'animate-pulse' : ''}`}>
+          <div className={`text-2xl font-bold mb-2 ${isAnimating ? 'animate-pulse' : ''}`}>
             {data.prefix}{formatValue(currentValue)}{data.suffix}
+            {data.unit && <span className="text-sm text-muted-foreground ml-1">{data.unit}</span>}
           </div>
           
           {data.showTrend && data.trendValue && (
-            <div className={`text-sm flex items-center gap-1 ${getTrendColor()}`}>
+            <div className={`text-sm flex items-center gap-1 ${getTrendColor()} mb-2`}>
               <span>{data.trendValue}</span>
               {data.trendLabel && <span className="text-muted-foreground">({data.trendLabel})</span>}
             </div>
           )}
 
-          {renderSparkline()}
-          {renderProgressBar()}
+          <div className="flex justify-between items-end">
+            <div className="flex-1">
+              {renderSparkline()}
+              {renderProgressBar()}
+            </div>
+            {data.trendChart && (
+              <div className="ml-2">
+                {renderAdvancedChart()}
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
     );
@@ -373,58 +720,68 @@ export function PersonalizedKPICard({
   // Default and detailed variants
   return (
     <Card
-      className={`${className} ${getSizeClasses()} ${getStatusColor()} cursor-pointer hover:shadow-md transition-all duration-200`}
-      style={cardStyle}
+      className={`${className} ${getSizeClasses()} ${getStatusColor()} ${getBorderRadiusClass()} ${getShadowClass()} ${getAnimationClass()} cursor-pointer hover:shadow-lg transition-all duration-300`}
+      style={dynamicStyles}
       onClick={onClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-1">
             {IconComponent && (
-              <IconComponent className="h-5 w-5" style={{ color: data.color }} />
+              <IconComponent className="h-5 w-5 flex-shrink-0" style={{ color: data.color }} />
             )}
-            <CardTitle className="text-sm font-medium">{data.title}</CardTitle>
+            <CardTitle className="text-sm font-medium truncate">{data.title}</CardTitle>
           </div>
-          {data.status && data.status !== 'neutral' && (
-            <Badge variant={data.status === 'success' ? 'default' : 'secondary'} className="text-xs">
-              {data.status}
-            </Badge>
-          )}
+          <div className="flex items-center gap-2">
+            {data.status && data.status !== 'neutral' && (
+              <Badge 
+                variant={data.status === 'success' ? 'default' : 'secondary'} 
+                className="text-xs"
+              >
+                {data.status}
+              </Badge>
+            )}
+            {data.showTrend && getTrendIcon()}
+          </div>
         </div>
         {data.subtitle && (
-          <p className="text-xs text-muted-foreground">{data.subtitle}</p>
+          <p className="text-xs text-muted-foreground mt-1">{data.subtitle}</p>
         )}
       </CardHeader>
       
-      <CardContent className="pt-0">
-        <div className="flex items-baseline justify-between mb-2">
-          <div className={`text-2xl font-bold ${isAnimating ? 'animate-pulse' : ''}`}>
-            {data.prefix}{formatValue(currentValue)}{data.suffix}
-            {data.unit && <span className="text-sm text-muted-foreground ml-1">{data.unit}</span>}
-          </div>
-          {data.showSparkline && renderSparkline()}
-        </div>
-
-        {data.showTrend && data.trendValue && (
-          <div className="flex items-center gap-2 mb-2">
-            {getTrendIcon()}
-            <span className={`text-sm font-medium ${getTrendColor()}`}>
-              {data.trendValue}
-            </span>
-            {data.trendLabel && (
-              <span className="text-xs text-muted-foreground">
-                vs {data.trendLabel}
-              </span>
+      <CardContent className="pt-0 space-y-3">
+        <div className="flex items-baseline justify-between">
+          <div className="flex-1">
+            <div className={`text-3xl font-bold ${isAnimating ? 'animate-pulse' : ''}`}>
+              {data.prefix}{formatValue(currentValue)}{data.suffix}
+              {data.unit && <span className="text-sm text-muted-foreground ml-1">{data.unit}</span>}
+            </div>
+            {data.showTrend && data.trendValue && (
+              <div className="flex items-center gap-2 mt-1">
+                <span className={`text-sm font-medium ${getTrendColor()}`}>
+                  {data.trendValue}
+                </span>
+                {data.trendLabel && (
+                  <span className="text-xs text-muted-foreground">
+                    vs {data.trendLabel}
+                  </span>
+                )}
+              </div>
             )}
           </div>
-        )}
+          
+          {data.trendChart ? renderAdvancedChart() : (data.showSparkline && renderSparkline())}
+        </div>
 
         {renderProgressBar()}
+        {renderGoalProgress()}
         {renderCustomFields()}
         {renderAlerts()}
 
         {data.lastUpdated && (
-          <div className="mt-2 pt-2 border-t border-border/50">
+          <div className="pt-2 border-t border-border/30">
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Clock className="h-3 w-3" />
               Updated {data.lastUpdated.toLocaleTimeString()}
@@ -570,37 +927,161 @@ export function generateSampleKPIData(): PersonalizedKPIData[] {
   ];
 }
 
-// KPI Template presets
+// Enhanced KPI Template presets with advanced styling
 export const KPI_TEMPLATES = {
-  sales: {
-    title: 'Sales KPI',
+  modernSales: {
+    title: 'Sales Performance',
     format: 'currency' as const,
     icon: 'dollar',
     color: '#10b981',
+    style: 'modern' as const,
+    borderRadius: 'large' as const,
+    shadow: 'medium' as const,
+    animation: 'slide' as const,
     showTrend: true,
     showProgress: true,
+    trendChart: {
+      type: 'area' as const,
+      data: [45000, 52000, 48000, 61000, 58000, 67000],
+      color: '#10b981',
+      height: 60,
+    },
   },
-  performance: {
-    title: 'Performance Metric',
-    format: 'percentage' as const,
-    icon: 'activity',
+  glassmorphicRevenue: {
+    title: 'Monthly Revenue',
+    format: 'currency' as const,
+    icon: 'dollar',
     color: '#3b82f6',
+    style: 'glassmorphic' as const,
+    borderRadius: 'large' as const,
+    shadow: 'glow' as const,
+    animation: 'fade' as const,
     showTrend: true,
-    showProgress: true,
+    showSparkline: true,
+    backgroundColor: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1))',
   },
-  count: {
-    title: 'Count Metric',
-    format: 'number' as const,
-    icon: 'target',
+  performanceGauge: {
+    title: 'Performance Score',
+    format: 'percentage' as const,
+    icon: 'gauge',
     color: '#8b5cf6',
+    style: 'modern' as const,
+    borderRadius: 'medium' as const,
+    shadow: 'medium' as const,
+    animation: 'pulse' as const,
     showTrend: true,
+    trendChart: {
+      type: 'gauge' as const,
+      data: [85],
+      color: '#8b5cf6',
+      height: 80,
+    },
+    goals: {
+      current: 85,
+      target: 100,
+      milestones: [
+        { value: 75, label: 'Good', reached: true },
+        { value: 90, label: 'Great', reached: false },
+        { value: 100, label: 'Perfect', reached: false },
+      ],
+    },
   },
-  satisfaction: {
-    title: 'Satisfaction Score',
+  minimalistCount: {
+    title: 'Active Users',
+    format: 'number' as const,
+    icon: 'users',
+    color: '#06b6d4',
+    style: 'minimal' as const,
+    borderRadius: 'small' as const,
+    shadow: 'small' as const,
+    animation: 'bounce' as const,
+    showTrend: true,
+    trendChart: {
+      type: 'bar' as const,
+      data: [120, 135, 142, 158, 163, 171],
+      color: '#06b6d4',
+      height: 50,
+    },
+  },
+  gradientSatisfaction: {
+    title: 'Customer Satisfaction',
     format: 'number' as const,
     suffix: '/5.0',
     icon: 'heart',
     color: '#ef4444',
+    style: 'gradient' as const,
+    borderRadius: 'full' as const,
+    shadow: 'large' as const,
+    animation: 'slide' as const,
+    backgroundColor: 'linear-gradient(135deg, #ef4444, #f97316)',
+    textColor: '#ffffff',
     showTrend: true,
+    trendChart: {
+      type: 'donut' as const,
+      data: [4.8],
+      color: '#ffffff',
+      height: 60,
+    },
+  },
+  classicTargets: {
+    title: 'Targets Met',
+    format: 'number' as const,
+    icon: 'target',
+    color: '#84cc16',
+    style: 'classic' as const,
+    borderRadius: 'medium' as const,
+    shadow: 'medium' as const,
+    showProgress: true,
+    showTrend: true,
+    goals: {
+      current: 23,
+      target: 30,
+      milestones: [
+        { value: 15, label: 'Q1', reached: true },
+        { value: 25, label: 'Q2', reached: false },
+        { value: 30, label: 'Q3', reached: false },
+      ],
+    },
+  },
+  sparklineActivityAnalytics: {
+    title: 'Activity Analytics',
+    format: 'number' as const,
+    icon: 'activity',
+    color: '#f59e0b',
+    style: 'modern' as const,
+    borderRadius: 'large' as const,
+    shadow: 'medium' as const,
+    animation: 'fade' as const,
+    showTrend: true,
+    showSparkline: true,
+    sparklineData: [120, 145, 135, 162, 158, 175, 182, 195],
+    customFields: [
+      { label: 'Peak Hour', value: '2-3 PM', icon: 'clock' },
+      { label: 'Avg/Hour', value: '156', icon: 'activity' },
+    ],
+  },
+  alertingRevenue: {
+    title: 'Revenue Alerts',
+    format: 'currency' as const,
+    icon: 'lightning',
+    color: '#dc2626',
+    style: 'modern' as const,
+    borderRadius: 'medium' as const,
+    shadow: 'glow' as const,
+    animation: 'pulse' as const,
+    showTrend: true,
+    alerts: [
+      {
+        threshold: 50000,
+        type: 'below' as const,
+        message: 'Revenue below monthly target',
+      },
+    ],
+    trendChart: {
+      type: 'area' as const,
+      data: [45000, 42000, 38000, 41000, 44000, 47000],
+      color: '#dc2626',
+      height: 50,
+    },
   },
 };
