@@ -5,7 +5,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { PersonalizedKPIManager } from './PersonalizedKPIManager';
 import { KPIShowcase } from './KPIShowcase';
+import { PharmaceuticalKPITemplates } from './PharmaceuticalKPITemplates';
 import { PersonalizedKPIData } from './widgets/PersonalizedKPICard';
+import { KPITemplate } from '@/lib/types';
 import { 
   Plus, 
   Star, 
@@ -25,6 +27,7 @@ interface PersonalizedKPIDashboardProps {
 export function PersonalizedKPIDashboard({ className = '' }: PersonalizedKPIDashboardProps) {
   const [activeTab, setActiveTab] = useState('manager');
   const [selectedTemplate, setSelectedTemplate] = useState<PersonalizedKPIData | null>(null);
+  const [selectedPharmaTemplate, setSelectedPharmaTemplate] = useState<KPITemplate | null>(null);
 
   const handleTemplateSelect = (kpi: PersonalizedKPIData) => {
     setSelectedTemplate(kpi);
@@ -32,13 +35,26 @@ export function PersonalizedKPIDashboard({ className = '' }: PersonalizedKPIDash
     toast.success('Template selected! Edit and customize in the KPI Manager.');
   };
 
+  const handlePharmaTemplateSelect = (template: KPITemplate) => {
+    setSelectedPharmaTemplate(template);
+    setActiveTab('manager');
+    toast.success(`Applied "${template.name}" pharmaceutical template with ${template.metrics.length} KPIs!`);
+  };
+
   const stats = [
     {
       title: 'Available Templates',
-      value: '20+',
-      description: 'Professional KPI card designs',
+      value: '30+',
+      description: 'Professional & industry-specific KPI designs',
       icon: Star,
       color: '#10b981'
+    },
+    {
+      title: 'Pharmaceutical KPIs',
+      value: '10',
+      description: 'B2B sales operation templates',
+      icon: Target,
+      color: '#0ea5e9'
     },
     {
       title: 'Customization Options',
@@ -52,13 +68,6 @@ export function PersonalizedKPIDashboard({ className = '' }: PersonalizedKPIDash
       value: '8',
       description: 'Sparklines, progress bars & gauges',
       icon: BarChart3,
-      color: '#3b82f6'
-    },
-    {
-      title: 'Real-time Updates',
-      value: '100%',
-      description: 'Live data with auto-refresh',
-      icon: Target,
       color: '#f59e0b'
     }
   ];
@@ -116,7 +125,7 @@ export function PersonalizedKPIDashboard({ className = '' }: PersonalizedKPIDash
       {/* Main Content */}
       <div>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="manager" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
               KPI Manager
@@ -124,6 +133,10 @@ export function PersonalizedKPIDashboard({ className = '' }: PersonalizedKPIDash
             <TabsTrigger value="showcase" className="flex items-center gap-2">
               <Eye className="h-4 w-4" />
               Template Gallery
+            </TabsTrigger>
+            <TabsTrigger value="pharmaceutical" className="flex items-center gap-2">
+              <Target className="h-4 w-4" />
+              Pharma Templates
             </TabsTrigger>
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <Grid className="h-4 w-4" />
@@ -153,6 +166,21 @@ export function PersonalizedKPIDashboard({ className = '' }: PersonalizedKPIDash
                   </Button>
                 </div>
               )}
+              {selectedPharmaTemplate && (
+                <div className="text-right">
+                  <p className="text-sm font-medium">Pharma Template Selected:</p>
+                  <p className="text-sm text-muted-foreground">{selectedPharmaTemplate.name}</p>
+                  <Badge variant="secondary" className="mr-2">{selectedPharmaTemplate.metrics.length} KPIs</Badge>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedPharmaTemplate(null)}
+                    className="mt-1"
+                  >
+                    Clear Selection
+                  </Button>
+                </div>
+              )}
             </div>
             
             <PersonalizedKPIManager />
@@ -167,6 +195,10 @@ export function PersonalizedKPIDashboard({ className = '' }: PersonalizedKPIDash
             </div>
             
             <KPIShowcase onSelectKPI={handleTemplateSelect} />
+          </TabsContent>
+
+          <TabsContent value="pharmaceutical" className="mt-6">
+            <PharmaceuticalKPITemplates onSelectTemplate={handlePharmaTemplateSelect} />
           </TabsContent>
 
           <TabsContent value="dashboard" className="mt-6 space-y-6">

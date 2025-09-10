@@ -456,6 +456,28 @@ export interface KPIInsight {
   suggestedActions?: string[];
 }
 
+// KPI Template Types for Pre-configured Industry Templates
+export interface KPITemplate {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  metrics: KPITemplateMetric[];
+  visualizations: ('gauge' | 'trend' | 'bar' | 'funnel' | 'progress' | 'map' | 'heatmap' | 'dashboard' | 'leaderboard' | 'alert')[];
+  tags: string[];
+  industry: string;
+}
+
+export interface KPITemplateMetric {
+  name: string;
+  type: 'currency' | 'percentage' | 'number';
+  target: number;
+  current: number;
+  unit: string;
+  timeframe: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+  trend?: 'higher-better' | 'lower-better';
+}
+
 // AI-Powered Lead Scoring and Risk Assessment Types
 export interface LeadScore {
   id: string;
