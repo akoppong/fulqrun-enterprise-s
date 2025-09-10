@@ -543,171 +543,272 @@ function OpportunityDetailDialog({ isOpen, onClose, opportunity, onEdit, onDelet
   const company = companies.find(c => c.id === opportunity.companyId);
   const contact = contacts.find(c => c.id === opportunity.contactId);
   const stageConfig = PEAK_STAGES.find(s => s.value === opportunity.stage) || PEAK_STAGES[0];
+  const priorityBadge = getPriorityBadge(opportunity.priority);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="dialog-content max-w-4xl max-h-[90vh]">
-        <DialogHeader className="pb-4 border-b">
-          <DialogTitle className="text-2xl font-semibold">
-            {opportunity.title}
-          </DialogTitle>
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <Building size={14} />
-              <span>{company?.name || 'Unknown Company'}</span>
+      <DialogContent className="dialog-content max-w-6xl max-h-[95vh] p-0">
+        {/* Header Section */}
+        <div className="sticky top-0 bg-background border-b p-6 flex items-center justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={onClose}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                ← Back
+              </Button>
             </div>
-            {contact && (
-              <div className="flex items-center gap-2">
-                <Users size={14} />
-                <span>{contact.firstName} {contact.lastName}</span>
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-2xl font-bold text-foreground mb-1">
+                  {opportunity.title}
+                </h1>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Building size={16} />
+                  <span>{company?.name || 'Unknown Company'}</span>
+                </div>
+                <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <span>📊 Not specified</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Calendar size={14} />
+                    <span>Created {format(new Date(opportunity.createdAt), 'MMM dd, yyyy')}</span>
+                  </div>
+                </div>
               </div>
-            )}
+              <Button onClick={onEdit} className="flex items-center gap-2">
+                <PencilSimple size={16} />
+                Edit
+              </Button>
+            </div>
           </div>
-        </DialogHeader>
+        </div>
 
-        <ScrollArea className="max-h-[70vh] pr-4">
-          <div className="space-y-6 py-4">
-            {/* Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card>
-                <CardContent className="p-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">
-                      {formatCurrency(opportunity.value)}
-                    </div>
-                    <div className="text-sm text-muted-foreground">Deal Value</div>
+        <ScrollArea className="flex-1 px-6">
+          <div className="py-6 space-y-6">
+            {/* Key Metrics Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <Card className="bg-card border-border">
+                <CardContent className="p-6 text-center">
+                  <div className="mb-2">
+                    <DollarSign size={24} className="mx-auto text-primary" />
                   </div>
+                  <div className="text-2xl font-bold text-foreground mb-1">
+                    {formatCurrency(opportunity.value)}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Deal Value</div>
                 </CardContent>
               </Card>
               
-              <Card>
-                <CardContent className="p-4">
-                  <div className="text-center">
-                    <Badge className={stageConfig.color} variant="secondary">
-                      {stageConfig.label}
-                    </Badge>
-                    <div className="text-sm text-muted-foreground mt-1">PEAK Stage</div>
+              <Card className="bg-card border-border">
+                <CardContent className="p-6 text-center">
+                  <div className="mb-2">
+                    <Target size={24} className="mx-auto text-blue-500" />
                   </div>
+                  <div className="text-2xl font-bold text-foreground mb-1">
+                    {opportunity.probability}%
+                  </div>
+                  <div className="text-sm text-muted-foreground">Win Probability</div>
                 </CardContent>
               </Card>
               
-              <Card>
-                <CardContent className="p-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold">{opportunity.probability}%</div>
-                    <div className="text-sm text-muted-foreground">Win Probability</div>
+              <Card className="bg-card border-border">
+                <CardContent className="p-6 text-center">
+                  <div className="mb-2">
+                    <TrendingUp size={24} className="mx-auto text-red-500" />
                   </div>
+                  <div className="text-2xl font-bold text-red-600 mb-1">
+                    {getMEDDPICCScore(opportunity.meddpicc)}%
+                  </div>
+                  <div className="text-sm text-muted-foreground">Deal Health</div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-card border-border">
+                <CardContent className="p-6 text-center">
+                  <div className="mb-2">
+                    <Calendar size={24} className="mx-auto text-purple-500" />
+                  </div>
+                  <div className="text-2xl font-bold text-foreground mb-1">
+                    {format(new Date(opportunity.expectedCloseDate), 'MMM dd')}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Expected Close</div>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Details */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Opportunity Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {opportunity.description && (
-                  <div>
-                    <Label className="text-sm font-medium">Description</Label>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {opportunity.description}
-                    </p>
-                  </div>
-                )}
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm font-medium">Expected Close Date</Label>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {format(new Date(opportunity.expectedCloseDate), 'PPP')}
-                    </p>
+            {/* Navigation Tabs */}
+            <div className="border-b border-border">
+              <div className="flex space-x-8">
+                <button className="border-b-2 border-primary text-primary font-medium py-2 px-1">
+                  Overview
+                </button>
+                <button className="text-muted-foreground hover:text-foreground py-2 px-1">
+                  PEAK
+                </button>
+                <button className="text-muted-foreground hover:text-foreground py-2 px-1">
+                  MEDDPICC
+                </button>
+                <button className="text-muted-foreground hover:text-foreground py-2 px-1">
+                  Activities
+                </button>
+                <button className="text-muted-foreground hover:text-foreground py-2 px-1">
+                  Contacts
+                </button>
+                <button className="text-muted-foreground hover:text-foreground py-2 px-1">
+                  Analytics
+                </button>
+              </div>
+            </div>
+
+            {/* Main Content Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Opportunity Details */}
+              <Card className="bg-card border-border">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg font-semibold">Opportunity Details</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <div className="text-sm font-medium text-muted-foreground mb-1">Stage</div>
+                      <Badge className={`${stageConfig.color} text-primary bg-primary/10`}>
+                        {stageConfig.label.toLowerCase()}
+                      </Badge>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-muted-foreground mb-1">Priority</div>
+                      <Badge variant="secondary" className={priorityBadge.className}>
+                        {(opportunity.priority || 'medium').toLowerCase()}
+                      </Badge>
+                    </div>
                   </div>
                   
-                  {opportunity.priority && (
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label className="text-sm font-medium">Priority</Label>
-                      <div className="mt-1">
-                        <Badge variant="secondary" className={getPriorityBadge(opportunity.priority).className}>
-                          {opportunity.priority.charAt(0).toUpperCase() + opportunity.priority.slice(1)}
-                        </Badge>
+                      <div className="text-sm font-medium text-muted-foreground mb-1">Source</div>
+                      <div className="text-sm">Not Specified</div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-muted-foreground mb-1">Industry</div>
+                      <div className="text-sm">Not Specified</div>
+                    </div>
+                  </div>
+
+                  {opportunity.description && (
+                    <div>
+                      <div className="text-sm font-medium text-muted-foreground mb-1">Description</div>
+                      <p className="text-sm text-foreground">
+                        {opportunity.description}
+                      </p>
+                    </div>
+                  )}
+
+                  {opportunity.tags && opportunity.tags.length > 0 && (
+                    <div>
+                      <div className="text-sm font-medium text-muted-foreground mb-2">Tags</div>
+                      <div className="flex flex-wrap gap-1">
+                        {opportunity.tags.map((tag, index) => (
+                          <Badge key={index} variant="secondary" className="text-xs bg-muted">
+                            {tag}
+                          </Badge>
+                        ))}
                       </div>
                     </div>
                   )}
-                </div>
+                </CardContent>
+              </Card>
 
-                {opportunity.tags && opportunity.tags.length > 0 && (
-                  <div>
-                    <Label className="text-sm font-medium">Tags</Label>
-                    <div className="flex flex-wrap gap-2 mt-1">
-                      {opportunity.tags.map((tag, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Contact Information */}
-            {contact && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Primary Contact</CardTitle>
+              {/* Primary Contact */}
+              <Card className="bg-card border-border">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg font-semibold">Primary Contact</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-start gap-4">
-                    <Avatar className="h-12 w-12">
-                      <AvatarFallback>
-                        {contact.firstName[0]}{contact.lastName[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="space-y-2">
-                      <div>
-                        <div className="font-medium">
-                          {contact.firstName} {contact.lastName}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {contact.title}
+                  {contact ? (
+                    <div className="space-y-4">
+                      <div className="flex items-start gap-4">
+                        <Avatar className="h-12 w-12">
+                          <AvatarFallback className="bg-muted">
+                            {contact.firstName[0]}{contact.lastName[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <div className="font-medium text-foreground">
+                            {contact.firstName} {contact.lastName}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {contact.title || 'No title specified'}
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-2">
+                      
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Envelope size={14} />
                           <span>{contact.email}</span>
                         </div>
                         {contact.phone && (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Phone size={14} />
                             <span>{contact.phone}</span>
                           </div>
                         )}
                       </div>
+                      
+                      <Button variant="outline" size="sm" className="w-full">
+                        Add Contact
+                      </Button>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <div className="mb-4">
+                        <Users size={48} className="mx-auto text-muted-foreground opacity-40" />
+                      </div>
+                      <div className="text-muted-foreground mb-4">
+                        No primary contact assigned
+                      </div>
+                      <Button variant="outline" size="sm">
+                        Add Contact
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
-            )}
+            </div>
+
+            {/* Recent Activities */}
+            <Card className="bg-card border-border">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg font-semibold">Recent Activities</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-12">
+                  <div className="mb-4">
+                    <TrendingUp size={48} className="mx-auto text-muted-foreground opacity-40" />
+                  </div>
+                  <div className="text-muted-foreground mb-4">
+                    No activities recorded
+                  </div>
+                  <Button variant="outline" size="sm">
+                    Add Activity
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </ScrollArea>
 
-        {/* Actions */}
-        <div className="flex items-center justify-between pt-4 border-t">
-          <Button variant="outline" onClick={onClose}>
-            Close
+        {/* Bottom Actions - Hidden for cleaner look */}
+        <div className="sr-only">
+          <Button variant="destructive" onClick={onDelete}>
+            <Trash size={14} className="mr-2" />
+            Delete
           </Button>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={onEdit}>
-              <PencilSimple size={14} className="mr-2" />
-              Edit
-            </Button>
-            <Button variant="destructive" onClick={onDelete}>
-              <Trash size={14} className="mr-2" />
-              Delete
-            </Button>
-          </div>
         </div>
       </DialogContent>
     </Dialog>
