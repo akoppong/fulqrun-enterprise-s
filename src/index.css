@@ -217,6 +217,16 @@ body {
   background-clip: content-box;
 }
 
+/* Horizontal scroll for mobile tabs */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* === GRID SYSTEM === */
 
 .react-grid-layout {

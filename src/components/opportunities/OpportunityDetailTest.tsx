@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
   CheckCircle, 
   AlertTriangle, 
@@ -16,7 +17,9 @@ import {
   TrendingUp,
   Database,
   RefreshCw,
-  PlayCircle
+  PlayCircle,
+  Eye,
+  ArrowRight
 } from '@phosphor-icons/react';
 import { OpportunityService } from '@/lib/opportunity-service';
 import { Opportunity, Company, Contact } from '@/lib/types';
@@ -24,6 +27,7 @@ import { formatCurrency, getMEDDPICCScore } from '@/lib/crm-utils';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { QuickOpportunityTest } from './QuickOpportunityTest';
+import { ResponsiveOpportunityDetail } from './ResponsiveOpportunityDetail';
 
 interface TestResult {
   name: string;
@@ -41,6 +45,8 @@ export function OpportunityDetailTest() {
     companies: Company[];
     contacts: Contact[];
   }>({ opportunities: [], companies: [], contacts: [] });
+  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
+  const [isDetailViewOpen, setIsDetailViewOpen] = useState(false);
 
   useEffect(() => {
     // Auto-run tests on component mount
@@ -526,23 +532,196 @@ export function OpportunityDetailTest() {
 
       {/* Tabbed Interface */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="quick" className="flex items-center gap-2">
             <PlayCircle size={16} />
             Quick Test
           </TabsTrigger>
-          <TabsTrigger value="comprehensive" className="flex items-center gap-2">
+          <TabsTrigger value="responsive" className="flex items-center gap-2">
             <Target size={16} />
-            Comprehensive
+            Responsive
+          </TabsTrigger>
+          <TabsTrigger value="comprehensive" className="flex items-center gap-2">
+            <FileText size={16} />
+            Tests
           </TabsTrigger>
           <TabsTrigger value="data" className="flex items-center gap-2">
             <Database size={16} />
-            Sample Data
+            Data
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="quick" className="space-y-6">
           <QuickOpportunityTest />
+        </TabsContent>
+
+        <TabsContent value="responsive" className="space-y-6">
+          <Card className="border-2 border-blue-200 bg-blue-50/30">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target size={24} className="text-blue-600" />
+                Responsive Design Testing
+              </CardTitle>
+              <p className="text-muted-foreground">
+                Test the new opportunity detail view across different screen sizes and devices.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Screen Size Demo Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Card className="border border-green-200 bg-green-50/30">
+                  <CardContent className="p-4 text-center">
+                    <div className="text-green-600 mb-2">
+                      <div className="w-8 h-8 mx-auto bg-green-100 rounded-lg flex items-center justify-center">
+                        📱
+                      </div>
+                    </div>
+                    <h3 className="font-semibold text-green-800">Mobile Phones</h3>
+                    <p className="text-xs text-green-600 mt-1">< 768px</p>
+                    <ul className="text-xs text-green-700 mt-2 space-y-1">
+                      <li>• Single column layout</li>
+                      <li>• Compact metrics cards</li>
+                      <li>• Horizontal scrolling tabs</li>
+                      <li>• Touch-friendly controls</li>
+                    </ul>
+                  </CardContent>
+                </Card>
+                
+                <Card className="border border-blue-200 bg-blue-50/30">
+                  <CardContent className="p-4 text-center">
+                    <div className="text-blue-600 mb-2">
+                      <div className="w-8 h-8 mx-auto bg-blue-100 rounded-lg flex items-center justify-center">
+                        📱
+                      </div>
+                    </div>
+                    <h3 className="font-semibold text-blue-800">Tablets</h3>
+                    <p className="text-xs text-blue-600 mt-1">768px - 1024px</p>
+                    <ul className="text-xs text-blue-700 mt-2 space-y-1">
+                      <li>• Two column layout</li>
+                      <li>• Larger text and icons</li>
+                      <li>• Flexible grid system</li>
+                      <li>• Balanced spacing</li>
+                    </ul>
+                  </CardContent>
+                </Card>
+                
+                <Card className="border border-purple-200 bg-purple-50/30">
+                  <CardContent className="p-4 text-center">
+                    <div className="text-purple-600 mb-2">
+                      <div className="w-8 h-8 mx-auto bg-purple-100 rounded-lg flex items-center justify-center">
+                        🖥️
+                      </div>
+                    </div>
+                    <h3 className="font-semibold text-purple-800">Desktop</h3>
+                    <p className="text-xs text-purple-600 mt-1">> 1024px</p>
+                    <ul className="text-xs text-purple-700 mt-2 space-y-1">
+                      <li>• Multi-column layout</li>
+                      <li>• Full feature display</li>
+                      <li>• Rich interactions</li>
+                      <li>• Maximum content</li>
+                    </ul>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Interactive Test Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Interactive Responsive Testing</h3>
+                <div className="p-4 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Click on any opportunity below to test the responsive detail view. 
+                    Try resizing your browser window to see how the layout adapts to different screen sizes.
+                  </p>
+                  
+                  {sampleData.opportunities.length > 0 && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {sampleData.opportunities.slice(0, 6).map(opp => (
+                        <Card key={opp.id} className="border border-border hover:border-primary/50 transition-colors cursor-pointer group">
+                          <CardContent className="p-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium text-sm text-foreground group-hover:text-primary transition-colors">
+                                  {opp.title}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {formatCurrency(opp.value)} • {opp.probability}%
+                                </div>
+                              </div>
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedOpportunity(opp);
+                                  setIsDetailViewOpen(true);
+                                }}
+                                className="shrink-0 ml-2 h-8 px-3"
+                              >
+                                <Eye size={12} className="mr-1" />
+                                Test
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Responsive Features Checklist */}
+              <Card className="border border-amber-200 bg-amber-50/30">
+                <CardHeader>
+                  <CardTitle className="text-lg text-amber-800">Responsive Features Implemented</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-amber-800">Layout Adaptations</h4>
+                      <ul className="space-y-2 text-sm text-amber-700">
+                        <li className="flex items-center gap-2">
+                          <CheckCircle size={16} className="text-green-600 shrink-0" />
+                          Mobile-first responsive design
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <CheckCircle size={16} className="text-green-600 shrink-0" />
+                          Flexible grid systems
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <CheckCircle size={16} className="text-green-600 shrink-0" />
+                          Collapsible navigation tabs
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <CheckCircle size={16} className="text-green-600 shrink-0" />
+                          Adaptive content sections
+                        </li>
+                      </ul>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-amber-800">Interaction Improvements</h4>
+                      <ul className="space-y-2 text-sm text-amber-700">
+                        <li className="flex items-center gap-2">
+                          <CheckCircle size={16} className="text-green-600 shrink-0" />
+                          Touch-friendly button sizes
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <CheckCircle size={16} className="text-green-600 shrink-0" />
+                          Proper text scaling
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <CheckCircle size={16} className="text-green-600 shrink-0" />
+                          Optimized scrolling areas
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <CheckCircle size={16} className="text-green-600 shrink-0" />
+                          Context-aware content display
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="comprehensive" className="space-y-6">
@@ -664,9 +843,25 @@ export function OpportunityDetailTest() {
                 <div className="space-y-2">
                   {sampleData.opportunities.map(opp => (
                     <div key={opp.id} className="p-3 bg-muted/50 rounded-lg">
-                      <div className="font-medium text-sm">{opp.title}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {formatCurrency(opp.value)} • {opp.stage} • {opp.probability}%
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm">{opp.title}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {formatCurrency(opp.value)} • {opp.stage} • {opp.probability}%
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedOpportunity(opp);
+                            setIsDetailViewOpen(true);
+                          }}
+                          className="shrink-0 ml-2"
+                        >
+                          <Eye size={14} className="mr-1" />
+                          View
+                        </Button>
                       </div>
                     </div>
                   ))}
@@ -706,6 +901,24 @@ export function OpportunityDetailTest() {
       )}
         </TabsContent>
       </Tabs>
+
+      {/* Responsive Detail View Dialog */}
+      {selectedOpportunity && (
+        <ResponsiveOpportunityDetail
+          opportunity={selectedOpportunity}
+          isOpen={isDetailViewOpen}
+          onClose={() => {
+            setIsDetailViewOpen(false);
+            setSelectedOpportunity(null);
+          }}
+          onEdit={() => {
+            toast.info('Edit functionality will be integrated with main opportunity form');
+          }}
+          onDelete={() => {
+            toast.info('Delete functionality will be integrated with main opportunity management');
+          }}
+        />
+      )}
     </div>
   );
 }
