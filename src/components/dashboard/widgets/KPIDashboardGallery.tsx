@@ -253,6 +253,8 @@ export function KPIDashboardGallery({ onAddToLayout }: KPIDashboardGalleryProps)
       </div>
     );
   };
+
+  const renderKPICard = (kpi: PersonalizedKPIData, isCustom: boolean) => {
     const isFavorite = favoriteKPIs.includes(kpi.id);
 
     return (
