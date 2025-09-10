@@ -25,6 +25,19 @@ interface RoleShowcaseProps {
 export function RoleShowcase({ currentUser, onRoleSwitch }: RoleShowcaseProps) {
   const [selectedDemo, setSelectedDemo] = useState<string | null>(null);
 
+  // Safety check for currentUser
+  if (!currentUser || !currentUser.role) {
+    console.error('RoleShowcase: Invalid currentUser provided:', currentUser);
+    return (
+      <div className="space-y-6 p-6">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-red-600">Invalid User State</h2>
+          <p className="text-muted-foreground">Cannot display role showcase without valid user information.</p>
+        </div>
+      </div>
+    );
+  }
+
   // Define test users for each role with realistic data
   const demoUsers: User[] = [
     {
@@ -105,15 +118,21 @@ export function RoleShowcase({ currentUser, onRoleSwitch }: RoleShowcaseProps) {
 
   const handleDemoUser = (user: User) => {
     setSelectedDemo(user.id);
-    toast.success(`Switching to ${roleInfo[user.role].title}`, {
-      description: `Experience the dashboard as ${user.name}`
-    });
+    const roleData = roleInfo[user.role];
+    if (roleData) {
+      toast.success(`Switching to ${roleData.title}`, {
+        description: `Experience the dashboard as ${user.name}`
+      });
+    }
     onRoleSwitch(user);
   };
 
   const handleBackToCurrent = () => {
     setSelectedDemo(null);
-    toast.info(`Back to your ${roleInfo[currentUser.role].title} dashboard`);
+    const roleData = roleInfo[currentUser.role];
+    if (roleData) {
+      toast.info(`Back to your ${roleData.title} dashboard`);
+    }
     onRoleSwitch(currentUser);
   };
 
@@ -147,16 +166,31 @@ export function RoleShowcase({ currentUser, onRoleSwitch }: RoleShowcaseProps) {
           </CardHeader>
           <CardContent>
             <div className="flex items-center space-x-4">
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${roleInfo[demoUsers.find(u => u.id === selectedDemo)?.role || 'rep'].bgColor}`}>
-                {React.createElement(roleInfo[demoUsers.find(u => u.id === selectedDemo)?.role || 'rep'].icon, {
-                  className: `w-6 h-6 ${roleInfo[demoUsers.find(u => u.id === selectedDemo)?.role || 'rep'].color}`
-                })}
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                (() => {
+                  const demoUser = demoUsers.find(u => u.id === selectedDemo);
+                  const role = demoUser?.role || 'rep';
+                  return roleInfo[role]?.bgColor || 'bg-gray-50';
+                })()
+              }`}>
+                {(() => {
+                  const demoUser = demoUsers.find(u => u.id === selectedDemo);
+                  const role = demoUser?.role || 'rep';
+                  const roleData = roleInfo[role];
+                  return roleData ? React.createElement(roleData.icon, {
+                    className: `w-6 h-6 ${roleData.color}`
+                  }) : null;
+                })()}
               </div>
               <div className="flex-1">
-                <p className="font-medium">{demoUsers.find(u => u.id === selectedDemo)?.name}</p>
+                <p className="font-medium">{demoUsers.find(u => u.id === selectedDemo)?.name || 'Demo User'}</p>
                 <p className="text-sm text-muted-foreground">
-                  {roleInfo[demoUsers.find(u => u.id === selectedDemo)?.role || 'rep'].title} • 
-                  {demoUsers.find(u => u.id === selectedDemo)?.territory}
+                  {(() => {
+                    const demoUser = demoUsers.find(u => u.id === selectedDemo);
+                    const role = demoUser?.role || 'rep';
+                    const roleData = roleInfo[role];
+                    return roleData ? `${roleData.title} • ${demoUser?.territory || 'Unknown Territory'}` : 'Demo User';
+                  })()}
                 </p>
               </div>
               <Badge variant="secondary">Demo User</Badge>
@@ -173,15 +207,15 @@ export function RoleShowcase({ currentUser, onRoleSwitch }: RoleShowcaseProps) {
           </CardHeader>
           <CardContent>
             <div className="flex items-center space-x-4">
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${roleInfo[currentUser.role].bgColor}`}>
-                {React.createElement(roleInfo[currentUser.role].icon, {
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${roleInfo[currentUser.role]?.bgColor || 'bg-gray-50'}`}>
+                {roleInfo[currentUser.role] && React.createElement(roleInfo[currentUser.role].icon, {
                   className: `w-6 h-6 ${roleInfo[currentUser.role].color}`
                 })}
               </div>
               <div>
                 <p className="font-medium">{currentUser.name}</p>
                 <p className="text-sm text-muted-foreground">
-                  {roleInfo[currentUser.role].title}
+                  {roleInfo[currentUser.role]?.title || 'User'}
                 </p>
               </div>
               <Badge variant="secondary" className="ml-auto">Active</Badge>
@@ -194,6 +228,13 @@ export function RoleShowcase({ currentUser, onRoleSwitch }: RoleShowcaseProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto">
         {demoUsers.map((user) => {
           const info = roleInfo[user.role];
+          
+          // Skip rendering if role info is missing
+          if (!info) {
+            console.warn(`Role info missing for user role: ${user.role}`);
+            return null;
+          }
+          
           const isCurrentDemo = selectedDemo === user.id;
           const isCurrentUser = currentUser.role === user.role && !selectedDemo;
           
@@ -206,16 +247,16 @@ export function RoleShowcase({ currentUser, onRoleSwitch }: RoleShowcaseProps) {
               }`}
               onClick={() => handleDemoUser(user)}
             >
-              <CardHeader className={`border-b-2 ${info.bgColor}`}>
+              <CardHeader className={`border-b-2 ${info.bgColor || 'bg-gray-50'}`}>
                 <CardTitle className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center bg-background shadow-sm`}>
-                      {React.createElement(info.icon, {
-                        className: `w-5 h-5 ${info.color}`
+                      {info.icon && React.createElement(info.icon, {
+                        className: `w-5 h-5 ${info.color || 'text-muted-foreground'}`
                       })}
                     </div>
                     <div>
-                      <h3 className="font-medium">{info.title}</h3>
+                      <h3 className="font-medium">{info.title || 'Role'}</h3>
                       <p className="text-sm text-muted-foreground">{user.name}</p>
                     </div>
                   </div>

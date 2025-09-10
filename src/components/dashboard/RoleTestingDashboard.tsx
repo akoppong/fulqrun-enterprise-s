@@ -23,6 +23,19 @@ interface RoleTestingDashboardProps {
 }
 
 export function RoleTestingDashboard({ currentUser }: RoleTestingDashboardProps) {
+  // Safety check for currentUser
+  if (!currentUser || !currentUser.role) {
+    console.error('RoleTestingDashboard: Invalid currentUser provided:', currentUser);
+    return (
+      <div className="space-y-6 p-6">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-red-600">Invalid User State</h2>
+          <p className="text-muted-foreground">Cannot display role testing dashboard without valid user information.</p>
+        </div>
+      </div>
+    );
+  }
+
   const [selectedRole, setSelectedRole] = useState<'rep' | 'manager' | 'bu_head' | 'executive' | 'admin'>('rep');
   const [previewUser, setPreviewUser] = useState<User | null>(null);
 
@@ -173,17 +186,23 @@ export function RoleTestingDashboard({ currentUser }: RoleTestingDashboardProps)
   const handleRoleChange = (role: 'rep' | 'manager' | 'bu_head' | 'executive' | 'admin') => {
     setSelectedRole(role);
     setPreviewUser(null);
-    toast.success(`Role selected: ${roleDescriptions[role].title}`, {
-      description: 'Click "Preview Dashboard" to experience the role-specific view'
-    });
+    const roleDesc = roleDescriptions[role];
+    if (roleDesc) {
+      toast.success(`Role selected: ${roleDesc.title}`, {
+        description: 'Click "Preview Dashboard" to experience the role-specific view'
+      });
+    }
   };
 
   const handlePreviewDashboard = () => {
     const user = testUsers[selectedRole];
+    const roleDesc = roleDescriptions[selectedRole];
     setPreviewUser(user);
-    toast.success(`Previewing ${roleDescriptions[selectedRole].title} Dashboard`, {
-      description: `Experience the dashboard as ${user.name}`
-    });
+    if (roleDesc) {
+      toast.success(`Previewing ${roleDesc.title} Dashboard`, {
+        description: `Experience the dashboard as ${user.name}`
+      });
+    }
   };
 
   const handleBackToRoleSelection = () => {
@@ -204,7 +223,7 @@ export function RoleTestingDashboard({ currentUser }: RoleTestingDashboardProps)
             <div>
               <p className="font-medium">Viewing as: {previewUser.name}</p>
               <p className="text-sm text-muted-foreground">
-                {roleDescriptions[previewUser.role].title} • {previewUser.territory}
+                {roleDescriptions[previewUser.role]?.title || 'Unknown Role'} • {previewUser.territory}
               </p>
             </div>
           </div>
@@ -241,14 +260,14 @@ export function RoleTestingDashboard({ currentUser }: RoleTestingDashboardProps)
         <CardContent>
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-              {React.createElement(roleDescriptions[currentUser.role].icon, {
-                className: `w-6 h-6 ${roleDescriptions[currentUser.role].color}`
+              {roleDescriptions[currentUser.role]?.icon && React.createElement(roleDescriptions[currentUser.role].icon, {
+                className: `w-6 h-6 ${roleDescriptions[currentUser.role]?.color || 'text-muted-foreground'}`
               })}
             </div>
             <div>
               <p className="font-medium">{currentUser.name}</p>
               <p className="text-sm text-muted-foreground">
-                {roleDescriptions[currentUser.role].title}
+                {roleDescriptions[currentUser.role]?.title || 'User'}
               </p>
             </div>
             <Badge variant="secondary" className="ml-auto">
@@ -291,25 +310,25 @@ export function RoleTestingDashboard({ currentUser }: RoleTestingDashboardProps)
           </div>
 
           {/* Selected Role Details */}
-          <div className={`p-6 rounded-lg border-2 ${roleDescriptions[selectedRole].bgColor} border-current/20`}>
+          <div className={`p-6 rounded-lg border-2 ${roleDescriptions[selectedRole]?.bgColor || 'bg-gray-50'} border-current/20`}>
             <div className="flex items-start space-x-4">
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${roleDescriptions[selectedRole].bgColor} border-2 border-current/20`}>
-                {React.createElement(roleDescriptions[selectedRole].icon, {
-                  className: `w-6 h-6 ${roleDescriptions[selectedRole].color}`
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${roleDescriptions[selectedRole]?.bgColor || 'bg-gray-50'} border-2 border-current/20`}>
+                {roleDescriptions[selectedRole]?.icon && React.createElement(roleDescriptions[selectedRole].icon, {
+                  className: `w-6 h-6 ${roleDescriptions[selectedRole]?.color || 'text-muted-foreground'}`
                 })}
               </div>
               <div className="flex-1">
-                <h3 className="text-xl font-bold mb-2">{roleDescriptions[selectedRole].title}</h3>
+                <h3 className="text-xl font-bold mb-2">{roleDescriptions[selectedRole]?.title || 'Role'}</h3>
                 <p className="text-muted-foreground mb-4">
-                  {roleDescriptions[selectedRole].description}
+                  {roleDescriptions[selectedRole]?.description || 'Role description not available'}
                 </p>
                 
                 <div className="space-y-2">
                   <h4 className="font-medium">Key Dashboard Features:</h4>
                   <ul className="space-y-1">
-                    {roleDescriptions[selectedRole].features.map((feature, index) => (
+                    {(roleDescriptions[selectedRole]?.features || []).map((feature, index) => (
                       <li key={index} className="flex items-center space-x-2 text-sm">
-                        <div className={`w-1.5 h-1.5 rounded-full ${roleDescriptions[selectedRole].color.replace('text-', 'bg-')}`} />
+                        <div className={`w-1.5 h-1.5 rounded-full ${roleDescriptions[selectedRole]?.color?.replace('text-', 'bg-') || 'bg-muted-foreground'}`} />
                         <span>{feature}</span>
                       </li>
                     ))}

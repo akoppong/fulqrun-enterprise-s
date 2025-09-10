@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button';
 import { AutoSaveDemo } from './AutoSaveDemo';
 import { AutoSaveTestRunner } from './AutoSaveTestRunner';
 import { AutoSaveTesting } from './AutoSaveTesting';
@@ -53,6 +54,24 @@ interface DashboardProps {
 export type DashboardView = 'dashboard' | 'role-testing' | 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'advanced-analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'kpi-gallery' | 'kpi-manager' | 'kpi-layout' | 'pharma-kpi-templates' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'autosave-demo' | 'autosave-test' | 'autosave-manual' | 'autosave-interactive' | 'field-testing' | 'comprehensive-testing' | 'validation-demo' | 'date-validation' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit';
 
 export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialView }: DashboardProps) {
+  // Safety check for user object and role
+  if (!user || !user.role) {
+    console.error('Dashboard: Invalid user object provided:', user);
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-red-600">Invalid User State</h2>
+          <p className="text-muted-foreground">Please log in again to continue.</p>
+          {onLogout && (
+            <Button onClick={onLogout} className="mt-4">
+              Return to Login
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   const [currentView, setCurrentView] = useState<DashboardView>(
     (initialView as DashboardView) || 'dashboard'
   );

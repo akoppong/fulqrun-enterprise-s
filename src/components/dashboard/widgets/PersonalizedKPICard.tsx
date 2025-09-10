@@ -179,14 +179,21 @@ export function PersonalizedKPICard({
 
   // Calculate dynamic styling based on data
   const dynamicStyles = useMemo(() => {
-    const baseStyles: React.CSSProperties = {
-      backgroundColor: data.backgroundColor,
-      borderColor: data.color,
-      color: data.textColor,
-    };
+    const baseStyles: React.CSSProperties = {};
+
+    // Only set styles if properties exist
+    if (data.backgroundColor) {
+      baseStyles.backgroundColor = data.backgroundColor;
+    }
+    if (data.color) {
+      baseStyles.borderColor = data.color;
+    }
+    if (data.textColor) {
+      baseStyles.color = data.textColor;
+    }
 
     // Apply gradient backgrounds
-    if (data.style === 'gradient' && data.backgroundColor?.includes('gradient')) {
+    if (data.style === 'gradient' && data.backgroundColor?.includes?.('gradient')) {
       baseStyles.background = data.backgroundColor;
     }
 
@@ -342,11 +349,16 @@ export function PersonalizedKPICard({
     const { type, data: chartData, color, height = 60 } = data.trendChart;
     const chartColor = color || data.color || '#3b82f6';
 
+    // Safety check for chart data
+    if (!chartData || !Array.isArray(chartData) || chartData.length === 0) {
+      return null;
+    }
+
     switch (type) {
       case 'gauge':
-        return renderGaugeChart(chartData[chartData.length - 1], 100, chartColor, height);
+        return renderGaugeChart(chartData[chartData.length - 1] || 0, 100, chartColor, height);
       case 'donut':
-        return renderDonutChart(chartData[chartData.length - 1], 100, chartColor, height);
+        return renderDonutChart(chartData[chartData.length - 1] || 0, 100, chartColor, height);
       case 'area':
         return renderAreaChart(chartData, chartColor, height);
       case 'bar':
@@ -434,13 +446,18 @@ export function PersonalizedKPICard({
   };
 
   const renderAreaChart = (chartData: number[], color: string, height: number) => {
-    const max = Math.max(...chartData);
-    const min = Math.min(...chartData);
+    if (!chartData || chartData.length === 0) return null;
+    
+    const validData = chartData.filter(val => typeof val === 'number' && !isNaN(val));
+    if (validData.length === 0) return null;
+    
+    const max = Math.max(...validData);
+    const min = Math.min(...validData);
     const range = max - min || 1;
     const width = 120;
 
-    const points = chartData.map((value, index) => {
-      const x = (index / (chartData.length - 1)) * width;
+    const points = validData.map((value, index) => {
+      const x = (index / (validData.length - 1)) * width;
       const y = height - ((value - min) / range) * (height - 10);
       return `${x},${y}`;
     }).join(' ');
@@ -473,18 +490,23 @@ export function PersonalizedKPICard({
   };
 
   const renderBarChart = (chartData: number[], color: string, height: number) => {
-    const max = Math.max(...chartData);
-    const barWidth = 100 / chartData.length - 2;
+    if (!chartData || chartData.length === 0) return null;
+    
+    const validData = chartData.filter(val => typeof val === 'number' && !isNaN(val));
+    if (validData.length === 0) return null;
+    
+    const max = Math.max(...validData);
+    const barWidth = 100 / validData.length - 2;
 
     return (
       <div className="mt-2 flex items-end gap-1" style={{ height: `${height}px` }}>
-        {chartData.map((value, index) => (
+        {validData.map((value, index) => (
           <div
             key={index}
             className="transition-all duration-500 ease-in-out rounded-sm"
             style={{
               width: `${barWidth}%`,
-              height: `${(value / max) * height}px`,
+              height: `${max > 0 ? (value / max) * height : 0}px`,
               backgroundColor: color,
               opacity: 0.8,
             }}
@@ -495,13 +517,18 @@ export function PersonalizedKPICard({
   };
 
   const renderLineChart = (chartData: number[], color: string, height: number) => {
-    const max = Math.max(...chartData);
-    const min = Math.min(...chartData);
+    if (!chartData || chartData.length === 0) return null;
+    
+    const validData = chartData.filter(val => typeof val === 'number' && !isNaN(val));
+    if (validData.length === 0) return null;
+    
+    const max = Math.max(...validData);
+    const min = Math.min(...validData);
     const range = max - min || 1;
     const width = 120;
 
-    const points = chartData.map((value, index) => {
-      const x = (index / (chartData.length - 1)) * width;
+    const points = validData.map((value, index) => {
+      const x = (index / (validData.length - 1)) * width;
       const y = height - ((value - min) / range) * height;
       return `${x},${y}`;
     }).join(' ');
@@ -519,8 +546,8 @@ export function PersonalizedKPICard({
             className="transition-all duration-500"
           />
           {/* Data points */}
-          {chartData.map((value, index) => {
-            const x = (index / (chartData.length - 1)) * width;
+          {validData.map((value, index) => {
+            const x = (index / (validData.length - 1)) * width;
             const y = height - ((value - min) / range) * height;
             return (
               <circle
@@ -541,7 +568,9 @@ export function PersonalizedKPICard({
   const renderSparkline = () => {
     if (!data.showSparkline || !data.sparklineData?.length) return null;
 
-    const sparkData = data.sparklineData;
+    const sparkData = data.sparklineData.filter(val => typeof val === 'number' && !isNaN(val));
+    if (sparkData.length === 0) return null;
+    
     const max = Math.max(...sparkData);
     const min = Math.min(...sparkData);
     const range = max - min || 1;
