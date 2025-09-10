@@ -327,6 +327,30 @@ export class OpportunityService {
     }
   }
 
+  static async getAllCompanies(): Promise<Company[]> {
+    if (typeof window === 'undefined') return [];
+
+    try {
+      const stored = localStorage.getItem(this.COMPANIES_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch (error) {
+      console.error('Error loading companies:', error);
+      return [];
+    }
+  }
+
+  static async getAllContacts(): Promise<Contact[]> {
+    if (typeof window === 'undefined') return [];
+
+    try {
+      const stored = localStorage.getItem(this.CONTACTS_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch (error) {
+      console.error('Error loading contacts:', error);
+      return [];
+    }
+  }
+
   // Progression management
   private static async initializeProgression(opportunity: Opportunity): Promise<void> {
     const progression: DealProgression = {

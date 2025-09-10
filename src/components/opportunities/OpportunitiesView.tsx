@@ -45,6 +45,7 @@ import {
   ChartLineUp
 } from '@phosphor-icons/react';
 import { OpportunityEditForm } from './OpportunityEditForm';
+import { OpportunityDetailTest } from './OpportunityDetailTest';
 import { formatCurrency, getMEDDPICCScore, getStageProgress } from '@/lib/crm-utils';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -62,6 +63,7 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [isDetailViewOpen, setIsDetailViewOpen] = useState(false);
+  const [isTestViewOpen, setIsTestViewOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
   // Filter and search state
@@ -223,14 +225,24 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
               Track and manage your sales pipeline with PEAK methodology and MEDDPICC qualification
             </p>
           </div>
-          <Button 
-            onClick={handleCreateOpportunity} 
-            className="h-11 px-6 font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
-            size="lg"
-          >
-            <Plus size={18} className="mr-2" />
-            New Opportunity
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button 
+              onClick={() => setIsTestViewOpen(true)}
+              variant="outline"
+              className="h-11 px-6 font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+              size="lg"
+            >
+              🧪 Test Detail View
+            </Button>
+            <Button 
+              onClick={handleCreateOpportunity} 
+              className="h-11 px-6 font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+              size="lg"
+            >
+              <Plus size={18} className="mr-2" />
+              New Opportunity
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -699,6 +711,15 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
           }}
         />
       )}
+
+      {/* Test View Dialog */}
+      <Dialog open={isTestViewOpen} onOpenChange={setIsTestViewOpen}>
+        <DialogContent className="max-w-[98vw] max-h-[98vh] w-full h-full p-0 gap-0">
+          <div className="h-full overflow-hidden">
+            <OpportunityDetailTest />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
