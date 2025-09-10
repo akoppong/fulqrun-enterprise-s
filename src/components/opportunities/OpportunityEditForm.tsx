@@ -212,7 +212,7 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, opportunity }: Op
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl w-[95vw] h-[95vh] flex flex-col p-0">
+      <DialogContent className="max-w-6xl w-[95vw] h-[95vh] flex flex-col">
         <DialogHeader className="px-6 py-4 border-b flex-shrink-0">
           <DialogTitle className="text-2xl font-semibold">
             {opportunity ? 'Edit Opportunity' : 'Create New Opportunity'}
@@ -225,8 +225,9 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, opportunity }: Op
           </p>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-6 py-4 dialog-scrollable-content">
-          <div className="space-y-6 py-4">
+        <div className="flex-1 overflow-hidden flex flex-col">
+          <div className="flex-1 overflow-y-auto px-6 dialog-scrollable-content">
+            <div className="space-y-6 py-6">
             {/* Opportunity Details Section */}
             <Card>
               <CardHeader>
@@ -536,13 +537,14 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, opportunity }: Op
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-between px-6 py-4 border-t bg-background/80 backdrop-blur-sm flex-shrink-0 dialog-footer-fixed">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t bg-background flex-shrink-0 mt-auto">
           <Button variant="outline" onClick={onClose} disabled={isLoading}>
             Cancel
           </Button>
           <Button onClick={handleSave} disabled={isLoading}>
             {isLoading ? 'Saving...' : opportunity ? 'Update Opportunity' : 'Create Opportunity'}
           </Button>
+        </div>
         </div>
       </DialogContent>
     </Dialog>
