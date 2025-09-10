@@ -213,10 +213,10 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
   };
 
   return (
-    <div className={`w-full max-w-full ${className}`}>
+    <div className={`w-full max-w-none overflow-x-auto ${className}`}>
       {/* Modern Header with Glass Effect */}
       <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border/50 px-4 lg:px-6 py-6 mb-6">
-        <div className="flex items-center justify-between w-full">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 w-full min-w-0">
           <div className="space-y-1">
             <h1 className="text-3xl lg:text-4xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
               Sales Opportunities
@@ -225,18 +225,18 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
               Track and manage your sales pipeline with PEAK methodology and MEDDPICC qualification
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 min-w-0 shrink-0">
             <Button 
               onClick={() => setIsTestViewOpen(true)}
               variant="outline"
-              className="h-11 px-4 lg:px-6 font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+              className="h-11 px-4 lg:px-6 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 whitespace-nowrap"
               size="lg"
             >
               🧪 Test Detail View
             </Button>
             <Button 
               onClick={handleCreateOpportunity} 
-              className="h-11 px-4 lg:px-6 font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+              className="h-11 px-4 lg:px-6 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 whitespace-nowrap"
               size="lg"
             >
               <Plus size={18} className="mr-2" />
@@ -246,7 +246,7 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
         </div>
       </div>
 
-      <div className="px-4 lg:px-6 space-y-6 lg:space-y-8">
+      <div className="px-4 lg:px-6 space-y-6 lg:space-y-8 w-full min-w-0 overflow-x-auto">
         {/* Enhanced Metrics Dashboard */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-blue-50 to-blue-100/50 hover:shadow-xl transition-all duration-300">

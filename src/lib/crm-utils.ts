@@ -1,5 +1,5 @@
 import { PipelineMetrics, Opportunity } from './types';
-import { safeGetTime } from './utils';
+import { safeGetTime } from './date-helpers';
 
 export const calculatePipelineMetrics = (opportunities: Opportunity[]): PipelineMetrics => {
   const totalValue = opportunities.reduce((sum, opp) => sum + opp.value, 0);
