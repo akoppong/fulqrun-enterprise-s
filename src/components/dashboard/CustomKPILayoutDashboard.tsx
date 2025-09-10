@@ -27,7 +27,6 @@ import {
   TrendingUp,
   TrendingDown,
   Minus,
-  Plus,
   Copy,
   Download,
   Upload,
