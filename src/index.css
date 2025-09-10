@@ -317,9 +317,9 @@ body {
 /* === FORMS & DIALOGS === */
 
 .dialog-content {
-  max-width: min(95vw, 56rem);
-  max-height: min(90vh, 42rem);
-  min-width: min(90vw, 32rem);
+  max-width: min(98vw, 84rem);
+  max-height: min(95vh, 50rem);
+  min-width: min(90vw, 42rem);
 }
 
 /* Enhanced dialog styles for better form UX */
@@ -423,6 +423,11 @@ textarea[class*="w-full"],
   .grid-cols-5 { grid-template-columns: repeat(2, 1fr) !important; }
   .grid-cols-6 { grid-template-columns: repeat(2, 1fr) !important; }
   .grid-cols-12 { grid-template-columns: repeat(3, 1fr) !important; }
+  
+  /* Three-column form layout becomes two-column on tablet */
+  .grid.grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-3 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
 }
 
 @media (max-width: 768px) {
@@ -481,6 +486,10 @@ textarea[class*="w-full"],
   }
   
   /* Stack form columns on mobile */
+  .grid.grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-3 {
+    grid-template-columns: 1fr !important;
+  }
+  
   .grid.grid-cols-1.lg\\:grid-cols-2 {
     grid-template-columns: 1fr !important;
   }

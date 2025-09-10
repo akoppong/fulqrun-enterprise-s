@@ -212,7 +212,7 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, opportunity }: Op
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl w-[95vw] h-[95vh] flex flex-col">
+      <DialogContent className="max-w-7xl w-[98vw] h-[95vh] flex flex-col">
         <DialogHeader className="px-6 py-4 border-b flex-shrink-0">
           <DialogTitle className="text-2xl font-semibold">
             {opportunity ? 'Edit Opportunity' : 'Create New Opportunity'}
@@ -232,13 +232,13 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, opportunity }: Op
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Opportunity Details</CardTitle>
-                <CardDescription>Core opportunity information</CardDescription>
+                <CardDescription>Core opportunity information and contact details</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Left Column - Basic Information */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* Column 1 - Basic Information */}
                   <div className="space-y-4">
-                    <h4 className="font-semibold text-base">Basic Information</h4>
+                    <h4 className="font-semibold text-base border-b pb-2">Basic Information</h4>
                     
                     <div className="space-y-2">
                       <Label htmlFor="opportunity-name" className="text-sm font-medium">
@@ -274,116 +274,58 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, opportunity }: Op
                       </Select>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="deal-value" className="text-sm font-medium">
-                          Deal Value ($) <span className="text-destructive">*</span>
-                        </Label>
-                        <Input
-                          id="deal-value"
-                          type="number"
-                          placeholder="20000"
-                          value={formData.value || ''}
-                          onChange={(e) => handleInputChange('value', parseFloat(e.target.value) || 0)}
-                          className="w-full"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="win-probability" className="text-sm font-medium">
-                          Win Probability (%)
-                        </Label>
-                        <Input
-                          id="win-probability"
-                          type="number"
-                          min="0"
-                          max="100"
-                          placeholder="50"
-                          value={formData.probability || ''}
-                          onChange={(e) => handleInputChange('probability', parseInt(e.target.value) || 0)}
-                          className="w-full"
-                        />
-                      </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="deal-value" className="text-sm font-medium">
+                        Deal Value ($) <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        id="deal-value"
+                        type="number"
+                        placeholder="20000"
+                        value={formData.value || ''}
+                        onChange={(e) => handleInputChange('value', parseFloat(e.target.value) || 0)}
+                        className="w-full"
+                      />
                     </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="peak-stage" className="text-sm font-medium">
-                          PEAK Stage
-                        </Label>
-                        <Select value={formData.stage} onValueChange={(value) => handleInputChange('stage', value)}>
-                          <SelectTrigger id="peak-stage" className="w-full">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {PEAK_STAGES.map((stage) => (
-                              <SelectItem key={stage.value} value={stage.value}>
-                                {stage.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="priority" className="text-sm font-medium">
-                          Priority
-                        </Label>
-                        <Select value={formData.priority || 'medium'} onValueChange={(value) => handleInputChange('priority', value)}>
-                          <SelectTrigger id="priority" className="w-full">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {priorityOptions.map((priority) => (
-                              <SelectItem key={priority.value} value={priority.value}>
-                                <div className="flex items-center gap-2">
-                                  <Badge className={priority.color} variant="secondary">
-                                    {priority.label}
-                                  </Badge>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="win-probability" className="text-sm font-medium">
+                        Win Probability (%)
+                      </Label>
+                      <Input
+                        id="win-probability"
+                        type="number"
+                        min="0"
+                        max="100"
+                        placeholder="50"
+                        value={formData.probability || ''}
+                        onChange={(e) => handleInputChange('probability', parseInt(e.target.value) || 0)}
+                        className="w-full"
+                      />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="expected-close-date" className="text-sm font-medium">
-                        Expected Close Date
+                      <Label htmlFor="peak-stage" className="text-sm font-medium">
+                        PEAK Stage
                       </Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              'w-full justify-start text-left font-normal',
-                              !formData.expectedCloseDate && 'text-muted-foreground'
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {formData.expectedCloseDate ? (
-                              format(new Date(formData.expectedCloseDate), 'MM/dd/yyyy')
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                          <Calendar
-                            mode="single"
-                            selected={formData.expectedCloseDate ? new Date(formData.expectedCloseDate) : undefined}
-                            onSelect={(date) => handleInputChange('expectedCloseDate', date?.toISOString())}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
+                      <Select value={formData.stage} onValueChange={(value) => handleInputChange('stage', value)}>
+                        <SelectTrigger id="peak-stage" className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PEAK_STAGES.map((stage) => (
+                            <SelectItem key={stage.value} value={stage.value}>
+                              {stage.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 
-                  {/* Right Column - Contact & Company Details */}
+                  {/* Column 2 - Contact & Status Details */}
                   <div className="space-y-4">
-                    <h4 className="font-semibold text-base">Contact & Company Details</h4>
+                    <h4 className="font-semibold text-base border-b pb-2">Contact & Status Details</h4>
                     
                     <div className="space-y-2">
                       <Label htmlFor="primary-contact" className="text-sm font-medium">
@@ -436,6 +378,65 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, opportunity }: Op
                     </div>
 
                     <div className="space-y-2">
+                      <Label htmlFor="priority" className="text-sm font-medium">
+                        Priority
+                      </Label>
+                      <Select value={formData.priority || 'medium'} onValueChange={(value) => handleInputChange('priority', value)}>
+                        <SelectTrigger id="priority" className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {priorityOptions.map((priority) => (
+                            <SelectItem key={priority.value} value={priority.value}>
+                              <div className="flex items-center gap-2">
+                                <Badge className={priority.color} variant="secondary">
+                                  {priority.label}
+                                </Badge>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="expected-close-date" className="text-sm font-medium">
+                        Expected Close Date
+                      </Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              'w-full justify-start text-left font-normal',
+                              !formData.expectedCloseDate && 'text-muted-foreground'
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {formData.expectedCloseDate ? (
+                              format(new Date(formData.expectedCloseDate), 'MM/dd/yyyy')
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={formData.expectedCloseDate ? new Date(formData.expectedCloseDate) : undefined}
+                            onSelect={(date) => handleInputChange('expectedCloseDate', date?.toISOString())}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </div>
+
+                  {/* Column 3 - Business & Market Details */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-base border-b pb-2">Business & Market Details</h4>
+                    
+                    <div className="space-y-2">
                       <Label htmlFor="industry" className="text-sm font-medium">
                         Industry
                       </Label>
@@ -470,16 +471,57 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, opportunity }: Op
                         </SelectContent>
                       </Select>
                     </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Tags</Label>
+                      <div className="flex flex-wrap gap-1 mb-2 min-h-[28px] p-2 border rounded-md bg-background">
+                        {tags.length > 0 ? (
+                          tags.map((tag, index) => (
+                            <Badge key={index} variant="secondary" className="text-xs">
+                              {tag}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="ml-1 h-auto p-0 text-muted-foreground hover:text-foreground"
+                                onClick={() => handleRemoveTag(tag)}
+                              >
+                                <X size={10} />
+                              </Button>
+                            </Badge>
+                          ))
+                        ) : (
+                          <span className="text-xs text-muted-foreground">No tags added</span>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Add a tag"
+                          value={newTag}
+                          onChange={(e) => setNewTag(e.target.value)}
+                          onKeyPress={handleKeyPress}
+                          className="flex-1 text-sm"
+                        />
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="sm"
+                          onClick={handleAddTag}
+                          disabled={!newTag.trim()}
+                        >
+                          <Plus size={14} />
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Additional Details Section */}
+            {/* Description Section */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Additional Details</CardTitle>
-                <CardDescription>Description, tags, and notes</CardDescription>
+                <CardTitle className="text-lg">Opportunity Description</CardTitle>
+                <CardDescription>Detailed description, requirements, and notes</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
@@ -488,48 +530,11 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, opportunity }: Op
                   </Label>
                   <Textarea
                     id="description"
-                    placeholder="Describe the opportunity, key requirements, and any important notes..."
+                    placeholder="Describe the opportunity, key requirements, decision factors, timeline, and any important notes..."
                     value={formData.description || ''}
                     onChange={(e) => handleInputChange('description', e.target.value)}
-                    className="min-h-[100px] w-full resize-none"
+                    className="min-h-[120px] w-full resize-none"
                   />
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Tags</Label>
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    {tags.map((tag, index) => (
-                      <Badge key={index} variant="secondary" className="text-xs">
-                        {tag}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="ml-1 h-auto p-0 text-muted-foreground hover:text-foreground"
-                          onClick={() => handleRemoveTag(tag)}
-                        >
-                          <X size={12} />
-                        </Button>
-                      </Badge>
-                    ))}
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Add a tag"
-                      value={newTag}
-                      onChange={(e) => setNewTag(e.target.value)}
-                      onKeyPress={handleKeyPress}
-                      className="flex-1"
-                    />
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="sm"
-                      onClick={handleAddTag}
-                      disabled={!newTag.trim()}
-                    >
-                      <Plus size={14} />
-                    </Button>
-                  </div>
                 </div>
               </CardContent>
             </Card>
