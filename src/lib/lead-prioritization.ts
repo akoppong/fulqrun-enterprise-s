@@ -1,4 +1,4 @@
-import { Contact, Company, LeadScore } from './types';
+import { Contact, Company, LeadScore } from './types/index';
 
 /**
  * Advanced Lead Prioritization Engine

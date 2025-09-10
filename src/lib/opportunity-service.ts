@@ -1,4 +1,4 @@
-import { Opportunity, Company, Contact, MEDDPICC } from './types';
+import { Opportunity, Company, Contact, MEDDPICC } from './types/index';
 import { type DealData, DealAnalyticsEngine, type AnalyticsResult } from './analytics-engine';
 import { DealProgressionEngine, type ProgressionResult, type DealProgression } from './progression-engine';
 

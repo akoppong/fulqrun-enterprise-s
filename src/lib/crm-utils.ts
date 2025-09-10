@@ -1,4 +1,4 @@
-import { PipelineMetrics, Opportunity } from './types';
+import { PipelineMetrics, Opportunity } from './types/index';
 import { safeGetTime } from './date-helpers';
 
 export const calculatePipelineMetrics = (opportunities: Opportunity[]): PipelineMetrics => {

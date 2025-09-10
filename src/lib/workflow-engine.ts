@@ -1,4 +1,4 @@
-import { WorkflowTemplate, WorkflowExecution, WorkflowStep, AutomationAction, ExecutionResult, Opportunity } from './types';
+import { WorkflowTemplate, WorkflowExecution, WorkflowStep, AutomationAction, ExecutionResult, Opportunity } from './types/index';
 import { allWorkflowTemplates } from './industry-workflows';
 import { toast } from 'sonner';
 

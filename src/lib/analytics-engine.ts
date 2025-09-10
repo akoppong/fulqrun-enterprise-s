@@ -1,4 +1,4 @@
-import { Opportunity } from './types';
+import { Opportunity } from './types/index';
 
 export interface DealData {
   id: string;

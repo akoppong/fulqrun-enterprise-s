@@ -1,4 +1,4 @@
-import { WorkflowTemplate, PeakStage } from './types';
+import { WorkflowTemplate, PeakStage } from './types/index';
 
 /**
  * Industry-specific workflow templates for different business contexts

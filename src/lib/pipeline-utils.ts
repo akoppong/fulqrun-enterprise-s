@@ -8,7 +8,7 @@ import {
   PipelineAnalytics,
   WorkflowAutomation,
   PEAK_STAGES
-} from './types';
+} from './types/index';
 
 // Pre-defined pipeline templates for different sales processes
 export const PIPELINE_TEMPLATES: PipelineConfiguration[] = [

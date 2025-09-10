@@ -1,4 +1,4 @@
-import { Opportunity, Contact, Company, MEDDPICC } from './types';
+import { Opportunity, Contact, Company, MEDDPICC } from './types/index';
 
 /**
  * Generate demo data for testing AI features

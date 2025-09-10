@@ -1,4 +1,4 @@
-import { Opportunity, MEDDPICC, Contact, Company, LeadScore, DealRiskAssessment, ScoringFactor, RiskFactor, RiskRecommendation, CustomerSegment } from './types';
+import { Opportunity, MEDDPICC, Contact, Company, LeadScore, DealRiskAssessment, ScoringFactor, RiskFactor, RiskRecommendation, CustomerSegment } from './types/index';
 import { SegmentUtils } from './segment-utils';
 
 /**

@@ -1,4 +1,4 @@
-import { KPITarget, Opportunity, GoalTrackingEntry } from './types';
+import { KPITarget, Opportunity, GoalTrackingEntry } from './types/index';
 
 /**
  * Utility functions for KPI calculations and goal tracking
