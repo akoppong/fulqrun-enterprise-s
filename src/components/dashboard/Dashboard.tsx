@@ -21,7 +21,7 @@ import { CSTPVDashboard } from './CSTPVDashboard';
 import { FinancialManagement } from './FinancialManagement';
 import { KPITargetsView } from './KPITargetsView';
 import { LearningPlatform } from './LearningPlatform';
-import { KPIDashboardBuilder } from './KPIDashboardBuilder';
+import { KPIDashboardGallery } from './widgets/KPIDashboardGallery';
 import { FinancialAlerts } from './FinancialAlerts';
 import { WorkflowAutomation } from '../workflows/WorkflowAutomation';
 import { AIInsightsView } from './AIInsightsView';
@@ -39,7 +39,7 @@ interface DashboardProps {
   initialView?: string;
 }
 
-export type DashboardView = 'dashboard' | 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'autosave-demo' | 'autosave-test' | 'autosave-manual' | 'autosave-interactive' | 'field-testing' | 'comprehensive-testing' | 'validation-demo' | 'date-validation' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit';
+export type DashboardView = 'dashboard' | 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'kpi-gallery' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'autosave-demo' | 'autosave-test' | 'autosave-manual' | 'autosave-interactive' | 'field-testing' | 'comprehensive-testing' | 'validation-demo' | 'date-validation' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit';
 
 export function Dashboard({ user, onLogout, initialView }: DashboardProps) {
   const [currentView, setCurrentView] = useState<DashboardView>(
@@ -140,6 +140,8 @@ export function Dashboard({ user, onLogout, initialView }: DashboardProps) {
             kpiTargets={kpiTargets}
           />
         );
+      case 'kpi-gallery':
+        return <KPIDashboardGallery />;
       case 'learning':
         return (
           <LearningPlatform 

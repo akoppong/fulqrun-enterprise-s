@@ -238,6 +238,15 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           isNew: true
         },
         {
+          id: 'kpi-gallery',
+          label: 'KPI Gallery',
+          icon: Star,
+          description: 'Personalized KPI cards',
+          permissionId: 'personal-kpis',
+          action: 'read',
+          isNew: true
+        },
+        {
           id: 'workflows',
           label: 'Workflows',
           icon: Workflow,

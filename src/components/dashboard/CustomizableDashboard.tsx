@@ -42,11 +42,21 @@ import { toast } from 'sonner';
 import { User } from '@/lib/types';
 import { ChartWidget } from './widgets/ChartWidget';
 import { WidgetConfigDialog } from './widgets/WidgetConfigDialog';
+import { PersonalizedKPICard, PersonalizedKPIData } from './widgets/PersonalizedKPICard';
+import { KPIDashboardGallery } from './widgets/KPIDashboardGallery';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
 // Widget Types Configuration
 const WIDGET_TYPES = {
+  'personalized-kpi': {
+    name: 'Personalized KPI',
+    description: 'Advanced customizable KPI card',
+    icon: <Target className="h-4 w-4" />,
+    defaultSize: { w: 3, h: 2 },
+    minSize: { w: 2, h: 1 },
+    maxSize: { w: 6, h: 4 }
+  },
   'kpi-card': {
     name: 'KPI Card',
     description: 'Display key performance metrics',
@@ -110,6 +120,14 @@ const WIDGET_TYPES = {
     defaultSize: { w: 4, h: 2 },
     minSize: { w: 3, h: 1 },
     maxSize: { w: 6, h: 4 }
+  },
+  'kpi-gallery': {
+    name: 'KPI Gallery',
+    description: 'Browse and manage KPI cards',
+    icon: <Grid className="h-4 w-4" />,
+    defaultSize: { w: 12, h: 6 },
+    minSize: { w: 8, h: 4 },
+    maxSize: { w: 12, h: 8 }
   }
 };
 
@@ -119,12 +137,15 @@ interface DashboardWidget {
   title: string;
   description?: string;
   data?: any;
+  kpiData?: PersonalizedKPIData; // For personalized KPI widgets
   config?: {
     chartType?: 'bar' | 'line' | 'pie' | 'area' | 'gauge';
     color?: string;
     refreshRate?: number;
     dataSource?: string;
     filters?: any[];
+    variant?: 'default' | 'compact' | 'detailed' | 'minimal';
+    size?: 'sm' | 'md' | 'lg';
   };
   layout: {
     x: number;
@@ -161,6 +182,7 @@ export function CustomizableDashboard({ user, onConfigChange }: CustomizableDash
   const [isEditMode, setIsEditMode] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isAddWidgetOpen, setIsAddWidgetOpen] = useState(false);
+  const [isKPIGalleryOpen, setIsKPIGalleryOpen] = useState(false);
   const [isConfigDialogOpen, setIsConfigDialogOpen] = useState(false);
   const [selectedWidgetForConfig, setSelectedWidgetForConfig] = useState<DashboardWidget | null>(null);
   const [selectedWidgetType, setSelectedWidgetType] = useState<keyof typeof WIDGET_TYPES>('kpi-card');
@@ -239,7 +261,72 @@ export function CustomizableDashboard({ user, onConfigChange }: CustomizableDash
     toast.success('Dashboard created successfully');
   }, [newDashboardName, newDashboardDescription, dashboards.length, user.id, setDashboards, setCurrentDashboard]);
 
-  const addWidget = useCallback(() => {
+  const addKPIFromGallery = useCallback((kpiData: PersonalizedKPIData) => {
+    if (!activeDashboard) {
+      toast.error('No active dashboard');
+      return;
+    }
+
+    const widgetType = WIDGET_TYPES['personalized-kpi'];
+    const newWidget: DashboardWidget = {
+      id: `widget-${Date.now()}`,
+      type: 'personalized-kpi',
+      title: kpiData.title,
+      description: kpiData.subtitle,
+      data: null,
+      kpiData: kpiData,
+      config: {
+        color: kpiData.color,
+        refreshRate: 30,
+        variant: 'default',
+        size: 'md',
+      },
+      layout: {
+        x: 0,
+        y: 0,
+        w: widgetType.defaultSize.w,
+        h: widgetType.defaultSize.h,
+      },
+      visible: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    // Find empty position
+    const maxY = activeDashboard.widgets.reduce((max, widget) => 
+      Math.max(max, widget.layout.y + widget.layout.h), 0
+    );
+    newWidget.layout.y = maxY;
+
+    const updatedDashboard: DashboardConfig = {
+      ...activeDashboard,
+      widgets: [...activeDashboard.widgets, newWidget],
+      layout: [
+        ...activeDashboard.layout,
+        {
+          i: newWidget.id,
+          x: newWidget.layout.x,
+          y: newWidget.layout.y,
+          w: newWidget.layout.w,
+          h: newWidget.layout.h,
+          minW: widgetType.minSize?.w,
+          minH: widgetType.minSize?.h,
+          maxW: widgetType.maxSize?.w,
+          maxH: widgetType.maxSize?.h,
+        },
+      ],
+      updatedAt: new Date(),
+    };
+
+    setDashboards(current =>
+      current.map(dashboard =>
+        dashboard.id === activeDashboard.id ? updatedDashboard : dashboard
+      )
+    );
+
+    setIsKPIGalleryOpen(false);
+    toast.success(`Added "${kpiData.title}" to dashboard`);
+  }, [activeDashboard, setDashboards]);
     if (!activeDashboard || !newWidgetTitle.trim()) {
       toast.error('Widget title is required');
       return;
@@ -252,10 +339,22 @@ export function CustomizableDashboard({ user, onConfigChange }: CustomizableDash
       title: newWidgetTitle,
       description: newWidgetDescription,
       data: generateSampleData(selectedWidgetType),
+      kpiData: selectedWidgetType === 'personalized-kpi' ? {
+        id: `kpi-${Date.now()}`,
+        title: newWidgetTitle,
+        value: 0,
+        format: 'number',
+        icon: 'target',
+        color: '#3b82f6',
+        showTrend: true,
+        lastUpdated: new Date(),
+      } : undefined,
       config: {
         chartType: selectedWidgetType === 'chart' ? 'bar' : undefined,
         color: '#3b82f6',
         refreshRate: 30,
+        variant: selectedWidgetType === 'personalized-kpi' ? 'default' : undefined,
+        size: selectedWidgetType === 'personalized-kpi' ? 'md' : undefined,
       },
       layout: {
         x: 0,
@@ -554,6 +653,22 @@ export function CustomizableDashboard({ user, onConfigChange }: CustomizableDash
         </div>
 
         <div className="flex items-center gap-2">
+          {/* KPI Gallery Dialog */}
+          <Dialog open={isKPIGalleryOpen} onOpenChange={setIsKPIGalleryOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Grid className="h-4 w-4 mr-2" />
+                KPI Gallery
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>KPI Gallery</DialogTitle>
+              </DialogHeader>
+              <KPIDashboardGallery onAddToLayout={addKPIFromGallery} />
+            </DialogContent>
+          </Dialog>
+
           {/* Create Dashboard Dialog */}
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
@@ -797,6 +912,33 @@ export function CustomizableDashboard({ user, onConfigChange }: CustomizableDash
 function WidgetRenderer({ widget, isEditMode }: { widget: DashboardWidget; isEditMode: boolean }) {
   const renderWidgetContent = () => {
     switch (widget.type) {
+      case 'personalized-kpi':
+        if (!widget.kpiData) {
+          return (
+            <div className="p-4 h-full flex items-center justify-center">
+              <div className="text-center text-muted-foreground">
+                <Target className="h-8 w-8 mx-auto mb-2" />
+                <p className="text-sm">No KPI data configured</p>
+              </div>
+            </div>
+          );
+        }
+        return (
+          <PersonalizedKPICard
+            data={widget.kpiData}
+            variant={widget.config?.variant as any || 'default'}
+            size={widget.config?.size as any || 'md'}
+            className="h-full border-0 shadow-none"
+          />
+        );
+
+      case 'kpi-gallery':
+        return (
+          <div className="h-full overflow-hidden">
+            <KPIDashboardGallery />
+          </div>
+        );
+
       case 'kpi-card':
         return (
           <div className="p-4 h-full flex flex-col justify-center">
@@ -899,6 +1041,11 @@ function WidgetRenderer({ widget, isEditMode }: { widget: DashboardWidget; isEdi
     }
   };
 
+  // For personalized KPI cards, we don't need the default header since the card has its own
+  if (widget.type === 'personalized-kpi') {
+    return renderWidgetContent();
+  }
+
   return (
     <>
       <CardHeader className="pb-2">
@@ -917,6 +1064,10 @@ function WidgetRenderer({ widget, isEditMode }: { widget: DashboardWidget; isEdi
 // Sample data generator
 function generateSampleData(widgetType: keyof typeof WIDGET_TYPES) {
   switch (widgetType) {
+    case 'personalized-kpi':
+      return null; // KPI data is handled separately in kpiData field
+    case 'kpi-gallery':
+      return null; // Gallery doesn't need data
     case 'kpi-card':
       return {
         value: '$45,231',
