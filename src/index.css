@@ -464,6 +464,13 @@ body {
   min-width: 95vw !important;
 }
 
+/* Enhanced width for opportunity edit form specifically */
+[data-radix-dialog-content].opportunity-edit-form-dialog {
+  width: 95vw !important;
+  max-width: 95vw !important;
+  min-width: 95vw !important;
+}
+
 /* Fix for ScrollArea within dialog content */
 [data-radix-dialog-content] [data-radix-scroll-area-root] {
   flex: 1 !important;
@@ -507,12 +514,63 @@ body {
   border: 0 !important;
 }
 
-/* Enhanced form field spacing */
-.form-grid-improved {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: 2rem;
-  margin-bottom: 2rem;
+/* Enhanced form field spacing for opportunity edit form */
+.opportunity-edit-form-dialog .form-section-spacing {
+  padding: 1.5rem 0;
+  border-bottom: 1px solid hsl(var(--border));
+  margin-bottom: 1.5rem;
+}
+
+.opportunity-edit-form-dialog .form-section-spacing:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.opportunity-edit-form-dialog .form-section-spacing h4 {
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+/* Improved grid spacing for wider form */
+.opportunity-edit-form-dialog .grid {
+  gap: 1.5rem;
+}
+
+.opportunity-edit-form-dialog .grid > * {
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.opportunity-edit-form-dialog .grid > * > label {
+  flex-shrink: 0;
+  margin-bottom: 0.25rem;
+  font-weight: 500;
+}
+
+.opportunity-edit-form-dialog .grid > * > input,
+.opportunity-edit-form-dialog .grid > * > [data-radix-select-trigger],
+.opportunity-edit-form-dialog .grid > * > button {
+  flex: 1;
+  min-height: 44px;
+}
+
+/* Prevent input field overlap */
+.opportunity-edit-form-dialog input,
+.opportunity-edit-form-dialog textarea,
+.opportunity-edit-form-dialog [data-radix-select-trigger] {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Enhanced select content width */
+.opportunity-edit-form-dialog [data-radix-select-content] {
+  min-width: max(var(--radix-select-trigger-width), 280px);
+  max-width: min(95vw, 500px);
 }
 
 .form-grid-improved .form-field {

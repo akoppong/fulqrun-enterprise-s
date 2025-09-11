@@ -639,7 +639,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-7xl w-[98vw] h-[95vh] p-0 gap-0 flex flex-col">
+      <DialogContent className="max-w-[95vw] w-[95vw] h-[95vh] p-0 gap-0 flex flex-col opportunity-edit-form-dialog">
         <DialogHeader className="px-6 py-4 border-b shrink-0">
           <DialogTitle className="text-2xl font-semibold flex items-center gap-2">
             {opportunity ? 'Edit Opportunity' : 'Create New Opportunity'}
@@ -695,7 +695,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
         )}
 
         <ScrollArea className="flex-1 min-h-0 dialog-scroll-area">
-          <div className="px-6 py-6 space-y-12">
+          <div className="px-8 py-6 space-y-8 max-w-none">
             {/* Opportunity Details Section */}
             <Card>
               <CardHeader>
@@ -707,12 +707,11 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                 </CardTitle>
                 <CardDescription>Core opportunity information and contact details</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-12">
+              <CardContent className="space-y-8">
                   {/* Basic Information Row */}
                   <div className="form-section-spacing">
                     <h4 className="font-semibold text-base mb-6 pb-2 border-b text-foreground">Basic Information</h4>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8 min-w-0">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 min-w-0">
                       <ValidatedInput
                         id="title"
                         label="Opportunity Name"
@@ -819,7 +818,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                   {/* Sales Information Row */}
                   <div className="form-section-spacing">
                     <h4 className="font-semibold text-base mb-6 pb-2 border-b text-foreground">Sales Information</h4>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8 min-w-0">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 min-w-0">
                       <ValidatedInput
                         id="probability"
                         label="Win Probability (%)"
@@ -921,7 +920,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                       </Alert>
                     )}
                     
-                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8 min-w-0">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 min-w-0">
                       <div className="space-y-2">
                         <Label htmlFor="primary-contact" className="text-sm font-medium">
                           Primary Contact
@@ -994,7 +993,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                   {/* Business & Market Details Row */}
                   <div className="form-section-spacing">
                     <h4 className="font-semibold text-base mb-6 pb-2 border-b text-foreground">Business & Market Details</h4>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8 min-w-0">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 min-w-0">
                       <div className="space-y-2">
                         <Label htmlFor="industry" className="text-sm font-medium">
                           Industry
