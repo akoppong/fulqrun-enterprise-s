@@ -37,6 +37,7 @@ import { CompaniesView } from './CompaniesView';
 import { UserManagement } from '../admin/UserManagement';
 import { SystemConfiguration } from '../admin/SystemConfiguration';
 import { SystemMonitoring } from '../admin/SystemMonitoring';
+import { AdministrationModule } from '../administration/AdministrationModule';
 import { PersonalizedKPIManager } from './PersonalizedKPIManager';
 import { PersonalizedKPIDashboard } from './PersonalizedKPIDashboard';
 import { KPIDashboardBuilder } from './KPIDashboardBuilder';
@@ -53,7 +54,7 @@ interface DashboardProps {
   initialView?: string;
 }
 
-export type DashboardView = 'dashboard' | 'role-testing' | 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'advanced-analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'kpi-gallery' | 'kpi-manager' | 'kpi-layout' | 'pharma-kpi-templates' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'opportunity-test-suite' | 'autosave-demo' | 'autosave-test' | 'autosave-manual' | 'autosave-interactive' | 'field-testing' | 'comprehensive-testing' | 'validation-demo' | 'date-validation' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit';
+export type DashboardView = 'dashboard' | 'role-testing' | 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'advanced-analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'kpi-gallery' | 'kpi-manager' | 'kpi-layout' | 'pharma-kpi-templates' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'autosave-demo' | 'autosave-test' | 'autosave-manual' | 'autosave-interactive' | 'field-testing' | 'comprehensive-testing' | 'validation-demo' | 'date-validation' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit' | 'administration';
 
 export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialView }: DashboardProps) {
   // Safety check for user object and role
@@ -323,9 +324,15 @@ export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialV
           </div>
         );
       
+      case 'administration':
+        return (
+          <AdministrationModule 
+            userRole={user.role} 
+            isOwner={user.role === 'admin' || user.email === originalUser?.email}
+          />
+        );
+      
       // Testing Components
-      case 'opportunity-test-suite':
-        return <OpportunityTestSuite />;
       case 'autosave-demo':
         return <AutoSaveDemo />;
       case 'autosave-test':

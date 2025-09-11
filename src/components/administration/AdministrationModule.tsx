@@ -33,6 +33,7 @@ import { ValidationTestingDemo } from '@/components/dashboard/ValidationTestingD
 import { AutoSaveTestRunner } from '@/components/dashboard/AutoSaveTestRunner';
 import { ComprehensiveValidationTestSuite } from '@/components/dashboard/ComprehensiveValidationTestSuite';
 import { FieldTypeTestingLab } from '@/components/dashboard/FieldTypeTestingLab';
+import { OpportunityTestSuite } from '@/components/opportunities/OpportunityTestSuite';
 
 // Import new real-time data integration components
 import { RealTimeDataHub } from '@/components/integrations/RealTimeDataHub';
@@ -431,13 +432,18 @@ export function AdministrationModule({ userRole, isOwner = false, initialView = 
             </CardHeader>
           </Card>
 
-          <Tabs defaultValue="validation-demo" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
+          <Tabs defaultValue="opportunity-suite" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-5">
+              <TabsTrigger value="opportunity-suite">Opportunity Tests</TabsTrigger>
               <TabsTrigger value="validation-demo">Validation Demo</TabsTrigger>
               <TabsTrigger value="autosave-test">AutoSave Tests</TabsTrigger>
               <TabsTrigger value="validation-suite">Validation Suite</TabsTrigger>
               <TabsTrigger value="field-testing">Field Testing</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="opportunity-suite">
+              <OpportunityTestSuite />
+            </TabsContent>
 
             <TabsContent value="validation-demo">
               <ValidationTestingDemo />

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -27,7 +27,11 @@ import {
   Star,
   Building,
   Calendar,
-  Settings
+  Settings,
+  Timer,
+  ChartBar,
+  SpeedTest,
+  CircuitryBoard
 } from '@phosphor-icons/react';
 import { useKV } from '@github/spark/hooks';
 import { Opportunity, Company, Contact } from '@/lib/types';
@@ -40,12 +44,22 @@ import { ResponsiveOpportunityDetail } from './ResponsiveOpportunityDetail';
 interface TestResult {
   id: string;
   name: string;
-  category: 'ui' | 'data' | 'integration' | 'performance' | 'security';
+  category: 'ui' | 'data' | 'integration' | 'performance' | 'security' | 'automation' | 'monitoring';
   status: 'pass' | 'fail' | 'warning' | 'pending' | 'skipped';
   message: string;
   details?: string;
   duration?: number;
   severity: 'low' | 'medium' | 'high' | 'critical';
+  metrics?: {
+    renderTime?: number;
+    memoryUsage?: number;
+    cpuUsage?: number;
+    responseTime?: number;
+    throughput?: number;
+  };
+  automated?: boolean;
+  scheduled?: boolean;
+  lastRun?: Date;
 }
 
 interface TestSuite {
@@ -54,6 +68,28 @@ interface TestSuite {
   tests: TestResult[];
   duration: number;
   status: 'running' | 'completed' | 'failed' | 'pending';
+  automated: boolean;
+  schedule?: string;
+  lastRun?: Date;
+}
+
+interface PerformanceMetrics {
+  timestamp: Date;
+  renderTime: number;
+  memoryUsage: number;
+  cpuUsage: number;
+  responseTime: number;
+  throughput: number;
+  userLoad: number;
+}
+
+interface ValidationRule {
+  id: string;
+  name: string;
+  type: 'field' | 'business' | 'data' | 'security';
+  rule: (data: any) => boolean;
+  message: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
 }
 
 export function OpportunityTestSuite() {
@@ -68,6 +104,14 @@ export function OpportunityTestSuite() {
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
   const [isDetailViewOpen, setIsDetailViewOpen] = useState(false);
   const [testProgress, setTestProgress] = useState(0);
+  const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics[]>([]);
+  const [validationRules] = useState<ValidationRule[]>([]);
+  const [isMonitoring, setIsMonitoring] = useState(false);
+  const [automatedTestsEnabled, setAutomatedTestsEnabled] = useState(false);
+  
+  // Performance monitoring refs
+  const performanceObserver = useRef<PerformanceObserver | null>(null);
+  const memoryMonitor = useRef<NodeJS.Timeout | null>(null);
 
   // Sample opportunities for testing
   const sampleOpportunities: Opportunity[] = [
@@ -182,7 +226,319 @@ export function OpportunityTestSuite() {
   useEffect(() => {
     // Initialize test suites
     initializeTestSuites();
+    
+    // Initialize performance monitoring
+    initializePerformanceMonitoring();
+    
+    // Cleanup on unmount
+    return () => {
+      if (performanceObserver.current) {
+        performanceObserver.current.disconnect();
+      }
+      if (memoryMonitor.current) {
+        clearInterval(memoryMonitor.current);
+      }
+    };
   }, []);
+
+  // Performance monitoring initialization
+  const initializePerformanceMonitoring = useCallback(() => {
+    // Setup performance observer for navigation and resource timing
+    if ('PerformanceObserver' in window) {
+      performanceObserver.current = new PerformanceObserver((list) => {
+        const entries = list.getEntries();
+        entries.forEach((entry) => {
+          if (entry.entryType === 'navigation' || entry.entryType === 'measure') {
+            recordPerformanceMetric({
+              timestamp: new Date(),
+              renderTime: entry.duration || 0,
+              memoryUsage: getMemoryUsage(),
+              cpuUsage: getCPUUsage(),
+              responseTime: entry.responseStart ? entry.responseStart - entry.requestStart : 0,
+              throughput: calculateThroughput(),
+              userLoad: getCurrentUserLoad()
+            });
+          }
+        });
+      });
+      
+      performanceObserver.current.observe({ 
+        entryTypes: ['navigation', 'measure', 'resource'] 
+      });
+    }
+
+    // Setup memory monitoring
+    memoryMonitor.current = setInterval(() => {
+      recordPerformanceMetric({
+        timestamp: new Date(),
+        renderTime: 0,
+        memoryUsage: getMemoryUsage(),
+        cpuUsage: getCPUUsage(),
+        responseTime: 0,
+        throughput: calculateThroughput(),
+        userLoad: getCurrentUserLoad()
+      });
+    }, 5000); // Monitor every 5 seconds
+  }, []);
+
+  const recordPerformanceMetric = useCallback((metric: PerformanceMetrics) => {
+    setPerformanceMetrics(prev => {
+      const updated = [...prev, metric];
+      // Keep only last 100 metrics to prevent memory bloat
+      return updated.slice(-100);
+    });
+  }, []);
+
+  const getMemoryUsage = (): number => {
+    if ('memory' in performance) {
+      const memory = (performance as any).memory;
+      return memory.usedJSHeapSize / 1024 / 1024; // MB
+    }
+    return 0;
+  };
+
+  const getCPUUsage = (): number => {
+    // Mock CPU usage calculation
+    const start = performance.now();
+    let iterations = 0;
+    const duration = 10; // 10ms sampling
+    
+    while (performance.now() - start < duration) {
+      iterations++;
+    }
+    
+    // Normalize to percentage (this is a simplified calculation)
+    return Math.min((iterations / 10000) * 100, 100);
+  };
+
+  const calculateThroughput = (): number => {
+    // Calculate operations per second based on recent metrics
+    if (performanceMetrics.length < 2) return 0;
+    
+    const recent = performanceMetrics.slice(-10);
+    const timeSpan = recent[recent.length - 1].timestamp.getTime() - recent[0].timestamp.getTime();
+    const operations = recent.length;
+    
+    return timeSpan > 0 ? (operations / timeSpan) * 1000 : 0; // ops/sec
+  };
+
+  const getCurrentUserLoad = (): number => {
+    // Mock user load calculation based on opportunities count
+    return Math.min((opportunities.length / 100) * 100, 100);
+  };
+
+  // Automated validation functions
+  const runAutomatedValidation = useCallback(async () => {
+    const validationResults: TestResult[] = [];
+    
+    // Data integrity validation
+    validationResults.push(await validateDataIntegrity());
+    
+    // Performance validation
+    validationResults.push(await validatePerformance());
+    
+    // Security validation
+    validationResults.push(await validateSecurity());
+    
+    // Business rule validation
+    validationResults.push(await validateBusinessRules());
+    
+    return validationResults;
+  }, [opportunities, companies, contacts, performanceMetrics]);
+
+  const validateDataIntegrity = async (): Promise<TestResult> => {
+    const startTime = Date.now();
+    const issues: string[] = [];
+    
+    // Check for orphaned opportunities
+    const orphanedOpps = opportunities.filter(opp => 
+      !companies.find(c => c.id === opp.companyId) ||
+      !contacts.find(c => c.id === opp.contactId)
+    );
+    
+    if (orphanedOpps.length > 0) {
+      issues.push(`${orphanedOpps.length} opportunities with missing company/contact references`);
+    }
+    
+    // Check for duplicate opportunities
+    const titles = opportunities.map(o => o.title);
+    const duplicates = titles.filter((title, index) => titles.indexOf(title) !== index);
+    
+    if (duplicates.length > 0) {
+      issues.push(`${duplicates.length} duplicate opportunity titles found`);
+    }
+    
+    // Check data consistency
+    const invalidValues = opportunities.filter(opp => 
+      opp.value < 0 || 
+      opp.probability < 0 || 
+      opp.probability > 100 ||
+      !opp.title || 
+      !opp.companyId
+    );
+    
+    if (invalidValues.length > 0) {
+      issues.push(`${invalidValues.length} opportunities with invalid data values`);
+    }
+    
+    return {
+      id: 'auto-data-integrity',
+      name: 'Automated Data Integrity Check',
+      category: 'automation',
+      status: issues.length === 0 ? 'pass' : 'warning',
+      message: issues.length === 0 ? 'All data integrity checks passed' : 'Data integrity issues found',
+      details: issues.join('; '),
+      duration: Date.now() - startTime,
+      severity: issues.length === 0 ? 'low' : 'medium',
+      automated: true,
+      lastRun: new Date()
+    };
+  };
+
+  const validatePerformance = async (): Promise<TestResult> => {
+    const startTime = Date.now();
+    const issues: string[] = [];
+    
+    if (performanceMetrics.length === 0) {
+      return {
+        id: 'auto-performance',
+        name: 'Automated Performance Check',
+        category: 'performance',
+        status: 'skipped',
+        message: 'No performance data available',
+        duration: Date.now() - startTime,
+        severity: 'low',
+        automated: true,
+        lastRun: new Date()
+      };
+    }
+    
+    const latestMetrics = performanceMetrics.slice(-10);
+    const avgRenderTime = latestMetrics.reduce((sum, m) => sum + m.renderTime, 0) / latestMetrics.length;
+    const avgMemoryUsage = latestMetrics.reduce((sum, m) => sum + m.memoryUsage, 0) / latestMetrics.length;
+    const avgResponseTime = latestMetrics.reduce((sum, m) => sum + m.responseTime, 0) / latestMetrics.length;
+    
+    if (avgRenderTime > 1000) {
+      issues.push(`High render time: ${avgRenderTime.toFixed(2)}ms`);
+    }
+    
+    if (avgMemoryUsage > 100) {
+      issues.push(`High memory usage: ${avgMemoryUsage.toFixed(2)}MB`);
+    }
+    
+    if (avgResponseTime > 500) {
+      issues.push(`High response time: ${avgResponseTime.toFixed(2)}ms`);
+    }
+    
+    return {
+      id: 'auto-performance',
+      name: 'Automated Performance Check',
+      category: 'performance',
+      status: issues.length === 0 ? 'pass' : 'warning',
+      message: issues.length === 0 ? 'Performance within acceptable limits' : 'Performance issues detected',
+      details: issues.join('; '),
+      duration: Date.now() - startTime,
+      severity: issues.length === 0 ? 'low' : 'medium',
+      automated: true,
+      lastRun: new Date(),
+      metrics: {
+        renderTime: avgRenderTime,
+        memoryUsage: avgMemoryUsage,
+        responseTime: avgResponseTime,
+        throughput: latestMetrics[latestMetrics.length - 1]?.throughput || 0
+      }
+    };
+  };
+
+  const validateSecurity = async (): Promise<TestResult> => {
+    const startTime = Date.now();
+    const issues: string[] = [];
+    
+    // Check for sensitive data exposure
+    const exposedData = opportunities.filter(opp => 
+      opp.description.toLowerCase().includes('password') ||
+      opp.description.toLowerCase().includes('ssn') ||
+      opp.description.toLowerCase().includes('credit card')
+    );
+    
+    if (exposedData.length > 0) {
+      issues.push(`${exposedData.length} opportunities may contain sensitive data`);
+    }
+    
+    // Check for injection vulnerabilities (basic check)
+    const suspiciousData = opportunities.filter(opp => 
+      opp.title.includes('<script') ||
+      opp.description.includes('<script') ||
+      opp.title.includes('javascript:') ||
+      opp.description.includes('javascript:')
+    );
+    
+    if (suspiciousData.length > 0) {
+      issues.push(`${suspiciousData.length} opportunities contain suspicious script content`);
+    }
+    
+    return {
+      id: 'auto-security',
+      name: 'Automated Security Check',
+      category: 'security',
+      status: issues.length === 0 ? 'pass' : 'fail',
+      message: issues.length === 0 ? 'No security issues detected' : 'Security issues found',
+      details: issues.join('; '),
+      duration: Date.now() - startTime,
+      severity: issues.length === 0 ? 'low' : 'critical',
+      automated: true,
+      lastRun: new Date()
+    };
+  };
+
+  const validateBusinessRules = async (): Promise<TestResult> => {
+    const startTime = Date.now();
+    const issues: string[] = [];
+    
+    // Check business rule: High-value opportunities should have high probability
+    const highValueLowProb = opportunities.filter(opp => 
+      opp.value > 500000 && opp.probability < 30
+    );
+    
+    if (highValueLowProb.length > 0) {
+      issues.push(`${highValueLowProb.length} high-value opportunities have unusually low probability`);
+    }
+    
+    // Check business rule: Old opportunities should be reviewed
+    const staleOpportunities = opportunities.filter(opp => {
+      const daysSinceUpdate = (Date.now() - new Date(opp.updatedAt).getTime()) / (1000 * 60 * 60 * 24);
+      return daysSinceUpdate > 30 && opp.stage !== 'closed-won' && opp.stage !== 'closed-lost';
+    });
+    
+    if (staleOpportunities.length > 0) {
+      issues.push(`${staleOpportunities.length} opportunities haven't been updated in over 30 days`);
+    }
+    
+    // Check business rule: MEDDPICC completion
+    const incompleteMEDDPICC = opportunities.filter(opp => 
+      !opp.meddpicc || 
+      !opp.meddpicc.metrics || 
+      !opp.meddpicc.economicBuyer || 
+      !opp.meddpicc.champion
+    );
+    
+    if (incompleteMEDDPICC.length > 0) {
+      issues.push(`${incompleteMEDDPICC.length} opportunities have incomplete MEDDPICC qualification`);
+    }
+    
+    return {
+      id: 'auto-business-rules',
+      name: 'Automated Business Rules Check',
+      category: 'automation',
+      status: issues.length === 0 ? 'pass' : 'warning',
+      message: issues.length === 0 ? 'All business rules validated' : 'Business rule violations found',
+      details: issues.join('; '),
+      duration: Date.now() - startTime,
+      severity: 'medium',
+      automated: true,
+      lastRun: new Date()
+    };
+  };
 
   const initializeTestSuites = () => {
     const suites: TestSuite[] = [
@@ -191,6 +547,7 @@ export function OpportunityTestSuite() {
         description: 'Test responsive design, accessibility, and user interface components',
         status: 'pending',
         duration: 0,
+        automated: false,
         tests: [
           {
             id: 'ui-1',
@@ -198,7 +555,8 @@ export function OpportunityTestSuite() {
             category: 'ui',
             status: 'pending',
             message: 'Test responsive behavior across different screen sizes',
-            severity: 'high'
+            severity: 'high',
+            automated: false
           },
           {
             id: 'ui-2',
@@ -206,7 +564,8 @@ export function OpportunityTestSuite() {
             category: 'ui',
             status: 'pending',
             message: 'Verify WCAG accessibility standards',
-            severity: 'medium'
+            severity: 'medium',
+            automated: false
           },
           {
             id: 'ui-3',
@@ -214,7 +573,8 @@ export function OpportunityTestSuite() {
             category: 'ui',
             status: 'pending',
             message: 'Test input validation and error handling',
-            severity: 'high'
+            severity: 'high',
+            automated: false
           },
           {
             id: 'ui-4',
@@ -222,7 +582,8 @@ export function OpportunityTestSuite() {
             category: 'ui',
             status: 'pending',
             message: 'Test tab navigation and modal interactions',
-            severity: 'medium'
+            severity: 'medium',
+            automated: false
           }
         ]
       },
@@ -231,6 +592,8 @@ export function OpportunityTestSuite() {
         description: 'Validate data structures, relationships, and calculations',
         status: 'pending',
         duration: 0,
+        automated: true,
+        schedule: 'hourly',
         tests: [
           {
             id: 'data-1',
@@ -238,7 +601,8 @@ export function OpportunityTestSuite() {
             category: 'data',
             status: 'pending',
             message: 'Verify MEDDPICC scoring algorithm accuracy',
-            severity: 'critical'
+            severity: 'critical',
+            automated: false
           },
           {
             id: 'data-2',
@@ -246,7 +610,8 @@ export function OpportunityTestSuite() {
             category: 'data',
             status: 'pending',
             message: 'Test data relationships and foreign key integrity',
-            severity: 'high'
+            severity: 'high',
+            automated: true
           },
           {
             id: 'data-3',
@@ -254,7 +619,8 @@ export function OpportunityTestSuite() {
             category: 'data',
             status: 'pending',
             message: 'Validate currency display and calculations',
-            severity: 'medium'
+            severity: 'medium',
+            automated: false
           },
           {
             id: 'data-4',
@@ -262,7 +628,8 @@ export function OpportunityTestSuite() {
             category: 'data',
             status: 'pending',
             message: 'Test date parsing, formatting, and timezone handling',
-            severity: 'medium'
+            severity: 'medium',
+            automated: false
           }
         ]
       },
@@ -271,6 +638,7 @@ export function OpportunityTestSuite() {
         description: 'Test component integration and API interactions',
         status: 'pending',
         duration: 0,
+        automated: false,
         tests: [
           {
             id: 'int-1',
@@ -278,7 +646,8 @@ export function OpportunityTestSuite() {
             category: 'integration',
             status: 'pending',
             message: 'Test integration between list and detail views',
-            severity: 'high'
+            severity: 'high',
+            automated: false
           },
           {
             id: 'int-2',
@@ -286,7 +655,8 @@ export function OpportunityTestSuite() {
             category: 'integration',
             status: 'pending',
             message: 'Verify state persistence and updates',
-            severity: 'high'
+            severity: 'high',
+            automated: false
           },
           {
             id: 'int-3',
@@ -294,7 +664,8 @@ export function OpportunityTestSuite() {
             category: 'integration',
             status: 'pending',
             message: 'Test user interactions and event propagation',
-            severity: 'medium'
+            severity: 'medium',
+            automated: false
           }
         ]
       },
@@ -303,6 +674,8 @@ export function OpportunityTestSuite() {
         description: 'Evaluate performance, loading times, and optimization',
         status: 'pending',
         duration: 0,
+        automated: true,
+        schedule: 'continuous',
         tests: [
           {
             id: 'perf-1',
@@ -310,7 +683,8 @@ export function OpportunityTestSuite() {
             category: 'performance',
             status: 'pending',
             message: 'Measure component render times',
-            severity: 'medium'
+            severity: 'medium',
+            automated: true
           },
           {
             id: 'perf-2',
@@ -318,7 +692,8 @@ export function OpportunityTestSuite() {
             category: 'performance',
             status: 'pending',
             message: 'Test performance with large opportunity lists',
-            severity: 'medium'
+            severity: 'medium',
+            automated: false
           },
           {
             id: 'perf-3',
@@ -326,7 +701,58 @@ export function OpportunityTestSuite() {
             category: 'performance',
             status: 'pending',
             message: 'Monitor memory consumption and cleanup',
-            severity: 'low'
+            severity: 'low',
+            automated: true
+          }
+        ]
+      },
+      {
+        name: 'Automated Monitoring',
+        description: 'Continuous validation and performance monitoring',
+        status: 'pending',
+        duration: 0,
+        automated: true,
+        schedule: 'continuous',
+        tests: [
+          {
+            id: 'auto-1',
+            name: 'Real-time Data Validation',
+            category: 'monitoring',
+            status: 'pending',
+            message: 'Continuous validation of data integrity',
+            severity: 'high',
+            automated: true,
+            scheduled: true
+          },
+          {
+            id: 'auto-2',
+            name: 'Performance Monitoring',
+            category: 'monitoring',
+            status: 'pending',
+            message: 'Real-time performance metrics collection',
+            severity: 'medium',
+            automated: true,
+            scheduled: true
+          },
+          {
+            id: 'auto-3',
+            name: 'Security Scanning',
+            category: 'security',
+            status: 'pending',
+            message: 'Automated security vulnerability scanning',
+            severity: 'critical',
+            automated: true,
+            scheduled: true
+          },
+          {
+            id: 'auto-4',
+            name: 'Business Rules Validation',
+            category: 'automation',
+            status: 'pending',
+            message: 'Automated business logic validation',
+            severity: 'medium',
+            automated: true,
+            scheduled: true
           }
         ]
       }
@@ -355,8 +781,8 @@ export function OpportunityTestSuite() {
         test.status = 'pending';
         setTestSuites([...updatedSuites]);
         
-        // Simulate test execution
-        await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000));
+        // Simulate test execution with realistic delays
+        await new Promise(resolve => setTimeout(resolve, test.automated ? 200 : 500 + Math.random() * 1000));
         
         // Run the actual test
         const result = await executeTest(test.id);
@@ -370,6 +796,7 @@ export function OpportunityTestSuite() {
       suite.duration = Date.now() - startTime;
       suite.status = suite.tests.every(t => t.status === 'pass') ? 'completed' : 
                    suite.tests.some(t => t.status === 'fail') ? 'failed' : 'completed';
+      suite.lastRun = new Date();
     }
 
     setIsRunning(false);
@@ -377,11 +804,45 @@ export function OpportunityTestSuite() {
     toast.success('Test suite completed successfully!');
   };
 
+  // Automated test runner for scheduled tests
+  const runAutomatedTests = useCallback(async () => {
+    if (!automatedTestsEnabled) return;
+
+    const automatedResults = await runAutomatedValidation();
+    
+    // Update test suites with automated results
+    setTestSuites(prev => {
+      const updated = [...prev];
+      const monitoringSuite = updated.find(s => s.name === 'Automated Monitoring');
+      
+      if (monitoringSuite) {
+        automatedResults.forEach(result => {
+          const testIndex = monitoringSuite.tests.findIndex(t => t.id === result.id);
+          if (testIndex !== -1) {
+            monitoringSuite.tests[testIndex] = { ...monitoringSuite.tests[testIndex], ...result };
+          }
+        });
+        monitoringSuite.lastRun = new Date();
+      }
+      
+      return updated;
+    });
+  }, [automatedTestsEnabled, runAutomatedValidation]);
+
+  // Run automated tests periodically
+  useEffect(() => {
+    if (automatedTestsEnabled) {
+      const interval = setInterval(runAutomatedTests, 60000); // Run every minute
+      return () => clearInterval(interval);
+    }
+  }, [automatedTestsEnabled, runAutomatedTests]);
+
   const executeTest = async (testId: string): Promise<Partial<TestResult>> => {
     const startTime = Date.now();
     
     try {
       switch (testId) {
+        // UI Tests
         case 'ui-1':
           return await testResponsiveLayout();
         case 'ui-2':
@@ -390,6 +851,8 @@ export function OpportunityTestSuite() {
           return await testFormValidation();
         case 'ui-4':
           return await testNavigationFlow();
+        
+        // Data Tests
         case 'data-1':
           return await testMEDDPICCCalculation();
         case 'data-2':
@@ -398,18 +861,33 @@ export function OpportunityTestSuite() {
           return await testCurrencyFormatting();
         case 'data-4':
           return await testDateHandling();
+        
+        // Integration Tests
         case 'int-1':
           return await testDetailViewIntegration();
         case 'int-2':
           return await testStateManagement();
         case 'int-3':
           return await testEventHandling();
+        
+        // Performance Tests
         case 'perf-1':
           return await testRenderPerformance();
         case 'perf-2':
           return await testLargeDataset();
         case 'perf-3':
           return await testMemoryUsage();
+        
+        // Automated Tests
+        case 'auto-1':
+          return await validateDataIntegrity();
+        case 'auto-2':
+          return await validatePerformance();
+        case 'auto-3':
+          return await validateSecurity();
+        case 'auto-4':
+          return await validateBusinessRules();
+        
         default:
           throw new Error(`Unknown test: ${testId}`);
       }
@@ -649,6 +1127,10 @@ export function OpportunityTestSuite() {
         return <TrendingUp size={16} className="text-orange-600" />;
       case 'security':
         return <TestTube size={16} className="text-red-600" />;
+      case 'automation':
+        return <CircuitryBoard size={16} className="text-indigo-600" />;
+      case 'monitoring':
+        return <Activity size={16} className="text-cyan-600" />;
     }
   };
 
@@ -663,11 +1145,11 @@ export function OpportunityTestSuite() {
       {/* Header */}
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold text-foreground">
-          Opportunity Detail View Test Suite
+          Comprehensive Opportunity Test Suite
         </h1>
-        <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-          Comprehensive testing framework for opportunity management components with automated validation, 
-          performance monitoring, and quality assurance.
+        <p className="text-lg text-muted-foreground max-w-4xl mx-auto">
+          Advanced testing framework with automated validation, real-time performance monitoring, 
+          and continuous quality assurance for enterprise opportunity management.
         </p>
       </div>
 
@@ -677,6 +1159,24 @@ export function OpportunityTestSuite() {
           <CardTitle className="flex items-center gap-2">
             <TestTube size={24} className="text-primary" />
             Test Suite Control Center
+            <div className="ml-auto flex items-center gap-2">
+              <Button
+                variant={isMonitoring ? "destructive" : "outline"}
+                size="sm"
+                onClick={() => setIsMonitoring(!isMonitoring)}
+              >
+                <Activity size={16} className="mr-1" />
+                {isMonitoring ? 'Stop' : 'Start'} Monitoring
+              </Button>
+              <Button
+                variant={automatedTestsEnabled ? "destructive" : "outline"}
+                size="sm"
+                onClick={() => setAutomatedTestsEnabled(!automatedTestsEnabled)}
+              >
+                <CircuitryBoard size={16} className="mr-1" />
+                {automatedTestsEnabled ? 'Disable' : 'Enable'} Automation
+              </Button>
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -688,6 +1188,22 @@ export function OpportunityTestSuite() {
               <div className="text-sm text-muted-foreground">
                 {isRunning ? currentTest : `${allTests.length} tests across ${testSuites.length} suites`}
               </div>
+              {(isMonitoring || automatedTestsEnabled) && (
+                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                  {isMonitoring && (
+                    <div className="flex items-center gap-1">
+                      <Activity size={12} className="text-green-500" />
+                      Performance monitoring active
+                    </div>
+                  )}
+                  {automatedTestsEnabled && (
+                    <div className="flex items-center gap-1">
+                      <CircuitryBoard size={12} className="text-blue-500" />
+                      Automated tests enabled
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             <Button 
               onClick={runAllTests} 
@@ -744,15 +1260,206 @@ export function OpportunityTestSuite() {
 
       {/* Tabbed Test Interface */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="suites">Test Suites</TabsTrigger>
+          <TabsTrigger value="performance">Performance</TabsTrigger>
           <TabsTrigger value="sample-data">Sample Data</TabsTrigger>
           <TabsTrigger value="quick-test">Quick Test</TabsTrigger>
           <TabsTrigger value="live-demo">Live Demo</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-6">
+        <TabsContent value="performance" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ChartBar size={24} className="text-blue-600" />
+                  Real-Time Performance Metrics
+                </CardTitle>
+                <p className="text-muted-foreground">
+                  Live performance monitoring and system health indicators
+                </p>
+              </CardHeader>
+              <CardContent>
+                {performanceMetrics.length > 0 ? (
+                  <div className="space-y-4">
+                    {(() => {
+                      const latest = performanceMetrics[performanceMetrics.length - 1];
+                      return (
+                        <>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                              <div className="text-sm font-medium flex items-center gap-1">
+                                <Timer size={14} />
+                                Render Time
+                              </div>
+                              <div className="text-2xl font-bold text-blue-600">
+                                {latest.renderTime.toFixed(2)}ms
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <div className="text-sm font-medium flex items-center gap-1">
+                                <Database size={14} />
+                                Memory Usage
+                              </div>
+                              <div className="text-2xl font-bold text-green-600">
+                                {latest.memoryUsage.toFixed(1)}MB
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <div className="text-sm font-medium flex items-center gap-1">
+                                <SpeedTest size={14} />
+                                Response Time
+                              </div>
+                              <div className="text-2xl font-bold text-orange-600">
+                                {latest.responseTime.toFixed(2)}ms
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <div className="text-sm font-medium flex items-center gap-1">
+                                <TrendingUp size={14} />
+                                Throughput
+                              </div>
+                              <div className="text-2xl font-bold text-purple-600">
+                                {latest.throughput.toFixed(1)} ops/s
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="pt-4 border-t space-y-3">
+                            <div className="flex justify-between text-sm">
+                              <span>CPU Usage</span>
+                              <span>{latest.cpuUsage.toFixed(1)}%</span>
+                            </div>
+                            <Progress 
+                              value={latest.cpuUsage} 
+                              className={`w-full ${latest.cpuUsage > 80 ? 'bg-red-100' : latest.cpuUsage > 60 ? 'bg-yellow-100' : 'bg-green-100'}`}
+                            />
+                            
+                            <div className="flex justify-between text-sm">
+                              <span>User Load</span>
+                              <span>{latest.userLoad.toFixed(1)}%</span>
+                            </div>
+                            <Progress 
+                              value={latest.userLoad} 
+                              className={`w-full ${latest.userLoad > 80 ? 'bg-red-100' : latest.userLoad > 60 ? 'bg-yellow-100' : 'bg-green-100'}`}
+                            />
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Activity size={48} className="mx-auto mb-4 opacity-50" />
+                    <p>Performance monitoring not active</p>
+                    <p className="text-sm">Enable monitoring to see real-time metrics</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CircuitryBoard size={24} className="text-green-600" />
+                  Automated Test Status
+                </CardTitle>
+                <p className="text-muted-foreground">
+                  Status of continuous automated validation and monitoring
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {testSuites
+                    .filter(suite => suite.automated)
+                    .map((suite, index) => (
+                      <div key={index} className="p-3 border rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="font-medium">{suite.name}</div>
+                          <Badge variant={suite.status === 'completed' ? 'default' : 'secondary'}>
+                            {suite.status}
+                          </Badge>
+                        </div>
+                        <div className="text-sm text-muted-foreground mb-2">
+                          {suite.description}
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <span>Schedule: {suite.schedule || 'Manual'}</span>
+                          {suite.lastRun && (
+                            <span>Last run: {format(suite.lastRun, 'HH:mm:ss')}</span>
+                          )}
+                        </div>
+                        <div className="mt-2">
+                          <div className="flex justify-between text-xs mb-1">
+                            <span>Tests: {suite.tests.length}</span>
+                            <span>
+                              Passed: {suite.tests.filter(t => t.status === 'pass').length}
+                            </span>
+                          </div>
+                          <Progress 
+                            value={(suite.tests.filter(t => t.status === 'pass').length / suite.tests.length) * 100}
+                            className="h-2"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  
+                  {!automatedTestsEnabled && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <CircuitryBoard size={48} className="mx-auto mb-4 opacity-50" />
+                      <p>Automated testing disabled</p>
+                      <p className="text-sm">Enable automation to see continuous test results</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Performance History Chart */}
+          {performanceMetrics.length > 10 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp size={24} className="text-orange-600" />
+                  Performance Trends
+                </CardTitle>
+                <p className="text-muted-foreground">
+                  Historical performance data and trend analysis
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div className="text-center p-4 bg-blue-50 rounded-lg">
+                    <div className="text-sm font-medium text-blue-700">Avg Render Time</div>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {(performanceMetrics.reduce((sum, m) => sum + m.renderTime, 0) / performanceMetrics.length).toFixed(2)}ms
+                    </div>
+                  </div>
+                  <div className="text-center p-4 bg-green-50 rounded-lg">
+                    <div className="text-sm font-medium text-green-700">Avg Memory</div>
+                    <div className="text-2xl font-bold text-green-600">
+                      {(performanceMetrics.reduce((sum, m) => sum + m.memoryUsage, 0) / performanceMetrics.length).toFixed(1)}MB
+                    </div>
+                  </div>
+                  <div className="text-center p-4 bg-orange-50 rounded-lg">
+                    <div className="text-sm font-medium text-orange-700">Avg Response</div>
+                    <div className="text-2xl font-bold text-orange-600">
+                      {(performanceMetrics.reduce((sum, m) => sum + m.responseTime, 0) / performanceMetrics.length).toFixed(2)}ms
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="text-sm text-muted-foreground">
+                  <p>Performance data is collected every 5 seconds when monitoring is active.</p>
+                  <p>Historical data includes render times, memory usage, response times, and system load metrics.</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {testSuites.map((suite, index) => (
               <Card key={index} className="border-2">
@@ -853,6 +1560,198 @@ export function OpportunityTestSuite() {
               </CardContent>
             </Card>
           ))}
+        </TabsContent>
+
+        <TabsContent value="performance" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ChartBar size={24} className="text-blue-600" />
+                  Real-Time Performance Metrics
+                </CardTitle>
+                <p className="text-muted-foreground">
+                  Live performance monitoring and system health indicators
+                </p>
+              </CardHeader>
+              <CardContent>
+                {performanceMetrics.length > 0 ? (
+                  <div className="space-y-4">
+                    {(() => {
+                      const latest = performanceMetrics[performanceMetrics.length - 1];
+                      return (
+                        <>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                              <div className="text-sm font-medium flex items-center gap-1">
+                                <Timer size={14} />
+                                Render Time
+                              </div>
+                              <div className="text-2xl font-bold text-blue-600">
+                                {latest.renderTime.toFixed(2)}ms
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <div className="text-sm font-medium flex items-center gap-1">
+                                <Database size={14} />
+                                Memory Usage
+                              </div>
+                              <div className="text-2xl font-bold text-green-600">
+                                {latest.memoryUsage.toFixed(1)}MB
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <div className="text-sm font-medium flex items-center gap-1">
+                                <SpeedTest size={14} />
+                                Response Time
+                              </div>
+                              <div className="text-2xl font-bold text-orange-600">
+                                {latest.responseTime.toFixed(2)}ms
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <div className="text-sm font-medium flex items-center gap-1">
+                                <TrendingUp size={14} />
+                                Throughput
+                              </div>
+                              <div className="text-2xl font-bold text-purple-600">
+                                {latest.throughput.toFixed(1)} ops/s
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="pt-4 border-t space-y-3">
+                            <div className="flex justify-between text-sm">
+                              <span>CPU Usage</span>
+                              <span>{latest.cpuUsage.toFixed(1)}%</span>
+                            </div>
+                            <Progress 
+                              value={latest.cpuUsage} 
+                              className={`w-full ${latest.cpuUsage > 80 ? 'bg-red-100' : latest.cpuUsage > 60 ? 'bg-yellow-100' : 'bg-green-100'}`}
+                            />
+                            
+                            <div className="flex justify-between text-sm">
+                              <span>User Load</span>
+                              <span>{latest.userLoad.toFixed(1)}%</span>
+                            </div>
+                            <Progress 
+                              value={latest.userLoad} 
+                              className={`w-full ${latest.userLoad > 80 ? 'bg-red-100' : latest.userLoad > 60 ? 'bg-yellow-100' : 'bg-green-100'}`}
+                            />
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Activity size={48} className="mx-auto mb-4 opacity-50" />
+                    <p>Performance monitoring not active</p>
+                    <p className="text-sm">Enable monitoring to see real-time metrics</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CircuitryBoard size={24} className="text-green-600" />
+                  Automated Test Status
+                </CardTitle>
+                <p className="text-muted-foreground">
+                  Status of continuous automated validation and monitoring
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {testSuites
+                    .filter(suite => suite.automated)
+                    .map((suite, index) => (
+                      <div key={index} className="p-3 border rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="font-medium">{suite.name}</div>
+                          <Badge variant={suite.status === 'completed' ? 'default' : 'secondary'}>
+                            {suite.status}
+                          </Badge>
+                        </div>
+                        <div className="text-sm text-muted-foreground mb-2">
+                          {suite.description}
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <span>Schedule: {suite.schedule || 'Manual'}</span>
+                          {suite.lastRun && (
+                            <span>Last run: {format(suite.lastRun, 'HH:mm:ss')}</span>
+                          )}
+                        </div>
+                        <div className="mt-2">
+                          <div className="flex justify-between text-xs mb-1">
+                            <span>Tests: {suite.tests.length}</span>
+                            <span>
+                              Passed: {suite.tests.filter(t => t.status === 'pass').length}
+                            </span>
+                          </div>
+                          <Progress 
+                            value={(suite.tests.filter(t => t.status === 'pass').length / suite.tests.length) * 100}
+                            className="h-2"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  
+                  {!automatedTestsEnabled && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <CircuitryBoard size={48} className="mx-auto mb-4 opacity-50" />
+                      <p>Automated testing disabled</p>
+                      <p className="text-sm">Enable automation to see continuous test results</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Performance History Chart */}
+          {performanceMetrics.length > 10 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp size={24} className="text-orange-600" />
+                  Performance Trends
+                </CardTitle>
+                <p className="text-muted-foreground">
+                  Historical performance data and trend analysis
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div className="text-center p-4 bg-blue-50 rounded-lg">
+                    <div className="text-sm font-medium text-blue-700">Avg Render Time</div>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {(performanceMetrics.reduce((sum, m) => sum + m.renderTime, 0) / performanceMetrics.length).toFixed(2)}ms
+                    </div>
+                  </div>
+                  <div className="text-center p-4 bg-green-50 rounded-lg">
+                    <div className="text-sm font-medium text-green-700">Avg Memory</div>
+                    <div className="text-2xl font-bold text-green-600">
+                      {(performanceMetrics.reduce((sum, m) => sum + m.memoryUsage, 0) / performanceMetrics.length).toFixed(1)}MB
+                    </div>
+                  </div>
+                  <div className="text-center p-4 bg-orange-50 rounded-lg">
+                    <div className="text-sm font-medium text-orange-700">Avg Response</div>
+                    <div className="text-2xl font-bold text-orange-600">
+                      {(performanceMetrics.reduce((sum, m) => sum + m.responseTime, 0) / performanceMetrics.length).toFixed(2)}ms
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="text-sm text-muted-foreground">
+                  <p>Performance data is collected every 5 seconds when monitoring is active.</p>
+                  <p>Historical data includes render times, memory usage, response times, and system load metrics.</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="sample-data" className="space-y-6">
