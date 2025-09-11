@@ -551,6 +551,7 @@ export function ResponsiveOpportunityDetail({
                           </CardContent>
                         </Card>
                       </div>
+                    </div>
                   </TabsContent>
 
                   <TabsContent value="metrics" className="mt-0 space-y-6">
