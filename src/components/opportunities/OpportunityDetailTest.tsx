@@ -577,7 +577,7 @@ export function OpportunityDetailTest() {
                       </div>
                     </div>
                     <h3 className="font-semibold text-green-800">Mobile Phones</h3>
-                    <p className="text-xs text-green-600 mt-1">< 768px</p>
+                    <p className="text-xs text-green-600 mt-1">&lt; 768px</p>
                     <ul className="text-xs text-green-700 mt-2 space-y-1">
                       <li>• Single column layout</li>
                       <li>• Compact metrics cards</li>
@@ -613,7 +613,7 @@ export function OpportunityDetailTest() {
                       </div>
                     </div>
                     <h3 className="font-semibold text-purple-800">Desktop</h3>
-                    <p className="text-xs text-purple-600 mt-1">> 1024px</p>
+                    <p className="text-xs text-purple-600 mt-1">&gt; 1024px</p>
                     <ul className="text-xs text-purple-700 mt-2 space-y-1">
                       <li>• Multi-column layout</li>
                       <li>• Full feature display</li>
