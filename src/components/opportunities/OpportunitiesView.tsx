@@ -46,6 +46,7 @@ import {
 } from '@phosphor-icons/react';
 import { OpportunityEditForm } from './OpportunityEditForm';
 import { OpportunityDetailTest } from './OpportunityDetailTest';
+import { ResponsiveOpportunityDetail } from './ResponsiveOpportunityDetail';
 import { formatCurrency, getMEDDPICCScore, getStageProgress } from '@/lib/crm-utils';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -694,7 +695,7 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
 
       {/* Detail View Dialog */}
       {selectedOpportunity && (
-        <OpportunityDetailDialog
+        <ResponsiveOpportunityDetail
           isOpen={isDetailViewOpen}
           onClose={() => {
             setIsDetailViewOpen(false);
@@ -724,16 +725,7 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
   );
 }
 
-// Simple detail view dialog for viewing opportunity details
-interface OpportunityDetailDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  opportunity: Opportunity;
-  onEdit: () => void;
-  onDelete: () => void;
-}
 
-function OpportunityDetailDialog({ isOpen, onClose, opportunity, onEdit, onDelete }: OpportunityDetailDialogProps) {
   const [companies] = useKV<Company[]>('companies', []);
   const [contacts] = useKV<Contact[]>('contacts', []);
   const [activeTab, setActiveTab] = useState('overview');
