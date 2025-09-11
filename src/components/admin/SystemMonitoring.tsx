@@ -6,6 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
+import { PerformanceDashboard } from './PerformanceDashboard';
+import { UIConsistencyDashboard } from './UIConsistencyDashboard';
 import {
   Activity,
   Cpu,
@@ -19,7 +21,9 @@ import {
   CheckCircle,
   XCircle,
   Eye,
-  ArrowClockwise as Refresh
+  ArrowClockwise as Refresh,
+  ChartLine,
+  Palette
 } from '@phosphor-icons/react';
 
 interface SystemMetrics {
@@ -41,6 +45,8 @@ interface ServiceStatus {
 export function SystemMonitoring() {
   const [refreshing, setRefreshing] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [showPerformanceDashboard, setShowPerformanceDashboard] = useState(false);
+  const [showUIConsistencyDashboard, setShowUIConsistencyDashboard] = useState(false);
 
   // Mock data - in real app, this would come from monitoring APIs
   const metrics: SystemMetrics = {
@@ -181,6 +187,20 @@ export function SystemMonitoring() {
           >
             <Refresh size={16} className={`mr-2 ${refreshing ? 'animate-spin' : ''}`} />
             Refresh
+          </Button>
+          <Button 
+            variant="outline"
+            onClick={() => setShowPerformanceDashboard(true)}
+          >
+            <ChartLine size={16} className="mr-2" />
+            Performance Monitor
+          </Button>
+          <Button 
+            variant="outline"
+            onClick={() => setShowUIConsistencyDashboard(true)}
+          >
+            <Palette size={16} className="mr-2" />
+            UI Consistency
           </Button>
           <Button variant="outline">
             <Activity size={16} className="mr-2" />
@@ -410,6 +430,18 @@ export function SystemMonitoring() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Performance Dashboard Modal */}
+      <PerformanceDashboard 
+        isOpen={showPerformanceDashboard}
+        onClose={() => setShowPerformanceDashboard(false)}
+      />
+
+      {/* UI Consistency Dashboard Modal */}
+      <UIConsistencyDashboard 
+        isOpen={showUIConsistencyDashboard}
+        onClose={() => setShowUIConsistencyDashboard(false)}
+      />
     </div>
   );
 }

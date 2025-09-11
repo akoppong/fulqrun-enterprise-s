@@ -4,8 +4,10 @@ import { User } from './lib/types';
 import { SimpleLoginForm } from './components/auth/SimpleLoginForm';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { Toaster } from './components/ui/sonner';
+import { EnhancedErrorBoundary } from './components/ui/enhanced-error-boundary';
 import './lib/error-handlers'; // Initialize global error handlers
 import { setupGlobalErrorHandling } from './lib/error-handling'; // Initialize comprehensive error handling
+import { performanceMonitor } from './lib/performance-monitor';
 
 function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -14,6 +16,16 @@ function App() {
   // Initialize error handling on app start
   useEffect(() => {
     setupGlobalErrorHandling();
+    
+    // Initialize performance monitoring
+    console.log('Performance monitoring initialized');
+    
+    // Optional: Set up performance monitoring callbacks
+    performanceMonitor.onOptimizationOpportunity((opportunity) => {
+      if (opportunity.severity === 'high') {
+        console.warn('High priority optimization opportunity:', opportunity);
+      }
+    });
   }, []);
 
   const handleLogin = (user: User) => {
@@ -31,21 +43,33 @@ function App() {
   };
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-      <div className="min-h-screen bg-background">
-        {!currentUser ? (
-          <SimpleLoginForm onLogin={handleLogin} />
-        ) : (
-          <Dashboard 
-            user={currentUser} 
-            originalUser={originalUser}
-            onLogout={handleLogout}
-            onRoleSwitch={handleRoleSwitch}
-          />
-        )}
-        <Toaster />
-      </div>
-    </ThemeProvider>
+    <EnhancedErrorBoundary
+      context="App"
+      showErrorDetails={process.env.NODE_ENV === 'development'}
+      resetOnPropsChange={true}
+      monitorPerformance={true}
+      maxRetries={3}
+    >
+      <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+        <div className="min-h-screen bg-background">
+          {!currentUser ? (
+            <EnhancedErrorBoundary context="LoginForm" isolateComponent={true}>
+              <SimpleLoginForm onLogin={handleLogin} />
+            </EnhancedErrorBoundary>
+          ) : (
+            <EnhancedErrorBoundary context="Dashboard" isolateComponent={true}>
+              <Dashboard 
+                user={currentUser} 
+                originalUser={originalUser}
+                onLogout={handleLogout}
+                onRoleSwitch={handleRoleSwitch}
+              />
+            </EnhancedErrorBoundary>
+          )}
+          <Toaster />
+        </div>
+      </ThemeProvider>
+    </EnhancedErrorBoundary>
   );
 }
 
