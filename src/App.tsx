@@ -4,6 +4,7 @@ import { User } from './lib/types';
 import { SimpleLoginForm } from './components/auth/SimpleLoginForm';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { Toaster } from './components/ui/sonner';
+import './lib/error-handlers'; // Initialize global error handlers
 
 function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);

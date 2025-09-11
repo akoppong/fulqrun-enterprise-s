@@ -1,7 +1,4 @@
-/**
- * Responsive Design Auto-Fix System
- * Automatically detects and fixes common responsive design issues
- */
+import { SafeResizeObserver } from './error-handlers';
 
 export interface ResponsiveIssue {
   type: 'layout' | 'overflow' | 'text' | 'touch' | 'accessibility' | 'performance';
@@ -63,7 +60,7 @@ export interface AutoFixSession {
 
 export class ResponsiveAutoFix {
   private static instance: ResponsiveAutoFix;
-  private observer: ResizeObserver | null = null;
+  private observer: SafeResizeObserver | null = null;
   private mutationObserver: MutationObserver | null = null;
   private fixedElements: Set<HTMLElement> = new Set();
   private issues: ResponsiveIssue[] = [];
@@ -87,34 +84,47 @@ export class ResponsiveAutoFix {
   private initializeObservers(): void {
     if (typeof window === 'undefined') return;
 
-    // Resize Observer for layout changes
-    this.observer = new ResizeObserver((entries) => {
+    // Safe Resize Observer for layout changes
+    this.observer = new SafeResizeObserver((entries) => {
       if (!this.isEnabled) return;
+      
       entries.forEach(entry => {
         this.checkElementResponsiveness(entry.target as HTMLElement);
       });
     });
 
-    // Mutation Observer for DOM changes
+    // Mutation Observer for DOM changes with debouncing
     this.mutationObserver = new MutationObserver((mutations) => {
       if (!this.isEnabled) return;
-      mutations.forEach(mutation => {
-        mutation.addedNodes.forEach(node => {
-          if (node.nodeType === Node.ELEMENT_NODE) {
-            this.analyzeNewElement(node as HTMLElement);
-          }
-        });
+      
+      // Debounce mutation observer callbacks
+      requestAnimationFrame(() => {
+        try {
+          mutations.forEach(mutation => {
+            mutation.addedNodes.forEach(node => {
+              if (node.nodeType === Node.ELEMENT_NODE) {
+                this.analyzeNewElement(node as HTMLElement);
+              }
+            });
+          });
+        } catch (error) {
+          console.warn('MutationObserver error:', error);
+        }
       });
     });
 
-    // Start observing
-    this.observer.observe(document.body, { box: 'border-box' });
-    this.mutationObserver.observe(document.body, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ['class', 'style']
-    });
+    // Start observing with error handling
+    try {
+      this.observer.observe(document.body);
+      this.mutationObserver.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['class', 'style']
+      });
+    } catch (error) {
+      console.warn('Failed to initialize observers:', error);
+    }
   }
 
   private bindViewportChangeListener(): void {

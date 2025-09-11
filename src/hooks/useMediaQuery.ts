@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { SafeResizeObserver } from '../lib/error-handlers';
 
 /**
  * Custom hook for responsive design media queries
@@ -175,22 +176,41 @@ export function useContainerQuery(
     const element = elementRef.current;
     
     const updateMatches = () => {
-      const rect = element.getBoundingClientRect();
-      const newMatches: Record<string, boolean> = {};
-      
-      Object.entries(breakpoints).forEach(([key, breakpoint]) => {
-        newMatches[key] = rect.width >= breakpoint;
-      });
-      
-      setMatches(newMatches);
+      try {
+        const rect = element.getBoundingClientRect();
+        const newMatches: Record<string, boolean> = {};
+        
+        Object.entries(breakpoints).forEach(([key, breakpoint]) => {
+          newMatches[key] = rect.width >= breakpoint;
+        });
+        
+        setMatches(newMatches);
+      } catch (error) {
+        console.warn('Container query update failed:', error);
+      }
     };
 
-    // Use ResizeObserver if available, fallback to window resize
+    // Use SafeResizeObserver if available, fallback to window resize
     if ('ResizeObserver' in window) {
-      const resizeObserver = new ResizeObserver(updateMatches);
-      resizeObserver.observe(element);
+      const resizeObserver = new SafeResizeObserver(() => {
+        updateMatches();
+      });
       
-      return () => resizeObserver.disconnect();
+      try {
+        resizeObserver.observe(element);
+        // Initial update
+        updateMatches();
+        
+        return () => {
+          resizeObserver.disconnect();
+        };
+      } catch (error) {
+        console.warn('Failed to initialize SafeResizeObserver:', error);
+        // Fallback to window resize
+        updateMatches();
+        window.addEventListener('resize', updateMatches);
+        return () => window.removeEventListener('resize', updateMatches);
+      }
     } else {
       updateMatches();
       window.addEventListener('resize', updateMatches);

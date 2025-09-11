@@ -1192,6 +1192,44 @@ textarea[class*="w-full"],
   }
 }
 
+/* Enhanced error prevention styles */
+.error-boundary {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+}
+
+/* ResizeObserver compatibility styles */
+.resize-observer-safe {
+  contain: layout;
+  box-sizing: border-box;
+}
+
+/* Prevent layout thrashing */
+.layout-stable {
+  will-change: auto;
+  transform: translateZ(0);
+}
+
+/* Safe animations */
+.safe-animation {
+  animation-fill-mode: both;
+  backface-visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .safe-animation {
+    animation: none;
+    transition: none;
+  }
+}
+
 .responsive-container {
   width: 100%;
   max-width: 1200px;
