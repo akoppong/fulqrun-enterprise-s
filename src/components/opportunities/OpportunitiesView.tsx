@@ -214,40 +214,43 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
   };
 
   return (
-    <div className={`w-full max-w-none overflow-x-auto ${className}`}>
+    <div className={`w-full min-w-0 ${className}`}>
       {/* Modern Header with Glass Effect */}
-      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border/50 px-4 lg:px-6 py-6 mb-6">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 w-full min-w-0">
-          <div className="space-y-1">
-            <h1 className="text-3xl lg:text-4xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
-              Sales Opportunities
-            </h1>
-            <p className="text-base lg:text-lg text-muted-foreground">
-              Track and manage your sales pipeline with PEAK methodology and MEDDPICC qualification
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 min-w-0 shrink-0">
-            <Button 
-              onClick={() => setIsTestViewOpen(true)}
-              variant="outline"
-              className="h-11 px-4 lg:px-6 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 whitespace-nowrap"
-              size="lg"
-            >
-              🧪 Test Detail View
-            </Button>
-            <Button 
-              onClick={handleCreateOpportunity} 
-              className="h-11 px-4 lg:px-6 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 whitespace-nowrap"
-              size="lg"
-            >
-              <Plus size={18} className="mr-2" />
-              New Opportunity
-            </Button>
+      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border/50 px-6 lg:px-8 py-6 mb-6">
+        <div className="max-w-[1600px] mx-auto">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 w-full">
+            <div className="space-y-1 min-w-0 flex-1">
+              <h1 className="text-3xl lg:text-4xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+                Sales Opportunities
+              </h1>
+              <p className="text-base lg:text-lg text-muted-foreground">
+                Track and manage your sales pipeline with PEAK methodology and MEDDPICC qualification
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+              <Button 
+                onClick={() => setIsTestViewOpen(true)}
+                variant="outline"
+                className="h-11 px-6 lg:px-8 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 whitespace-nowrap"
+                size="lg"
+              >
+                🧪 Test Detail View
+              </Button>
+              <Button 
+                onClick={handleCreateOpportunity} 
+                className="h-11 px-6 lg:px-8 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 whitespace-nowrap"
+                size="lg"
+              >
+                <Plus size={18} className="mr-2" />
+                New Opportunity
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="px-4 lg:px-6 space-y-6 lg:space-y-8 w-full min-w-0 overflow-x-auto">
+      <div className="px-6 lg:px-8 space-y-6 lg:space-y-8 w-full">
+        <div className="max-w-[1600px] mx-auto space-y-6 lg:space-y-8">
         {/* Enhanced Metrics Dashboard */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-blue-50 to-blue-100/50 hover:shadow-xl transition-all duration-300">
@@ -325,10 +328,10 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
 
         {/* Modern Control Panel */}
         <Card className="border-0 shadow-lg bg-card/50 backdrop-blur-sm">
-          <CardContent className="p-4 lg:p-6">
-            <div className="flex flex-col xl:flex-row xl:items-center gap-4 lg:gap-6">
+          <CardContent className="p-6">
+            <div className="flex flex-col 2xl:flex-row 2xl:items-center gap-6">
               {/* Search Bar */}
-              <div className="flex-1 max-w-full xl:max-w-md">
+              <div className="flex-1 max-w-full 2xl:max-w-lg">
                 <div className="relative">
                   <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
                   <Input
@@ -341,9 +344,9 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
               </div>
               
               {/* Filter Controls */}
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap items-center gap-4">
                 <Select value={stageFilter} onValueChange={setStageFilter}>
-                  <SelectTrigger className="w-44 lg:w-52 h-12 border-0 bg-background/80 backdrop-blur-sm shadow-sm">
+                  <SelectTrigger className="w-52 lg:w-56 h-12 border-0 bg-background/80 backdrop-blur-sm shadow-sm">
                     <Filter size={16} className="mr-2 text-muted-foreground" />
                     <SelectValue placeholder="All Stages" />
                   </SelectTrigger>
@@ -361,7 +364,7 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
                 </Select>
 
                 <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                  <SelectTrigger className="w-40 lg:w-44 h-12 border-0 bg-background/80 backdrop-blur-sm shadow-sm">
+                  <SelectTrigger className="w-48 lg:w-52 h-12 border-0 bg-background/80 backdrop-blur-sm shadow-sm">
                     <Star size={16} className="mr-2 text-muted-foreground" />
                     <SelectValue placeholder="All Priorities" />
                   </SelectTrigger>
@@ -375,7 +378,7 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
                 </Select>
 
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-40 lg:w-44 h-12 border-0 bg-background/80 backdrop-blur-sm shadow-sm">
+                  <SelectTrigger className="w-48 lg:w-52 h-12 border-0 bg-background/80 backdrop-blur-sm shadow-sm">
                     <SortAscending size={16} className="mr-2 text-muted-foreground" />
                     <SelectValue />
                   </SelectTrigger>
@@ -394,19 +397,19 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
                     variant={viewMode === 'list' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setViewMode('list')}
-                    className="h-10 px-3 lg:px-4"
+                    className="h-10 px-4 lg:px-5"
                   >
-                    <List size={16} className="mr-1 lg:mr-2" />
-                    <span className="hidden sm:inline">List</span>
+                    <List size={16} className="mr-2" />
+                    <span>List</span>
                   </Button>
                   <Button
                     variant={viewMode === 'grid' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setViewMode('grid')}
-                    className="h-10 px-3 lg:px-4"
+                    className="h-10 px-4 lg:px-5"
                   >
-                    <GridFour size={16} className="mr-1 lg:mr-2" />
-                    <span className="hidden sm:inline">Grid</span>
+                    <GridFour size={16} className="mr-2" />
+                    <span>Grid</span>
                   </Button>
                 </div>
               </div>
@@ -448,238 +451,241 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <Table>
-                <TableHeader className="bg-muted/30 backdrop-blur-sm">
-                  <TableRow className="border-border/50 hover:bg-transparent">
-                    <TableHead className="font-semibold text-foreground py-4 px-4 lg:px-6 min-w-[300px] lg:min-w-[350px]">
-                      Opportunity Details
-                    </TableHead>
-                    <TableHead className="font-semibold text-foreground py-4 px-4 lg:px-6 min-w-[160px] lg:min-w-[180px]">
-                      Company & Contact
-                    </TableHead>
-                    <TableHead className="font-semibold text-foreground py-4 px-4 lg:px-6 min-w-[120px] lg:min-w-[140px]">
-                      Stage & Progress
-                    </TableHead>
-                    <TableHead className="font-semibold text-foreground py-4 px-4 lg:px-6 min-w-[120px] lg:min-w-[140px] text-right">
-                      Deal Value
-                    </TableHead>
-                    <TableHead className="font-semibold text-foreground py-4 px-4 lg:px-6 min-w-[140px] lg:min-w-[160px]">
-                      Win Probability
-                    </TableHead>
-                    <TableHead className="font-semibold text-foreground py-4 px-4 lg:px-6 min-w-[100px] lg:min-w-[120px]">
-                      Priority
-                    </TableHead>
-                    <TableHead className="font-semibold text-foreground py-4 px-4 lg:px-6 min-w-[120px] lg:min-w-[140px]">
-                      Timeline
-                    </TableHead>
-                    <TableHead className="font-semibold text-foreground py-4 px-4 lg:px-6 min-w-[100px] lg:min-w-[120px] text-center">
-                      Actions
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sortedOpportunities.map((opportunity) => {
-                    const stageConfig = getStageConfig(opportunity.stage);
-                    const priorityBadge = getPriorityBadge(opportunity.priority);
-                    const company = companies.find(c => c.id === opportunity.companyId);
-                    const contact = contacts.find(c => c.id === opportunity.contactId);
+              <div className="min-w-[1400px]">
+                <Table className="opportunities-table">
+                  <TableHeader className="bg-muted/30 backdrop-blur-sm">
+                    <TableRow className="border-border/50 hover:bg-transparent">
+                      <TableHead className="font-semibold text-foreground py-4 px-6 col-opportunity-details">
+                        Opportunity Details
+                      </TableHead>
+                      <TableHead className="font-semibold text-foreground py-4 px-6 col-company-contact">
+                        Company & Contact
+                      </TableHead>
+                      <TableHead className="font-semibold text-foreground py-4 px-6 col-stage-progress">
+                        Stage & Progress
+                      </TableHead>
+                      <TableHead className="font-semibold text-foreground py-4 px-6 col-deal-value text-right">
+                        Deal Value
+                      </TableHead>
+                      <TableHead className="font-semibold text-foreground py-4 px-6 col-win-probability">
+                        Win Probability
+                      </TableHead>
+                      <TableHead className="font-semibold text-foreground py-4 px-6 col-priority">
+                        Priority
+                      </TableHead>
+                      <TableHead className="font-semibold text-foreground py-4 px-6 col-timeline">
+                        Timeline
+                      </TableHead>
+                      <TableHead className="font-semibold text-foreground py-4 px-6 col-actions text-center">
+                        Actions
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {sortedOpportunities.map((opportunity) => {
+                      const stageConfig = getStageConfig(opportunity.stage);
+                      const priorityBadge = getPriorityBadge(opportunity.priority);
+                      const company = companies.find(c => c.id === opportunity.companyId);
+                      const contact = contacts.find(c => c.id === opportunity.contactId);
 
-                    return (
-                      <TableRow 
-                        key={opportunity.id} 
-                        className="group border-border/30 hover:bg-muted/20 cursor-pointer transition-all duration-200"
-                        onClick={() => handleViewOpportunity(opportunity)}
-                      >
-                        <TableCell className="py-4 lg:py-6 px-4 lg:px-6">
-                          <div className="space-y-2">
-                            <div className="font-semibold text-sm lg:text-base text-foreground group-hover:text-primary transition-colors">
-                              {opportunity.title}
-                            </div>
-                            <div className="text-xs lg:text-sm text-muted-foreground line-clamp-2 max-w-sm lg:max-w-md">
-                              {opportunity.description || 'No description provided'}
-                            </div>
-                            {opportunity.tags && opportunity.tags.length > 0 && (
-                              <div className="flex gap-1 flex-wrap mt-2">
-                                {opportunity.tags.slice(0, 3).map((tag, index) => (
-                                  <Badge 
-                                    key={index} 
-                                    variant="secondary" 
-                                    className="text-xs px-2 py-1 bg-primary/10 text-primary border-primary/20"
-                                  >
-                                    {tag}
-                                  </Badge>
-                                ))}
-                                {opportunity.tags.length > 3 && (
-                                  <Badge 
-                                    variant="secondary" 
-                                    className="text-xs px-2 py-1 bg-muted text-muted-foreground"
-                                  >
-                                    +{opportunity.tags.length - 3} more
-                                  </Badge>
-                                )}
+                      return (
+                        <TableRow 
+                          key={opportunity.id} 
+                          className="group border-border/30 hover:bg-muted/20 cursor-pointer transition-all duration-200"
+                          onClick={() => handleViewOpportunity(opportunity)}
+                        >
+                          <TableCell className="py-6 px-6 col-opportunity-details">
+                            <div className="space-y-2">
+                              <div className="font-semibold text-base text-foreground group-hover:text-primary transition-colors truncate">
+                                {opportunity.title}
                               </div>
-                            )}
-                          </div>
-                        </TableCell>
-                        
-                        <TableCell className="py-4 lg:py-6 px-4 lg:px-6">
-                          <div className="space-y-3">
-                            <div className="flex items-center gap-3">
-                              <div className="p-2 bg-blue-50 rounded-lg">
-                                <Building size={16} className="text-blue-600" />
+                              <div className="text-sm text-muted-foreground line-clamp-2 max-w-[350px]">
+                                {opportunity.description || 'No description provided'}
                               </div>
-                              <div>
-                                <div className="font-medium text-xs lg:text-sm text-foreground">{company?.name || 'Unknown Company'}</div>
-                                <div className="text-xs text-muted-foreground">
-                                  {company?.industry || 'Industry not specified'}
+                              {opportunity.tags && opportunity.tags.length > 0 && (
+                                <div className="flex gap-1 flex-wrap mt-2">
+                                  {opportunity.tags.slice(0, 3).map((tag, index) => (
+                                    <Badge 
+                                      key={index} 
+                                      variant="secondary" 
+                                      className="text-xs px-2 py-1 bg-primary/10 text-primary border-primary/20"
+                                    >
+                                      {tag}
+                                    </Badge>
+                                  ))}
+                                  {opportunity.tags.length > 3 && (
+                                    <Badge 
+                                      variant="secondary" 
+                                      className="text-xs px-2 py-1 bg-muted text-muted-foreground"
+                                    >
+                                      +{opportunity.tags.length - 3}
+                                    </Badge>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+                          
+                          <TableCell className="py-6 px-6 col-company-contact">
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-2">
+                                <div className="p-1.5 bg-blue-50 rounded-lg shrink-0">
+                                  <Building size={14} className="text-blue-600" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="font-medium text-sm text-foreground truncate">{company?.name || 'Unknown Company'}</div>
+                                  <div className="text-xs text-muted-foreground truncate">
+                                    {company?.industry || 'Industry not specified'}
+                                  </div>
                                 </div>
                               </div>
+                              {contact && (
+                                <div className="flex items-center gap-2 pl-1">
+                                  <Avatar className="h-5 w-5 shrink-0">
+                                    <AvatarFallback className="text-xs bg-muted">
+                                      {contact.firstName[0]}{contact.lastName[0]}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="text-sm min-w-0 flex-1">
+                                    <div className="text-sm text-foreground truncate">{contact.firstName} {contact.lastName}</div>
+                                    <div className="text-xs text-muted-foreground truncate">{contact.title || 'Contact'}</div>
+                                  </div>
+                                </div>
+                              )}
                             </div>
-                            {contact && (
-                              <div className="flex items-center gap-3 pl-1">
-                                <Avatar className="h-6 w-6">
-                                  <AvatarFallback className="text-xs bg-muted">
-                                    {contact.firstName[0]}{contact.lastName[0]}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div className="text-sm">
-                                  <div className="text-xs lg:text-sm text-foreground">{contact.firstName} {contact.lastName}</div>
-                                  <div className="text-xs text-muted-foreground">{contact.title || 'Contact'}</div>
+                          </TableCell>
+                          
+                          <TableCell className="py-6 px-6 col-stage-progress">
+                            <div className="space-y-3">
+                              <Badge 
+                                variant="secondary" 
+                                className={`${stageConfig.color} font-medium px-2 py-1 text-xs whitespace-nowrap`}
+                              >
+                                {stageConfig.label}
+                              </Badge>
+                              <div className="space-y-1">
+                                <div className="flex justify-between text-xs">
+                                  <span className="text-muted-foreground">Progress</span>
+                                  <span className="font-medium">{getStageProgress(opportunity.stage)}%</span>
+                                </div>
+                                <Progress 
+                                  value={getStageProgress(opportunity.stage)} 
+                                  className="h-2"
+                                />
+                              </div>
+                            </div>
+                          </TableCell>
+                          
+                          <TableCell className="py-6 px-6 col-deal-value text-right">
+                            <div className="space-y-1">
+                              <div className="text-lg font-bold text-foreground">
+                                {formatCurrency(opportunity.value)}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                Deal value
+                              </div>
+                            </div>
+                          </TableCell>
+                          
+                          <TableCell className="py-6 px-6 col-win-probability">
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-2">
+                                <div className="flex-1">
+                                  <div className="flex justify-between text-sm mb-1">
+                                    <span className="text-muted-foreground text-xs">Win Rate</span>
+                                    <span className="font-semibold text-foreground text-sm">{opportunity.probability}%</span>
+                                  </div>
+                                  <div className="w-full bg-muted rounded-full h-2.5 overflow-hidden">
+                                    <div 
+                                      className={`h-full rounded-full transition-all duration-300 ${
+                                        opportunity.probability >= 75 ? 'bg-green-500' :
+                                        opportunity.probability >= 50 ? 'bg-yellow-500' :
+                                        'bg-red-500'
+                                      }`}
+                                      style={{ width: `${opportunity.probability}%` }}
+                                    />
+                                  </div>
                                 </div>
                               </div>
-                            )}
-                          </div>
-                        </TableCell>
-                        
-                        <TableCell className="py-4 lg:py-6 px-4 lg:px-6">
-                          <div className="space-y-3">
+                              <div className="text-xs text-muted-foreground">
+                                {opportunity.probability >= 75 ? 'High confidence' :
+                                 opportunity.probability >= 50 ? 'Moderate' :
+                                 'Needs attention'}
+                              </div>
+                            </div>
+                          </TableCell>
+                          
+                          <TableCell className="py-6 px-6 col-priority">
                             <Badge 
                               variant="secondary" 
-                              className={`${stageConfig.color} font-medium px-2 lg:px-3 py-1 text-xs`}
+                              className={`${priorityBadge.className} font-medium px-2 py-1 text-xs whitespace-nowrap`}
                             >
-                              {stageConfig.label}
+                              {(opportunity.priority || 'medium').charAt(0).toUpperCase() + 
+                               (opportunity.priority || 'medium').slice(1)}
                             </Badge>
+                          </TableCell>
+                          
+                          <TableCell className="py-6 px-6 col-timeline">
                             <div className="space-y-1">
-                              <div className="flex justify-between text-xs">
-                                <span className="text-muted-foreground">Progress</span>
-                                <span className="font-medium">{getStageProgress(opportunity.stage)}%</span>
+                              <div className="flex items-center gap-2 text-sm">
+                                <Calendar size={12} className="text-muted-foreground shrink-0" />
+                                <span className="font-medium text-xs">
+                                  {format(new Date(opportunity.expectedCloseDate), 'MMM dd')}
+                                </span>
                               </div>
-                              <Progress 
-                                value={getStageProgress(opportunity.stage)} 
-                                className="h-2"
-                              />
-                            </div>
-                          </div>
-                        </TableCell>
-                        
-                        <TableCell className="py-4 lg:py-6 px-4 lg:px-6 text-right">
-                          <div className="space-y-1">
-                            <div className="text-lg lg:text-xl font-bold text-foreground">
-                              {formatCurrency(opportunity.value)}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              Deal value
-                            </div>
-                          </div>
-                        </TableCell>
-                        
-                        <TableCell className="py-4 lg:py-6 px-4 lg:px-6">
-                          <div className="space-y-3">
-                            <div className="flex items-center gap-3">
-                              <div className="flex-1">
-                                <div className="flex justify-between text-sm mb-1">
-                                  <span className="text-muted-foreground">Win Rate</span>
-                                  <span className="font-semibold text-foreground">{opportunity.probability}%</span>
-                                </div>
-                                <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
-                                  <div 
-                                    className={`h-full rounded-full transition-all duration-300 ${
-                                      opportunity.probability >= 75 ? 'bg-green-500' :
-                                      opportunity.probability >= 50 ? 'bg-yellow-500' :
-                                      'bg-red-500'
-                                    }`}
-                                    style={{ width: `${opportunity.probability}%` }}
-                                  />
-                                </div>
+                              <div className="text-xs text-muted-foreground">
+                                Expected close
                               </div>
                             </div>
-                            <div className="text-xs text-muted-foreground">
-                              {opportunity.probability >= 75 ? 'High confidence' :
-                               opportunity.probability >= 50 ? 'Moderate confidence' :
-                               'Needs attention'}
+                          </TableCell>
+                          
+                          <TableCell className="py-6 px-6 col-actions">
+                            <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200">
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleViewOpportunity(opportunity);
+                                }}
+                                className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
+                              >
+                                <Eye size={14} />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditOpportunity(opportunity);
+                                }}
+                                className="h-8 w-8 p-0 hover:bg-emerald-50 hover:text-emerald-600"
+                              >
+                                <PencilSimple size={14} />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteOpportunity(opportunity);
+                                }}
+                                className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                              >
+                                <Trash size={14} />
+                              </Button>
                             </div>
-                          </div>
-                        </TableCell>
-                        
-                        <TableCell className="py-4 lg:py-6 px-4 lg:px-6">
-                          <Badge 
-                            variant="secondary" 
-                            className={`${priorityBadge.className} font-medium px-2 lg:px-3 py-1 text-xs`}
-                          >
-                            {(opportunity.priority || 'medium').charAt(0).toUpperCase() + 
-                             (opportunity.priority || 'medium').slice(1)}
-                          </Badge>
-                        </TableCell>
-                        
-                        <TableCell className="py-4 lg:py-6 px-4 lg:px-6">
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2 text-xs lg:text-sm">
-                              <Calendar size={14} className="text-muted-foreground" />
-                              <span className="font-medium">
-                                {format(new Date(opportunity.expectedCloseDate), 'MMM dd, yyyy')}
-                              </span>
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              Expected close
-                            </div>
-                          </div>
-                        </TableCell>
-                        
-                        <TableCell className="py-4 lg:py-6 px-4 lg:px-6">
-                          <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200">
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleViewOpportunity(opportunity);
-                              }}
-                              className="h-9 w-9 p-0 hover:bg-blue-50 hover:text-blue-600"
-                            >
-                              <Eye size={16} />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEditOpportunity(opportunity);
-                              }}
-                              className="h-9 w-9 p-0 hover:bg-emerald-50 hover:text-emerald-600"
-                            >
-                              <PencilSimple size={16} />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteOpportunity(opportunity);
-                              }}
-                              className="h-9 w-9 p-0 hover:bg-red-50 hover:text-red-600"
-                            >
-                              <Trash size={16} />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           )}
         </Card>
+        </div>
       </div>
 
       {/* Edit Form Dialog */}
