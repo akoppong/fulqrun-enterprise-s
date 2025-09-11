@@ -333,20 +333,41 @@ body {
 }
 
 /* Enhanced dialog styles for better form UX */
-[data-radix-dialog-content] {
-  display: flex !important;
-  flex-direction: column !important;
-  max-height: 96vh !important;
-  overflow: hidden !important;
-  width: min(96vw, 90rem) !important;
-  height: min(95vh, 45rem) !important;
+[data-radix-dialog-overlay] {
+  background-color: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(4px) !important;
 }
 
-[data-radix-dialog-content] form {
+[data-radix-dialog-content] {
+  background-color: hsl(var(--background)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  border-radius: 8px !important;
+}
+
+/* Opportunity Detail Modal Specific Styles */
+.opportunity-detail-modal {
+  width: 95vw !important;
+  max-width: 1400px !important;
+  height: 90vh !important;
+  max-height: 900px !important;
+  margin: auto !important;
+  padding: 0 !important;
+  overflow: hidden !important;
   display: flex !important;
   flex-direction: column !important;
-  flex: 1 !important;
-  overflow: hidden !important;
+}
+
+.opportunity-detail-modal [data-radix-dialog-content] {
+  width: inherit !important;
+  height: inherit !important;
+  max-width: inherit !important;
+  max-height: inherit !important;
+  margin: inherit !important;
+  padding: inherit !important;
+  overflow: inherit !important;
+  display: inherit !important;
+  flex-direction: inherit !important;
 }
 
 .dialog-scrollable-content {
