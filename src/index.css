@@ -124,35 +124,36 @@ body {
   overflow: hidden;
   background: hsl(var(--background));
   width: 100vw;
+  min-width: 100vw;
+  max-width: 100vw;
 }
 
 .dashboard-content-area {
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
   width: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background: hsl(var(--background));
 }
 
 /* Force proper width distribution - Ensure main content uses full space */
-@media (min-width: 1024px) {
-  .dashboard-main-container .sidebar-container {
-    width: 320px !important;
-    min-width: 320px !important;
-    max-width: 320px !important;
-    flex-shrink: 0 !important;
-    flex-grow: 0 !important;
-  }
-  
-  .dashboard-main-container .dashboard-content-area {
-    flex: 1 !important;
-    min-width: 0 !important;
-    width: calc(100vw - 320px) !important;
-    max-width: none !important;
-    flex-shrink: 1 !important;
-    flex-grow: 1 !important;
-  }
+.dashboard-main-container .sidebar-container {
+  width: 320px;
+  min-width: 320px;
+  max-width: 320px;
+  flex: 0 0 320px;
+  flex-shrink: 0;
+  flex-grow: 0;
+}
+
+.dashboard-main-container .dashboard-content-area {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: calc(100% - 320px);
+  max-width: calc(100% - 320px);
+  overflow: hidden;
 }
 
 /* Prevent any layout-breaking overflow */
@@ -164,7 +165,8 @@ body {
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .dashboard-main-container .dashboard-content-area main > div {
@@ -188,9 +190,10 @@ body {
 }
 
 .dashboard-content-area > main {
-  flex: 1;
+  flex: 1 1 auto;
   flex-shrink: 1;
   min-height: 0;
+  overflow: auto;
 }
 
 /* === NAVIGATION === */
@@ -292,7 +295,10 @@ body {
   width: 320px;
   min-width: 320px;
   max-width: 320px;
+  flex: 0 0 320px;
   flex-shrink: 0;
+  background: hsl(var(--card));
+  border-right: 1px solid hsl(var(--border));
 }
 
 @media (max-width: 1023px) {
@@ -300,6 +306,7 @@ body {
     width: auto;
     min-width: auto;
     max-width: none;
+    flex: 0 0 auto;
     flex-shrink: 1;
   }
 }
@@ -587,9 +594,22 @@ textarea[class*="w-full"],
     margin-left: 0 !important;
   }
   
+  .dashboard-main-container {
+    flex-direction: column;
+  }
+  
+  .dashboard-main-container .sidebar-container {
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    flex: 0 0 auto !important;
+  }
+  
   .dashboard-main-container .dashboard-content-area {
     width: 100% !important;
     max-width: 100% !important;
+    flex: 1 1 auto !important;
   }
   
   .content-area-padding {
