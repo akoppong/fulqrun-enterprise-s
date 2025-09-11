@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { OpportunityDetailView } from './OpportunityDetailView';
-import { OpportunityDetailTest } from '@/components/opportunities/OpportunityDetailTest';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -132,22 +131,18 @@ export function OpportunityTestView() {
         </TabsContent>
 
         <TabsContent value="automated" className="space-y-6">
-          <OpportunityDetailTest />
+          <Card>
+            <CardHeader>
+              <CardTitle>Automated Testing Suite</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                The automated test components have been removed and integrated into the main opportunities view for better user experience.
+              </p>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
-    </div>
-  );
-}
-                key={id}
-                variant="outline"
-                onClick={() => handleViewOpportunity(id)}
-              >
-                View Opportunity {id}
-              </Button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

@@ -33,7 +33,6 @@ import { ValidationTestingDemo } from '@/components/dashboard/ValidationTestingD
 import { AutoSaveTestRunner } from '@/components/dashboard/AutoSaveTestRunner';
 import { ComprehensiveValidationTestSuite } from '@/components/dashboard/ComprehensiveValidationTestSuite';
 import { FieldTypeTestingLab } from '@/components/dashboard/FieldTypeTestingLab';
-import { OpportunityTestSuite } from '@/components/opportunities/OpportunityTestSuite';
 
 // Import new real-time data integration components
 import { RealTimeDataHub } from '@/components/integrations/RealTimeDataHub';
@@ -454,7 +453,15 @@ export function AdministrationModule({ userRole, isOwner = false, initialView = 
             </TabsList>
 
             <TabsContent value="opportunity-suite">
-              <OpportunityTestSuite />
+              <Card>
+                <CardHeader>
+                  <CardTitle>Opportunity Testing Suite</CardTitle>
+                  <CardDescription>Comprehensive testing for opportunity management features has been moved to the main opportunities view.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">The opportunity testing components have been integrated into the main CRM opportunities view for better user experience.</p>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="responsive-autofix">

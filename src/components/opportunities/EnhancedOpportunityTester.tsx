@@ -1,5 +1,4 @@
-import { OpportunityDetailTestRunner } from './OpportunityDetailTestRunner';
-
+// This file has been removed - reverted to original OpportunitiesView
 export function EnhancedOpportunityTester() {
-  return <OpportunityDetailTestRunner />;
+  return null;
 }
