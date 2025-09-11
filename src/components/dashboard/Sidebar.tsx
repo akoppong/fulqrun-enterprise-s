@@ -173,6 +173,15 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           permissionId: 'dashboard',
           action: 'read',
           isNew: true
+        },
+        {
+          id: 'opportunity-test',
+          label: 'Opportunity Detail Test',
+          icon: Eye,
+          description: 'Test full-screen opportunity views',
+          permissionId: 'opportunities',
+          action: 'read',
+          isNew: true
         }
       ]
     },

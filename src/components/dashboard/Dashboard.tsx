@@ -41,6 +41,7 @@ import { ResponsiveValidationSuite } from '../testing/ResponsiveValidationSuite'
 import { FloatingAutoFix } from '../testing/FloatingAutoFix';
 import { ResponsiveDesignRecommendations } from '../testing/ResponsiveDesignRecommendations';
 import { AutomatedResponsiveAnalyzer } from '../testing/AutomatedResponsiveAnalyzer';
+import { FullScreenOpportunityTest } from '../opportunities/FullScreenOpportunityTest';
 
 interface DashboardProps {
   user: User;
@@ -50,7 +51,7 @@ interface DashboardProps {
   initialView?: string;
 }
 
-export type DashboardView = 'dashboard' | 'role-testing' | 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'advanced-analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'kpi-gallery' | 'kpi-manager' | 'kpi-layout' | 'pharma-kpi-templates' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit' | 'administration' | 'responsive-testing';
+export type DashboardView = 'dashboard' | 'role-testing' | 'opportunity-test' | 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'advanced-analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'kpi-gallery' | 'kpi-manager' | 'kpi-layout' | 'pharma-kpi-templates' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit' | 'administration' | 'responsive-testing';
 
 export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialView }: DashboardProps) {
   // Safety check for user object and role
@@ -171,6 +172,8 @@ export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialV
             onRoleSwitch={onRoleSwitch || (() => {})}
           />
         );
+      case 'opportunity-test':
+        return <FullScreenOpportunityTest />;
       case 'pipeline':
         return <PipelineView />;
       case 'opportunities':
