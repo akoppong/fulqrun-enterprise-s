@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useKV } from '@github/spark/hooks';
-import { Opportunity, Company, Contact, PEAK_STAGES } from '@/lib/types';
+import { Opportunity, Company, Contact, PEAK_STAGES, MEDDPICC } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,7 +10,8 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { 
   Building,
   User,
@@ -63,6 +64,13 @@ export function ResponsiveOpportunityDetail({
   const [contacts] = useKV<Contact[]>('contacts', []);
   const [activeTab, setActiveTab] = useState('overview');
   const [isMobile, setIsMobile] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Validate opportunity data
+  if (!opportunity) {
+    console.error('ResponsiveOpportunityDetail: No opportunity provided');
+    return null;
+  }
 
   // Check for mobile screen size
   useEffect(() => {
@@ -75,20 +83,111 @@ export function ResponsiveOpportunityDetail({
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
-  // Get related data
-  const company = companies.find(c => c.id === opportunity.companyId);
-  const contact = contacts.find(c => c.id === opportunity.contactId);
-  const stageConfig = PEAK_STAGES.find(s => s.value === opportunity.stage) || PEAK_STAGES[0];
-  const meddpicScore = getMEDDPICCScore(opportunity.meddpicc);
-  const stageProgress = getStageProgress(opportunity.stage);
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!isOpen) return;
+      
+      switch (event.key) {
+        case 'Escape':
+          onClose();
+          break;
+        case '1':
+          if (event.ctrlKey || event.metaKey) {
+            event.preventDefault();
+            setActiveTab('overview');
+          }
+          break;
+        case '2':
+          if (event.ctrlKey || event.metaKey) {
+            event.preventDefault();
+            setActiveTab('metrics');
+          }
+          break;
+        case '3':
+          if (event.ctrlKey || event.metaKey) {
+            event.preventDefault();
+            setActiveTab('peak');
+          }
+          break;
+        case '4':
+          if (event.ctrlKey || event.metaKey) {
+            event.preventDefault();
+            setActiveTab('meddpicc');
+          }
+          break;
+        case '5':
+          if (event.ctrlKey || event.metaKey) {
+            event.preventDefault();
+            setActiveTab('contact');
+          }
+          break;
+        case 'e':
+          if ((event.ctrlKey || event.metaKey) && onEdit) {
+            event.preventDefault();
+            onEdit();
+          }
+          break;
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [isOpen, onClose, onEdit]);
+
+  // Reset tab when opportunity changes
+  useEffect(() => {
+    if (isOpen) {
+      setActiveTab('overview');
+    }
+  }, [opportunity.id, isOpen]);
+
+  // Get related data with memoization
+  const company = useMemo(() => 
+    companies.find(c => c.id === opportunity.companyId), 
+    [companies, opportunity.companyId]
+  );
   
-  // Calculate days in various states
-  const daysInStage = differenceInDays(new Date(), new Date(opportunity.updatedAt));
-  const daysInPipeline = differenceInDays(new Date(), new Date(opportunity.createdAt));
-  const daysToClose = differenceInDays(new Date(opportunity.expectedCloseDate), new Date());
+  const contact = useMemo(() => 
+    contacts.find(c => c.id === opportunity.contactId), 
+    [contacts, opportunity.contactId]
+  );
+  
+  const stageConfig = useMemo(() => 
+    PEAK_STAGES.find(s => s.value === opportunity.stage) || PEAK_STAGES[0], 
+    [opportunity.stage]
+  );
+  
+  const meddpicScore = useMemo(() => 
+    getMEDDPICCScore(opportunity.meddpicc), 
+    [opportunity.meddpicc]
+  );
+  
+  const stageProgress = useMemo(() => 
+    getStageProgress(opportunity.stage), 
+    [opportunity.stage]
+  );
+  
+  // Calculate days in various states with memoization
+  const timeCalculations = useMemo(() => {
+    const now = new Date();
+    const createdAt = new Date(opportunity.createdAt);
+    const updatedAt = new Date(opportunity.updatedAt);
+    const expectedCloseDate = new Date(opportunity.expectedCloseDate);
+    
+    return {
+      daysInStage: differenceInDays(now, updatedAt),
+      daysInPipeline: differenceInDays(now, createdAt),
+      daysToClose: differenceInDays(expectedCloseDate, now)
+    };
+  }, [opportunity.createdAt, opportunity.updatedAt, opportunity.expectedCloseDate]);
+  
+  const { daysInStage, daysInPipeline, daysToClose } = timeCalculations;
 
   const getPriorityBadge = (priority?: string) => {
-    switch (priority) {
+    switch (priority?.toLowerCase()) {
       case 'low':
         return { variant: 'secondary' as const, className: 'bg-gray-100 text-gray-800 border-gray-300' };
       case 'medium':
@@ -102,14 +201,22 @@ export function ResponsiveOpportunityDetail({
     }
   };
 
-  const priorityBadge = getPriorityBadge(opportunity.priority);
+  const priorityBadge = useMemo(() => 
+    getPriorityBadge(opportunity.priority), 
+    [opportunity.priority]
+  );
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="dialog-content max-w-[98vw] max-h-[98vh] min-w-[90vw] h-[95vh] p-0 gap-0 overflow-hidden">
-        <DialogTitle className="sr-only">
-          Opportunity Details - {opportunity.title}
-        </DialogTitle>
+        <VisuallyHidden>
+          <DialogTitle>
+            Opportunity Details - {opportunity.title}
+          </DialogTitle>
+          <DialogDescription>
+            Detailed view of opportunity {opportunity.title} including PEAK methodology progress, MEDDPICC qualification, and contact information.
+          </DialogDescription>
+        </VisuallyHidden>
         
         <div className="flex flex-col h-full bg-background">
           {/* Improved Header Layout */}
@@ -122,6 +229,7 @@ export function ResponsiveOpportunityDetail({
                   size="sm" 
                   onClick={onClose}
                   className="text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Close opportunity details"
                 >
                   <ArrowLeft size={18} className="mr-2" />
                   <span className="hidden sm:inline">Back to Opportunities</span>
@@ -134,6 +242,7 @@ export function ResponsiveOpportunityDetail({
                       size="sm"
                       onClick={onEdit}
                       className="px-4 py-2 font-medium"
+                      aria-label="Edit opportunity"
                     >
                       <PencilSimple size={16} className="mr-2" />
                       <span className="hidden sm:inline">Edit</span>
@@ -145,6 +254,7 @@ export function ResponsiveOpportunityDetail({
                       variant="outline"
                       onClick={onDelete}
                       className="px-4 py-2 text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+                      aria-label="Delete opportunity"
                     >
                       <Trash size={16} className="mr-2" />
                       <span className="hidden sm:inline">Delete</span>
@@ -299,9 +409,9 @@ export function ResponsiveOpportunityDetail({
                             </div>
                             <div className="space-y-1">
                               <div className={`text-xl lg:text-2xl font-bold ${meddpicScore < 50 ? 'text-red-600' : meddpicScore < 80 ? 'text-yellow-600' : 'text-green-600'}`}>
-                                {meddpicScore}%
+                                {Math.round(meddpicScore)}%
                               </div>
-                              <div className="text-sm font-medium text-purple-700">MEDDPICC</div>
+                              <div className="text-sm font-medium text-purple-700">MEDDPICC Score</div>
                             </div>
                           </CardContent>
                         </Card>
@@ -315,7 +425,7 @@ export function ResponsiveOpportunityDetail({
                             </div>
                             <div className="space-y-1">
                               <div className="text-lg lg:text-xl font-bold text-amber-900">
-                                {daysToClose > 0 ? `${daysToClose} days` : 'Overdue'}
+                                {daysToClose > 0 ? `${daysToClose} days` : daysToClose === 0 ? 'Due today' : `${Math.abs(daysToClose)} days overdue`}
                               </div>
                               <div className="text-sm font-medium text-amber-700">To Close</div>
                             </div>
@@ -632,7 +742,7 @@ export function ResponsiveOpportunityDetail({
                   </TabsContent>
 
                   <TabsContent value="meddpicc" className="mt-0 space-y-6">
-                    <Card className="border-0 shadow-lg bg-gradient-to-br from-background to-purple/5">
+                    <Card className="border-0 shadow-lg bg-gradient-to-br from-background to-purple-50/30">
                       <CardHeader className="pb-6">
                         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                           <CardTitle className="text-xl font-semibold flex items-center gap-3">
@@ -647,7 +757,7 @@ export function ResponsiveOpportunityDetail({
                               meddpicScore < 50 ? 'text-red-600 bg-red-50' : 
                               meddpicScore < 80 ? 'text-yellow-600 bg-yellow-50' : 
                               'text-green-600 bg-green-50'
-                            }`}>{meddpicScore}%</div>
+                            }`}>{Math.round(meddpicScore)}%</div>
                           </div>
                         </div>
                         <div className="space-y-2">
@@ -721,14 +831,30 @@ export function ResponsiveOpportunityDetail({
                             }
                           ].map((component) => {
                             const IconComponent = component.icon;
-                            const hasContent = opportunity.meddpicc[component.key as keyof typeof opportunity.meddpicc];
+                            const hasContent = opportunity.meddpicc?.[component.key as keyof MEDDPICC];
+                            
+                            // Define color classes statically for Tailwind
+                            const getColorClasses = (color: string) => {
+                              switch(color) {
+                                case 'blue': return { bg: 'bg-blue-100', text: 'text-blue-600' };
+                                case 'emerald': return { bg: 'bg-emerald-100', text: 'text-emerald-600' };
+                                case 'purple': return { bg: 'bg-purple-100', text: 'text-purple-600' };
+                                case 'indigo': return { bg: 'bg-indigo-100', text: 'text-indigo-600' };
+                                case 'rose': return { bg: 'bg-rose-100', text: 'text-rose-600' };
+                                case 'amber': return { bg: 'bg-amber-100', text: 'text-amber-600' };
+                                case 'green': return { bg: 'bg-green-100', text: 'text-green-600' };
+                                default: return { bg: 'bg-gray-100', text: 'text-gray-600' };
+                              }
+                            };
+                            
+                            const colorClasses = getColorClasses(component.color);
                             
                             return (
                               <Card key={component.key} className="border-border/50 bg-gradient-to-br from-background to-muted/10">
                                 <CardContent className="p-4">
                                   <div className="flex items-start gap-3">
-                                    <div className={`p-3 bg-${component.color}-100 rounded-lg shrink-0`}>
-                                      <IconComponent size={18} className={`text-${component.color}-600`} />
+                                    <div className={`p-3 ${colorClasses.bg} rounded-lg shrink-0`}>
+                                      <IconComponent size={18} className={colorClasses.text} />
                                     </div>
                                     <div className="flex-1 space-y-2 min-w-0">
                                       <div className="flex items-center justify-between">
@@ -739,12 +865,12 @@ export function ResponsiveOpportunityDetail({
                                           <Warning size={16} className="text-amber-500 shrink-0" />
                                         )}
                                       </div>
-                                      <p className="text-sm text-muted-foreground leading-relaxed">
+                                      <div className="text-sm text-muted-foreground leading-relaxed">
                                         {component.description}
-                                      </p>
+                                      </div>
                                       <div className="p-3 bg-muted/50 rounded-lg">
                                         <p className="text-sm font-medium text-foreground">
-                                          {hasContent || 'Not yet defined'}
+                                          {hasContent ? String(hasContent) : 'Not yet defined'}
                                         </p>
                                       </div>
                                     </div>
@@ -831,7 +957,7 @@ export function ResponsiveOpportunityDetail({
                               <Avatar className="h-20 w-20 border-4 border-blue-100 shrink-0">
                                 <AvatarImage src={contact.avatarUrl} />
                                 <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold text-xl">
-                                  {contact.firstName[0]}{contact.lastName[0]}
+                                  {(contact.firstName || 'U')[0]}{(contact.lastName || 'U')[0]}
                                 </AvatarFallback>
                               </Avatar>
                               <div className="flex-1 space-y-2 min-w-0">
