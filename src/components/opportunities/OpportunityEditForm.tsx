@@ -153,12 +153,6 @@ interface FormValidationState {
   isValid: boolean;
   isValidating: boolean;
 }
-  isOpen: boolean;
-  onClose: () => void;
-  onSave?: (opportunity: Partial<Opportunity>) => void;
-  onSubmit?: (opportunity: Partial<Opportunity>) => void;
-  opportunity?: Opportunity | null;
-}
 
 interface OpportunityEditFormProps {
   isOpen: boolean;
