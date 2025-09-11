@@ -43,6 +43,7 @@ import {
 import { formatCurrency, getMEDDPICCScore, getStageProgress } from '@/lib/crm-utils';
 import { format, differenceInDays } from 'date-fns';
 import { toast } from 'sonner';
+import { OpportunitiesMainView } from './OpportunitiesMainView';
 
 interface ResponsiveOpportunityDetailProps {
   opportunity: Opportunity;
@@ -888,3 +889,6 @@ export function ResponsiveOpportunityDetail({
     </Dialog>
   );
 }
+
+// Export alias for backward compatibility
+export const OpportunitiesView = OpportunitiesMainView;

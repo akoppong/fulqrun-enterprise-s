@@ -21,11 +21,12 @@ import { toast } from 'sonner';
 interface OpportunityEditFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (opportunity: Partial<Opportunity>) => void;
+  onSave?: (opportunity: Partial<Opportunity>) => void;
+  onSubmit?: (opportunity: Partial<Opportunity>) => void;
   opportunity?: Opportunity | null;
 }
 
-export function OpportunityEditForm({ isOpen, onClose, onSave, opportunity }: OpportunityEditFormProps) {
+export function OpportunityEditForm({ isOpen, onClose, onSave, onSubmit, opportunity }: OpportunityEditFormProps) {
   const [companies] = useKV<Company[]>('companies', []);
   const [contacts] = useKV<Contact[]>('contacts', []);
   
@@ -191,7 +192,10 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, opportunity }: Op
         opportunityData.createdAt = new Date().toISOString();
       }
 
-      onSave(opportunityData);
+      const callback = onSave || onSubmit;
+      if (callback) {
+        callback(opportunityData);
+      }
       onClose();
       toast.success(opportunity ? 'Opportunity updated successfully' : 'Opportunity created successfully');
     } catch (error) {

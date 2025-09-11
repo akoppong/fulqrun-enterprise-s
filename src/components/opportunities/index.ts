@@ -1,3 +1,3 @@
-export { OpportunitiesView } from './OpportunitiesView';
+export { ResponsiveOpportunityDetail, OpportunitiesView } from './OpportunitiesView';
+export { OpportunitiesMainView } from './OpportunitiesMainView';
 export { OpportunityEditForm } from './OpportunityEditForm';
-export { ResponsiveOpportunityDetail } from './ResponsiveOpportunityDetail';
