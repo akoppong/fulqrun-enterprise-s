@@ -29,7 +29,7 @@ import {
 } from '@phosphor-icons/react';
 import { useState } from 'react';
 import { OpportunityDialog } from './OpportunityDialog';
-import { OpportunityDetailView } from './OpportunityDetailView';
+import { OpportunityDetailFullView } from './OpportunityDetailFullView';
 import { toast } from 'sonner';
 
 export function OpportunityList() {
@@ -40,11 +40,11 @@ export function OpportunityList() {
   // View state
   const [viewMode, setViewMode] = useState<'table' | 'cards' | 'detail'>('table');
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
+  const [currentView, setCurrentView] = useState<'list' | 'detail'>('list');
   
   // Dialog states
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDetailViewOpen, setIsDetailViewOpen] = useState(false);
   
   // Filters and search
   const [searchTerm, setSearchTerm] = useState('');
@@ -131,7 +131,12 @@ export function OpportunityList() {
 
   const handleViewOpportunity = (opportunity: Opportunity) => {
     setSelectedOpportunity(opportunity);
-    setIsDetailViewOpen(true);
+    setCurrentView('detail');
+  };
+
+  const handleBackToList = () => {
+    setCurrentView('list');
+    setSelectedOpportunity(null);
   };
 
   const handleDeleteOpportunity = async (opportunity: Opportunity) => {
@@ -145,13 +150,18 @@ export function OpportunityList() {
   const handleSaveOpportunity = (opportunityData: Partial<Opportunity>) => {
     if (selectedOpportunity) {
       // Update existing opportunity
+      const updatedOpportunity = { ...selectedOpportunity, ...opportunityData, updatedAt: new Date().toISOString() };
       setOpportunities(current => 
         current.map(opp => 
           opp.id === selectedOpportunity.id 
-            ? { ...opp, ...opportunityData, updatedAt: new Date().toISOString() }
+            ? updatedOpportunity
             : opp
         )
       );
+      // Update selected opportunity if we're in detail view
+      if (currentView === 'detail') {
+        setSelectedOpportunity(updatedOpportunity);
+      }
       toast.success('Opportunity updated successfully');
     } else {
       // Create new opportunity
@@ -317,333 +327,351 @@ export function OpportunityList() {
 
   return (
     <div className="space-y-6">
-      {/* Header with metrics */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold">Sales Opportunities</h2>
-            <p className="text-muted-foreground">Manage and track all sales opportunities through the PEAK methodology</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <Button onClick={handleCreateOpportunity} className="flex items-center gap-2">
-              <Plus size={16} />
-              New Opportunity
-            </Button>
-          </div>
-        </div>
-
-        {/* Pipeline Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <Target size={20} className="text-primary" />
-                </div>
-                <div>
-                  <div className="text-2xl font-bold">{metrics.totalOpportunities}</div>
-                  <div className="text-sm text-muted-foreground">Total Opportunities</div>
-                </div>
+      {/* Conditional rendering based on current view */}
+      {currentView === 'detail' && selectedOpportunity ? (
+        <OpportunityDetailFullView
+          opportunity={selectedOpportunity}
+          onBack={handleBackToList}
+          onEdit={() => {
+            setCurrentView('list');
+            handleEditOpportunity(selectedOpportunity);
+          }}
+          onDelete={() => {
+            handleDeleteOpportunity(selectedOpportunity);
+            handleBackToList();
+          }}
+        />
+      ) : (
+        <>
+          {/* Header with metrics */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-3xl font-bold">Sales Opportunities</h2>
+                <p className="text-muted-foreground">Manage and track all sales opportunities through the PEAK methodology</p>
               </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <DollarSign size={20} className="text-green-600" />
-                </div>
-                <div>
-                  <div className="text-2xl font-bold">{formatCurrency(metrics.totalValue)}</div>
-                  <div className="text-sm text-muted-foreground">Pipeline Value</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <ChartBar size={20} className="text-blue-600" />
-                </div>
-                <div>
-                  <div className="text-2xl font-bold">{formatCurrency(metrics.averageValue)}</div>
-                  <div className="text-sm text-muted-foreground">Avg Deal Size</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-orange-100 rounded-lg">
-                  <TrendUp size={20} className="text-orange-600" />
-                </div>
-                <div>
-                  <div className="text-2xl font-bold">
-                    {sortedOpportunities.length > 0 
-                      ? Math.round(sortedOpportunities.reduce((sum, opp) => sum + opp.probability, 0) / sortedOpportunities.length)
-                      : 0}%
-                  </div>
-                  <div className="text-sm text-muted-foreground">Avg Probability</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* Filters and Search */}
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div className="flex items-center gap-4 flex-1">
-              <div className="flex items-center gap-2 flex-1 max-w-md">
-                <Search size={16} className="text-muted-foreground" />
-                <Input
-                  placeholder="Search opportunities, companies, contacts..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="flex-1"
-                />
-              </div>
-              
-              <Select value={stageFilter} onValueChange={setStageFilter}>
-                <SelectTrigger className="w-48">
-                  <Filter size={16} className="mr-2" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Stages</SelectItem>
-                  {PEAK_STAGES.map(stage => (
-                    <SelectItem key={stage.value} value={stage.value}>
-                      {stage.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={valueRangeFilter} onValueChange={setValueRangeFilter}>
-                <SelectTrigger className="w-40">
-                  <DollarSign size={16} className="mr-2" />
-                  <SelectValue placeholder="Value Range" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Values</SelectItem>
-                  <SelectItem value="small">&lt; $10K</SelectItem>
-                  <SelectItem value="medium">$10K - $100K</SelectItem>
-                  <SelectItem value="large">$100K - $1M</SelectItem>
-                  <SelectItem value="enterprise">$1M+</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-40">
-                  <SortAscending size={16} className="mr-2" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="updatedAt">Recent</SelectItem>
-                  <SelectItem value="title">Name</SelectItem>
-                  <SelectItem value="value">Value</SelectItem>
-                  <SelectItem value="stage">Stage</SelectItem>
-                  <SelectItem value="probability">Probability</SelectItem>
-                  <SelectItem value="expectedCloseDate">Close Date</SelectItem>
-                  <SelectItem value="meddpiccScore">MEDDPICC Score</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Button
-                variant={viewMode === 'table' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('table')}
-              >
-                <List size={16} />
-              </Button>
-              <Button
-                variant={viewMode === 'cards' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('cards')}
-              >
-                <GridFour size={16} />
-              </Button>
-            </div>
-          </div>
-          
-          {/* Active filters indicator */}
-          {(searchTerm || stageFilter !== 'all' || valueRangeFilter !== 'all') && (
-            <div className="flex items-center gap-2 pt-2 border-t">
-              <span className="text-sm text-muted-foreground">Active filters:</span>
-              {searchTerm && (
-                <Badge variant="secondary" className="text-xs">
-                  Search: "{searchTerm}"
-                </Badge>
-              )}
-              {stageFilter !== 'all' && (
-                <Badge variant="secondary" className="text-xs">
-                  Stage: {PEAK_STAGES.find(s => s.value === stageFilter)?.label}
-                </Badge>
-              )}
-              {valueRangeFilter !== 'all' && (
-                <Badge variant="secondary" className="text-xs">
-                  Value: {valueRangeFilter}
-                </Badge>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setSearchTerm('');
-                  setStageFilter('all');
-                  setValueRangeFilter('all');
-                }}
-                className="text-xs h-6 px-2"
-              >
-                Clear all
-              </Button>
-            </div>
-          )}
-        </CardHeader>
-        
-        <CardContent className="p-0">
-          {sortedOpportunities.length === 0 ? (
-            <div className="text-center py-12">
-              <Target size={48} className="mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-2">No opportunities found</h3>
-              <p className="text-muted-foreground mb-4">
-                {searchTerm || stageFilter !== 'all' || valueRangeFilter !== 'all'
-                  ? 'Try adjusting your search or filter criteria'
-                  : 'Start by creating your first opportunity'
-                }
-              </p>
-              {!searchTerm && stageFilter === 'all' && valueRangeFilter === 'all' && (
+              <div className="flex items-center gap-4">
                 <Button onClick={handleCreateOpportunity} className="flex items-center gap-2">
                   <Plus size={16} />
-                  Create First Opportunity
+                  New Opportunity
                 </Button>
-              )}
+              </div>
             </div>
-          ) : (
-            <>
-              {/* Table View */}
-              {viewMode === 'table' && (
-                <div className="responsive-overflow">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="min-w-[300px]">Opportunity</TableHead>
-                        <TableHead className="min-w-[120px]">Stage</TableHead>
-                        <TableHead className="min-w-[120px]">Value</TableHead>
-                        <TableHead className="min-w-[120px]">Probability</TableHead>
-                        <TableHead className="min-w-[130px]">MEDDPICC</TableHead>
-                        <TableHead className="min-w-[120px]">Close Date</TableHead>
-                        <TableHead className="min-w-[140px]">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {sortedOpportunities.map((opportunity) => {
-                        const stageConfig = getStageConfig(opportunity.stage);
-                        const meddpicScore = getMEDDPICCScore(opportunity.meddpicc);
-                        const meddpicBadge = getMEDDPICCBadge(meddpicScore);
-                        const company = companies.find(c => c.id === opportunity.companyId);
-                        const contact = contacts.find(c => c.id === opportunity.contactId);
 
-                        return (
-                          <TableRow key={opportunity.id} className="group">
-                            <TableCell>
-                              <div className="space-y-1">
-                                <div className="font-medium">{opportunity.title}</div>
-                                <div className="text-sm text-muted-foreground flex items-center gap-2">
-                                  <Building size={12} />
-                                  <span>{company?.name || 'Unknown Company'}</span>
-                                </div>
-                                {contact && (
-                                  <div className="text-xs text-muted-foreground flex items-center gap-2">
-                                    <Users size={12} />
-                                    <span>{contact.firstName} {contact.lastName} - {contact.title}</span>
-                                  </div>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge className={stageConfig.color} variant="secondary">
-                                {stageConfig.label}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="font-medium">
-                              {formatCurrency(opportunity.value)}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <div className="w-16 bg-muted rounded-full h-2">
-                                  <div 
-                                    className="bg-primary h-2 rounded-full transition-all"
-                                    style={{ width: `${opportunity.probability}%` }}
-                                  />
-                                </div>
-                                <span className="text-sm">{opportunity.probability}%</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant={meddpicBadge.variant}>
-                                {meddpicScore}% {meddpicBadge.label}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-sm">
-                              {safeFormatDate(opportunity.expectedCloseDate, 'No date set')}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => handleViewOpportunity(opportunity)}
-                                >
-                                  <Eye size={14} />
-                                </Button>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => handleEditOpportunity(opportunity)}
-                                >
-                                  <PencilSimple size={14} />
-                                </Button>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => handleDeleteOpportunity(opportunity)}
-                                >
-                                  <Trash size={14} />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-
-              {/* Cards View */}
-              {viewMode === 'cards' && (
-                <div className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {sortedOpportunities.map(renderOpportunityCard)}
+            {/* Pipeline Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <Target size={20} className="text-primary" />
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold">{metrics.totalOpportunities}</div>
+                      <div className="text-sm text-muted-foreground">Total Opportunities</div>
+                    </div>
                   </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <DollarSign size={20} className="text-green-600" />
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold">{formatCurrency(metrics.totalValue)}</div>
+                      <div className="text-sm text-muted-foreground">Pipeline Value</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <ChartBar size={20} className="text-blue-600" />
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold">{formatCurrency(metrics.averageValue)}</div>
+                      <div className="text-sm text-muted-foreground">Avg Deal Size</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-orange-100 rounded-lg">
+                      <TrendUp size={20} className="text-orange-600" />
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold">
+                        {sortedOpportunities.length > 0 
+                          ? Math.round(sortedOpportunities.reduce((sum, opp) => sum + opp.probability, 0) / sortedOpportunities.length)
+                          : 0}%
+                      </div>
+                      <div className="text-sm text-muted-foreground">Avg Probability</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          {/* Filters and Search */}
+          <Card>
+            <CardHeader>
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div className="flex items-center gap-4 flex-1">
+                  <div className="flex items-center gap-2 flex-1 max-w-md">
+                    <Search size={16} className="text-muted-foreground" />
+                    <Input
+                      placeholder="Search opportunities, companies, contacts..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="flex-1"
+                    />
+                  </div>
+                  
+                  <Select value={stageFilter} onValueChange={setStageFilter}>
+                    <SelectTrigger className="w-48">
+                      <Filter size={16} className="mr-2" />
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Stages</SelectItem>
+                      {PEAK_STAGES.map(stage => (
+                        <SelectItem key={stage.value} value={stage.value}>
+                          {stage.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={valueRangeFilter} onValueChange={setValueRangeFilter}>
+                    <SelectTrigger className="w-40">
+                      <DollarSign size={16} className="mr-2" />
+                      <SelectValue placeholder="Value Range" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Values</SelectItem>
+                      <SelectItem value="small">&lt; $10K</SelectItem>
+                      <SelectItem value="medium">$10K - $100K</SelectItem>
+                      <SelectItem value="large">$100K - $1M</SelectItem>
+                      <SelectItem value="enterprise">$1M+</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="w-40">
+                      <SortAscending size={16} className="mr-2" />
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="updatedAt">Recent</SelectItem>
+                      <SelectItem value="title">Name</SelectItem>
+                      <SelectItem value="value">Value</SelectItem>
+                      <SelectItem value="stage">Stage</SelectItem>
+                      <SelectItem value="probability">Probability</SelectItem>
+                      <SelectItem value="expectedCloseDate">Close Date</SelectItem>
+                      <SelectItem value="meddpiccScore">MEDDPICC Score</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant={viewMode === 'table' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setViewMode('table')}
+                  >
+                    <List size={16} />
+                  </Button>
+                  <Button
+                    variant={viewMode === 'cards' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setViewMode('cards')}
+                  >
+                    <GridFour size={16} />
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Active filters indicator */}
+              {(searchTerm || stageFilter !== 'all' || valueRangeFilter !== 'all') && (
+                <div className="flex items-center gap-2 pt-2 border-t">
+                  <span className="text-sm text-muted-foreground">Active filters:</span>
+                  {searchTerm && (
+                    <Badge variant="secondary" className="text-xs">
+                      Search: "{searchTerm}"
+                    </Badge>
+                  )}
+                  {stageFilter !== 'all' && (
+                    <Badge variant="secondary" className="text-xs">
+                      Stage: {PEAK_STAGES.find(s => s.value === stageFilter)?.label}
+                    </Badge>
+                  )}
+                  {valueRangeFilter !== 'all' && (
+                    <Badge variant="secondary" className="text-xs">
+                      Value: {valueRangeFilter}
+                    </Badge>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSearchTerm('');
+                      setStageFilter('all');
+                      setValueRangeFilter('all');
+                    }}
+                    className="text-xs h-6 px-2"
+                  >
+                    Clear all
+                  </Button>
                 </div>
               )}
-            </>
-          )}
-        </CardContent>
-      </Card>
+            </CardHeader>
+            
+            <CardContent className="p-0">
+              {sortedOpportunities.length === 0 ? (
+                <div className="text-center py-12">
+                  <Target size={48} className="mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No opportunities found</h3>
+                  <p className="text-muted-foreground mb-4">
+                    {searchTerm || stageFilter !== 'all' || valueRangeFilter !== 'all'
+                      ? 'Try adjusting your search or filter criteria'
+                      : 'Start by creating your first opportunity'
+                    }
+                  </p>
+                  {!searchTerm && stageFilter === 'all' && valueRangeFilter === 'all' && (
+                    <Button onClick={handleCreateOpportunity} className="flex items-center gap-2">
+                      <Plus size={16} />
+                      Create First Opportunity
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <>
+                  {/* Table View */}
+                  {viewMode === 'table' && (
+                    <div className="responsive-overflow">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="min-w-[300px]">Opportunity</TableHead>
+                            <TableHead className="min-w-[120px]">Stage</TableHead>
+                            <TableHead className="min-w-[120px]">Value</TableHead>
+                            <TableHead className="min-w-[120px]">Probability</TableHead>
+                            <TableHead className="min-w-[130px]">MEDDPICC</TableHead>
+                            <TableHead className="min-w-[120px]">Close Date</TableHead>
+                            <TableHead className="min-w-[140px]">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {sortedOpportunities.map((opportunity) => {
+                            const stageConfig = getStageConfig(opportunity.stage);
+                            const meddpicScore = getMEDDPICCScore(opportunity.meddpicc);
+                            const meddpicBadge = getMEDDPICCBadge(meddpicScore);
+                            const company = companies.find(c => c.id === opportunity.companyId);
+                            const contact = contacts.find(c => c.id === opportunity.contactId);
 
-      {/* Dialogs */}
+                            return (
+                              <TableRow key={opportunity.id} className="group">
+                                <TableCell>
+                                  <div className="space-y-1">
+                                    <div className="font-medium">{opportunity.title}</div>
+                                    <div className="text-sm text-muted-foreground flex items-center gap-2">
+                                      <Building size={12} />
+                                      <span>{company?.name || 'Unknown Company'}</span>
+                                    </div>
+                                    {contact && (
+                                      <div className="text-xs text-muted-foreground flex items-center gap-2">
+                                        <Users size={12} />
+                                        <span>{contact.firstName} {contact.lastName} - {contact.title}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge className={stageConfig.color} variant="secondary">
+                                    {stageConfig.label}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="font-medium">
+                                  {formatCurrency(opportunity.value)}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-16 bg-muted rounded-full h-2">
+                                      <div 
+                                        className="bg-primary h-2 rounded-full transition-all"
+                                        style={{ width: `${opportunity.probability}%` }}
+                                      />
+                                    </div>
+                                    <span className="text-sm">{opportunity.probability}%</span>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge variant={meddpicBadge.variant}>
+                                    {meddpicScore}% {meddpicBadge.label}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-sm">
+                                  {safeFormatDate(opportunity.expectedCloseDate, 'No date set')}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => handleViewOpportunity(opportunity)}
+                                    >
+                                      <Eye size={14} />
+                                    </Button>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => handleEditOpportunity(opportunity)}
+                                    >
+                                      <PencilSimple size={14} />
+                                    </Button>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => handleDeleteOpportunity(opportunity)}
+                                    >
+                                      <Trash size={14} />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+
+                  {/* Cards View */}
+                  {viewMode === 'cards' && (
+                    <div className="p-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        {sortedOpportunities.map(renderOpportunityCard)}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </>
+      )}
+
+      {/* Dialog for Create/Edit */}
       <OpportunityDialog
         isOpen={isCreateDialogOpen || isEditDialogOpen}
         onClose={() => {
@@ -654,26 +682,6 @@ export function OpportunityList() {
         onSave={handleSaveOpportunity}
         opportunity={selectedOpportunity}
       />
-
-      {/* Detail View Modal */}
-      {selectedOpportunity && (
-        <OpportunityDetailView
-          isOpen={isDetailViewOpen}
-          onClose={() => {
-            setIsDetailViewOpen(false);
-            setSelectedOpportunity(null);
-          }}
-          opportunity={selectedOpportunity}
-          onEdit={() => {
-            setIsDetailViewOpen(false);
-            handleEditOpportunity(selectedOpportunity);
-          }}
-          onDelete={() => {
-            setIsDetailViewOpen(false);
-            handleDeleteOpportunity(selectedOpportunity);
-          }}
-        />
-      )}
     </div>
   );
 }
