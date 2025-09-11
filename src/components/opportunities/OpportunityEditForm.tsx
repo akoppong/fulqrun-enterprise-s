@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useKV } from '@github/spark/hooks';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -11,11 +11,154 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ValidatedInput } from '@/components/ui/validated-input';
+import { ValidatedSelect } from '@/components/ui/validated-select';
+import { FormErrorBoundary } from '@/components/ui/form-error-boundary';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Plus, X } from '@phosphor-icons/react';
+import { Calendar as CalendarIcon, Plus, X, Warning, Info, CheckCircle } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
 import { Opportunity, Company, Contact, PEAK_STAGES } from '@/lib/types';
 import { toast } from 'sonner';
+import { FormValidator, ValidationSchema } from '@/lib/validation';
+import { errorHandler, withErrorHandling } from '@/lib/error-handling';
+
+// Enhanced validation schema for opportunity form
+const opportunityValidationSchema: ValidationSchema = {
+  title: {
+    required: true,
+    minLength: 3,
+    maxLength: 200,
+    custom: (value: string) => {
+      if (value && /^\s+|\s+$/.test(value)) {
+        return 'Title cannot start or end with spaces';
+      }
+      if (value && /\s{2,}/.test(value)) {
+        return 'Title cannot contain consecutive spaces';
+      }
+      if (value && /^[0-9]+$/.test(value)) {
+        return 'Title cannot be only numbers';
+      }
+      return null;
+    }
+  },
+  description: {
+    maxLength: 2000,
+    custom: (value: string) => {
+      if (value && value.length > 0 && value.length < 10) {
+        return 'Description should be at least 10 characters for meaningful context';
+      }
+      return null;
+    }
+  },
+  value: {
+    required: true,
+    min: 0,
+    max: 1000000000,
+    custom: (value: number, data?: any) => {
+      if (value !== undefined && value > 0 && value < 100) {
+        return 'Deal value seems unusually low. Please verify the amount.';
+      }
+      if (value !== undefined && value > 50000000) {
+        return 'Deal value is very high. Please confirm this is correct.';
+      }
+      return null;
+    }
+  },
+  probability: {
+    required: true,
+    min: 0,
+    max: 100,
+    custom: (value: number, data?: any) => {
+      if (value !== undefined && data?.stage) {
+        // Stage-based probability validation
+        const stage = data.stage;
+        if (stage === 'prospect' && value > 50) {
+          return 'Probability seems high for Prospect stage (typically 0-25%)';
+        }
+        if (stage === 'qualification' && (value < 20 || value > 60)) {
+          return 'Probability for Qualification stage typically ranges 20-50%';
+        }
+        if (stage === 'proposal' && (value < 40 || value > 80)) {
+          return 'Probability for Proposal stage typically ranges 40-75%';
+        }
+        if (stage === 'negotiation' && value < 60) {
+          return 'Probability for Negotiation stage typically 60%+';
+        }
+        if (stage === 'closing' && value < 80) {
+          return 'Probability for Closing stage typically 80%+';
+        }
+      }
+      return null;
+    }
+  },
+  expectedCloseDate: {
+    required: true,
+    date: {
+      allowPast: false,
+      allowFuture: true,
+      required: true,
+      maxDate: new Date(Date.now() + 2 * 365 * 24 * 60 * 60 * 1000), // 2 years from now
+      custom: (value: Date) => {
+        const now = new Date();
+        const daysDiff = Math.ceil((value.getTime() - now.getTime()) / (1000 * 3600 * 24));
+        
+        if (daysDiff < 7) {
+          return 'Close date is very soon. Consider if this timeline is realistic.';
+        }
+        if (daysDiff > 730) {
+          return 'Close date is more than 2 years away. Consider shorter milestones.';
+        }
+        return null;
+      }
+    }
+  },
+  companyId: {
+    required: true,
+    custom: (value: string) => {
+      if (!value || value.trim() === '') {
+        return 'Please select a company for this opportunity';
+      }
+      return null;
+    }
+  },
+  stage: {
+    required: true,
+    custom: (value: string) => {
+      const validStages = PEAK_STAGES.map(s => s.value);
+      if (!validStages.includes(value)) {
+        return 'Please select a valid PEAK stage';
+      }
+      return null;
+    }
+  },
+  priority: {
+    required: true,
+    custom: (value: string) => {
+      if (!['low', 'medium', 'high', 'critical'].includes(value)) {
+        return 'Please select a valid priority level';
+      }
+      return null;
+    }
+  }
+};
+
+interface ValidationErrors {
+  [key: string]: string;
+}
+
+interface FormValidationState {
+  errors: ValidationErrors;
+  touched: Set<string>;
+  isValid: boolean;
+  isValidating: boolean;
+}
+  isOpen: boolean;
+  onClose: () => void;
+  onSave?: (opportunity: Partial<Opportunity>) => void;
+  onSubmit?: (opportunity: Partial<Opportunity>) => void;
+  opportunity?: Opportunity | null;
+}
 
 interface OpportunityEditFormProps {
   isOpen: boolean;
@@ -26,6 +169,24 @@ interface OpportunityEditFormProps {
 }
 
 export function OpportunityEditForm({ isOpen, onClose, onSave, onSubmit, opportunity }: OpportunityEditFormProps) {
+  return (
+    <FormErrorBoundary
+      context="OpportunityEditForm"
+      showErrorDetails={process.env.NODE_ENV === 'development'}
+      resetOnPropsChange={true}
+    >
+      <OpportunityEditFormInner
+        isOpen={isOpen}
+        onClose={onClose}
+        onSave={onSave}
+        onSubmit={onSubmit}
+        opportunity={opportunity}
+      />
+    </FormErrorBoundary>
+  );
+}
+
+function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportunity }: OpportunityEditFormProps) {
   const [companies] = useKV<Company[]>('companies', []);
   const [contacts] = useKV<Contact[]>('contacts', []);
   
@@ -57,6 +218,17 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, onSubmit, opportu
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Enhanced validation state
+  const [validationState, setValidationState] = useState<FormValidationState>({
+    errors: {},
+    touched: new Set(),
+    isValid: false,
+    isValidating: false
+  });
+  
+  const [showValidationSummary, setShowValidationSummary] = useState(false);
+  const [validator] = useState(() => new FormValidator(opportunityValidationSchema));
 
   // Options
   const industryOptions = [
@@ -90,6 +262,100 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, onSubmit, opportu
     { value: 'critical', label: 'Critical', color: 'bg-red-100 text-red-800' }
   ];
 
+  // Enhanced validation functions
+  const validateForm = useCallback((data: Partial<Opportunity>, showAllErrors = false) => {
+    const result = validator.validate(data);
+    
+    setValidationState(prev => ({
+      ...prev,
+      errors: result.errors.reduce((acc, error) => {
+        acc[error.field] = error.message;
+        return acc;
+      }, {} as ValidationErrors),
+      isValid: result.isValid,
+      isValidating: false
+    }));
+    
+    if (showAllErrors) {
+      setShowValidationSummary(true);
+      // Mark all fields as touched to show errors
+      const allFields = Object.keys(opportunityValidationSchema);
+      setValidationState(prev => ({
+        ...prev,
+        touched: new Set([...prev.touched, ...allFields])
+      }));
+    }
+    
+    return result;
+  }, [validator]);
+
+  const validateField = useCallback((fieldName: string, value: any, allData?: Partial<Opportunity>) => {
+    const dataToValidate = allData || { ...formData, [fieldName]: value };
+    const fieldSchema = { [fieldName]: opportunityValidationSchema[fieldName] };
+    
+    if (!fieldSchema[fieldName]) return;
+    
+    const fieldValidator = new FormValidator(fieldSchema);
+    const result = fieldValidator.validate(dataToValidate);
+    
+    setValidationState(prev => ({
+      ...prev,
+      errors: {
+        ...prev.errors,
+        [fieldName]: result.errors[0]?.message || ''
+      },
+      touched: new Set([...prev.touched, fieldName])
+    }));
+    
+    return result.isValid;
+  }, [formData]);
+
+  const getFieldError = useCallback((fieldName: string) => {
+    const hasError = validationState.errors[fieldName];
+    const isTouched = validationState.touched.has(fieldName);
+    return (hasError && isTouched) ? validationState.errors[fieldName] : null;
+  }, [validationState]);
+
+  const hasFieldError = useCallback((fieldName: string) => {
+    return validationState.touched.has(fieldName) && !!validationState.errors[fieldName];
+  }, [validationState]);
+
+  // Business logic validations
+  const performBusinessValidations = useCallback((data: Partial<Opportunity>) => {
+    const warnings: string[] = [];
+    const errors: string[] = [];
+
+    // Check for duplicate opportunities
+    if (data.title && data.companyId) {
+      // In a real app, you'd check against existing opportunities
+      // For now, just a placeholder validation
+    }
+
+    // Value and probability correlation
+    if (data.value && data.probability) {
+      const expectedValue = data.value * (data.probability / 100);
+      if (expectedValue < 1000 && data.priority === 'high') {
+        warnings.push('High priority opportunity with low expected value');
+      }
+    }
+
+    // Close date and stage alignment
+    if (data.expectedCloseDate && data.stage) {
+      const closeDate = new Date(data.expectedCloseDate);
+      const daysDiff = Math.ceil((closeDate.getTime() - new Date().getTime()) / (1000 * 3600 * 24));
+      
+      if (data.stage === 'closing' && daysDiff > 30) {
+        warnings.push('Closing stage opportunities typically close within 30 days');
+      }
+      
+      if (data.stage === 'prospect' && daysDiff < 30) {
+        warnings.push('Prospect stage opportunities typically have longer timelines');
+      }
+    }
+
+    return { warnings, errors };
+  }, []);
+
   useEffect(() => {
     if (opportunity) {
       setFormData({
@@ -97,6 +363,14 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, onSubmit, opportu
         expectedCloseDate: opportunity.expectedCloseDate
       });
       setTags(opportunity.tags || []);
+      // Reset validation state for edit mode
+      setValidationState({
+        errors: {},
+        touched: new Set(),
+        isValid: false,
+        isValidating: false
+      });
+      setShowValidationSummary(false);
     } else {
       // Reset form for new opportunity
       setFormData({
@@ -123,21 +397,95 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, onSubmit, opportu
         }
       });
       setTags([]);
+      setValidationState({
+        errors: {},
+        touched: new Set(),
+        isValid: false,
+        isValidating: false
+      });
+      setShowValidationSummary(false);
     }
   }, [opportunity, isOpen]);
 
-  const handleInputChange = (field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
+  // Validate form whenever data changes
+  useEffect(() => {
+    if (Object.keys(formData).length > 0) {
+      validateForm(formData);
+    }
+  }, [formData, validateForm]);
+
+  const handleInputChange = useCallback((field: string, value: any) => {
+    const newData = {
+      ...formData,
       [field]: value
-    }));
-  };
+    };
+    
+    setFormData(newData);
+    
+    // Validate field if it's been touched
+    if (validationState.touched.has(field)) {
+      validateField(field, value, newData);
+    }
+    
+    // Auto-adjust probability based on stage
+    if (field === 'stage' && value) {
+      let newProbability = formData.probability;
+      switch (value) {
+        case 'prospect':
+          newProbability = Math.min(newProbability || 25, 25);
+          break;
+        case 'qualification':
+          newProbability = Math.max(Math.min(newProbability || 40, 50), 20);
+          break;
+        case 'proposal':
+          newProbability = Math.max(Math.min(newProbability || 60, 75), 40);
+          break;
+        case 'negotiation':
+          newProbability = Math.max(newProbability || 70, 60);
+          break;
+        case 'closing':
+          newProbability = Math.max(newProbability || 85, 80);
+          break;
+      }
+      
+      if (newProbability !== formData.probability) {
+        setFormData(prev => ({ ...prev, probability: newProbability }));
+        toast.info('Probability adjusted', {
+          description: `Probability updated to ${newProbability}% to align with ${value} stage`
+        });
+      }
+    }
+  }, [formData, validationState.touched, validateField]);
 
   const handleAddTag = () => {
-    if (newTag.trim() && !tags.includes(newTag.trim())) {
-      setTags(prev => [...prev, newTag.trim()]);
-      setNewTag('');
+    if (!newTag.trim()) {
+      toast.error('Please enter a tag name');
+      return;
     }
+    
+    if (newTag.trim().length < 2) {
+      toast.error('Tag must be at least 2 characters long');
+      return;
+    }
+    
+    if (newTag.trim().length > 30) {
+      toast.error('Tag cannot exceed 30 characters');
+      return;
+    }
+    
+    if (tags.includes(newTag.trim())) {
+      toast.warning('This tag already exists');
+      return;
+    }
+    
+    if (tags.length >= 10) {
+      toast.error('Maximum 10 tags allowed');
+      return;
+    }
+    
+    setTags(prev => [...prev, newTag.trim()]);
+    setNewTag('');
+    toast.success('Tag added successfully');
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
@@ -151,20 +499,55 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, onSubmit, opportu
     }
   };
 
-  const handleSave = async () => {
-    // Basic validation
-    if (!formData.title?.trim()) {
-      toast.error('Opportunity name is required');
-      return;
-    }
+  const handleSave = withErrorHandling(async () => {
+    // Mark all fields as touched for validation display
+    setValidationState(prev => ({
+      ...prev,
+      touched: new Set(Object.keys(opportunityValidationSchema))
+    }));
+
+    // Perform comprehensive validation
+    const validationResult = validateForm(formData, true);
     
-    if (!formData.companyId) {
-      toast.error('Company is required');
+    if (!validationResult.isValid) {
+      setShowValidationSummary(true);
+      
+      // Focus on first error field
+      const firstError = validationResult.errors[0];
+      if (firstError) {
+        const element = document.getElementById(firstError.field);
+        if (element) {
+          element.focus();
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+      
+      toast.error('Please fix validation errors', {
+        description: `Found ${validationResult.errors.length} error${validationResult.errors.length !== 1 ? 's' : ''} that need to be addressed`
+      });
       return;
     }
 
-    if (!formData.value || formData.value <= 0) {
-      toast.error('Deal value must be greater than 0');
+    // Perform business logic validations
+    const businessValidation = performBusinessValidations(formData);
+    
+    // Show warnings but don't block submission
+    if (businessValidation.warnings.length > 0) {
+      businessValidation.warnings.forEach(warning => {
+        toast.warning('Business Logic Warning', {
+          description: warning,
+          duration: 5000
+        });
+      });
+    }
+    
+    // Block submission on business errors
+    if (businessValidation.errors.length > 0) {
+      businessValidation.errors.forEach(error => {
+        toast.error('Business Rule Violation', {
+          description: error
+        });
+      });
       return;
     }
 
@@ -178,22 +561,43 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, onSubmit, opportu
       };
 
       if (!opportunity) {
+        opportunityData.id = `opp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         opportunityData.createdAt = new Date().toISOString();
       }
 
       const callback = onSave || onSubmit;
       if (callback) {
-        callback(opportunityData);
+        await callback(opportunityData);
       }
+      
       onClose();
-      toast.success(opportunity ? 'Opportunity updated successfully' : 'Opportunity created successfully');
+      setShowValidationSummary(false);
+      
+      toast.success(
+        opportunity ? 'Opportunity updated successfully' : 'Opportunity created successfully',
+        {
+          description: `"${formData.title}" has been ${opportunity ? 'updated' : 'added to your pipeline'}`,
+          action: {
+            label: 'View Pipeline',
+            onClick: () => console.log('Navigate to pipeline')
+          }
+        }
+      );
     } catch (error) {
       console.error('Error saving opportunity:', error);
-      toast.error('Failed to save opportunity');
+      errorHandler.handleError(
+        error instanceof Error ? error : new Error('Failed to save opportunity'),
+        'high',
+        { 
+          context: 'OpportunityEditForm.handleSave',
+          formData,
+          isEdit: !!opportunity
+        }
+      );
     } finally {
       setIsLoading(false);
     }
-  };
+  }, { context: 'OpportunityEditForm.handleSave' });
 
   // Get filtered contacts based on selected company
   const availableContacts = formData.companyId 
@@ -207,8 +611,11 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, onSubmit, opportu
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-6xl w-[95vw] h-[95vh] p-0 gap-0 flex flex-col">
         <DialogHeader className="px-6 py-4 border-b shrink-0">
-          <DialogTitle className="text-2xl font-semibold">
+          <DialogTitle className="text-2xl font-semibold flex items-center gap-2">
             {opportunity ? 'Edit Opportunity' : 'Create New Opportunity'}
+            {validationState.isValid && (
+              <CheckCircle className="w-5 h-5 text-green-500" />
+            )}
           </DialogTitle>
           <p className="text-muted-foreground text-sm">
             {opportunity 
@@ -218,12 +625,56 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, onSubmit, opportu
           </p>
         </DialogHeader>
 
+        {/* Validation Summary */}
+        {showValidationSummary && Object.keys(validationState.errors).length > 0 && (
+          <div className="px-6 py-3 bg-destructive/5 border-b">
+            <Alert variant="destructive">
+              <Warning className="w-4 h-4" />
+              <AlertDescription>
+                <div className="space-y-1">
+                  <p className="font-medium">Please fix the following errors:</p>
+                  <ul className="list-disc list-inside text-sm space-y-1">
+                    {Object.entries(validationState.errors)
+                      .filter(([_, error]) => error)
+                      .slice(0, 5) // Show only first 5 errors
+                      .map(([field, error]) => (
+                        <li key={field}>
+                          <button
+                            type="button"
+                            className="text-left hover:underline"
+                            onClick={() => {
+                              const element = document.getElementById(field);
+                              element?.focus();
+                              element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }}
+                          >
+                            {error}
+                          </button>
+                        </li>
+                      ))}
+                  </ul>
+                  {Object.keys(validationState.errors).length > 5 && (
+                    <p className="text-sm">
+                      And {Object.keys(validationState.errors).length - 5} more error{Object.keys(validationState.errors).length - 5 !== 1 ? 's' : ''}...
+                    </p>
+                  )}
+                </div>
+              </AlertDescription>
+            </Alert>
+          </div>
+        )}
+
         <ScrollArea className="flex-1 min-h-0 dialog-scroll-area">
           <div className="px-6 py-6 space-y-8">
             {/* Opportunity Details Section */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Opportunity Details</CardTitle>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  Opportunity Details
+                  <Badge variant={validationState.isValid ? "default" : "destructive"}>
+                    {validationState.isValid ? "Valid" : "Needs Attention"}
+                  </Badge>
+                </CardTitle>
                 <CardDescription>Core opportunity information and contact details</CardDescription>
               </CardHeader>
               <CardContent>
@@ -232,53 +683,95 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, onSubmit, opportu
                   <div>
                     <h4 className="font-semibold text-base mb-4 pb-2 border-b text-foreground">Basic Information</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="opportunity-name" className="text-sm font-medium">
-                          Opportunity Name <span className="text-destructive">*</span>
-                        </Label>
-                        <Input
-                          id="opportunity-name"
-                          placeholder="Enter opportunity name"
-                          value={formData.title || ''}
-                          onChange={(e) => handleInputChange('title', e.target.value)}
-                          className="w-full"
-                        />
-                      </div>
+                      <ValidatedInput
+                        id="title"
+                        label="Opportunity Name"
+                        type="text"
+                        placeholder="Enter opportunity name"
+                        value={formData.title || ''}
+                        onChange={(value) => handleInputChange('title', value)}
+                        error={getFieldError('title')}
+                        validation={{
+                          required: true,
+                          minLength: 3,
+                          maxLength: 200
+                        }}
+                        validateOn="blur"
+                        onValidation={(isValid, error) => {
+                          if (!isValid && error) {
+                            setValidationState(prev => ({
+                              ...prev,
+                              errors: { ...prev.errors, title: error },
+                              touched: new Set([...prev.touched, 'title'])
+                            }));
+                          }
+                        }}
+                      />
 
-                      <div className="space-y-2">
-                        <Label htmlFor="company" className="text-sm font-medium">
-                          Company <span className="text-destructive">*</span>
-                        </Label>
-                        <Select value={formData.companyId} onValueChange={(value) => {
+                      <ValidatedSelect
+                        id="companyId"
+                        label="Company"
+                        placeholder="Select company"
+                        value={formData.companyId || ''}
+                        onChange={(value) => {
                           handleInputChange('companyId', value);
                           handleInputChange('contactId', ''); // Reset contact when company changes
-                        }}>
-                          <SelectTrigger id="company" className="w-full">
-                            <SelectValue placeholder="Select company" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {companies.map((company) => (
-                              <SelectItem key={company.id} value={company.id}>
-                                {company.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                        }}
+                        options={companies.map(company => ({
+                          value: company.id,
+                          label: company.name,
+                          description: company.industry
+                        }))}
+                        validation={{
+                          required: true
+                        }}
+                        error={getFieldError('companyId')}
+                        validateOn="blur"
+                        onValidation={(isValid, error) => {
+                          if (!isValid && error) {
+                            setValidationState(prev => ({
+                              ...prev,
+                              errors: { ...prev.errors, companyId: error },
+                              touched: new Set([...prev.touched, 'companyId'])
+                            }));
+                          }
+                        }}
+                      />
 
-                      <div className="space-y-2">
-                        <Label htmlFor="deal-value" className="text-sm font-medium">
-                          Deal Value ($) <span className="text-destructive">*</span>
-                        </Label>
-                        <Input
-                          id="deal-value"
-                          type="number"
-                          placeholder="750000"
-                          value={formData.value || ''}
-                          onChange={(e) => handleInputChange('value', parseFloat(e.target.value) || 0)}
-                          className="w-full"
-                        />
-                      </div>
+                      <ValidatedInput
+                        id="value"
+                        label="Deal Value ($)"
+                        type="number"
+                        placeholder="750000"
+                        value={formData.value?.toString() || ''}
+                        onChange={(value) => handleInputChange('value', parseFloat(value) || 0)}
+                        error={getFieldError('value')}
+                        validation={{
+                          required: true,
+                          min: 0,
+                          max: 1000000000,
+                          custom: (value: string) => {
+                            const numValue = parseFloat(value);
+                            if (numValue > 0 && numValue < 100) {
+                              return 'Deal value seems unusually low. Please verify the amount.';
+                            }
+                            if (numValue > 50000000) {
+                              return 'Deal value is very high. Please confirm this is correct.';
+                            }
+                            return null;
+                          }
+                        }}
+                        validateOn="blur"
+                        onValidation={(isValid, error) => {
+                          if (!isValid && error) {
+                            setValidationState(prev => ({
+                              ...prev,
+                              errors: { ...prev.errors, value: error },
+                              touched: new Set([...prev.touched, 'value'])
+                            }));
+                          }
+                        }}
+                      />
                     </div>
                   </div>
 
@@ -286,61 +779,89 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, onSubmit, opportu
                   <div>
                     <h4 className="font-semibold text-base mb-4 pb-2 border-b text-foreground">Sales Information</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="win-probability" className="text-sm font-medium">
-                          Win Probability (%)
-                        </Label>
-                        <Input
-                          id="win-probability"
-                          type="number"
-                          min="0"
-                          max="100"
-                          placeholder="75"
-                          value={formData.probability || ''}
-                          onChange={(e) => handleInputChange('probability', parseInt(e.target.value) || 0)}
-                          className="w-full"
-                        />
-                      </div>
+                      <ValidatedInput
+                        id="probability"
+                        label="Win Probability (%)"
+                        type="number"
+                        placeholder="75"
+                        value={formData.probability?.toString() || ''}
+                        onChange={(value) => handleInputChange('probability', parseInt(value) || 0)}
+                        error={getFieldError('probability')}
+                        validation={{
+                          required: true,
+                          min: 0,
+                          max: 100
+                        }}
+                        validateOn="blur"
+                        onValidation={(isValid, error) => {
+                          if (!isValid && error) {
+                            setValidationState(prev => ({
+                              ...prev,
+                              errors: { ...prev.errors, probability: error },
+                              touched: new Set([...prev.touched, 'probability'])
+                            }));
+                          }
+                        }}
+                      />
 
-                      <div className="space-y-2">
-                        <Label htmlFor="peak-stage" className="text-sm font-medium">
-                          PEAK Stage
-                        </Label>
-                        <Select value={formData.stage} onValueChange={(value) => handleInputChange('stage', value)}>
-                          <SelectTrigger id="peak-stage" className="w-full">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {PEAK_STAGES.map((stage) => (
-                              <SelectItem key={stage.value} value={stage.value}>
-                                {stage.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                      <ValidatedSelect
+                        id="stage"
+                        label="PEAK Stage"
+                        placeholder="Select stage"
+                        value={formData.stage || ''}
+                        onChange={(value) => handleInputChange('stage', value)}
+                        options={PEAK_STAGES.map(stage => ({
+                          value: stage.value,
+                          label: stage.label,
+                          description: `Typical probability: ${stage.value === 'prospect' ? '0-25%' : 
+                            stage.value === 'qualification' ? '20-50%' :
+                            stage.value === 'proposal' ? '40-75%' :
+                            stage.value === 'negotiation' ? '60-85%' : '80-95%'}`
+                        }))}
+                        validation={{
+                          required: true
+                        }}
+                        error={getFieldError('stage')}
+                        validateOn="blur"
+                        onValidation={(isValid, error) => {
+                          if (!isValid && error) {
+                            setValidationState(prev => ({
+                              ...prev,
+                              errors: { ...prev.errors, stage: error },
+                              touched: new Set([...prev.touched, 'stage'])
+                            }));
+                          }
+                        }}
+                      />
 
-                      <div className="space-y-2">
-                        <Label htmlFor="priority" className="text-sm font-medium">
-                          Priority
-                        </Label>
-                        <Select value={formData.priority || 'medium'} onValueChange={(value) => handleInputChange('priority', value)}>
-                          <SelectTrigger id="priority" className="w-full">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {priorityOptions.map((priority) => (
-                              <SelectItem key={priority.value} value={priority.value}>
-                                <div className="flex items-center gap-2">
-                                  <Badge className={priority.color} variant="secondary">
-                                    {priority.label}
-                                  </Badge>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                      <ValidatedSelect
+                        id="priority"
+                        label="Priority"
+                        placeholder="Select priority"
+                        value={formData.priority || 'medium'}
+                        onChange={(value) => handleInputChange('priority', value)}
+                        options={priorityOptions.map(priority => ({
+                          value: priority.value,
+                          label: priority.label,
+                          description: `${priority.value === 'low' ? 'Standard follow-up' :
+                            priority.value === 'medium' ? 'Regular attention' :
+                            priority.value === 'high' ? 'Close monitoring' : 'Immediate action required'}`
+                        }))}
+                        validation={{
+                          required: true
+                        }}
+                        error={getFieldError('priority')}
+                        validateOn="blur"
+                        onValidation={(isValid, error) => {
+                          if (!isValid && error) {
+                            setValidationState(prev => ({
+                              ...prev,
+                              errors: { ...prev.errors, priority: error },
+                              touched: new Set([...prev.touched, 'priority'])
+                            }));
+                          }
+                        }}
+                      />
                     </div>
                   </div>
 
@@ -442,7 +963,7 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, onSubmit, opportu
 
                       <div className="space-y-2">
                         <Label htmlFor="expected-close-date" className="text-sm font-medium">
-                          Expected Close Date
+                          Expected Close Date <span className="text-destructive">*</span>
                         </Label>
                         <Popover>
                           <PopoverTrigger asChild>
@@ -450,8 +971,10 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, onSubmit, opportu
                               variant="outline"
                               className={cn(
                                 'w-full justify-start text-left font-normal',
-                                !formData.expectedCloseDate && 'text-muted-foreground'
+                                !formData.expectedCloseDate && 'text-muted-foreground',
+                                hasFieldError('expectedCloseDate') && 'border-destructive'
                               )}
+                              id="expected-close-date"
                             >
                               <CalendarIcon className="mr-2 h-4 w-4" />
                               {formData.expectedCloseDate ? (
@@ -465,11 +988,26 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, onSubmit, opportu
                             <Calendar
                               mode="single"
                               selected={formData.expectedCloseDate ? new Date(formData.expectedCloseDate) : undefined}
-                              onSelect={(date) => handleInputChange('expectedCloseDate', date?.toISOString())}
+                              onSelect={(date) => {
+                                handleInputChange('expectedCloseDate', date?.toISOString());
+                                setValidationState(prev => ({
+                                  ...prev,
+                                  touched: new Set([...prev.touched, 'expectedCloseDate'])
+                                }));
+                              }}
                               initialFocus
+                              disabled={(date) => date < new Date()}
                             />
                           </PopoverContent>
                         </Popover>
+                        {hasFieldError('expectedCloseDate') && (
+                          <Alert variant="destructive" className="py-2">
+                            <Warning className="w-4 h-4" />
+                            <AlertDescription className="text-sm">
+                              {getFieldError('expectedCloseDate')}
+                            </AlertDescription>
+                          </Alert>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -536,9 +1074,35 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, onSubmit, opportu
                     id="description"
                     placeholder="Describe the opportunity, key requirements, decision factors, timeline, and any important notes..."
                     value={formData.description || ''}
-                    onChange={(e) => handleInputChange('description', e.target.value)}
-                    className="min-h-[120px] w-full resize-none"
+                    onChange={(e) => {
+                      handleInputChange('description', e.target.value);
+                      if (validationState.touched.has('description')) {
+                        validateField('description', e.target.value);
+                      }
+                    }}
+                    onBlur={() => {
+                      setValidationState(prev => ({
+                        ...prev,
+                        touched: new Set([...prev.touched, 'description'])
+                      }));
+                      validateField('description', formData.description || '');
+                    }}
+                    className={cn(
+                      "min-h-[120px] w-full resize-none",
+                      hasFieldError('description') && "border-destructive"
+                    )}
                   />
+                  {hasFieldError('description') && (
+                    <Alert variant="destructive" className="py-2">
+                      <Warning className="w-4 h-4" />
+                      <AlertDescription className="text-sm">
+                        {getFieldError('description')}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  <div className="text-xs text-muted-foreground text-right">
+                    {(formData.description || '').length}/2000 characters
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -546,13 +1110,42 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, onSubmit, opportu
         </ScrollArea>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t bg-background shrink-0">
-          <Button variant="outline" onClick={onClose} disabled={isLoading}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={isLoading}>
-            {isLoading ? 'Saving...' : opportunity ? 'Update Opportunity' : 'Create Opportunity'}
-          </Button>
+        <div className="flex items-center justify-between gap-3 px-6 py-4 border-t bg-background shrink-0">
+          <div className="flex items-center gap-2">
+            {validationState.isValid ? (
+              <div className="flex items-center gap-2 text-green-600">
+                <CheckCircle className="w-4 h-4" />
+                <span className="text-sm">Ready to save</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Info className="w-4 h-4" />
+                <span className="text-sm">
+                  {Object.keys(validationState.errors).filter(key => validationState.errors[key]).length} error{Object.keys(validationState.errors).filter(key => validationState.errors[key]).length !== 1 ? 's' : ''} to fix
+                </span>
+              </div>
+            )}
+          </div>
+          
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={onClose} disabled={isLoading}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSave} 
+              disabled={isLoading || !validationState.isValid}
+              className="min-w-[150px]"
+            >
+              {isLoading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  Saving...
+                </>
+              ) : (
+                opportunity ? 'Update Opportunity' : 'Create Opportunity'
+              )}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
