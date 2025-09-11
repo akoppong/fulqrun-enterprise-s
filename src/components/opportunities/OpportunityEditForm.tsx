@@ -94,23 +94,30 @@ const opportunityValidationSchema: ValidationSchema = {
   },
   expectedCloseDate: {
     required: true,
-    date: {
-      allowPast: false,
-      allowFuture: true,
-      required: true,
-      maxDate: new Date(Date.now() + 2 * 365 * 24 * 60 * 60 * 1000), // 2 years from now
-      custom: (value: Date) => {
-        const now = new Date();
-        const daysDiff = Math.ceil((value.getTime() - now.getTime()) / (1000 * 3600 * 24));
-        
-        if (daysDiff < 7) {
-          return 'Close date is very soon. Consider if this timeline is realistic.';
-        }
-        if (daysDiff > 730) {
-          return 'Close date is more than 2 years away. Consider shorter milestones.';
-        }
-        return null;
+    custom: (value: Date) => {
+      if (!value) return 'Expected close date is required';
+      
+      const now = new Date();
+      const daysDiff = Math.ceil((value.getTime() - now.getTime()) / (1000 * 3600 * 24));
+      
+      if (value < now) {
+        return 'Expected close date cannot be in the past';
       }
+      
+      if (daysDiff < 7) {
+        return 'Close date is very soon. Consider if this timeline is realistic.';
+      }
+      
+      if (daysDiff > 730) {
+        return 'Close date is more than 2 years away. Consider shorter milestones.';
+      }
+      
+      const maxDate = new Date(Date.now() + 2 * 365 * 24 * 60 * 60 * 1000);
+      if (value > maxDate) {
+        return 'Expected close date is too far in the future (max 2 years)';
+      }
+      
+      return null;
     }
   },
   companyId: {
