@@ -40,7 +40,8 @@ import {
   Database,
   Lock,
   FileText,
-  Crown
+  Crown,
+  ArrowsOutCardinal
 } from '@phosphor-icons/react';
 
 interface SidebarProps {
@@ -446,6 +447,15 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           description: 'Advanced validation test suite',
           permissionId: 'pipeline',
           isBeta: true
+        },
+        {
+          id: 'responsive-testing',
+          label: 'Responsive Design Test',
+          icon: ArrowsOutCardinal,
+          description: 'Validate responsive behavior across screen sizes',
+          permissionId: 'pipeline',
+          action: 'read',
+          isNew: true
         },
         {
           id: 'validation-demo',
