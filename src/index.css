@@ -345,77 +345,6 @@ body {
   border-radius: 8px !important;
 }
 
-/* Opportunity Detail Modal Specific Styles */
-.opportunity-detail-modal {
-  width: 95vw !important;
-  max-width: 1400px !important;
-  height: 90vh !important;
-  max-height: 900px !important;
-  margin: auto !important;
-  padding: 0 !important;
-  overflow: hidden !important;
-  display: flex !important;
-  flex-direction: column !important;
-}
-
-.opportunity-detail-modal [data-radix-dialog-content] {
-  width: inherit !important;
-  height: inherit !important;
-  max-width: inherit !important;
-  max-height: inherit !important;
-  margin: inherit !important;
-  padding: inherit !important;
-  overflow: inherit !important;
-  display: inherit !important;
-  flex-direction: inherit !important;
-}
-
-.dialog-scrollable-content {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding-right: 2px; /* Prevent content from touching scrollbar */
-}
-
-.dialog-scrollable-content::-webkit-scrollbar {
-  width: 6px;
-}
-
-.dialog-scrollable-content::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.dialog-scrollable-content::-webkit-scrollbar-thumb {
-  background-color: hsl(var(--border));
-  border-radius: 3px;
-}
-
-.dialog-scrollable-content::-webkit-scrollbar-thumb:hover {
-  background-color: hsl(var(--border) / 0.8);
-}
-
-/* Sticky tabs for better navigation */
-.dialog-tabs-sticky {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: hsl(var(--background));
-  border-bottom: 1px solid hsl(var(--border));
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-}
-
-/* Fixed footer for form actions */
-.dialog-footer-fixed {
-  position: sticky;
-  bottom: 0;
-  z-index: 10;
-  background: hsl(var(--background) / 0.95);
-  backdrop-filter: blur(8px);
-  border-top: 1px solid hsl(var(--border));
-  margin-top: auto;
-}
-
 input[class*="w-full"], 
 textarea[class*="w-full"], 
 [data-radix-select-trigger] {
@@ -495,23 +424,12 @@ textarea[class*="w-full"],
   
   /* Enhanced mobile dialog styles */
   [data-radix-dialog-content] {
-    width: calc(100vw - 0.5rem) !important;
-    height: calc(100vh - 0.5rem) !important;
+    width: calc(100vw - 1rem) !important;
+    height: calc(100vh - 1rem) !important;
     max-width: none !important;
     max-height: none !important;
     min-width: unset !important;
-    margin: 0.25rem !important;
-  }
-  
-  .dialog-scrollable-content {
-    padding-left: 0.75rem !important;
-    padding-right: 0.75rem !important;
-  }
-  
-  .dialog-footer-fixed,
-  .dialog-tabs-sticky {
-    padding-left: 0.75rem !important;
-    padding-right: 0.75rem !important;
+    margin: 0.5rem !important;
   }
   
   input[class*="w-full"], 

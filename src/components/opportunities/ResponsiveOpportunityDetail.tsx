@@ -159,7 +159,7 @@ export function ResponsiveOpportunityDetail({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="opportunity-detail-modal">
+      <DialogContent className="max-w-[95vw] w-full max-h-[95vh] h-[95vh] p-0 overflow-hidden">
         <DialogHeader className="sr-only">
           <DialogTitle>
             Opportunity Details - {opportunity.title}
@@ -169,7 +169,9 @@ export function ResponsiveOpportunityDetail({
           </DialogDescription>
         </DialogHeader>
         
-        <div className="flex flex-col h-full bg-background">
+        {/* Close Button - The dialog component handles this automatically */}
+
+        <div className="flex flex-col h-full">
           {/* Fixed Header */}
           <div className="flex-shrink-0 bg-gradient-to-r from-card/50 to-background border-b border-border px-6 py-4">
             <div className="flex flex-col gap-4">
@@ -183,7 +185,7 @@ export function ResponsiveOpportunityDetail({
                   aria-label="Close opportunity details"
                 >
                   <ArrowLeft size={16} className="mr-2" />
-                  <span className="text-sm">Back</span>
+                  <span className="text-sm">Back to Opportunities</span>
                 </Button>
                 
                 <div className="flex items-center gap-2">
@@ -195,19 +197,7 @@ export function ResponsiveOpportunityDetail({
                       aria-label="Edit opportunity"
                     >
                       <PencilSimple size={14} className="mr-2" />
-                      Edit
-                    </Button>
-                  )}
-                  {onDelete && (
-                    <Button 
-                      size="sm"
-                      variant="outline"
-                      onClick={onDelete}
-                      className="text-sm text-red-600 border-red-200 hover:bg-red-50"
-                      aria-label="Delete opportunity"
-                    >
-                      <Trash size={14} className="mr-2" />
-                      Delete
+                      Edit Opportunity
                     </Button>
                   )}
                 </div>
@@ -228,6 +218,9 @@ export function ResponsiveOpportunityDetail({
                     {company?.industry && (
                       <span className="hidden sm:inline">• {company.industry}</span>
                     )}
+                    <span className="text-muted-foreground hidden md:inline">
+                      Created {format(new Date(opportunity.createdAt), 'MMM dd, yyyy')}
+                    </span>
                   </div>
                 </div>
                 
@@ -297,7 +290,7 @@ export function ResponsiveOpportunityDetail({
               </div>
               
               {/* Scrollable Content Area */}
-              <div className="flex-1 overflow-y-auto">
+              <ScrollArea className="flex-1 h-[calc(95vh-160px)]">
                 <div className="p-6">
                   <TabsContent value="overview" className="mt-0 space-y-6">
                     {/* Key Metrics Cards */}
@@ -558,7 +551,6 @@ export function ResponsiveOpportunityDetail({
                           </CardContent>
                         </Card>
                       </div>
-                    </div>
                   </TabsContent>
 
                   <TabsContent value="metrics" className="mt-0 space-y-6">
@@ -973,7 +965,7 @@ export function ResponsiveOpportunityDetail({
                     </Card>
                   </TabsContent>
                 </div>
-              </div>
+              </ScrollArea>
             </Tabs>
           </div>
         </div>
