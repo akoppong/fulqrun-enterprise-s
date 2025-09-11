@@ -30,6 +30,37 @@ export interface ResponsiveMetrics {
   accessibilityScore: number;
 }
 
+export interface AutoFixRule {
+  id: string;
+  name: string;
+  description: string;
+  category: 'layout' | 'overflow' | 'text' | 'touch' | 'accessibility' | 'performance';
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  selector: string;
+  fix: (element: HTMLElement) => void;
+  check: (element: HTMLElement) => boolean;
+  estimatedTime: string;
+}
+
+export interface AutoFixResult {
+  success: boolean;
+  issuesFixed: number;
+  totalIssues: number;
+  errors: string[];
+  appliedRules: string[];
+  sessionId: string;
+  duration: number;
+}
+
+export interface AutoFixSession {
+  id: string;
+  timestamp: Date;
+  result: AutoFixResult;
+  viewport: ViewportInfo;
+  selectedRules: string[];
+  dryRun: boolean;
+}
+
 export class ResponsiveAutoFix {
   private static instance: ResponsiveAutoFix;
   private observer: ResizeObserver | null = null;
@@ -653,5 +684,342 @@ export const ResponsiveUtils = {
       const rect = element.getBoundingClientRect();
       return rect.width >= minSize && rect.height >= minSize;
     });
+  }
+};
+
+// === AUTO-FIX RULES CONFIGURATION === //
+
+export const AUTO_FIX_RULES: AutoFixRule[] = [
+  // Critical Layout Issues
+  {
+    id: 'horizontal-overflow',
+    name: 'Horizontal Overflow',
+    description: 'Elements extending beyond viewport width',
+    category: 'layout',
+    priority: 'critical',
+    selector: '*',
+    estimatedTime: '1-2 minutes',
+    check: (element: HTMLElement) => {
+      const rect = element.getBoundingClientRect();
+      return rect.right > window.innerWidth;
+    },
+    fix: (element: HTMLElement) => {
+      element.style.maxWidth = '100%';
+      element.style.boxSizing = 'border-box';
+      element.style.overflowX = 'auto';
+    }
+  },
+  {
+    id: 'fixed-width-containers',
+    name: 'Fixed Width Containers',
+    description: 'Containers with fixed widths that break on smaller screens',
+    category: 'layout',
+    priority: 'high',
+    selector: '[style*="width:"]',
+    estimatedTime: '2-3 minutes',
+    check: (element: HTMLElement) => {
+      const style = window.getComputedStyle(element);
+      if (style.width && style.width.includes('px') && !style.maxWidth) {
+        const width = parseInt(style.width);
+        return width > window.innerWidth * 0.9;
+      }
+      return false;
+    },
+    fix: (element: HTMLElement) => {
+      const currentWidth = element.style.width;
+      element.style.width = 'auto';
+      element.style.maxWidth = currentWidth;
+      element.style.minWidth = '0';
+    }
+  },
+  {
+    id: 'content-overflow',
+    name: 'Content Overflow',
+    description: 'Content overflowing containers horizontally',
+    category: 'overflow',
+    priority: 'high',
+    selector: '*',
+    estimatedTime: '1-2 minutes',
+    check: (element: HTMLElement) => {
+      const style = window.getComputedStyle(element);
+      return element.scrollWidth > element.clientWidth && 
+             style.overflow !== 'hidden' && 
+             style.overflowX !== 'hidden';
+    },
+    fix: (element: HTMLElement) => {
+      element.style.overflowX = 'auto';
+      element.style.maxWidth = '100%';
+    }
+  },
+
+  // Touch Target Issues
+  {
+    id: 'small-touch-targets',
+    name: 'Small Touch Targets',
+    description: 'Interactive elements too small for touch devices',
+    category: 'touch',
+    priority: 'high',
+    selector: 'button, a, input, select, [role="button"]',
+    estimatedTime: '3-5 minutes',
+    check: (element: HTMLElement) => {
+      const rect = element.getBoundingClientRect();
+      const minSize = window.innerWidth < 768 ? 44 : 40;
+      return rect.width < minSize || rect.height < minSize;
+    },
+    fix: (element: HTMLElement) => {
+      const rect = element.getBoundingClientRect();
+      const minSize = window.innerWidth < 768 ? 44 : 40;
+      
+      if (rect.width < minSize) {
+        element.style.minWidth = `${minSize}px`;
+      }
+      
+      if (rect.height < minSize) {
+        element.style.minHeight = `${minSize}px`;
+      }
+      
+      element.style.display = 'inline-flex';
+      element.style.alignItems = 'center';
+      element.style.justifyContent = 'center';
+    }
+  },
+
+  // Text Readability Issues
+  {
+    id: 'small-font-sizes',
+    name: 'Small Font Sizes',
+    description: 'Text too small for mobile devices',
+    category: 'text',
+    priority: 'medium',
+    selector: '*',
+    estimatedTime: '2-4 minutes',
+    check: (element: HTMLElement) => {
+      if (!element.textContent?.trim()) return false;
+      const style = window.getComputedStyle(element);
+      const fontSize = parseFloat(style.fontSize);
+      const minSize = window.innerWidth < 768 ? 16 : 14;
+      return fontSize < minSize;
+    },
+    fix: (element: HTMLElement) => {
+      const minSize = window.innerWidth < 768 ? 16 : 14;
+      element.style.fontSize = `${minSize}px`;
+    }
+  },
+  {
+    id: 'long-line-lengths',
+    name: 'Long Line Lengths',
+    description: 'Text lines too long for optimal readability',
+    category: 'text',
+    priority: 'low',
+    selector: 'p, div, span',
+    estimatedTime: '1-2 minutes',
+    check: (element: HTMLElement) => {
+      const lineLength = element.textContent?.length || 0;
+      return lineLength > 80 && !element.closest('pre, code');
+    },
+    fix: (element: HTMLElement) => {
+      element.style.maxWidth = '65ch';
+      element.style.lineHeight = '1.6';
+    }
+  },
+
+  // Accessibility Issues
+  {
+    id: 'high-z-index',
+    name: 'High Z-Index Values',
+    description: 'Elements with extremely high z-index values',
+    category: 'accessibility',
+    priority: 'low',
+    selector: '*',
+    estimatedTime: '1 minute',
+    check: (element: HTMLElement) => {
+      const style = window.getComputedStyle(element);
+      const zIndex = parseInt(style.zIndex);
+      return zIndex > 9999;
+    },
+    fix: (element: HTMLElement) => {
+      element.style.zIndex = '999';
+    }
+  },
+
+  // Performance Issues
+  {
+    id: 'unoptimized-images',
+    name: 'Unoptimized Images',
+    description: 'Images without responsive sizing',
+    category: 'performance',
+    priority: 'medium',
+    selector: 'img',
+    estimatedTime: '2-3 minutes',
+    check: (element: HTMLElement) => {
+      const img = element as HTMLImageElement;
+      const style = window.getComputedStyle(img);
+      return !style.maxWidth || style.maxWidth === 'none';
+    },
+    fix: (element: HTMLElement) => {
+      element.style.maxWidth = '100%';
+      element.style.height = 'auto';
+    }
+  },
+
+  // Layout Structure Issues
+  {
+    id: 'fixed-positioning',
+    name: 'Fixed Positioning Issues',
+    description: 'Fixed positioned elements causing mobile layout issues',
+    category: 'layout',
+    priority: 'medium',
+    selector: '[style*="position: fixed"], .fixed',
+    estimatedTime: '3-5 minutes',
+    check: (element: HTMLElement) => {
+      const style = window.getComputedStyle(element);
+      return style.position === 'fixed' && window.innerWidth < 768;
+    },
+    fix: (element: HTMLElement) => {
+      if (window.innerWidth < 768) {
+        element.style.position = 'relative';
+      }
+    }
+  },
+
+  // Table Responsiveness
+  {
+    id: 'unresponsive-tables',
+    name: 'Unresponsive Tables',
+    description: 'Tables without horizontal scroll on mobile',
+    category: 'overflow',
+    priority: 'medium',
+    selector: 'table',
+    estimatedTime: '2-3 minutes',
+    check: (element: HTMLElement) => {
+      const table = element as HTMLTableElement;
+      const rect = table.getBoundingClientRect();
+      return rect.width > window.innerWidth && window.innerWidth < 768;
+    },
+    fix: (element: HTMLElement) => {
+      const wrapper = document.createElement('div');
+      wrapper.style.overflowX = 'auto';
+      wrapper.style.maxWidth = '100%';
+      wrapper.className = 'auto-fix-table-container';
+      
+      element.parentNode?.insertBefore(wrapper, element);
+      wrapper.appendChild(element);
+      
+      element.style.minWidth = '600px';
+    }
+  }
+];
+
+// === RESPONSIVE AUTO-FIXER SINGLETON === //
+
+export const responsiveAutoFixer = {
+  // Run auto-fix with specified rules and options
+  runAutoFix: async (options: {
+    rules?: string[];
+    categories?: string[];
+    priorities?: string[];
+    dryRun?: boolean;
+  } = {}): Promise<AutoFixResult> => {
+    const startTime = Date.now();
+    const sessionId = `session-${Date.now()}`;
+    const autoFix = ResponsiveAutoFix.getInstance();
+    
+    try {
+      // Filter rules based on options
+      let rulesToApply = AUTO_FIX_RULES;
+      
+      if (options.rules?.length) {
+        rulesToApply = rulesToApply.filter(rule => options.rules!.includes(rule.id));
+      }
+      
+      if (options.categories?.length) {
+        rulesToApply = rulesToApply.filter(rule => options.categories!.includes(rule.category));
+      }
+      
+      if (options.priorities?.length) {
+        rulesToApply = rulesToApply.filter(rule => options.priorities!.includes(rule.priority));
+      }
+
+      const appliedRules: string[] = [];
+      const errors: string[] = [];
+      let totalIssues = 0;
+      let issuesFixed = 0;
+
+      // Apply each rule
+      for (const rule of rulesToApply) {
+        try {
+          const elements = document.querySelectorAll(rule.selector) as NodeListOf<HTMLElement>;
+          
+          for (const element of elements) {
+            if (rule.check(element)) {
+              totalIssues++;
+              
+              if (!options.dryRun) {
+                rule.fix(element);
+                issuesFixed++;
+              }
+            }
+          }
+          
+          appliedRules.push(rule.id);
+        } catch (error) {
+          errors.push(`Failed to apply rule ${rule.id}: ${error}`);
+        }
+      }
+
+      const duration = Date.now() - startTime;
+
+      return {
+        success: errors.length === 0,
+        issuesFixed,
+        totalIssues,
+        errors,
+        appliedRules,
+        sessionId,
+        duration
+      };
+    } catch (error) {
+      return {
+        success: false,
+        issuesFixed: 0,
+        totalIssues: 0,
+        errors: [`Auto-fix failed: ${error}`],
+        appliedRules: [],
+        sessionId,
+        duration: Date.now() - startTime
+      };
+    }
+  },
+
+  // Get all available rules
+  getRules: () => [...AUTO_FIX_RULES],
+
+  // Get rules by category
+  getRulesByCategory: (category: string) => 
+    AUTO_FIX_RULES.filter(rule => rule.category === category),
+
+  // Get rules by priority
+  getRulesByPriority: (priority: string) => 
+    AUTO_FIX_RULES.filter(rule => rule.priority === priority),
+
+  // Check specific rule against element
+  checkRule: (ruleId: string, element: HTMLElement): boolean => {
+    const rule = AUTO_FIX_RULES.find(r => r.id === ruleId);
+    return rule ? rule.check(element) : false;
+  },
+
+  // Apply specific rule to element
+  applyRule: (ruleId: string, element: HTMLElement): boolean => {
+    const rule = AUTO_FIX_RULES.find(r => r.id === ruleId);
+    if (rule && rule.check(element)) {
+      try {
+        rule.fix(element);
+        return true;
+      } catch (error) {
+        console.error(`Failed to apply rule ${ruleId}:`, error);
+        return false;
+      }
+    }
+    return false;
   }
 };
