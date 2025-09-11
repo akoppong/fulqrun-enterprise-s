@@ -80,6 +80,8 @@ body {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 .content-area-padding {
@@ -96,6 +98,96 @@ body {
   .content-area-padding {
     padding: 2.5rem;
   }
+}
+
+/* Enhanced sidebar layout */
+.sidebar-container {
+  width: 320px;
+  min-width: 320px;
+  max-width: 320px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 1023px) {
+  .sidebar-container {
+    width: auto;
+    min-width: auto;
+    max-width: none;
+    flex-shrink: 1;
+  }
+}
+
+/* Main dashboard layout fix */
+.dashboard-main-container {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background: hsl(var(--background));
+}
+
+.dashboard-content-area {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Force proper width distribution */
+@media (min-width: 1024px) {
+  .dashboard-main-container .sidebar-container {
+    width: 320px !important;
+    min-width: 320px !important;
+    max-width: 320px !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+  }
+  
+  .dashboard-main-container .dashboard-content-area {
+    flex: 1 !important;
+    min-width: 0 !important;
+    width: auto !important;
+    max-width: none !important;
+    flex-shrink: 1 !important;
+    flex-grow: 1 !important;
+  }
+}
+
+/* Prevent any layout-breaking overflow */
+.dashboard-main-container * {
+  box-sizing: border-box;
+}
+
+.dashboard-main-container .dashboard-content-area main {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.dashboard-main-container .dashboard-content-area main > div {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Debug helper to ensure proper layout (can be removed) */
+.dashboard-layout-debug .sidebar-container {
+  background-color: rgba(255, 0, 0, 0.1) !important;
+}
+
+.dashboard-layout-debug .dashboard-content-area {
+  background-color: rgba(0, 255, 0, 0.1) !important;
+}
+
+/* Additional layout fixes */
+.dashboard-content-area > * {
+  flex-shrink: 0;
+}
+
+.dashboard-content-area > main {
+  flex: 1;
+  flex-shrink: 1;
+  min-height: 0;
 }
 
 /* === NAVIGATION === */
@@ -194,6 +286,19 @@ body {
   height: 100vh;
   display: flex;
   flex-direction: column;
+  width: 320px;
+  min-width: 320px;
+  max-width: 320px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 1023px) {
+  .sidebar-container {
+    width: auto;
+    min-width: auto;
+    max-width: none;
+    flex-shrink: 1;
+  }
 }
 
 .sidebar-navigation-area {
@@ -477,6 +582,11 @@ textarea[class*="w-full"],
 @media (max-width: 768px) {
   .main-content-area {
     margin-left: 0 !important;
+  }
+  
+  .dashboard-main-container .dashboard-content-area {
+    width: 100% !important;
+    max-width: 100% !important;
   }
   
   .content-area-padding {

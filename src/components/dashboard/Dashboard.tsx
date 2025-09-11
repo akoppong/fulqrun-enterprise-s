@@ -371,7 +371,7 @@ export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialV
   };
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+    <div className="dashboard-main-container">
       {/* Enhanced mobile-responsive sidebar */}
       <Sidebar 
         currentView={currentView} 
@@ -380,14 +380,14 @@ export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialV
       />
       
       {/* Main content area with improved mobile layout */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="dashboard-content-area">
         <Header 
           user={user} 
           originalUser={originalUser}
           onLogout={onLogout} 
         />
-        <main className="flex-1 overflow-auto">
-          <div className="p-3 sm:p-4 lg:p-6 w-full">
+        <main className="flex-1 overflow-auto w-full">
+          <div className="p-3 sm:p-4 lg:p-6 w-full max-w-full">
             {renderView()}
           </div>
         </main>

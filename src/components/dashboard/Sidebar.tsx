@@ -689,7 +689,7 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
       </Sheet>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex w-80 bg-card border-r flex-col sidebar-container">
+      <aside className="hidden lg:flex bg-card border-r flex-col sidebar-container">
         <SidebarContent />
       </aside>
     </>
