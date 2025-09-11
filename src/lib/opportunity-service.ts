@@ -87,12 +87,67 @@ export class OpportunityService {
       if (!stored) {
         await this.initializeSampleData();
         const newStored = localStorage.getItem(this.STORAGE_KEY);
-        return newStored ? JSON.parse(newStored) : [];
+        if (!newStored) return [];
+        
+        const parsed = JSON.parse(newStored);
+        const opportunities = Array.isArray(parsed) ? parsed : [];
+        return this.transformOpportunities(opportunities);
       }
-      return JSON.parse(stored);
+      
+      const parsed = JSON.parse(stored);
+      const opportunities = Array.isArray(parsed) ? parsed : [];
+      return this.transformOpportunities(opportunities);
     } catch (error) {
       console.error('Error loading opportunities:', error);
+      // Clear corrupted data and reinitialize
+      localStorage.removeItem(this.STORAGE_KEY);
+      await this.initializeSampleData();
       return [];
+    }
+  }
+
+  // Transform opportunities to match the expected format for the view
+  private static transformOpportunities(opportunities: any[]): any[] {
+    return opportunities.map(opp => ({
+      ...opp,
+      name: opp.title || opp.name, // Map title to name
+      company: this.getCompanyName(opp.companyId),
+      primaryContact: this.getContactName(opp.contactId),
+      tags: opp.tags || [],
+      expectedCloseDate: new Date(opp.expectedCloseDate),
+      createdDate: new Date(opp.createdAt),
+      updatedAt: new Date(opp.updatedAt),
+      industry: opp.industry || this.getCompanyIndustry(opp.companyId)
+    }));
+  }
+
+  private static getCompanyName(companyId: string): string {
+    try {
+      const companies = JSON.parse(localStorage.getItem(this.COMPANIES_KEY) || '[]');
+      const company = companies.find((c: any) => c.id === companyId);
+      return company?.name || 'Unknown Company';
+    } catch {
+      return 'Unknown Company';
+    }
+  }
+
+  private static getCompanyIndustry(companyId: string): string {
+    try {
+      const companies = JSON.parse(localStorage.getItem(this.COMPANIES_KEY) || '[]');
+      const company = companies.find((c: any) => c.id === companyId);
+      return company?.industry || 'Technology';
+    } catch {
+      return 'Technology';
+    }
+  }
+
+  private static getContactName(contactId: string): string {
+    try {
+      const contacts = JSON.parse(localStorage.getItem(this.CONTACTS_KEY) || '[]');
+      const contact = contacts.find((c: any) => c.id === contactId);
+      return contact ? `${contact.firstName} ${contact.lastName}` : 'Unknown Contact';
+    } catch {
+      return 'Unknown Contact';
     }
   }
 
@@ -195,8 +250,8 @@ export class OpportunityService {
     const lowercaseQuery = query.toLowerCase();
 
     return opportunities.filter(opp =>
-      opp.title.toLowerCase().includes(lowercaseQuery) ||
-      opp.description.toLowerCase().includes(lowercaseQuery) ||
+      (opp.name || opp.title)?.toLowerCase().includes(lowercaseQuery) ||
+      opp.description?.toLowerCase().includes(lowercaseQuery) ||
       opp.tags?.some(tag => tag.toLowerCase().includes(lowercaseQuery))
     );
   }
@@ -452,13 +507,23 @@ export class OpportunityService {
 
   // Initialize sample data for demonstration
   static async initializeSampleData(): Promise<void> {
-    const existingOpportunities = await this.getAllOpportunities();
-    if (existingOpportunities.length > 0) return;
-
-    // Sample data would be imported from sample-opportunities.ts
-    const { sampleOpportunities, sampleCompanies, sampleContacts } = await import('../data/sample-opportunities');
+    // Check if data already exists without calling getAllOpportunities
+    if (typeof window === 'undefined') return;
     
     try {
+      const stored = localStorage.getItem(this.STORAGE_KEY);
+      if (stored && stored !== '[]' && stored !== 'null') {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) return;
+      }
+    } catch (error) {
+      console.error('Error checking existing data:', error);
+    }
+
+    // Sample data would be imported from sample-opportunities.ts
+    try {
+      const { sampleOpportunities, sampleCompanies, sampleContacts } = await import('../data/sample-opportunities');
+      
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(sampleOpportunities));
       localStorage.setItem(this.COMPANIES_KEY, JSON.stringify(sampleCompanies));
       localStorage.setItem(this.CONTACTS_KEY, JSON.stringify(sampleContacts));
@@ -469,6 +534,8 @@ export class OpportunityService {
       }
     } catch (error) {
       console.error('Error initializing sample data:', error);
+      // Fallback to empty array if sample data fails to load
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify([]));
     }
   }
 }

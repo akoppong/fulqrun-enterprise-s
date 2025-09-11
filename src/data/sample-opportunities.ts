@@ -56,7 +56,7 @@ export const sampleContacts: Contact[] = [
   }
 ];
 
-export const enhancedSampleOpportunities: Opportunity[] = [
+export const sampleOpportunities: Opportunity[] = [
   {
     id: 'enhanced-test-opp-1',
     title: 'Enterprise Digital Transformation - Global Scale',
@@ -68,9 +68,12 @@ export const enhancedSampleOpportunities: Opportunity[] = [
     ownerId: 'user-1',
     companyId: 'test-comp-1',
     contactId: 'test-contact-1',
-    expectedCloseDate: new Date(Date.now() + 75 * 24 * 60 * 60 * 1000),
+    expectedCloseDate: new Date(Date.now() + 75 * 24 * 60 * 60 * 1000).toISOString(),
     createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
     updatedAt: new Date().toISOString(),
+    industry: 'Manufacturing',
+    leadSource: 'referral',
+    tags: ['enterprise', 'digital-transformation', 'high-value', 'manufacturing'],
     meddpicc: {
       metrics: 'ROI: 220% over 3 years with break-even at 18 months. Cost savings: $18M annually through operational efficiency gains. Productivity increase: 42% across all manufacturing lines. Quality improvement: 35% reduction in defects. Compliance automation: 95% reduction in manual compliance reporting. Employee satisfaction: +28 NPS improvement through modern tools.',
       economicBuyer: 'CEO Maria Rodriguez - Ultimate decision maker for strategic technology investments exceeding $1M. Reports directly to board of directors. Has full P&L responsibility and authority to approve multi-year strategic initiatives. Strong track record of technology-driven transformations in previous role.',
@@ -93,9 +96,12 @@ export const enhancedSampleOpportunities: Opportunity[] = [
     ownerId: 'user-1',
     companyId: 'test-comp-2',
     contactId: 'test-contact-2',
-    expectedCloseDate: new Date(Date.now() + 95 * 24 * 60 * 60 * 1000),
+    expectedCloseDate: new Date(Date.now() + 95 * 24 * 60 * 60 * 1000).toISOString(),
     createdAt: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString(),
     updatedAt: new Date().toISOString(),
+    industry: 'Financial Services',
+    leadSource: 'inbound',
+    tags: ['ai', 'financial-services', 'automation', 'compliance'],
     meddpicc: {
       metrics: 'Fraud reduction: 55% decrease in false positives and 40% improvement in fraud detection accuracy. Customer satisfaction: +32 NPS improvement through personalized experiences. Revenue increase: $75M annually through improved cross-sell (28% increase) and retention (15% improvement). Operational efficiency: 60% reduction in manual underwriting time and 45% improvement in loan processing speed.',
       economicBuyer: 'CFO David Kim - Final authority on technology investments with ROI accountability to board. Manages $500M annual budget with specific mandate to improve operational efficiency and revenue growth. Previous experience with successful AI implementations at two other financial institutions. Strong advocate for data-driven decision making.',
@@ -159,7 +165,7 @@ export async function initializeSampleData(): Promise<{
 
     // Initialize opportunities if they don't exist
     if (!existingOpportunities) {
-      localStorage.setItem('opportunities', JSON.stringify(enhancedSampleOpportunities));
+      localStorage.setItem('opportunities', JSON.stringify(sampleOpportunities));
     }
 
     // Initialize companies if they don't exist
@@ -173,7 +179,7 @@ export async function initializeSampleData(): Promise<{
     }
 
     return {
-      opportunities: enhancedSampleOpportunities,
+      opportunities: sampleOpportunities,
       companies: sampleCompanies,
       contacts: sampleContacts
     };
@@ -186,3 +192,6 @@ export async function initializeSampleData(): Promise<{
     };
   }
 }
+
+// Export alias for backwards compatibility
+export const enhancedSampleOpportunities = sampleOpportunities;

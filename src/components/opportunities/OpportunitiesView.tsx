@@ -31,15 +31,21 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
 
   // Load opportunities on component mount
   useEffect(() => {
-    const loadOpportunities = () => {
+    const loadOpportunities = async () => {
       try {
-        OpportunityService.initializeSampleData();
-        const data = OpportunityService.getAllOpportunities();
-        setOpportunities(data);
-        setFilteredOpportunities(data);
+        setIsLoading(true);
+        await OpportunityService.initializeSampleData();
+        const data = await OpportunityService.getAllOpportunities();
+        // Ensure data is always an array
+        const safeData = Array.isArray(data) ? data : [];
+        setOpportunities(safeData);
+        setFilteredOpportunities(safeData);
       } catch (error) {
         console.error("Error loading opportunities:", error);
         toast.error("Failed to load opportunities");
+        // Set empty arrays on error
+        setOpportunities([]);
+        setFilteredOpportunities([]);
       } finally {
         setIsLoading(false);
       }
@@ -50,7 +56,8 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
 
   // Apply filters
   useEffect(() => {
-    let filtered = opportunities;
+    // Ensure opportunities is always an array
+    let filtered = Array.isArray(opportunities) ? opportunities : [];
 
     // Search filter
     if (searchQuery) {
@@ -77,9 +84,10 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
 
   const handleCreateOpportunity = async (data: Partial<Opportunity>) => {
     try {
-      const newOpportunity = await OpportunityService.createOpportunity(data);
-      const updatedOpportunities = OpportunityService.getAllOpportunities();
-      setOpportunities(updatedOpportunities);
+      await OpportunityService.createOpportunity(data);
+      const updatedOpportunities = await OpportunityService.getAllOpportunities();
+      const safeData = Array.isArray(updatedOpportunities) ? updatedOpportunities : [];
+      setOpportunities(safeData);
       setShowCreateForm(false);
       toast.success("Opportunity created successfully!");
     } catch (error) {
@@ -91,8 +99,9 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
   const handleUpdateOpportunity = async (id: string, data: Partial<Opportunity>) => {
     try {
       await OpportunityService.updateOpportunity(id, data);
-      const updatedOpportunities = OpportunityService.getAllOpportunities();
-      setOpportunities(updatedOpportunities);
+      const updatedOpportunities = await OpportunityService.getAllOpportunities();
+      const safeData = Array.isArray(updatedOpportunities) ? updatedOpportunities : [];
+      setOpportunities(safeData);
       setSelectedOpportunity(null);
       toast.success("Opportunity updated successfully!");
     } catch (error) {
@@ -104,8 +113,9 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
   const handleDeleteOpportunity = async (id: string) => {
     try {
       await OpportunityService.deleteOpportunity(id);
-      const updatedOpportunities = OpportunityService.getAllOpportunities();
-      setOpportunities(updatedOpportunities);
+      const updatedOpportunities = await OpportunityService.getAllOpportunities();
+      const safeData = Array.isArray(updatedOpportunities) ? updatedOpportunities : [];
+      setOpportunities(safeData);
       toast.success("Opportunity deleted successfully!");
     } catch (error) {
       console.error("Error deleting opportunity:", error);
@@ -272,7 +282,7 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredOpportunities.map((opportunity) => {
+                  {Array.isArray(filteredOpportunities) && filteredOpportunities.map((opportunity) => {
                     const daysUntilClose = getDaysUntilClose(opportunity.expectedCloseDate);
                     const stageProgress = getStageProgress(opportunity.stage);
 
@@ -464,7 +474,7 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
                         </td>
                       </tr>
                     );
-                  })}
+                  })}}
                 </tbody>
               </table>
             </div>
@@ -472,7 +482,7 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
         </div>
 
         {/* Empty state */}
-        {filteredOpportunities.length === 0 && (
+        {Array.isArray(filteredOpportunities) && filteredOpportunities.length === 0 && (
           <div className="flex flex-col items-center justify-center h-64 text-center">
             <Briefcase className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">No opportunities found</h3>
