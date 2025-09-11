@@ -398,6 +398,15 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
       defaultOpen: false,
       items: [
         {
+          id: 'opportunity-test-suite',
+          label: 'Opportunity Test Suite',
+          icon: Target,
+          description: 'Comprehensive opportunity detail view testing',
+          permissionId: 'opportunities',
+          action: 'read',
+          isNew: true
+        },
+        {
           id: 'role-testing',
           label: 'Role-Based Dashboards',
           icon: Crown,
