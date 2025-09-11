@@ -550,7 +550,6 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, opportunity }: Op
             {isLoading ? 'Saving...' : opportunity ? 'Update Opportunity' : 'Create Opportunity'}
           </Button>
         </div>
-        </div>
       </DialogContent>
     </Dialog>
   );
