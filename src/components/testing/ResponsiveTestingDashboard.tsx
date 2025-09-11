@@ -8,6 +8,8 @@ import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { ResponsiveAutoFixInterface } from './ResponsiveAutoFixInterface';
+import { QuickAutoFixActions } from './QuickAutoFixActions';
 import { 
   DeviceMobile,
   DeviceTablet,
@@ -31,7 +33,8 @@ import {
   Wrench,
   Star,
   Lightning,
-  ShieldCheck
+  ShieldCheck,
+  Zap
 } from '@phosphor-icons/react';
 import { 
   ResponsiveValidator, 
@@ -400,8 +403,9 @@ export function ResponsiveTestingDashboard() {
 
       {/* Results Dashboard */}
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="autofix">Auto-Fix</TabsTrigger>
           <TabsTrigger value="devices">Device Analysis</TabsTrigger>
           <TabsTrigger value="components">Component Deep Dive</TabsTrigger>
           <TabsTrigger value="roadmap">Implementation Roadmap</TabsTrigger>
@@ -543,6 +547,95 @@ export function ResponsiveTestingDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>Breakpoint Performance Matrix</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                {STANDARD_BREAKPOINTS.map((breakpoint) => {
+                  const Icon = getDeviceIcon(breakpoint.name);
+                  const testData = testResults.flatMap(result => 
+                    result.testResults.filter(test => test.breakpoint.name === breakpoint.name)
+                  );
+                  const avgScore = testData.length > 0 
+                    ? Math.round(testData.reduce((sum, test) => sum + test.score, 0) / testData.length)
+                    : 0;
+                  
+                  return (
+                    <div
+                      key={breakpoint.name}
+                      className={`p-3 rounded-lg border-2 ${
+                        avgScore >= 85 ? 'border-green-200 bg-green-50' :
+                        avgScore >= 70 ? 'border-yellow-200 bg-yellow-50' :
+                        'border-red-200 bg-red-50'
+                      }`}
+                    >
+                      <div className="text-center">
+                        <Icon size={20} className="mx-auto mb-1" />
+                        <div className="text-xs font-medium">{breakpoint.name}</div>
+                        <div className="text-xs text-muted-foreground">{breakpoint.width}px</div>
+                        <div className="text-sm font-semibold mt-1">{avgScore}%</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Auto-Fix Tab */}
+        <TabsContent value="autofix" className="space-y-6">
+          <div className="space-y-6">
+            {/* Quick Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="h-5 w-5" />
+                  Quick Auto-Fix Actions
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  One-click fixes for common responsive design issues
+                </p>
+              </CardHeader>
+              <CardContent>
+                <QuickAutoFixActions 
+                  onComplete={() => {
+                    // Refresh test results after fixes are applied
+                    setSelectedTab('overview');
+                    setTimeout(() => runTests(), 1000);
+                  }}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Advanced Auto-Fix Interface */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Wrench className="h-5 w-5" />
+                  Advanced Auto-Fix
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Detailed analysis and customized auto-fix options
+                </p>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <ResponsiveAutoFixInterface />
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* Devices Tab */}
+        <TabsContent value="devices" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Monitor size={20} />
+                Device Analysis
+              </CardTitle>
+              <p className="text-muted-foreground">
+                Responsive performance across different device types
+              </p>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">

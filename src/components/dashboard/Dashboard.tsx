@@ -48,6 +48,7 @@ import { RoleTestingDashboard } from './RoleTestingDashboard';
 import { RoleShowcase } from './RoleShowcase';
 import { ResponsiveTestSuite } from '../testing/ResponsiveTestSuite';
 import { ResponsiveValidationSuite } from '../testing/ResponsiveValidationSuite';
+import { FloatingAutoFix } from '../testing/FloatingAutoFix';
 import { ResponsiveDesignRecommendations } from '../testing/ResponsiveDesignRecommendations';
 import { AutomatedResponsiveAnalyzer } from '../testing/AutomatedResponsiveAnalyzer';
 
@@ -393,6 +394,13 @@ export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialV
       </div>
       
       <FinancialAlerts opportunities={opportunities} />
+      
+      {/* Floating Auto-Fix for responsive design issues */}
+      <FloatingAutoFix 
+        position="bottom-right"
+        showOnIssuesOnly={false}
+        autoDetect={true}
+      />
     </div>
   );
 }
