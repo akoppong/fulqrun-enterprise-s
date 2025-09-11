@@ -77,7 +77,7 @@ export function PipelineView() {
   const totalPipelineValue = opportunities.reduce((sum, opp) => sum + opp.value, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="w-full h-full space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold">Sales Pipeline</h2>

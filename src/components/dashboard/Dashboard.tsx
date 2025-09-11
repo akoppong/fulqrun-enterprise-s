@@ -386,8 +386,8 @@ export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialV
           originalUser={originalUser}
           onLogout={onLogout} 
         />
-        <main className="flex-1 overflow-auto w-full">
-          <div className="p-3 sm:p-4 lg:p-6 w-full max-w-full">
+        <main className="flex-1 overflow-auto w-full min-w-0">
+          <div className="p-4 lg:p-6 w-full h-full">
             {renderView()}
           </div>
         </main>

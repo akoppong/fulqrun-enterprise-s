@@ -117,12 +117,13 @@ body {
   }
 }
 
-/* Main dashboard layout fix */
+/* Main dashboard layout fix - Force full width usage */
 .dashboard-main-container {
   display: flex;
   height: 100vh;
   overflow: hidden;
   background: hsl(var(--background));
+  width: 100vw;
 }
 
 .dashboard-content-area {
@@ -134,7 +135,7 @@ body {
   overflow: hidden;
 }
 
-/* Force proper width distribution */
+/* Force proper width distribution - Ensure main content uses full space */
 @media (min-width: 1024px) {
   .dashboard-main-container .sidebar-container {
     width: 320px !important;
@@ -147,7 +148,7 @@ body {
   .dashboard-main-container .dashboard-content-area {
     flex: 1 !important;
     min-width: 0 !important;
-    width: auto !important;
+    width: calc(100vw - 320px) !important;
     max-width: none !important;
     flex-shrink: 1 !important;
     flex-grow: 1 !important;
@@ -163,11 +164,13 @@ body {
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
+  flex: 1;
 }
 
 .dashboard-main-container .dashboard-content-area main > div {
   width: 100%;
   max-width: 100%;
+  min-height: 100%;
 }
 
 /* Debug helper to ensure proper layout (can be removed) */
