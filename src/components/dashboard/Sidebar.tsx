@@ -398,10 +398,19 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
       defaultOpen: false,
       items: [
         {
-          id: 'opportunity-test-suite',
-          label: 'Opportunity Test Suite',
+          id: 'enhanced-opportunity-testing',
+          label: 'Enhanced Opportunity Testing',
           icon: Target,
-          description: 'Comprehensive opportunity detail view testing',
+          description: 'Advanced opportunity detail view testing with performance monitoring',
+          permissionId: 'opportunities',
+          action: 'read',
+          isNew: true
+        },
+        {
+          id: 'opportunity-test-suite',
+          label: 'Legacy Test Suite',
+          icon: ClipboardList,
+          description: 'Original comprehensive opportunity testing suite',
           permissionId: 'opportunities',
           action: 'read',
           isNew: true

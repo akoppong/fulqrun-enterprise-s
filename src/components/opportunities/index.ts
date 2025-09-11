@@ -4,3 +4,4 @@ export { OpportunityDetailTest } from './OpportunityDetailTest';
 export { OpportunityTestSuite } from './OpportunityTestSuite';
 export { QuickOpportunityTest } from './QuickOpportunityTest';
 export { ResponsiveOpportunityDetail } from './ResponsiveOpportunityDetail';
+export { EnhancedOpportunityTester } from './EnhancedOpportunityTester';
