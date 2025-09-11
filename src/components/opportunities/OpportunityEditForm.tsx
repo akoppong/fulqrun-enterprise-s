@@ -8,7 +8,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -40,6 +39,9 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, onSubmit, opportu
     expectedCloseDate: new Date().toISOString(),
     companyId: '',
     contactId: '',
+    priority: 'medium',
+    industry: '',
+    leadSource: '',
     meddpicc: {
       metrics: '',
       economicBuyer: '',
@@ -56,7 +58,7 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, onSubmit, opportu
   const [newTag, setNewTag] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Industry options (could be moved to a config file)
+  // Options
   const industryOptions = [
     'Technology',
     'Healthcare',
@@ -69,7 +71,6 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, onSubmit, opportu
     'Other'
   ];
 
-  // Lead source options
   const leadSourceOptions = [
     'Website',
     'Referral',
@@ -82,7 +83,6 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, onSubmit, opportu
     'Other'
   ];
 
-  // Priority options
   const priorityOptions = [
     { value: 'low', label: 'Low', color: 'bg-gray-100 text-gray-800' },
     { value: 'medium', label: 'Medium', color: 'bg-yellow-100 text-yellow-800' },
@@ -96,7 +96,6 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, onSubmit, opportu
         ...opportunity,
         expectedCloseDate: opportunity.expectedCloseDate
       });
-      // Extract tags if they exist in opportunity metadata
       setTags(opportunity.tags || []);
     } else {
       // Reset form for new opportunity
@@ -131,16 +130,6 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, onSubmit, opportu
     setFormData(prev => ({
       ...prev,
       [field]: value
-    }));
-  };
-
-  const handleContactChange = (field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      contact: {
-        ...prev.contact,
-        [field]: value
-      }
     }));
   };
 
@@ -216,12 +205,12 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, onSubmit, opportu
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-7xl w-[98vw] h-[95vh] flex flex-col">
-        <DialogHeader className="px-6 py-4 border-b flex-shrink-0">
+      <DialogContent className="max-w-6xl w-[95vw] h-[95vh] p-0 gap-0">
+        <DialogHeader className="px-6 py-4 border-b shrink-0">
           <DialogTitle className="text-2xl font-semibold">
             {opportunity ? 'Edit Opportunity' : 'Create New Opportunity'}
           </DialogTitle>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             {opportunity 
               ? `Update the details for ${formData.title || 'this opportunity'}`
               : 'Create a new sales opportunity and track it through the PEAK methodology'
@@ -229,21 +218,20 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, onSubmit, opportu
           </p>
         </DialogHeader>
 
-        <div className="flex-1 overflow-hidden flex flex-col">
-          <div className="flex-1 overflow-y-auto px-6 dialog-scrollable-content">
-            <div className="space-y-6 py-6">
-              {/* Opportunity Details Section */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Opportunity Details</CardTitle>
-                  <CardDescription>Core opportunity information and contact details</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {/* Column 1 - Basic Information */}
-                    <div className="space-y-4">
-                      <h4 className="font-semibold text-base border-b pb-2">Basic Information</h4>
-                      
+        <ScrollArea className="flex-1 px-6">
+          <div className="py-6 space-y-8">
+            {/* Opportunity Details Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Opportunity Details</CardTitle>
+                <CardDescription>Core opportunity information and contact details</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-8">
+                  {/* Basic Information Row */}
+                  <div>
+                    <h4 className="font-semibold text-base mb-4 pb-2 border-b text-foreground">Basic Information</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       <div className="space-y-2">
                         <Label htmlFor="opportunity-name" className="text-sm font-medium">
                           Opportunity Name <span className="text-destructive">*</span>
@@ -285,13 +273,19 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, onSubmit, opportu
                         <Input
                           id="deal-value"
                           type="number"
-                          placeholder="20000"
+                          placeholder="750000"
                           value={formData.value || ''}
                           onChange={(e) => handleInputChange('value', parseFloat(e.target.value) || 0)}
                           className="w-full"
                         />
                       </div>
-                      
+                    </div>
+                  </div>
+
+                  {/* Sales Information Row */}
+                  <div>
+                    <h4 className="font-semibold text-base mb-4 pb-2 border-b text-foreground">Sales Information</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       <div className="space-y-2">
                         <Label htmlFor="win-probability" className="text-sm font-medium">
                           Win Probability (%)
@@ -301,7 +295,7 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, onSubmit, opportu
                           type="number"
                           min="0"
                           max="100"
-                          placeholder="50"
+                          placeholder="75"
                           value={formData.probability || ''}
                           onChange={(e) => handleInputChange('probability', parseInt(e.target.value) || 0)}
                           className="w-full"
@@ -325,12 +319,35 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, onSubmit, opportu
                           </SelectContent>
                         </Select>
                       </div>
-                    </div>
 
-                    {/* Column 2 - Contact & Status Details */}
-                    <div className="space-y-4">
-                      <h4 className="font-semibold text-base border-b pb-2">Contact & Status Details</h4>
-                      
+                      <div className="space-y-2">
+                        <Label htmlFor="priority" className="text-sm font-medium">
+                          Priority
+                        </Label>
+                        <Select value={formData.priority || 'medium'} onValueChange={(value) => handleInputChange('priority', value)}>
+                          <SelectTrigger id="priority" className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {priorityOptions.map((priority) => (
+                              <SelectItem key={priority.value} value={priority.value}>
+                                <div className="flex items-center gap-2">
+                                  <Badge className={priority.color} variant="secondary">
+                                    {priority.label}
+                                  </Badge>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Contact & Status Details Row */}
+                  <div>
+                    <h4 className="font-semibold text-base mb-4 pb-2 border-b text-foreground">Contact & Status Details</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       <div className="space-y-2">
                         <Label htmlFor="primary-contact" className="text-sm font-medium">
                           Primary Contact
@@ -360,7 +377,7 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, onSubmit, opportu
                         <Input
                           id="contact-email"
                           type="email"
-                          placeholder="contact@company.com"
+                          placeholder="john.anderson@techflow.com"
                           value={selectedContact?.email || ''}
                           disabled
                           className="w-full bg-muted"
@@ -374,29 +391,49 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, onSubmit, opportu
                         <Input
                           id="contact-phone"
                           type="tel"
-                          placeholder="+1 (555) 123-4567"
+                          placeholder="+1-555-0101"
                           value={selectedContact?.phone || ''}
                           disabled
                           className="w-full bg-muted"
                         />
                       </div>
+                    </div>
+                  </div>
 
+                  {/* Business & Market Details Row */}
+                  <div>
+                    <h4 className="font-semibold text-base mb-4 pb-2 border-b text-foreground">Business & Market Details</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       <div className="space-y-2">
-                        <Label htmlFor="priority" className="text-sm font-medium">
-                          Priority
+                        <Label htmlFor="industry" className="text-sm font-medium">
+                          Industry
                         </Label>
-                        <Select value={formData.priority || 'medium'} onValueChange={(value) => handleInputChange('priority', value)}>
-                          <SelectTrigger id="priority" className="w-full">
-                            <SelectValue />
+                        <Select value={formData.industry || selectedCompany?.industry || ''} onValueChange={(value) => handleInputChange('industry', value)}>
+                          <SelectTrigger id="industry" className="w-full">
+                            <SelectValue placeholder="Select industry" />
                           </SelectTrigger>
                           <SelectContent>
-                            {priorityOptions.map((priority) => (
-                              <SelectItem key={priority.value} value={priority.value}>
-                                <div className="flex items-center gap-2">
-                                  <Badge className={priority.color} variant="secondary">
-                                    {priority.label}
-                                  </Badge>
-                                </div>
+                            {industryOptions.map((industry) => (
+                              <SelectItem key={industry} value={industry.toLowerCase()}>
+                                {industry}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="lead-source" className="text-sm font-medium">
+                          Lead Source
+                        </Label>
+                        <Select value={formData.leadSource || ''} onValueChange={(value) => handleInputChange('leadSource', value)}>
+                          <SelectTrigger id="lead-source" className="w-full">
+                            <SelectValue placeholder="Select source" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {leadSourceOptions.map((source) => (
+                              <SelectItem key={source} value={source.toLowerCase()}>
+                                {source}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -435,119 +472,81 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, onSubmit, opportu
                         </Popover>
                       </div>
                     </div>
+                  </div>
 
-                    {/* Column 3 - Business & Market Details */}
-                    <div className="space-y-4">
-                      <h4 className="font-semibold text-base border-b pb-2">Business & Market Details</h4>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="industry" className="text-sm font-medium">
-                          Industry
-                        </Label>
-                        <Select value={formData.industry || selectedCompany?.industry || ''} onValueChange={(value) => handleInputChange('industry', value)}>
-                          <SelectTrigger id="industry" className="w-full">
-                            <SelectValue placeholder="Select industry" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {industryOptions.map((industry) => (
-                              <SelectItem key={industry} value={industry.toLowerCase()}>
-                                {industry}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                  {/* Tags Section */}
+                  <div>
+                    <h4 className="font-semibold text-base mb-4 pb-2 border-b text-foreground">Tags</h4>
+                    <div className="space-y-3">
+                      <div className="flex flex-wrap gap-2 min-h-[40px] p-3 border rounded-md bg-background">
+                        {tags.length > 0 ? (
+                          tags.map((tag, index) => (
+                            <Badge key={index} variant="secondary" className="text-xs">
+                              {tag}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="ml-1 h-auto p-0 text-muted-foreground hover:text-foreground"
+                                onClick={() => handleRemoveTag(tag)}
+                              >
+                                <X size={12} />
+                              </Button>
+                            </Badge>
+                          ))
+                        ) : (
+                          <span className="text-sm text-muted-foreground">No tags added</span>
+                        )}
                       </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="lead-source" className="text-sm font-medium">
-                          Lead Source
-                        </Label>
-                        <Select value={formData.leadSource || ''} onValueChange={(value) => handleInputChange('leadSource', value)}>
-                          <SelectTrigger id="lead-source" className="w-full">
-                            <SelectValue placeholder="Select source" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {leadSourceOptions.map((source) => (
-                              <SelectItem key={source} value={source.toLowerCase()}>
-                                {source}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium">Tags</Label>
-                        <div className="flex flex-wrap gap-1 mb-2 min-h-[28px] p-2 border rounded-md bg-background">
-                          {tags.length > 0 ? (
-                            tags.map((tag, index) => (
-                              <Badge key={index} variant="secondary" className="text-xs">
-                                {tag}
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="ml-1 h-auto p-0 text-muted-foreground hover:text-foreground"
-                                  onClick={() => handleRemoveTag(tag)}
-                                >
-                                  <X size={10} />
-                                </Button>
-                              </Badge>
-                            ))
-                          ) : (
-                            <span className="text-xs text-muted-foreground">No tags added</span>
-                          )}
-                        </div>
-                        <div className="flex gap-2">
-                          <Input
-                            placeholder="Add a tag"
-                            value={newTag}
-                            onChange={(e) => setNewTag(e.target.value)}
-                            onKeyPress={handleKeyPress}
-                            className="flex-1 text-sm"
-                          />
-                          <Button 
-                            type="button" 
-                            variant="outline" 
-                            size="sm"
-                            onClick={handleAddTag}
-                            disabled={!newTag.trim()}
-                          >
-                            <Plus size={14} />
-                          </Button>
-                        </div>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Add a tag"
+                          value={newTag}
+                          onChange={(e) => setNewTag(e.target.value)}
+                          onKeyPress={handleKeyPress}
+                          className="flex-1"
+                        />
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="sm"
+                          onClick={handleAddTag}
+                          disabled={!newTag.trim()}
+                        >
+                          <Plus size={16} />
+                        </Button>
                       </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </CardContent>
+            </Card>
 
-              {/* Description Section */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Opportunity Description</CardTitle>
-                  <CardDescription>Detailed description, requirements, and notes</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="description" className="text-sm font-medium">
-                      Description
-                    </Label>
-                    <Textarea
-                      id="description"
-                      placeholder="Describe the opportunity, key requirements, decision factors, timeline, and any important notes..."
-                      value={formData.description || ''}
-                      onChange={(e) => handleInputChange('description', e.target.value)}
-                      className="min-h-[120px] w-full resize-none"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            {/* Description Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Opportunity Description</CardTitle>
+                <CardDescription>Detailed description, requirements, and notes</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="description" className="text-sm font-medium">
+                    Description
+                  </Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Describe the opportunity, key requirements, decision factors, timeline, and any important notes..."
+                    value={formData.description || ''}
+                    onChange={(e) => handleInputChange('description', e.target.value)}
+                    className="min-h-[120px] w-full resize-none"
+                  />
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        </div>
+        </ScrollArea>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t bg-background flex-shrink-0 mt-auto">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t bg-background shrink-0">
           <Button variant="outline" onClick={onClose} disabled={isLoading}>
             Cancel
           </Button>
