@@ -94,19 +94,20 @@ const opportunityValidationSchema: ValidationSchema = {
   },
   expectedCloseDate: {
     required: true,
-    custom: (value: any) => {
+    custom: (value: any): string | null => {
       if (!value) return 'Expected close date is required';
       
-      // Handle string or Date object
+      // Handle string or Date object safely
       let date: Date;
       try {
         if (typeof value === 'string') {
-          if (value.trim() === '') return 'Expected close date is required';
-          date = new Date(value);
+          const trimmedValue = value.trim();
+          if (trimmedValue === '') return 'Expected close date is required';
+          date = new Date(trimmedValue);
         } else if (value instanceof Date) {
           date = value;
-        } else if (typeof value === 'object' && value !== null && typeof value.getTime === 'function') {
-          // Handle Date-like objects
+        } else if (typeof value === 'object' && value !== null && 'getTime' in value && typeof value.getTime === 'function') {
+          // Handle Date-like objects with type safety
           date = new Date(value.getTime());
         } else {
           return 'Please enter a valid date';
@@ -363,15 +364,25 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
 
     // Close date and stage alignment
     if (data.expectedCloseDate && data.stage) {
-      const closeDate = new Date(data.expectedCloseDate);
-      const daysDiff = Math.ceil((closeDate.getTime() - new Date().getTime()) / (1000 * 3600 * 24));
-      
-      if (data.stage === 'closing' && daysDiff > 30) {
-        warnings.push('Closing stage opportunities typically close within 30 days');
-      }
-      
-      if (data.stage === 'prospect' && daysDiff < 30) {
-        warnings.push('Prospect stage opportunities typically have longer timelines');
+      try {
+        const closeDate = new Date(data.expectedCloseDate);
+        
+        // Ensure the date is valid before using getTime()
+        if (!isNaN(closeDate.getTime())) {
+          const now = new Date();
+          const daysDiff = Math.ceil((closeDate.getTime() - now.getTime()) / (1000 * 3600 * 24));
+          
+          if (data.stage === 'closing' && daysDiff > 30) {
+            warnings.push('Closing stage opportunities typically close within 30 days');
+          }
+          
+          if (data.stage === 'prospect' && daysDiff < 30) {
+            warnings.push('Prospect stage opportunities typically have longer timelines');
+          }
+        }
+      } catch (error) {
+        // Silently handle invalid dates in business logic validation
+        console.warn('Invalid date in business logic validation:', error);
       }
     }
 

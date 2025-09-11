@@ -1,3 +1,35 @@
+/**
+ * Comprehensive Error Handling System for FulQrun CRM
+ * 
+ * This module provides centralized error handling, categorization, and user notification
+ * capabilities. It includes both runtime error handling and development-time error tracking.
+ * 
+ * Features:
+ * - Automatic error categorization by severity
+ * - User-friendly error message translation
+ * - Error persistence with memory management
+ * - Integration with toast notifications
+ * - Development vs production error handling differences
+ * - API error handling with structured responses
+ * - Network error detection and handling
+ * 
+ * @example
+ * ```typescript
+ * // Basic error handling
+ * try {
+ *   await riskyOperation();
+ * } catch (error) {
+ *   errorHandler.handleError(error, { operation: 'user-data-fetch' }, 'high');
+ * }
+ * 
+ * // Wrapped function with automatic error handling
+ * const safeFunction = withErrorHandling(async () => {
+ *   return await apiCall();
+ * }, { context: 'api-operation' });
+ * ```
+ * 
+ * @module ErrorHandling
+ */
 import { toast } from 'sonner';
 
 export type ErrorSeverity = 'low' | 'medium' | 'high' | 'critical';

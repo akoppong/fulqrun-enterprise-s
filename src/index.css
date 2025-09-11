@@ -447,56 +447,56 @@ body {
   min-width: min(88vw, 42rem);
 }
 
-/* Enhanced dialog styles for better form UX */
-[data-radix-dialog-overlay] {
-  background-color: rgba(0, 0, 0, 0.6) !important;
-  backdrop-filter: blur(4px) !important;
+/* Enhanced dialog styles for better form UX - Use higher specificity instead of !important */
+body [data-radix-dialog-overlay] {
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
 }
 
-[data-radix-dialog-content] {
-  background-color: hsl(var(--background)) !important;
-  border: 1px solid hsl(var(--border)) !important;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
-  border-radius: 8px !important;
-  display: flex !important;
-  flex-direction: column !important;
-  overflow: hidden !important;
-  min-width: 95vw !important;
+body [data-radix-dialog-content] {
+  background-color: hsl(var(--background));
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 95vw;
 }
 
 /* Enhanced width for opportunity edit form specifically */
-[data-radix-dialog-content].opportunity-edit-form-dialog {
-  width: 95vw !important;
-  max-width: 95vw !important;
-  min-width: 95vw !important;
+body [data-radix-dialog-content].opportunity-edit-form-dialog {
+  width: 95vw;
+  max-width: 95vw;
+  min-width: 95vw;
 }
 
 /* Fix for ScrollArea within dialog content */
-[data-radix-dialog-content] [data-radix-scroll-area-root] {
-  flex: 1 !important;
-  min-height: 0 !important;
-  display: flex !important;
-  flex-direction: column !important;
+body [data-radix-dialog-content] [data-radix-scroll-area-root] {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-[data-radix-dialog-content] [data-radix-scroll-area-viewport] {
-  flex: 1 !important;
-  max-height: none !important;
-  overflow-y: auto !important;
-  min-height: 0 !important;
+body [data-radix-dialog-content] [data-radix-scroll-area-viewport] {
+  flex: 1;
+  max-height: none;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 /* Ensure dialog content uses flexbox layout properly */
-[data-radix-dialog-content].flex.flex-col {
-  height: 100% !important;
-  max-height: 95vh !important;
+body [data-radix-dialog-content].flex.flex-col {
+  height: 100%;
+  max-height: 95vh;
 }
 
 /* Override any height constraints on scroll area in dialogs */
 .dialog-scroll-area {
-  flex: 1 !important;
-  min-height: 0 !important;
-  overflow: hidden !important;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* Full-screen opportunity detail modal */

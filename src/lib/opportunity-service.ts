@@ -214,35 +214,40 @@ export class OpportunityService {
   }
 
   static async createOpportunity(data: Partial<Opportunity>): Promise<Opportunity> {
-    const opportunity: Opportunity = {
-      id: data.id || Date.now().toString(),
-      companyId: data.companyId || '',
-      contactId: data.contactId || '',
-      title: data.title || '',
-      description: data.description || '',
-      value: data.value || 0,
-      stage: data.stage || 'prospect',
-      probability: data.probability || 50,
-      expectedCloseDate: data.expectedCloseDate || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
-      ownerId: data.ownerId || 'current-user',
-      priority: data.priority || 'medium',
-      industry: data.industry,
-      leadSource: data.leadSource,
-      tags: data.tags || [],
-      meddpicc: data.meddpicc || this.getDefaultMeddpicc(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      aiInsights: data.aiInsights
-    };
+    try {
+      const opportunity: Opportunity = {
+        id: data.id || Date.now().toString(),
+        companyId: data.companyId || '',
+        contactId: data.contactId || '',
+        title: data.title || '',
+        description: data.description || '',
+        value: data.value || 0,
+        stage: data.stage || 'prospect',
+        probability: data.probability || 50,
+        expectedCloseDate: data.expectedCloseDate || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
+        ownerId: data.ownerId || 'current-user',
+        priority: data.priority || 'medium',
+        industry: data.industry,
+        leadSource: data.leadSource,
+        tags: data.tags || [],
+        meddpicc: data.meddpicc || this.getDefaultMeddpicc(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        aiInsights: data.aiInsights
+      };
 
-    const opportunities = await this.getAllOpportunities();
-    opportunities.push(opportunity);
-    await this.saveOpportunities(opportunities);
+      const opportunities = await this.getAllOpportunities();
+      opportunities.push(opportunity);
+      await this.saveOpportunities(opportunities);
 
-    // Initialize progression tracking
-    await this.initializeProgression(opportunity);
+      // Initialize progression tracking
+      await this.initializeProgression(opportunity);
 
-    return opportunity;
+      return opportunity;
+    } catch (error) {
+      console.error('Failed to create opportunity:', error);
+      throw new Error(`Failed to create opportunity: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   static async updateOpportunity(id: string, updates: Partial<Opportunity>): Promise<Opportunity | null> {

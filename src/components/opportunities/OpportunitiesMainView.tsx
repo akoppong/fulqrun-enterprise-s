@@ -35,12 +35,30 @@ import { OpportunityEditForm } from './OpportunityEditForm';
 import { ResponsiveOpportunityDetail } from './OpportunitiesView';
 import { toast } from 'sonner';
 import { format, differenceInDays } from 'date-fns';
+import { ErrorBoundary } from 'react-error-boundary';
+import { errorHandler, withErrorHandling } from '@/lib/error-handling';
+
+function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
+  return (
+    <div className="flex items-center justify-center p-8 bg-destructive/10 border border-destructive/20 rounded-lg">
+      <div className="text-center">
+        <h3 className="text-lg font-semibold text-destructive mb-2">Something went wrong</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          We encountered an error while loading the opportunities view.
+        </p>
+        <Button onClick={resetErrorBoundary} variant="outline" size="sm">
+          Try again
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 interface OpportunitiesMainViewProps {
   className?: string;
 }
 
-export function OpportunitiesMainView({ className = '' }: OpportunitiesMainViewProps) {
+function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewProps) {
   const [opportunities, setOpportunities] = useKV<Opportunity[]>('opportunities', []);
   const [companies] = useKV<Company[]>('companies', []);
   const [contacts] = useKV<Contact[]>('contacts', []);
@@ -586,6 +604,22 @@ export function OpportunitiesMainView({ className = '' }: OpportunitiesMainViewP
         />
       )}
     </div>
+  );
+}
+
+export function OpportunitiesMainView(props: OpportunitiesMainViewProps) {
+  return (
+    <ErrorBoundary
+      FallbackComponent={ErrorFallback}
+      onError={(error, errorInfo) => {
+        errorHandler.handleError(error, {
+          component: 'OpportunitiesMainView',
+          errorInfo,
+        }, 'high');
+      }}
+    >
+      <OpportunitiesMainViewInner {...props} />
+    </ErrorBoundary>
   );
 }
 

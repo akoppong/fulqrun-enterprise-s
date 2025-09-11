@@ -3,6 +3,20 @@ import { twMerge } from "tailwind-merge"
 import { DateValidator } from './date-validation'
 import { DATE_FORMATS } from './date-utils'
 
+/**
+ * Utility function to combine Tailwind CSS classes with clsx and tailwind-merge
+ * 
+ * This function combines class strings/conditionals using clsx, then merges
+ * any conflicting Tailwind classes using tailwind-merge to prevent conflicts.
+ * 
+ * @param inputs - Array of class values (strings, objects, arrays, etc.)
+ * @returns Merged class string with conflicts resolved
+ * 
+ * @example
+ * ```tsx
+ * cn('px-2 py-1', isActive && 'bg-blue-500', 'px-4') // 'py-1 bg-blue-500 px-4'
+ * ```
+ */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
