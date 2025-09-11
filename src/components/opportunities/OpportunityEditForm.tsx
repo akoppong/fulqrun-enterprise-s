@@ -106,11 +106,27 @@ const opportunityValidationSchema: ValidationSchema = {
           date = new Date(trimmedValue);
         } else if (value instanceof Date) {
           date = value;
-        } else if (typeof value === 'object' && value !== null && 'getTime' in value && typeof value.getTime === 'function') {
-          // Handle Date-like objects with type safety
-          date = new Date(value.getTime());
+        } else if (typeof value === 'object' && value !== null) {
+          // Handle Date-like objects more safely
+          try {
+            if ('getTime' in value && typeof value.getTime === 'function') {
+              date = new Date(value.getTime());
+            } else if ('toISOString' in value && typeof value.toISOString === 'function') {
+              date = new Date(value.toISOString());
+            } else {
+              // Attempt to convert to string and parse
+              date = new Date(String(value));
+            }
+          } catch {
+            return 'Please enter a valid date';
+          }
         } else {
-          return 'Please enter a valid date';
+          // Try to convert primitive values to date
+          try {
+            date = new Date(value);
+          } catch {
+            return 'Please enter a valid date';
+          }
         }
         
         // Check if date is valid
@@ -706,7 +722,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
         )}
 
         <ScrollArea className="flex-1 min-h-0 dialog-scroll-area">
-          <div className="px-8 py-6 space-y-8 max-w-none">
+          <div className="px-12 py-8 space-y-10 max-w-none">
             {/* Opportunity Details Section */}
             <Card>
               <CardHeader>
@@ -722,7 +738,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                   {/* Basic Information Row */}
                   <div className="form-section-spacing">
                     <h4 className="font-semibold text-base mb-6 pb-2 border-b text-foreground">Basic Information</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 min-w-0">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 min-w-0">
                       <ValidatedInput
                         id="title"
                         label="Opportunity Name"
@@ -829,7 +845,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                   {/* Sales Information Row */}
                   <div className="form-section-spacing">
                     <h4 className="font-semibold text-base mb-6 pb-2 border-b text-foreground">Sales Information</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 min-w-0">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 min-w-0">
                       <ValidatedInput
                         id="probability"
                         label="Win Probability (%)"
@@ -931,7 +947,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                       </Alert>
                     )}
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 min-w-0">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 min-w-0">
                       <div className="space-y-2">
                         <Label htmlFor="primary-contact" className="text-sm font-medium">
                           Primary Contact
@@ -1004,7 +1020,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                   {/* Business & Market Details Row */}
                   <div className="form-section-spacing">
                     <h4 className="font-semibold text-base mb-6 pb-2 border-b text-foreground">Business & Market Details</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 min-w-0">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 min-w-0">
                       <div className="space-y-2">
                         <Label htmlFor="industry" className="text-sm font-medium">
                           Industry
@@ -1135,7 +1151,6 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                       </div>
                     </div>
                   </div>
-                </div>
               </CardContent>
             </Card>
 

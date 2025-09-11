@@ -534,14 +534,14 @@ body [data-radix-dialog-content].flex.flex-col {
 
 /* Improved grid spacing for wider form */
 .opportunity-edit-form-dialog .grid {
-  gap: 1.5rem;
+  gap: 2rem;
 }
 
 .opportunity-edit-form-dialog .grid > * {
-  min-height: 80px;
+  min-height: 100px;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
 .opportunity-edit-form-dialog .grid > * > label {
@@ -569,8 +569,8 @@ body [data-radix-dialog-content].flex.flex-col {
 
 /* Enhanced select content width */
 .opportunity-edit-form-dialog [data-radix-select-content] {
-  min-width: max(var(--radix-select-trigger-width), 280px);
-  max-width: min(95vw, 500px);
+  min-width: max(var(--radix-select-trigger-width), 320px);
+  max-width: min(95vw, 600px);
 }
 
 .form-grid-improved .form-field {
