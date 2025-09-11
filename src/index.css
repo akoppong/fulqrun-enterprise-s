@@ -327,17 +327,19 @@ body {
 /* === FORMS & DIALOGS === */
 
 .dialog-content {
-  max-width: min(98vw, 96rem);
-  max-height: min(95vh, 50rem);
-  min-width: min(90vw, 48rem);
+  max-width: min(96vw, 90rem);
+  max-height: min(95vh, 45rem);
+  min-width: min(88vw, 42rem);
 }
 
 /* Enhanced dialog styles for better form UX */
 [data-radix-dialog-content] {
   display: flex !important;
   flex-direction: column !important;
-  max-height: 95vh !important;
+  max-height: 96vh !important;
   overflow: hidden !important;
+  width: min(96vw, 90rem) !important;
+  height: min(95vh, 45rem) !important;
 }
 
 [data-radix-dialog-content] form {
@@ -460,13 +462,13 @@ textarea[class*="w-full"],
   
   .grid-cols-2 { grid-template-columns: 1fr !important; }
   .grid-cols-3 { grid-template-columns: 1fr !important; }
-  .grid-cols-4 { grid-template-columns: 1fr !important; }
+  .grid-cols-4 { grid-template-columns: repeat(2, 1fr) !important; }
   .grid-cols-12 { grid-template-columns: repeat(2, 1fr) !important; }
   
   .dialog-content {
-    margin: 1rem;
-    max-width: calc(100vw - 2rem);
-    max-height: calc(100vh - 2rem);
+    margin: 0.5rem;
+    max-width: calc(100vw - 1rem);
+    max-height: calc(100vh - 1rem);
     min-width: unset;
   }
   
@@ -481,14 +483,14 @@ textarea[class*="w-full"],
   }
   
   .dialog-scrollable-content {
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
   }
   
   .dialog-footer-fixed,
   .dialog-tabs-sticky {
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
   }
   
   input[class*="w-full"], 
