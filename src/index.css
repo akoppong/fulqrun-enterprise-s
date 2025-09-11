@@ -887,19 +887,24 @@ textarea[class*="w-full"],
 /* === OPPORTUNITIES TABLE === */
 
 .opportunities-table-container {
-  overflow-x: auto;
+  overflow-x: auto !important;
+  overflow-y: hidden;
   min-width: 100%;
   width: 100%;
+  position: relative;
+  /* Enable momentum scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
 }
 
 .opportunities-table-wrapper {
   min-width: 2000px; /* Increased minimum width for better spacing */
-  width: 100%;
+  width: max-content;
+  position: relative;
 }
 
 .opportunities-table {
   min-width: 2000px; /* Increased minimum width for better column spacing */
-  width: 100%;
+  width: max-content;
   table-layout: fixed; /* Use fixed layout for consistent column widths */
 }
 

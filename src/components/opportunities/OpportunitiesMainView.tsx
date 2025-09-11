@@ -288,183 +288,181 @@ export function OpportunitiesMainView({ className = '' }: OpportunitiesMainViewP
           <Card className="h-full">
             <CardContent className="p-0 h-full">
               <div className="opportunities-table-container h-full">
-                <ScrollArea className="h-full">
-                  <div className="opportunities-table-wrapper">
-                    <Table className="opportunities-table">
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="col-opportunity-details">Opportunity</TableHead>
-                          <TableHead className="col-company-contact">Company & Contact</TableHead>
-                          <TableHead className="col-stage-progress">Stage & Progress</TableHead>
-                          <TableHead className="col-deal-value">Deal Value</TableHead>
-                          <TableHead className="col-win-probability">Win Probability</TableHead>
-                          <TableHead className="col-priority">Priority</TableHead>
-                          <TableHead className="col-timeline">Timeline</TableHead>
-                          <TableHead className="col-actions">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredOpportunities.map((opportunity) => {
-                          const company = companies.find(c => c.id === opportunity.companyId);
-                          const contact = contacts.find(c => c.id === opportunity.contactId);
-                          const stageConfig = PEAK_STAGES.find(s => s.value === opportunity.stage);
-                          const meddpicScore = getMEDDPICCScore(opportunity.meddpicc);
-                          const stageProgress = getStageProgress(opportunity.stage);
-                          const daysToClose = differenceInDays(new Date(opportunity.expectedCloseDate), new Date());
+                <div className="opportunities-table-wrapper">
+                  <Table className="opportunities-table">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="col-opportunity-details">Opportunity</TableHead>
+                        <TableHead className="col-company-contact">Company & Contact</TableHead>
+                        <TableHead className="col-stage-progress">Stage & Progress</TableHead>
+                        <TableHead className="col-deal-value">Deal Value</TableHead>
+                        <TableHead className="col-win-probability">Win Probability</TableHead>
+                        <TableHead className="col-priority">Priority</TableHead>
+                        <TableHead className="col-timeline">Timeline</TableHead>
+                        <TableHead className="col-actions">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredOpportunities.map((opportunity) => {
+                        const company = companies.find(c => c.id === opportunity.companyId);
+                        const contact = contacts.find(c => c.id === opportunity.contactId);
+                        const stageConfig = PEAK_STAGES.find(s => s.value === opportunity.stage);
+                        const meddpicScore = getMEDDPICCScore(opportunity.meddpicc);
+                        const stageProgress = getStageProgress(opportunity.stage);
+                        const daysToClose = differenceInDays(new Date(opportunity.expectedCloseDate), new Date());
 
-                          return (
-                            <TableRow key={opportunity.id} className="cursor-pointer hover:bg-muted/50">
-                              <TableCell className="col-opportunity-details">
-                                <div className="space-y-1">
-                                  <div className="font-medium text-foreground truncate-content">
-                                    {opportunity.title}
-                                  </div>
-                                  <div className="text-sm text-muted-foreground truncate-content">
-                                    {opportunity.description || 'No description'}
-                                  </div>
-                                  {opportunity.tags && opportunity.tags.length > 0 && (
-                                    <div className="flex gap-1 flex-wrap">
-                                      {opportunity.tags.slice(0, 2).map((tag, index) => (
-                                        <Badge key={index} variant="secondary" className="text-xs">
-                                          {tag}
-                                        </Badge>
-                                      ))}
-                                      {opportunity.tags.length > 2 && (
-                                        <Badge variant="secondary" className="text-xs">
-                                          +{opportunity.tags.length - 2}
-                                        </Badge>
-                                      )}
-                                    </div>
-                                  )}
+                        return (
+                          <TableRow key={opportunity.id} className="cursor-pointer hover:bg-muted/50">
+                            <TableCell className="col-opportunity-details">
+                              <div className="space-y-1">
+                                <div className="font-medium text-foreground truncate-content">
+                                  {opportunity.title}
                                 </div>
-                              </TableCell>
-                              
-                              <TableCell className="col-company-contact">
-                                <div className="space-y-1">
-                                  <div className="font-medium text-foreground flex items-center gap-1">
-                                    <Building size={14} className="text-blue-600" />
-                                    <span className="truncate-content">
-                                      {company?.name || 'Unknown Company'}
-                                    </span>
-                                  </div>
-                                  <div className="text-sm text-muted-foreground flex items-center gap-1">
-                                    <Users size={14} className="text-green-600" />
-                                    <span className="truncate-content">
-                                      {contact ? `${contact.firstName} ${contact.lastName}` : 'No contact'}
-                                    </span>
-                                  </div>
+                                <div className="text-sm text-muted-foreground truncate-content">
+                                  {opportunity.description || 'No description'}
                                 </div>
-                              </TableCell>
-                              
-                              <TableCell className="col-stage-progress">
-                                <div className="space-y-2">
-                                  <Badge className={`${stageConfig?.color || 'bg-gray-100 text-gray-800'} text-xs`}>
-                                    {stageConfig?.label || opportunity.stage}
-                                  </Badge>
-                                  <div className="space-y-1">
-                                    <Progress value={stageProgress} className="h-2" />
-                                    <div className="text-xs text-muted-foreground">
-                                      {stageProgress}% complete
-                                    </div>
+                                {opportunity.tags && opportunity.tags.length > 0 && (
+                                  <div className="flex gap-1 flex-wrap">
+                                    {opportunity.tags.slice(0, 2).map((tag, index) => (
+                                      <Badge key={index} variant="secondary" className="text-xs">
+                                        {tag}
+                                      </Badge>
+                                    ))}
+                                    {opportunity.tags.length > 2 && (
+                                      <Badge variant="secondary" className="text-xs">
+                                        +{opportunity.tags.length - 2}
+                                      </Badge>
+                                    )}
                                   </div>
+                                )}
+                              </div>
+                            </TableCell>
+                            
+                            <TableCell className="col-company-contact">
+                              <div className="space-y-1">
+                                <div className="font-medium text-foreground flex items-center gap-1">
+                                  <Building size={14} className="text-blue-600" />
+                                  <span className="truncate-content">
+                                    {company?.name || 'Unknown Company'}
+                                  </span>
                                 </div>
-                              </TableCell>
-                              
-                              <TableCell className="col-deal-value">
-                                <div className="space-y-1">
-                                  <div className="font-semibold text-foreground">
-                                    {formatCurrency(opportunity.value)}
-                                  </div>
-                                  <div className="text-xs text-muted-foreground">
-                                    Deal Value
-                                  </div>
+                                <div className="text-sm text-muted-foreground flex items-center gap-1">
+                                  <Users size={14} className="text-green-600" />
+                                  <span className="truncate-content">
+                                    {contact ? `${contact.firstName} ${contact.lastName}` : 'No contact'}
+                                  </span>
                                 </div>
-                              </TableCell>
-                              
-                              <TableCell className="col-win-probability">
-                                <div className="space-y-2">
-                                  <div className="flex items-center justify-between">
-                                    <span className="text-sm font-medium">{opportunity.probability}%</span>
-                                    <Target size={14} className="text-blue-600" />
-                                  </div>
-                                  <Progress value={opportunity.probability} className="h-2" />
-                                  <div className="text-xs text-muted-foreground">
-                                    MEDDPICC: {meddpicScore}%
-                                  </div>
-                                </div>
-                              </TableCell>
-                              
-                              <TableCell className="col-priority">
-                                <Badge 
-                                  variant="secondary" 
-                                  className={`${getPriorityBadge(opportunity.priority || 'medium')} text-xs border`}
-                                >
-                                  {(opportunity.priority || 'medium').charAt(0).toUpperCase() + 
-                                   (opportunity.priority || 'medium').slice(1)}
+                              </div>
+                            </TableCell>
+                            
+                            <TableCell className="col-stage-progress">
+                              <div className="space-y-2">
+                                <Badge className={`${stageConfig?.color || 'bg-gray-100 text-gray-800'} text-xs`}>
+                                  {stageConfig?.label || opportunity.stage}
                                 </Badge>
-                              </TableCell>
-                              
-                              <TableCell className="col-timeline">
                                 <div className="space-y-1">
-                                  <div className="text-sm font-medium">
-                                    {format(new Date(opportunity.expectedCloseDate), 'MMM dd')}
-                                  </div>
-                                  <div className={`text-xs font-medium ${
-                                    daysToClose < 0 ? 'text-red-600' : 
-                                    daysToClose < 7 ? 'text-amber-600' : 
-                                    'text-green-600'
-                                  }`}>
-                                    {daysToClose < 0 ? `${Math.abs(daysToClose)}d overdue` : 
-                                     daysToClose === 0 ? 'Due today' :
-                                     `${daysToClose}d left`}
+                                  <Progress value={stageProgress} className="h-2" />
+                                  <div className="text-xs text-muted-foreground">
+                                    {stageProgress}% complete
                                   </div>
                                 </div>
-                              </TableCell>
-                              
-                              <TableCell className="col-actions">
-                                <div className="flex items-center gap-1">
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleViewOpportunity(opportunity);
-                                    }}
-                                    className="h-8 w-8 p-0"
-                                  >
-                                    <Eye size={14} />
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleEditOpportunity(opportunity);
-                                    }}
-                                    className="h-8 w-8 p-0"
-                                  >
-                                    <PencilSimple size={14} />
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDeleteOpportunity(opportunity.id);
-                                    }}
-                                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                                  >
-                                    <Trash size={14} />
-                                  </Button>
+                              </div>
+                            </TableCell>
+                            
+                            <TableCell className="col-deal-value">
+                              <div className="space-y-1">
+                                <div className="font-semibold text-foreground">
+                                  {formatCurrency(opportunity.value)}
                                 </div>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </ScrollArea>
+                                <div className="text-xs text-muted-foreground">
+                                  Deal Value
+                                </div>
+                              </div>
+                            </TableCell>
+                            
+                            <TableCell className="col-win-probability">
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm font-medium">{opportunity.probability}%</span>
+                                  <Target size={14} className="text-blue-600" />
+                                </div>
+                                <Progress value={opportunity.probability} className="h-2" />
+                                <div className="text-xs text-muted-foreground">
+                                  MEDDPICC: {meddpicScore}%
+                                </div>
+                              </div>
+                            </TableCell>
+                            
+                            <TableCell className="col-priority">
+                              <Badge 
+                                variant="secondary" 
+                                className={`${getPriorityBadge(opportunity.priority || 'medium')} text-xs border`}
+                              >
+                                {(opportunity.priority || 'medium').charAt(0).toUpperCase() + 
+                                 (opportunity.priority || 'medium').slice(1)}
+                              </Badge>
+                            </TableCell>
+                            
+                            <TableCell className="col-timeline">
+                              <div className="space-y-1">
+                                <div className="text-sm font-medium">
+                                  {format(new Date(opportunity.expectedCloseDate), 'MMM dd')}
+                                </div>
+                                <div className={`text-xs font-medium ${
+                                  daysToClose < 0 ? 'text-red-600' : 
+                                  daysToClose < 7 ? 'text-amber-600' : 
+                                  'text-green-600'
+                                }`}>
+                                  {daysToClose < 0 ? `${Math.abs(daysToClose)}d overdue` : 
+                                   daysToClose === 0 ? 'Due today' :
+                                   `${daysToClose}d left`}
+                                </div>
+                              </div>
+                            </TableCell>
+                            
+                            <TableCell className="col-actions">
+                              <div className="flex items-center gap-1">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleViewOpportunity(opportunity);
+                                  }}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Eye size={14} />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditOpportunity(opportunity);
+                                  }}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <PencilSimple size={14} />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteOpportunity(opportunity.id);
+                                  }}
+                                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                                >
+                                  <Trash size={14} />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
             </CardContent>
           </Card>
