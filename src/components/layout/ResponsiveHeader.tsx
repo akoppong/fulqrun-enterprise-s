@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { ResponsiveStatusIndicator } from '@/components/ui/responsive-status-indicator';
 import { cn } from '@/lib/utils';
 
 interface ResponsiveHeaderProps {
@@ -67,6 +68,9 @@ export function ResponsiveHeader({
 
         {/* Action Items */}
         <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 ml-4">
+          {/* Responsive Status Indicator */}
+          <ResponsiveStatusIndicator />
+
           {/* Notifications - Desktop only initially, mobile in dropdown */}
           {showNotifications && (
             <Button 

@@ -1,331 +1,356 @@
-/**
- * React Hook for Responsive Auto-Fix
- * Provides reactive state management for auto-fix operations
- */
-
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { 
-  responsiveAutoFixer, 
-  AutoFixSession, 
-  AutoFixRule, 
-  AutoFixResult,
-  type AutoFixIssue 
+  ResponsiveAutoFix, 
+  ResponsiveValidator, 
+  ResponsiveIssue, 
+  ResponsiveMetrics, 
+  ViewportInfo 
 } from '@/lib/responsive-auto-fix';
-import { responsiveValidator } from '@/lib/responsive-validator';
 
 export interface UseResponsiveAutoFixOptions {
-  autoRun?: boolean;
-  categories?: AutoFixRule['category'][];
-  priorities?: AutoFixRule['priority'][];
-  dryRun?: boolean;
-  onSuccess?: (session: AutoFixSession) => void;
-  onError?: (error: Error) => void;
-  onProgress?: (progress: number) => void;
+  enabled?: boolean;
+  autoFixCritical?: boolean;
+  autoFixHigh?: boolean;
+  watchForChanges?: boolean;
+  performanceMode?: boolean;
 }
 
-export interface ResponsiveAutoFixState {
-  isRunning: boolean;
-  currentSession: AutoFixSession | null;
-  sessions: AutoFixSession[];
-  progress: number;
-  lastError: Error | null;
-  validationResults: any;
+export interface ResponsiveState {
+  viewport: ViewportInfo;
+  metrics: ResponsiveMetrics | null;
+  issues: ResponsiveIssue[];
+  isAnalyzing: boolean;
+  lastAnalysis: Date | null;
 }
 
-export const useResponsiveAutoFix = (options: UseResponsiveAutoFixOptions = {}) => {
-  const [state, setState] = useState<ResponsiveAutoFixState>({
-    isRunning: false,
-    currentSession: null,
-    sessions: [],
-    progress: 0,
-    lastError: null,
-    validationResults: null
+export function useResponsiveAutoFix(options: UseResponsiveAutoFixOptions = {}) {
+  const {
+    enabled = true,
+    autoFixCritical = true,
+    autoFixHigh = false,
+    watchForChanges = true,
+    performanceMode = false
+  } = options;
+
+  const [state, setState] = useState<ResponsiveState>({
+    viewport: {
+      width: 0,
+      height: 0,
+      aspectRatio: 1,
+      orientation: 'landscape',
+      deviceType: 'desktop',
+      pixelRatio: 1
+    },
+    metrics: null,
+    issues: [],
+    isAnalyzing: false,
+    lastAnalysis: null
   });
 
-  // Load initial data
+  const autoFix = ResponsiveAutoFix.getInstance();
+
+  // Update viewport info
+  const updateViewport = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    
+    const viewport = autoFix.getViewportInfo();
+    setState(prev => ({ ...prev, viewport }));
+  }, [autoFix]);
+
+  // Perform full analysis
+  const analyzeResponsiveness = useCallback(async (): Promise<ResponsiveMetrics> => {
+    setState(prev => ({ ...prev, isAnalyzing: true }));
+    
+    try {
+      // Add small delay in performance mode to avoid blocking UI
+      if (performanceMode) {
+        await new Promise(resolve => setTimeout(resolve, 16));
+      }
+      
+      const metrics = autoFix.performFullAnalysis();
+      const issues = autoFix.getIssues();
+      
+      setState(prev => ({
+        ...prev,
+        metrics,
+        issues,
+        isAnalyzing: false,
+        lastAnalysis: new Date()
+      }));
+      
+      // Auto-fix critical and high priority issues if enabled
+      if (autoFixCritical) {
+        autoFix.autoFixBySeverity('critical');
+      }
+      
+      if (autoFixHigh) {
+        autoFix.autoFixBySeverity('high');
+      }
+      
+      return metrics;
+    } catch (error) {
+      console.error('Responsive analysis failed:', error);
+      setState(prev => ({ ...prev, isAnalyzing: false }));
+      throw error;
+    }
+  }, [autoFix, autoFixCritical, autoFixHigh, performanceMode]);
+
+  // Auto-fix specific issue types
+  const autoFixByType = useCallback((type: ResponsiveIssue['type']): number => {
+    return autoFix.autoFixByType(type);
+  }, [autoFix]);
+
+  // Auto-fix specific severity levels
+  const autoFixBySeverity = useCallback((severity: ResponsiveIssue['severity']): number => {
+    return autoFix.autoFixBySeverity(severity);
+  }, [autoFix]);
+
+  // Auto-fix all issues
+  const autoFixAll = useCallback((): number => {
+    return autoFix.autoFixAll();
+  }, [autoFix]);
+
+  // Get filtered issues
+  const getIssuesByType = useCallback((type: ResponsiveIssue['type']): ResponsiveIssue[] => {
+    return state.issues.filter(issue => issue.type === type);
+  }, [state.issues]);
+
+  const getIssuesBySeverity = useCallback((severity: ResponsiveIssue['severity']): ResponsiveIssue[] => {
+    return state.issues.filter(issue => issue.severity === severity);
+  }, [state.issues]);
+
+  // Generate comprehensive report
+  const generateReport = useCallback(() => {
+    return ResponsiveValidator.generateResponsiveReport();
+  }, []);
+
+  // Validate breakpoints
+  const validateBreakpoints = useCallback((): boolean => {
+    return ResponsiveValidator.validateBreakpoints();
+  }, []);
+
+  // Setup effects
   useEffect(() => {
-    loadSessions();
-  }, []);
-
-  // Auto-run if specified
-  useEffect(() => {
-    if (options.autoRun && !state.isRunning && state.sessions.length === 0) {
-      runAutoFix();
+    if (!enabled) {
+      autoFix.disable();
+      return;
     }
-  }, [options.autoRun]);
 
-  const loadSessions = useCallback(() => {
-    try {
-      const sessions = responsiveAutoFixer.getSessionHistory();
-      setState(prev => ({ ...prev, sessions }));
-    } catch (error) {
-      console.error('Failed to load sessions:', error);
-    }
-  }, []);
+    autoFix.enable();
+    updateViewport();
 
-  const runAutoFix = useCallback(async (overrideOptions: Partial<UseResponsiveAutoFixOptions> = {}) => {
-    if (state.isRunning) return;
+    // Initial analysis
+    analyzeResponsiveness();
 
-    const mergedOptions = { ...options, ...overrideOptions };
-    
-    setState(prev => ({ 
-      ...prev, 
-      isRunning: true, 
-      progress: 0, 
-      lastError: null 
-    }));
+    // Setup listeners
+    const handleIssuesUpdate = (issues: ResponsiveIssue[]) => {
+      setState(prev => ({ ...prev, issues }));
+    };
 
-    try {
-      // Simulate progress updates
-      const progressInterval = setInterval(() => {
-        setState(prev => ({
-          ...prev,
-          progress: Math.min(prev.progress + 20, 90)
-        }));
-        
-        if (mergedOptions.onProgress) {
-          mergedOptions.onProgress(Math.min(state.progress + 20, 90));
-        }
-      }, 300);
+    autoFix.addListener(handleIssuesUpdate);
 
-      const session = await responsiveAutoFixer.runAutoFix({
-        categories: mergedOptions.categories,
-        priorities: mergedOptions.priorities,
-        dryRun: mergedOptions.dryRun ?? true
-      });
-
-      clearInterval(progressInterval);
-      
-      setState(prev => ({
-        ...prev,
-        currentSession: session,
-        progress: 100,
-        isRunning: false
-      }));
-
-      // Validate results if fixes were applied
-      if (!mergedOptions.dryRun && session.totalIssuesFixed > 0) {
-        try {
-          const validation = await responsiveAutoFixer.validateFixes(session.id);
-          setState(prev => ({ ...prev, validationResults: validation }));
-        } catch (validationError) {
-          console.warn('Validation failed:', validationError);
-        }
+    // Setup viewport listeners
+    const handleResize = () => {
+      updateViewport();
+      if (watchForChanges && !performanceMode) {
+        analyzeResponsiveness();
       }
+    };
 
-      loadSessions();
-
-      if (mergedOptions.onSuccess) {
-        mergedOptions.onSuccess(session);
-      }
-
-      if (mergedOptions.onProgress) {
-        mergedOptions.onProgress(100);
-      }
-
-      // Reset progress after delay
+    const handleOrientationChange = () => {
       setTimeout(() => {
-        setState(prev => ({ ...prev, progress: 0 }));
-      }, 2000);
+        updateViewport();
+        if (watchForChanges) {
+          analyzeResponsiveness();
+        }
+      }, 500);
+    };
 
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      
-      setState(prev => ({
-        ...prev,
-        isRunning: false,
-        lastError: err,
-        progress: 0
-      }));
-
-      if (mergedOptions.onError) {
-        mergedOptions.onError(err);
-      }
+    if (watchForChanges) {
+      window.addEventListener('resize', handleResize);
+      window.addEventListener('orientationchange', handleOrientationChange);
     }
-  }, [state.isRunning, state.progress, options, loadSessions]);
 
-  const runResponsiveAutoFix = useCallback(async (overrideOptions: Partial<UseResponsiveAutoFixOptions> = {}) => {
-    if (state.isRunning) return;
-
-    const mergedOptions = { ...options, ...overrideOptions };
-    
-    setState(prev => ({ 
-      ...prev, 
-      isRunning: true, 
-      progress: 0, 
-      lastError: null 
-    }));
-
-    try {
-      const sessions = await responsiveAutoFixer.runResponsiveAutoFix({
-        dryRun: mergedOptions.dryRun ?? true
-      });
-
-      const firstSession = Array.from(sessions.values())[0];
-      
-      setState(prev => ({
-        ...prev,
-        currentSession: firstSession,
-        progress: 100,
-        isRunning: false
-      }));
-
-      loadSessions();
-
-      if (mergedOptions.onSuccess && firstSession) {
-        mergedOptions.onSuccess(firstSession);
-      }
-
-      // Reset progress after delay
-      setTimeout(() => {
-        setState(prev => ({ ...prev, progress: 0 }));
-      }, 2000);
-
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      
-      setState(prev => ({
-        ...prev,
-        isRunning: false,
-        lastError: err,
-        progress: 0
-      }));
-
-      if (mergedOptions.onError) {
-        mergedOptions.onError(err);
-      }
-    }
-  }, [state.isRunning, options, loadSessions]);
-
-  const runAutoFixOnElement = useCallback(async (
-    element: Element, 
-    overrideOptions: Partial<UseResponsiveAutoFixOptions> = {}
-  ): Promise<AutoFixResult[]> => {
-    const mergedOptions = { ...options, ...overrideOptions };
-    
-    try {
-      const results = await responsiveAutoFixer.runAutoFixOnElement(element, {
-        categories: mergedOptions.categories,
-        priorities: mergedOptions.priorities,
-        dryRun: mergedOptions.dryRun ?? true
-      });
-
-      return results;
-    } catch (error) {
-      console.error('Failed to run auto-fix on element:', error);
-      return [];
-    }
-  }, [options]);
-
-  const clearHistory = useCallback(() => {
-    responsiveAutoFixer.clearHistory();
-    setState(prev => ({ 
-      ...prev, 
-      sessions: [], 
-      currentSession: null,
-      validationResults: null 
-    }));
-  }, []);
-
-  const getSession = useCallback((sessionId: string) => {
-    return responsiveAutoFixer.getSession(sessionId);
-  }, []);
-
-  const getRules = useCallback((filters?: {
-    categories?: AutoFixRule['category'][];
-    priorities?: AutoFixRule['priority'][];
-  }) => {
-    const allRules = responsiveAutoFixer.getRules();
-    
-    if (!filters) return allRules;
-
-    return allRules.filter(rule => {
-      if (filters.categories && !filters.categories.includes(rule.category)) return false;
-      if (filters.priorities && !filters.priorities.includes(rule.priority)) return false;
-      return true;
-    });
-  }, []);
-
-  const validateCurrentPage = useCallback(async () => {
-    try {
-      const analysis = await responsiveValidator.analyzeComponent(
-        'Current Page',
-        'Validation of the current page responsive design',
-        'body'
-      );
-
-      return analysis;
-    } catch (error) {
-      console.error('Page validation failed:', error);
-      return null;
-    }
-  }, []);
-
-  const getRecommendations = useCallback(() => {
-    return responsiveAutoFixer.generateFixRecommendations();
-  }, []);
+    return () => {
+      autoFix.removeListener(handleIssuesUpdate);
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleOrientationChange);
+    };
+  }, [enabled, watchForChanges, performanceMode, autoFix, updateViewport, analyzeResponsiveness]);
 
   return {
     // State
-    ...state,
+    viewport: state.viewport,
+    metrics: state.metrics,
+    issues: state.issues,
+    isAnalyzing: state.isAnalyzing,
+    lastAnalysis: state.lastAnalysis,
     
     // Actions
-    runAutoFix,
-    runResponsiveAutoFix,
-    runAutoFixOnElement,
-    clearHistory,
-    loadSessions,
-    validateCurrentPage,
+    analyzeResponsiveness,
+    autoFixAll,
+    autoFixByType,
+    autoFixBySeverity,
+    
+    // Queries
+    getIssuesByType,
+    getIssuesBySeverity,
     
     // Utilities
-    getSession,
-    getRules,
-    getRecommendations,
+    generateReport,
+    validateBreakpoints,
     
-    // Computed values
-    hasResults: state.currentSession !== null,
-    isSuccessful: state.currentSession?.totalIssuesFixed > 0,
-    hasWarnings: state.currentSession?.warnings.length > 0,
-    availableRules: getRules({
-      categories: options.categories,
-      priorities: options.priorities
-    })
+    // Stats
+    stats: {
+      totalIssues: state.issues.length,
+      criticalIssues: state.issues.filter(i => i.severity === 'critical').length,
+      highIssues: state.issues.filter(i => i.severity === 'high').length,
+      autoFixableIssues: state.issues.filter(i => i.autoFixAvailable).length,
+      overflowIssues: state.issues.filter(i => i.type === 'overflow').length,
+      touchIssues: state.issues.filter(i => i.type === 'touch').length,
+      accessibilityIssues: state.issues.filter(i => i.type === 'accessibility').length
+    }
   };
-};
+}
 
-// Specialized hooks for common use cases
-export const useResponsiveAutoFixCritical = (autoRun = false) => {
-  return useResponsiveAutoFix({
-    priorities: ['critical'],
-    categories: ['layout', 'interaction'],
-    autoRun,
-    dryRun: false
-  });
-};
+// Specialized hooks for specific use cases
 
-export const useResponsiveAnalysis = (autoRun = true) => {
-  return useResponsiveAutoFix({
-    priorities: ['critical', 'high', 'medium'],
-    categories: ['layout', 'interaction', 'typography', 'accessibility'],
-    autoRun,
-    dryRun: true
+export function useResponsiveTableFix() {
+  const autoFix = useResponsiveAutoFix({
+    enabled: true,
+    autoFixCritical: true,
+    autoFixHigh: true,
+    performanceMode: true
   });
-};
 
-export const useResponsiveAutoFixLayout = (autoRun = false) => {
-  return useResponsiveAutoFix({
-    categories: ['layout'],
-    priorities: ['critical', 'high'],
-    autoRun,
-    dryRun: false
-  });
-};
+  const fixTableOverflow = useCallback((tableContainer: HTMLElement) => {
+    // Apply responsive table fixes
+    tableContainer.style.overflowX = 'auto';
+    tableContainer.style.maxWidth = '100%';
+    
+    const table = tableContainer.querySelector('table');
+    if (table) {
+      table.style.minWidth = 'max-content';
+      table.style.width = '100%';
+    }
+  }, []);
 
-export const useResponsiveAutoFixAccessibility = (autoRun = false) => {
-  return useResponsiveAutoFix({
-    categories: ['accessibility', 'interaction'],
-    priorities: ['critical', 'high'],
-    autoRun,
-    dryRun: false
+  const fixTableColumns = useCallback((table: HTMLElement) => {
+    const viewport = autoFix.viewport;
+    const headers = table.querySelectorAll('th');
+    
+    if (viewport.deviceType === 'mobile' && headers.length > 4) {
+      // Hide less important columns on mobile
+      headers.forEach((header, index) => {
+        if (index > 3) {
+          (header as HTMLElement).style.display = 'none';
+          const columnCells = table.querySelectorAll(`td:nth-child(${index + 1})`);
+          columnCells.forEach(cell => {
+            (cell as HTMLElement).style.display = 'none';
+          });
+        }
+      });
+    }
+  }, [autoFix.viewport]);
+
+  return {
+    ...autoFix,
+    fixTableOverflow,
+    fixTableColumns
+  };
+}
+
+export function useResponsiveFormFix() {
+  const autoFix = useResponsiveAutoFix({
+    enabled: true,
+    autoFixCritical: true,
+    performanceMode: true
   });
-};
+
+  const fixFormLayout = useCallback((form: HTMLElement) => {
+    const viewport = autoFix.viewport;
+    
+    // Convert multi-column forms to single column on mobile
+    if (viewport.deviceType === 'mobile') {
+      const gridElements = form.querySelectorAll('[class*="grid-cols-"]');
+      gridElements.forEach(element => {
+        (element as HTMLElement).style.gridTemplateColumns = '1fr';
+      });
+    }
+    
+    // Ensure form inputs are touch-friendly
+    const inputs = form.querySelectorAll('input, textarea, select, button');
+    inputs.forEach(input => {
+      const element = input as HTMLElement;
+      const rect = element.getBoundingClientRect();
+      
+      if (rect.height < 44) {
+        element.style.minHeight = '44px';
+      }
+    });
+  }, [autoFix.viewport]);
+
+  const fixFieldSpacing = useCallback((form: HTMLElement) => {
+    const viewport = autoFix.viewport;
+    const spacing = viewport.deviceType === 'mobile' ? '1rem' : '1.5rem';
+    
+    const fields = form.querySelectorAll('.form-field, .field-group');
+    fields.forEach(field => {
+      (field as HTMLElement).style.marginBottom = spacing;
+    });
+  }, [autoFix.viewport]);
+
+  return {
+    ...autoFix,
+    fixFormLayout,
+    fixFieldSpacing
+  };
+}
+
+export function useResponsiveModalFix() {
+  const autoFix = useResponsiveAutoFix({
+    enabled: true,
+    autoFixCritical: true,
+    autoFixHigh: true
+  });
+
+  const fixModalSize = useCallback((modal: HTMLElement) => {
+    const viewport = autoFix.viewport;
+    
+    if (viewport.deviceType === 'mobile') {
+      // Full-screen modals on mobile
+      modal.style.width = '100vw';
+      modal.style.height = '100vh';
+      modal.style.maxWidth = 'none';
+      modal.style.maxHeight = 'none';
+      modal.style.margin = '0';
+      modal.style.borderRadius = '0';
+    } else {
+      // Responsive sizing for larger screens
+      modal.style.width = 'min(90vw, 800px)';
+      modal.style.maxHeight = '90vh';
+      modal.style.margin = 'auto';
+    }
+  }, [autoFix.viewport]);
+
+  const fixModalContent = useCallback((modal: HTMLElement) => {
+    const content = modal.querySelector('[data-radix-dialog-content]') as HTMLElement;
+    if (content) {
+      content.style.display = 'flex';
+      content.style.flexDirection = 'column';
+      content.style.maxHeight = '100%';
+      
+      const scrollableArea = content.querySelector('.scroll-area, [data-radix-scroll-area-viewport]') as HTMLElement;
+      if (scrollableArea) {
+        scrollableArea.style.flex = '1';
+        scrollableArea.style.minHeight = '0';
+      }
+    }
+  }, []);
+
+  return {
+    ...autoFix,
+    fixModalSize,
+    fixModalContent
+  };
+}

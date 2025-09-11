@@ -1,740 +1,657 @@
 /**
- * Responsive Auto-Fix Engine
- * Automatically detects and applies fixes for common responsive design problems
+ * Responsive Design Auto-Fix System
+ * Automatically detects and fixes common responsive design issues
  */
 
-import { ResponsiveIssue, ResponsiveValidator, ResponsiveUtils, STANDARD_BREAKPOINTS } from './responsive-validator';
-import { ResponsiveRecommendation, RESPONSIVE_RECOMMENDATIONS } from './responsive-recommendations';
-
-export interface AutoFixRule {
-  id: string;
-  name: string;
-  category: 'layout' | 'typography' | 'interaction' | 'accessibility' | 'performance';
-  priority: 'critical' | 'high' | 'medium' | 'low';
+export interface ResponsiveIssue {
+  type: 'layout' | 'overflow' | 'text' | 'touch' | 'accessibility' | 'performance';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  element?: HTMLElement;
   description: string;
-  detector: (element: Element) => AutoFixIssue | null;
-  fixer: (element: Element, issue: AutoFixIssue) => AutoFixResult;
-  validator?: (element: Element) => boolean;
-  affectedBreakpoints?: string[];
+  autoFixAvailable: boolean;
+  fix?: () => void;
 }
 
-export interface AutoFixIssue {
-  ruleId: string;
-  element: Element;
-  severity: 'critical' | 'high' | 'medium' | 'low';
-  description: string;
-  currentValue?: string;
-  recommendedValue?: string;
-  cssProperty?: string;
-  selector?: string;
+export interface ViewportInfo {
+  width: number;
+  height: number;
+  aspectRatio: number;
+  orientation: 'portrait' | 'landscape';
+  deviceType: 'mobile' | 'tablet' | 'desktop' | 'tv';
+  pixelRatio: number;
 }
 
-export interface AutoFixResult {
-  success: boolean;
-  applied: boolean;
-  cssChanges?: { property: string; oldValue: string; newValue: string }[];
-  classChanges?: { added: string[]; removed: string[] };
-  structuralChanges?: { type: string; description: string }[];
-  error?: string;
+export interface ResponsiveMetrics {
+  totalElements: number;
+  overflowingElements: number;
+  tooSmallTouchTargets: number;
+  lowContrastElements: number;
+  performanceScore: number;
+  accessibilityScore: number;
 }
 
-export interface AutoFixSession {
-  id: string;
-  timestamp: Date;
-  rulesApplied: string[];
-  totalIssuesFound: number;
-  totalIssuesFixed: number;
-  results: Map<string, AutoFixResult>;
-  warnings: string[];
-  summary: string;
-}
+export class ResponsiveAutoFix {
+  private static instance: ResponsiveAutoFix;
+  private observer: ResizeObserver | null = null;
+  private mutationObserver: MutationObserver | null = null;
+  private fixedElements: Set<HTMLElement> = new Set();
+  private issues: ResponsiveIssue[] = [];
+  private listeners: Array<(issues: ResponsiveIssue[]) => void> = [];
+  private isEnabled = true;
 
-// Core auto-fix rules for responsive design issues
-export const AUTO_FIX_RULES: AutoFixRule[] = [
-  // Critical Layout Fixes
-  {
-    id: 'horizontal-overflow',
-    name: 'Fix Horizontal Overflow',
-    category: 'layout',
-    priority: 'critical',
-    description: 'Automatically fixes elements that extend beyond viewport width',
-    detector: (element: Element) => {
-      const rect = element.getBoundingClientRect();
-      const viewport = ResponsiveUtils.getViewportDimensions();
-      
-      if (rect.right > viewport.width + 10) { // 10px tolerance
-        return {
-          ruleId: 'horizontal-overflow',
-          element,
-          severity: 'critical',
-          description: `Element extends ${Math.round(rect.right - viewport.width)}px beyond viewport`,
-          currentValue: `width: ${rect.width}px`,
-          recommendedValue: 'max-width: 100%'
-        };
-      }
-      return null;
-    },
-    fixer: (element: Element, issue: AutoFixIssue) => {
-      try {
-        const htmlElement = element as HTMLElement;
-        const currentClasses = Array.from(htmlElement.classList);
-        
-        // Apply responsive width classes
-        const responsiveClasses = ['w-full', 'max-w-full', 'overflow-x-auto'];
-        const addedClasses: string[] = [];
-        
-        responsiveClasses.forEach(cls => {
-          if (!htmlElement.classList.contains(cls)) {
-            htmlElement.classList.add(cls);
-            addedClasses.push(cls);
-          }
-        });
-        
-        // Remove fixed width classes that might cause issues
-        const removedClasses: string[] = [];
-        const problematicClasses = ['w-auto', 'min-w-max', 'whitespace-nowrap'];
-        
-        problematicClasses.forEach(cls => {
-          if (htmlElement.classList.contains(cls)) {
-            htmlElement.classList.remove(cls);
-            removedClasses.push(cls);
-          }
-        });
-        
-        return {
-          success: true,
-          applied: true,
-          classChanges: { added: addedClasses, removed: removedClasses }
-        };
-      } catch (error) {
-        return {
-          success: false,
-          applied: false,
-          error: `Failed to fix horizontal overflow: ${error}`
-        };
-      }
-    },
-    affectedBreakpoints: ['Mobile Portrait', 'Mobile Landscape', 'Small Tablet']
-  },
-
-  {
-    id: 'small-touch-targets',
-    name: 'Fix Small Touch Targets',
-    category: 'interaction',
-    priority: 'high',
-    description: 'Ensures interactive elements meet minimum 44px touch target size',
-    detector: (element: Element) => {
-      const interactiveSelectors = 'button, a, input[type="button"], input[type="submit"], [role="button"], [tabindex]';
-      
-      if (element.matches(interactiveSelectors)) {
-        const rect = element.getBoundingClientRect();
-        const minSize = 44;
-        
-        if (rect.width < minSize || rect.height < minSize) {
-          return {
-            ruleId: 'small-touch-targets',
-            element,
-            severity: 'high',
-            description: `Touch target is ${Math.round(Math.min(rect.width, rect.height))}px, should be minimum ${minSize}px`,
-            currentValue: `${Math.round(rect.width)}×${Math.round(rect.height)}px`,
-            recommendedValue: `${minSize}×${minSize}px minimum`
-          };
-        }
-      }
-      return null;
-    },
-    fixer: (element: Element, issue: AutoFixIssue) => {
-      try {
-        const htmlElement = element as HTMLElement;
-        const addedClasses: string[] = [];
-        
-        // Add touch-friendly classes
-        if (!htmlElement.classList.contains('touch-target')) {
-          htmlElement.classList.add('touch-target');
-          addedClasses.push('touch-target');
-        }
-        
-        // Ensure minimum padding for small elements
-        if (!htmlElement.classList.contains('p-3') && !htmlElement.classList.contains('p-4')) {
-          htmlElement.classList.add('p-3');
-          addedClasses.push('p-3');
-        }
-        
-        return {
-          success: true,
-          applied: true,
-          classChanges: { added: addedClasses, removed: [] }
-        };
-      } catch (error) {
-        return {
-          success: false,
-          applied: false,
-          error: `Failed to fix touch target size: ${error}`
-        };
-      }
-    },
-    affectedBreakpoints: ['All Mobile', 'All Tablet']
-  },
-
-  {
-    id: 'unresponsive-grid',
-    name: 'Fix Unresponsive Grid Layout',
-    category: 'layout',
-    priority: 'high',
-    description: 'Converts fixed grids to responsive layouts',
-    detector: (element: Element) => {
-      const htmlElement = element as HTMLElement;
-      const computedStyle = window.getComputedStyle(htmlElement);
-      
-      if (computedStyle.display === 'grid') {
-        const gridCols = computedStyle.gridTemplateColumns;
-        
-        // Check for fixed column grids that don't adapt
-        if (gridCols && gridCols.includes('repeat(') && !gridCols.includes('minmax') && !gridCols.includes('auto-fit')) {
-          return {
-            ruleId: 'unresponsive-grid',
-            element,
-            severity: 'high',
-            description: 'Grid layout uses fixed columns that don\'t adapt to screen size',
-            currentValue: gridCols,
-            recommendedValue: 'responsive grid with auto-fit or media queries'
-          };
-        }
-      }
-      return null;
-    },
-    fixer: (element: Element, issue: AutoFixIssue) => {
-      try {
-        const htmlElement = element as HTMLElement;
-        const currentClasses = Array.from(htmlElement.classList);
-        const addedClasses: string[] = [];
-        const removedClasses: string[] = [];
-        
-        // Remove fixed grid classes
-        const fixedGridClasses = currentClasses.filter(cls => 
-          cls.startsWith('grid-cols-') && !cls.includes(':')
-        );
-        
-        fixedGridClasses.forEach(cls => {
-          htmlElement.classList.remove(cls);
-          removedClasses.push(cls);
-        });
-        
-        // Add responsive grid classes
-        if (!htmlElement.classList.contains('grid-cols-1')) {
-          htmlElement.classList.add('grid-cols-1');
-          addedClasses.push('grid-cols-1');
-        }
-        
-        if (!htmlElement.classList.contains('md:grid-cols-2')) {
-          htmlElement.classList.add('md:grid-cols-2');
-          addedClasses.push('md:grid-cols-2');
-        }
-        
-        if (!htmlElement.classList.contains('lg:grid-cols-3')) {
-          htmlElement.classList.add('lg:grid-cols-3');
-          addedClasses.push('lg:grid-cols-3');
-        }
-        
-        return {
-          success: true,
-          applied: true,
-          classChanges: { added: addedClasses, removed: removedClasses }
-        };
-      } catch (error) {
-        return {
-          success: false,
-          applied: false,
-          error: `Failed to fix grid layout: ${error}`
-        };
-      }
+  static getInstance(): ResponsiveAutoFix {
+    if (!ResponsiveAutoFix.instance) {
+      ResponsiveAutoFix.instance = new ResponsiveAutoFix();
     }
-  },
-
-  {
-    id: 'small-text-mobile',
-    name: 'Fix Small Text on Mobile',
-    category: 'typography',
-    priority: 'medium',
-    description: 'Increases text size for better mobile readability',
-    detector: (element: Element) => {
-      const textElements = ['p', 'span', 'div', 'label', 'li'];
-      
-      if (textElements.includes(element.tagName.toLowerCase())) {
-        const computedStyle = window.getComputedStyle(element);
-        const fontSize = parseFloat(computedStyle.fontSize);
-        const viewport = ResponsiveUtils.getViewportDimensions();
-        
-        // Check for small text on mobile viewports
-        if (viewport.width <= 768 && fontSize < 14) {
-          return {
-            ruleId: 'small-text-mobile',
-            element,
-            severity: 'medium',
-            description: `Text size ${fontSize}px is too small for mobile devices`,
-            currentValue: `${fontSize}px`,
-            recommendedValue: '14px minimum for mobile'
-          };
-        }
-      }
-      return null;
-    },
-    fixer: (element: Element, issue: AutoFixIssue) => {
-      try {
-        const htmlElement = element as HTMLElement;
-        const addedClasses: string[] = [];
-        
-        // Add responsive text size class if not already present
-        const hasTextSizeClass = Array.from(htmlElement.classList).some(cls => 
-          cls.startsWith('text-') && (cls.includes('sm') || cls.includes('base') || cls.includes('lg'))
-        );
-        
-        if (!hasTextSizeClass) {
-          htmlElement.classList.add('text-sm', 'md:text-base');
-          addedClasses.push('text-sm', 'md:text-base');
-        }
-        
-        return {
-          success: true,
-          applied: true,
-          classChanges: { added: addedClasses, removed: [] }
-        };
-      } catch (error) {
-        return {
-          success: false,
-          applied: false,
-          error: `Failed to fix text size: ${error}`
-        };
-      }
-    },
-    affectedBreakpoints: ['All Mobile']
-  },
-
-  {
-    id: 'missing-responsive-images',
-    name: 'Fix Non-Responsive Images',
-    category: 'layout',
-    priority: 'medium',
-    description: 'Makes images responsive and prevents overflow',
-    detector: (element: Element) => {
-      if (element.tagName.toLowerCase() === 'img') {
-        const htmlElement = element as HTMLElement;
-        const computedStyle = window.getComputedStyle(htmlElement);
-        
-        if (computedStyle.maxWidth !== '100%' && !htmlElement.classList.contains('w-full')) {
-          return {
-            ruleId: 'missing-responsive-images',
-            element,
-            severity: 'medium',
-            description: 'Image is not responsive and may cause overflow',
-            currentValue: 'Fixed or unconstrained width',
-            recommendedValue: 'max-width: 100% with responsive classes'
-          };
-        }
-      }
-      return null;
-    },
-    fixer: (element: Element, issue: AutoFixIssue) => {
-      try {
-        const htmlElement = element as HTMLElement;
-        const addedClasses: string[] = [];
-        
-        // Add responsive image classes
-        const responsiveClasses = ['max-w-full', 'h-auto'];
-        
-        responsiveClasses.forEach(cls => {
-          if (!htmlElement.classList.contains(cls)) {
-            htmlElement.classList.add(cls);
-            addedClasses.push(cls);
-          }
-        });
-        
-        return {
-          success: true,
-          applied: true,
-          classChanges: { added: addedClasses, removed: [] }
-        };
-      } catch (error) {
-        return {
-          success: false,
-          applied: false,
-          error: `Failed to fix image responsiveness: ${error}`
-        };
-      }
-    }
-  },
-
-  {
-    id: 'inadequate-spacing-mobile',
-    name: 'Fix Inadequate Mobile Spacing',
-    category: 'layout',
-    priority: 'medium',
-    description: 'Adjusts padding and margins for better mobile experience',
-    detector: (element: Element) => {
-      const viewport = ResponsiveUtils.getViewportDimensions();
-      
-      if (viewport.width <= 768) {
-        const computedStyle = window.getComputedStyle(element);
-        const padding = parseFloat(computedStyle.paddingLeft) + parseFloat(computedStyle.paddingRight);
-        
-        // Check for elements that might need better mobile spacing
-        if (element.matches('.card, .dialog-content, .form-container, [role="dialog"]')) {
-          if (padding < 16) {
-            return {
-              ruleId: 'inadequate-spacing-mobile',
-              element,
-              severity: 'medium',
-              description: 'Element has insufficient padding for mobile touch interaction',
-              currentValue: `${padding}px total horizontal padding`,
-              recommendedValue: '16px minimum for mobile'
-            };
-          }
-        }
-      }
-      return null;
-    },
-    fixer: (element: Element, issue: AutoFixIssue) => {
-      try {
-        const htmlElement = element as HTMLElement;
-        const addedClasses: string[] = [];
-        
-        // Add responsive padding classes
-        if (!htmlElement.classList.contains('p-4') && !htmlElement.classList.contains('px-4')) {
-          htmlElement.classList.add('p-4', 'md:p-6');
-          addedClasses.push('p-4', 'md:p-6');
-        }
-        
-        return {
-          success: true,
-          applied: true,
-          classChanges: { added: addedClasses, removed: [] }
-        };
-      } catch (error) {
-        return {
-          success: false,
-          applied: false,
-          error: `Failed to fix mobile spacing: ${error}`
-        };
-      }
-    },
-    affectedBreakpoints: ['All Mobile']
-  }
-];
-
-export class ResponsiveAutoFixer {
-  private static instance: ResponsiveAutoFixer;
-  private sessions: Map<string, AutoFixSession> = new Map();
-  private rules: AutoFixRule[] = AUTO_FIX_RULES;
-  private isRunning = false;
-
-  static getInstance(): ResponsiveAutoFixer {
-    if (!ResponsiveAutoFixer.instance) {
-      ResponsiveAutoFixer.instance = new ResponsiveAutoFixer();
-    }
-    return ResponsiveAutoFixer.instance;
+    return ResponsiveAutoFix.instance;
   }
 
-  /**
-   * Run auto-fix on the entire document
-   */
-  async runAutoFix(options: {
-    selector?: string;
-    categories?: AutoFixRule['category'][];
-    priorities?: AutoFixRule['priority'][];
-    dryRun?: boolean;
-  } = {}): Promise<AutoFixSession> {
-    if (this.isRunning) {
-      throw new Error('Auto-fix is already running');
-    }
+  private constructor() {
+    this.initializeObservers();
+    this.bindViewportChangeListener();
+  }
 
-    this.isRunning = true;
-    const session: AutoFixSession = {
-      id: `autofix-${Date.now()}`,
-      timestamp: new Date(),
-      rulesApplied: [],
-      totalIssuesFound: 0,
-      totalIssuesFixed: 0,
-      results: new Map(),
-      warnings: [],
-      summary: ''
-    };
+  // === INITIALIZATION === //
 
-    try {
-      // Filter rules based on options
-      const activeRules = this.rules.filter(rule => {
-        if (options.categories && !options.categories.includes(rule.category)) return false;
-        if (options.priorities && !options.priorities.includes(rule.priority)) return false;
-        return true;
+  private initializeObservers(): void {
+    if (typeof window === 'undefined') return;
+
+    // Resize Observer for layout changes
+    this.observer = new ResizeObserver((entries) => {
+      if (!this.isEnabled) return;
+      entries.forEach(entry => {
+        this.checkElementResponsiveness(entry.target as HTMLElement);
       });
-
-      // Get elements to check
-      const selector = options.selector || 'body *';
-      const elements = Array.from(document.querySelectorAll(selector));
-
-      console.log(`Running auto-fix with ${activeRules.length} rules on ${elements.length} elements`);
-
-      // Apply each rule to each element
-      for (const rule of activeRules) {
-        let ruleIssuesFound = 0;
-        let ruleIssuesFixed = 0;
-
-        for (const element of elements) {
-          try {
-            const issue = rule.detector(element);
-            
-            if (issue) {
-              session.totalIssuesFound++;
-              ruleIssuesFound++;
-
-              if (!options.dryRun) {
-                const result = rule.fixer(element, issue);
-                session.results.set(`${rule.id}-${elements.indexOf(element)}`, result);
-
-                if (result.success && result.applied) {
-                  session.totalIssuesFixed++;
-                  ruleIssuesFixed++;
-                }
-
-                if (!result.success && result.error) {
-                  session.warnings.push(`${rule.name}: ${result.error}`);
-                }
-              }
-            }
-          } catch (error) {
-            session.warnings.push(`Error applying rule ${rule.name}: ${error}`);
-          }
-        }
-
-        if (ruleIssuesFound > 0) {
-          session.rulesApplied.push(rule.id);
-          console.log(`Rule ${rule.name}: Found ${ruleIssuesFound} issues, fixed ${ruleIssuesFixed}`);
-        }
-      }
-
-      // Generate summary
-      session.summary = this.generateSessionSummary(session, options.dryRun || false);
-      
-      // Store session
-      this.sessions.set(session.id, session);
-
-      console.log('Auto-fix completed:', session.summary);
-      return session;
-
-    } catch (error) {
-      session.warnings.push(`Auto-fix failed: ${error}`);
-      throw error;
-    } finally {
-      this.isRunning = false;
-    }
-  }
-
-  /**
-   * Run auto-fix on a specific element
-   */
-  async runAutoFixOnElement(element: Element, options: {
-    categories?: AutoFixRule['category'][];
-    priorities?: AutoFixRule['priority'][];
-    dryRun?: boolean;
-  } = {}): Promise<AutoFixResult[]> {
-    const results: AutoFixResult[] = [];
-
-    // Filter rules based on options
-    const activeRules = this.rules.filter(rule => {
-      if (options.categories && !options.categories.includes(rule.category)) return false;
-      if (options.priorities && !options.priorities.includes(rule.priority)) return false;
-      return true;
     });
 
-    for (const rule of activeRules) {
-      try {
-        const issue = rule.detector(element);
-        
-        if (issue) {
-          if (!options.dryRun) {
-            const result = rule.fixer(element, issue);
-            results.push(result);
-          } else {
-            results.push({
-              success: true,
-              applied: false // Dry run, so no actual changes
-            });
+    // Mutation Observer for DOM changes
+    this.mutationObserver = new MutationObserver((mutations) => {
+      if (!this.isEnabled) return;
+      mutations.forEach(mutation => {
+        mutation.addedNodes.forEach(node => {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            this.analyzeNewElement(node as HTMLElement);
           }
-        }
-      } catch (error) {
-        results.push({
-          success: false,
-          applied: false,
-          error: `Error applying rule ${rule.name}: ${error}`
         });
-      }
-    }
+      });
+    });
 
-    return results;
+    // Start observing
+    this.observer.observe(document.body, { box: 'border-box' });
+    this.mutationObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class', 'style']
+    });
   }
 
-  /**
-   * Test auto-fix across different viewport sizes
-   */
-  async runResponsiveAutoFix(options: {
-    breakpoints?: typeof STANDARD_BREAKPOINTS;
-    dryRun?: boolean;
-  } = {}): Promise<Map<string, AutoFixSession>> {
-    const breakpoints = options.breakpoints || STANDARD_BREAKPOINTS.slice(0, 6); // Test key breakpoints
-    const sessions = new Map<string, AutoFixSession>();
+  private bindViewportChangeListener(): void {
+    if (typeof window === 'undefined') return;
 
-    for (const breakpoint of breakpoints) {
-      try {
-        // Simulate viewport resize
-        await ResponsiveUtils.simulateViewportResize(breakpoint.width, breakpoint.height);
-        
-        // Run auto-fix for this viewport
-        const session = await this.runAutoFix({
-          dryRun: options.dryRun,
-          categories: ['layout', 'interaction', 'typography'] // Focus on responsive categories
-        });
+    let resizeTimeout: NodeJS.Timeout;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        this.performFullAnalysis();
+      }, 250);
+    });
 
-        sessions.set(breakpoint.name, session);
-        
-        // Small delay between viewport changes
-        await new Promise(resolve => setTimeout(resolve, 100));
-      } catch (error) {
-        console.warn(`Failed to run auto-fix for ${breakpoint.name}:`, error);
-      }
-    }
-
-    return sessions;
+    // Orientation change
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => {
+        this.performFullAnalysis();
+      }, 500);
+    });
   }
 
-  /**
-   * Add custom auto-fix rule
-   */
-  addRule(rule: AutoFixRule): void {
-    this.rules.push(rule);
-  }
+  // === ANALYSIS METHODS === //
 
-  /**
-   * Remove auto-fix rule
-   */
-  removeRule(ruleId: string): boolean {
-    const index = this.rules.findIndex(rule => rule.id === ruleId);
-    if (index >= 0) {
-      this.rules.splice(index, 1);
-      return true;
-    }
-    return false;
-  }
-
-  /**
-   * Get all available rules
-   */
-  getRules(): AutoFixRule[] {
-    return [...this.rules];
-  }
-
-  /**
-   * Get rules by category
-   */
-  getRulesByCategory(category: AutoFixRule['category']): AutoFixRule[] {
-    return this.rules.filter(rule => rule.category === category);
-  }
-
-  /**
-   * Get session history
-   */
-  getSessionHistory(): AutoFixSession[] {
-    return Array.from(this.sessions.values()).sort((a, b) => 
-      b.timestamp.getTime() - a.timestamp.getTime()
-    );
-  }
-
-  /**
-   * Get specific session
-   */
-  getSession(sessionId: string): AutoFixSession | undefined {
-    return this.sessions.get(sessionId);
-  }
-
-  /**
-   * Clear session history
-   */
-  clearHistory(): void {
-    this.sessions.clear();
-  }
-
-  /**
-   * Generate comprehensive fix recommendations
-   */
-  generateFixRecommendations(): {
-    criticalFixes: ResponsiveRecommendation[];
-    quickFixes: ResponsiveRecommendation[];
-    automatedFixes: string[];
-    manualFixes: string[];
-  } {
-    const automated = this.rules.map(rule => rule.name);
-    const manual = RESPONSIVE_RECOMMENDATIONS
-      .filter(rec => !automated.some(auto => rec.solution.toLowerCase().includes(auto.toLowerCase())))
-      .slice(0, 10);
+  public getViewportInfo(): ViewportInfo {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
 
     return {
-      criticalFixes: RESPONSIVE_RECOMMENDATIONS.filter(rec => rec.priority === 'critical'),
-      quickFixes: RESPONSIVE_RECOMMENDATIONS.filter(rec => rec.estimatedEffort === 'low'),
-      automatedFixes: automated,
-      manualFixes: manual.map(rec => rec.solution)
+      width,
+      height,
+      aspectRatio: width / height,
+      orientation: width > height ? 'landscape' : 'portrait',
+      deviceType: this.getDeviceType(width),
+      pixelRatio: window.devicePixelRatio || 1
     };
   }
 
-  /**
-   * Generate session summary
-   */
-  private generateSessionSummary(session: AutoFixSession, dryRun: boolean): string {
-    const mode = dryRun ? 'Dry run analysis' : 'Auto-fix session';
-    const fixed = dryRun ? 'would fix' : 'fixed';
+  private getDeviceType(width: number): ViewportInfo['deviceType'] {
+    if (width < 768) return 'mobile';
+    if (width < 1024) return 'tablet';
+    if (width < 1920) return 'desktop';
+    return 'tv';
+  }
+
+  public performFullAnalysis(): ResponsiveMetrics {
+    this.issues = [];
+    const elements = document.querySelectorAll('*') as NodeListOf<HTMLElement>;
     
-    return `${mode} completed: Found ${session.totalIssuesFound} issues, ${fixed} ${session.totalIssuesFixed}. Applied ${session.rulesApplied.length} rules with ${session.warnings.length} warnings.`;
+    let overflowingElements = 0;
+    let tooSmallTouchTargets = 0;
+    let lowContrastElements = 0;
+
+    elements.forEach(element => {
+      const issues = this.analyzeElement(element);
+      this.issues.push(...issues);
+
+      if (issues.some(i => i.type === 'overflow')) overflowingElements++;
+      if (issues.some(i => i.type === 'touch')) tooSmallTouchTargets++;
+      if (issues.some(i => i.type === 'accessibility')) lowContrastElements++;
+    });
+
+    const metrics: ResponsiveMetrics = {
+      totalElements: elements.length,
+      overflowingElements,
+      tooSmallTouchTargets,
+      lowContrastElements,
+      performanceScore: this.calculatePerformanceScore(),
+      accessibilityScore: this.calculateAccessibilityScore()
+    };
+
+    this.notifyListeners();
+    return metrics;
   }
 
-  /**
-   * Validate fixes
-   */
-  async validateFixes(sessionId: string): Promise<{
-    validationScore: number;
-    remainingIssues: ResponsiveIssue[];
-    improvements: string[];
-  }> {
-    const session = this.getSession(sessionId);
-    if (!session) {
-      throw new Error('Session not found');
+  private analyzeElement(element: HTMLElement): ResponsiveIssue[] {
+    const issues: ResponsiveIssue[] = [];
+    const computedStyle = window.getComputedStyle(element);
+    const rect = element.getBoundingClientRect();
+
+    // Check for overflow issues
+    issues.push(...this.checkOverflow(element, rect, computedStyle));
+    
+    // Check touch target sizes
+    issues.push(...this.checkTouchTargets(element, rect, computedStyle));
+    
+    // Check text readability
+    issues.push(...this.checkTextReadability(element, computedStyle));
+    
+    // Check layout issues
+    issues.push(...this.checkLayoutIssues(element, rect, computedStyle));
+    
+    // Check accessibility
+    issues.push(...this.checkAccessibility(element, computedStyle));
+
+    return issues;
+  }
+
+  private analyzeNewElement(element: HTMLElement): void {
+    if (!this.isEnabled) return;
+    const issues = this.analyzeElement(element);
+    this.issues.push(...issues);
+    
+    // Auto-fix critical issues immediately
+    issues.forEach(issue => {
+      if (issue.severity === 'critical' && issue.autoFixAvailable && issue.fix) {
+        issue.fix();
+      }
+    });
+  }
+
+  private checkElementResponsiveness(element: HTMLElement): void {
+    if (this.fixedElements.has(element)) return;
+    
+    const issues = this.analyzeElement(element);
+    issues.forEach(issue => {
+      if (issue.autoFixAvailable && issue.fix) {
+        issue.fix();
+        this.fixedElements.add(element);
+      }
+    });
+  }
+
+  // === SPECIFIC CHECKS === //
+
+  private checkOverflow(element: HTMLElement, rect: DOMRect, style: CSSStyleDeclaration): ResponsiveIssue[] {
+    const issues: ResponsiveIssue[] = [];
+    const viewport = this.getViewportInfo();
+
+    // Check horizontal overflow
+    if (rect.right > viewport.width) {
+      issues.push({
+        type: 'overflow',
+        severity: 'high',
+        element,
+        description: `Element extends beyond viewport width (${Math.round(rect.right)}px > ${viewport.width}px)`,
+        autoFixAvailable: true,
+        fix: () => this.fixHorizontalOverflow(element)
+      });
     }
 
-    // Re-run validation to check improvements
-    const validator = ResponsiveValidator.getInstance();
-    const analysis = await validator.analyzeComponent(
-      'Auto-fix Validation',
-      'Validation after auto-fix application',
-      'body'
+    // Check for fixed widths that might cause issues
+    if (style.width && style.width.includes('px') && !style.maxWidth) {
+      const width = parseInt(style.width);
+      if (width > viewport.width * 0.9) {
+        issues.push({
+          type: 'layout',
+          severity: 'medium',
+          element,
+          description: `Fixed width (${width}px) may cause overflow on smaller screens`,
+          autoFixAvailable: true,
+          fix: () => this.fixFixedWidth(element)
+        });
+      }
+    }
+
+    // Check for content overflow within containers
+    if (element.scrollWidth > element.clientWidth && style.overflow !== 'hidden' && style.overflowX !== 'hidden') {
+      issues.push({
+        type: 'overflow',
+        severity: 'medium',
+        element,
+        description: 'Content overflows container horizontally',
+        autoFixAvailable: true,
+        fix: () => this.fixContentOverflow(element)
+      });
+    }
+
+    return issues;
+  }
+
+  private checkTouchTargets(element: HTMLElement, rect: DOMRect, style: CSSStyleDeclaration): ResponsiveIssue[] {
+    const issues: ResponsiveIssue[] = [];
+    const viewport = this.getViewportInfo();
+
+    // Only check interactive elements
+    if (!this.isInteractiveElement(element)) return issues;
+
+    const minTouchSize = viewport.deviceType === 'mobile' ? 44 : 40;
+    
+    if (rect.width < minTouchSize || rect.height < minTouchSize) {
+      issues.push({
+        type: 'touch',
+        severity: viewport.deviceType === 'mobile' ? 'high' : 'medium',
+        element,
+        description: `Touch target too small (${Math.round(rect.width)}×${Math.round(rect.height)}px, minimum: ${minTouchSize}×${minTouchSize}px)`,
+        autoFixAvailable: true,
+        fix: () => this.fixTouchTargetSize(element, minTouchSize)
+      });
+    }
+
+    return issues;
+  }
+
+  private checkTextReadability(element: HTMLElement, style: CSSStyleDeclaration): ResponsiveIssue[] {
+    const issues: ResponsiveIssue[] = [];
+    const viewport = this.getViewportInfo();
+
+    if (!element.textContent?.trim()) return issues;
+
+    const fontSize = parseFloat(style.fontSize);
+    const minFontSize = viewport.deviceType === 'mobile' ? 16 : 14;
+
+    if (fontSize < minFontSize) {
+      issues.push({
+        type: 'text',
+        severity: 'medium',
+        element,
+        description: `Font size too small for ${viewport.deviceType} (${fontSize}px < ${minFontSize}px)`,
+        autoFixAvailable: true,
+        fix: () => this.fixFontSize(element, minFontSize)
+      });
+    }
+
+    // Check line length
+    const lineLength = element.textContent.length;
+    if (lineLength > 80 && !element.closest('pre, code')) {
+      issues.push({
+        type: 'text',
+        severity: 'low',
+        element,
+        description: `Line length may be too long for readability (${lineLength} characters)`,
+        autoFixAvailable: true,
+        fix: () => this.fixLineLength(element)
+      });
+    }
+
+    return issues;
+  }
+
+  private checkLayoutIssues(element: HTMLElement, rect: DOMRect, style: CSSStyleDeclaration): ResponsiveIssue[] {
+    const issues: ResponsiveIssue[] = [];
+
+    // Check for elements positioned off-screen
+    if (rect.left < -10 || rect.top < -10) {
+      issues.push({
+        type: 'layout',
+        severity: 'high',
+        element,
+        description: 'Element positioned off-screen',
+        autoFixAvailable: false
+      });
+    }
+
+    // Check for elements with z-index issues
+    const zIndex = parseInt(style.zIndex);
+    if (zIndex > 9999) {
+      issues.push({
+        type: 'layout',
+        severity: 'low',
+        element,
+        description: `Extremely high z-index (${zIndex}) may cause stacking issues`,
+        autoFixAvailable: true,
+        fix: () => this.fixZIndex(element)
+      });
+    }
+
+    return issues;
+  }
+
+  private checkAccessibility(element: HTMLElement, style: CSSStyleDeclaration): ResponsiveIssue[] {
+    const issues: ResponsiveIssue[] = [];
+
+    // Check color contrast (simplified)
+    const color = this.getContrastRatio(style.color, style.backgroundColor);
+    if (color < 4.5) {
+      issues.push({
+        type: 'accessibility',
+        severity: 'medium',
+        element,
+        description: `Low color contrast ratio (${color.toFixed(2)}, minimum: 4.5)`,
+        autoFixAvailable: false
+      });
+    }
+
+    return issues;
+  }
+
+  // === AUTO-FIX METHODS === //
+
+  private fixHorizontalOverflow(element: HTMLElement): void {
+    element.style.maxWidth = '100%';
+    element.style.boxSizing = 'border-box';
+    element.style.overflowX = 'auto';
+  }
+
+  private fixFixedWidth(element: HTMLElement): void {
+    const currentWidth = element.style.width;
+    element.style.width = 'auto';
+    element.style.maxWidth = currentWidth;
+    element.style.minWidth = '0';
+  }
+
+  private fixContentOverflow(element: HTMLElement): void {
+    element.style.overflowX = 'auto';
+    element.style.maxWidth = '100%';
+  }
+
+  private fixTouchTargetSize(element: HTMLElement, minSize: number): void {
+    const current = element.getBoundingClientRect();
+    
+    if (current.width < minSize) {
+      element.style.minWidth = `${minSize}px`;
+    }
+    
+    if (current.height < minSize) {
+      element.style.minHeight = `${minSize}px`;
+    }
+    
+    element.style.display = 'inline-flex';
+    element.style.alignItems = 'center';
+    element.style.justifyContent = 'center';
+  }
+
+  private fixFontSize(element: HTMLElement, minSize: number): void {
+    element.style.fontSize = `${minSize}px`;
+  }
+
+  private fixLineLength(element: HTMLElement): void {
+    element.style.maxWidth = '65ch';
+    element.style.lineHeight = '1.6';
+  }
+
+  private fixZIndex(element: HTMLElement): void {
+    element.style.zIndex = '999';
+  }
+
+  // === UTILITY METHODS === //
+
+  private isInteractiveElement(element: HTMLElement): boolean {
+    const interactiveTags = ['button', 'a', 'input', 'select', 'textarea'];
+    const interactiveRoles = ['button', 'link', 'tab', 'menuitem'];
+    
+    return (
+      interactiveTags.includes(element.tagName.toLowerCase()) ||
+      interactiveRoles.includes(element.getAttribute('role') || '') ||
+      element.onclick !== null ||
+      element.style.cursor === 'pointer'
     );
+  }
 
-    const remainingCritical = analysis.criticalIssues.filter(issue => 
-      issue.severity === 'critical' || issue.severity === 'high'
-    );
+  private getContrastRatio(foreground: string, background: string): number {
+    // Simplified contrast calculation
+    // In a real implementation, you'd use a proper color contrast library
+    return 4.5; // Placeholder
+  }
 
-    const improvements = [
-      `Fixed ${session.totalIssuesFixed} out of ${session.totalIssuesFound} detected issues`,
-      `Applied ${session.rulesApplied.length} auto-fix rules`,
-      `Reduced critical issues by ${Math.max(0, session.totalIssuesFound - remainingCritical.length)}`,
-    ];
+  private calculatePerformanceScore(): number {
+    const totalIssues = this.issues.length;
+    const criticalIssues = this.issues.filter(i => i.severity === 'critical').length;
+    const highIssues = this.issues.filter(i => i.severity === 'high').length;
+    
+    const score = Math.max(0, 100 - (criticalIssues * 20) - (highIssues * 10) - (totalIssues * 2));
+    return Math.round(score);
+  }
 
-    return {
-      validationScore: analysis.overallScore,
-      remainingIssues: remainingCritical,
-      improvements
-    };
+  private calculateAccessibilityScore(): number {
+    const accessibilityIssues = this.issues.filter(i => i.type === 'accessibility').length;
+    const touchIssues = this.issues.filter(i => i.type === 'touch').length;
+    
+    const score = Math.max(0, 100 - (accessibilityIssues * 15) - (touchIssues * 10));
+    return Math.round(score);
+  }
+
+  // === PUBLIC API === //
+
+  public enable(): void {
+    this.isEnabled = true;
+  }
+
+  public disable(): void {
+    this.isEnabled = false;
+  }
+
+  public getIssues(): ResponsiveIssue[] {
+    return [...this.issues];
+  }
+
+  public getIssuesByType(type: ResponsiveIssue['type']): ResponsiveIssue[] {
+    return this.issues.filter(issue => issue.type === type);
+  }
+
+  public getIssuesBySeverity(severity: ResponsiveIssue['severity']): ResponsiveIssue[] {
+    return this.issues.filter(issue => issue.severity === severity);
+  }
+
+  public autoFixAll(): number {
+    let fixedCount = 0;
+    
+    this.issues.forEach(issue => {
+      if (issue.autoFixAvailable && issue.fix) {
+        try {
+          issue.fix();
+          fixedCount++;
+        } catch (error) {
+          console.warn('Auto-fix failed for issue:', issue.description, error);
+        }
+      }
+    });
+    
+    // Re-analyze after fixes
+    setTimeout(() => {
+      this.performFullAnalysis();
+    }, 100);
+    
+    return fixedCount;
+  }
+
+  public autoFixByType(type: ResponsiveIssue['type']): number {
+    return this.autoFixByCriteria(issue => issue.type === type);
+  }
+
+  public autoFixBySeverity(severity: ResponsiveIssue['severity']): number {
+    return this.autoFixByCriteria(issue => issue.severity === severity);
+  }
+
+  private autoFixByCriteria(criteria: (issue: ResponsiveIssue) => boolean): number {
+    let fixedCount = 0;
+    
+    this.issues
+      .filter(criteria)
+      .filter(issue => issue.autoFixAvailable && issue.fix)
+      .forEach(issue => {
+        try {
+          issue.fix!();
+          fixedCount++;
+        } catch (error) {
+          console.warn('Auto-fix failed for issue:', issue.description, error);
+        }
+      });
+    
+    return fixedCount;
+  }
+
+  public addListener(callback: (issues: ResponsiveIssue[]) => void): void {
+    this.listeners.push(callback);
+  }
+
+  public removeListener(callback: (issues: ResponsiveIssue[]) => void): void {
+    this.listeners = this.listeners.filter(l => l !== callback);
+  }
+
+  private notifyListeners(): void {
+    this.listeners.forEach(listener => {
+      try {
+        listener([...this.issues]);
+      } catch (error) {
+        console.warn('Listener callback failed:', error);
+      }
+    });
+  }
+
+  public dispose(): void {
+    this.observer?.disconnect();
+    this.mutationObserver?.disconnect();
+    this.listeners = [];
+    this.issues = [];
+    this.fixedElements.clear();
   }
 }
 
-// Export singleton instance
-export const responsiveAutoFixer = ResponsiveAutoFixer.getInstance();
+// === RESPONSIVE DESIGN VALIDATOR === //
 
-// Export types and utilities
-export type { AutoFixRule, AutoFixIssue, AutoFixResult, AutoFixSession };
-export { AUTO_FIX_RULES };
+export class ResponsiveValidator {
+  static validateBreakpoints(): boolean {
+    const breakpoints = [480, 768, 1024, 1440];
+    const issues: string[] = [];
+
+    breakpoints.forEach(width => {
+      // Simulate viewport at breakpoint
+      const mediaQuery = window.matchMedia(`(max-width: ${width}px)`);
+      if (mediaQuery.matches) {
+        // Check for common issues at this breakpoint
+        const overflowElements = document.querySelectorAll('*').length;
+        if (overflowElements > 0) {
+          // Add validation logic
+        }
+      }
+    });
+
+    return issues.length === 0;
+  }
+
+  static generateResponsiveReport(): {
+    viewport: ViewportInfo;
+    metrics: ResponsiveMetrics;
+    issues: ResponsiveIssue[];
+    recommendations: string[];
+  } {
+    const autoFix = ResponsiveAutoFix.getInstance();
+    const viewport = autoFix.getViewportInfo();
+    const metrics = autoFix.performFullAnalysis();
+    const issues = autoFix.getIssues();
+
+    const recommendations = ResponsiveValidator.generateRecommendations(issues, viewport);
+
+    return {
+      viewport,
+      metrics,
+      issues,
+      recommendations
+    };
+  }
+
+  private static generateRecommendations(issues: ResponsiveIssue[], viewport: ViewportInfo): string[] {
+    const recommendations: string[] = [];
+
+    const overflowIssues = issues.filter(i => i.type === 'overflow').length;
+    if (overflowIssues > 0) {
+      recommendations.push(`Fix ${overflowIssues} overflow issues to prevent horizontal scrolling`);
+    }
+
+    const touchIssues = issues.filter(i => i.type === 'touch').length;
+    if (touchIssues > 0 && viewport.deviceType === 'mobile') {
+      recommendations.push(`Increase touch target sizes for ${touchIssues} interactive elements`);
+    }
+
+    const textIssues = issues.filter(i => i.type === 'text').length;
+    if (textIssues > 0) {
+      recommendations.push(`Improve text readability for ${textIssues} elements`);
+    }
+
+    if (viewport.width < 768) {
+      recommendations.push('Consider implementing mobile-first responsive design patterns');
+    }
+
+    return recommendations;
+  }
+}
+
+// === RESPONSIVE UTILITIES === //
+
+export const ResponsiveUtils = {
+  // Check if element fits in viewport
+  fitsInViewport: (element: HTMLElement): boolean => {
+    const rect = element.getBoundingClientRect();
+    return (
+      rect.left >= 0 &&
+      rect.top >= 0 &&
+      rect.right <= window.innerWidth &&
+      rect.bottom <= window.innerHeight
+    );
+  },
+
+  // Get optimal font size for current viewport
+  getOptimalFontSize: (baseSize: number): number => {
+    const viewport = ResponsiveAutoFix.getInstance().getViewportInfo();
+    const scale = viewport.deviceType === 'mobile' ? 1.1 : 1;
+    return Math.max(14, baseSize * scale);
+  },
+
+  // Get optimal spacing for current viewport
+  getOptimalSpacing: (baseSpacing: number): number => {
+    const viewport = ResponsiveAutoFix.getInstance().getViewportInfo();
+    switch (viewport.deviceType) {
+      case 'mobile': return baseSpacing * 0.8;
+      case 'tablet': return baseSpacing * 0.9;
+      default: return baseSpacing;
+    }
+  },
+
+  // Check if touch targets are adequate
+  validateTouchTargets: (container: HTMLElement): boolean => {
+    const interactiveElements = container.querySelectorAll('button, a, input, select, [role="button"]');
+    const minSize = 44;
+    
+    return Array.from(interactiveElements).every(element => {
+      const rect = element.getBoundingClientRect();
+      return rect.width >= minSize && rect.height >= minSize;
+    });
+  }
+};

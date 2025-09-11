@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useKV } from '@github/spark/hooks';
 import { Opportunity, Company, Contact, PEAK_STAGES } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -49,6 +49,7 @@ import { ResponsiveOpportunityDetail } from './ResponsiveOpportunityDetail';
 import { formatCurrency, getMEDDPICCScore, getStageProgress } from '@/lib/crm-utils';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { useResponsiveTableFix } from '@/hooks/useResponsiveAutoFix';
 
 interface OpportunitiesViewProps {
   className?: string;
@@ -58,6 +59,10 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
   const [opportunities, setOpportunities] = useKV<Opportunity[]>('opportunities', []);
   const [companies, setCompanies] = useKV<Company[]>('companies', []);
   const [contacts, setContacts] = useKV<Contact[]>('contacts', []);
+
+  // Responsive auto-fix integration
+  const { fixTableOverflow, fixTableColumns, viewport } = useResponsiveTableFix();
+  const tableContainerRef = useRef<HTMLDivElement>(null);
 
   // State management
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
@@ -78,6 +83,20 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
       initializeSampleData();
     }
   }, []);
+
+  // Apply responsive fixes when viewport changes or component mounts
+  useEffect(() => {
+    if (tableContainerRef.current) {
+      // Apply table responsive fixes
+      fixTableOverflow(tableContainerRef.current);
+      
+      // Apply column fixes based on viewport
+      const table = tableContainerRef.current.querySelector('table');
+      if (table) {
+        fixTableColumns(table);
+      }
+    }
+  }, [viewport.deviceType, viewport.width, fixTableOverflow, fixTableColumns]);
 
   const initializeSampleData = async () => {
     // Create sample companies if they don't exist
@@ -440,7 +459,7 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
               )}
             </div>
           ) : (
-            <div className="opportunities-table-container w-full">
+            <div className="opportunities-table-container w-full" ref={tableContainerRef}>
               <div className="opportunities-table-wrapper w-full">
                 <Table className="opportunities-table w-full">
                   <TableHeader className="bg-muted/30 backdrop-blur-sm">
