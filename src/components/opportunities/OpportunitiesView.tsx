@@ -1,524 +1,890 @@
-import { useState, useEffect } from "react";
-import { Plus, Search, Filter, MoreHorizontal, DollarSign, Calendar, User, Briefcase, TrendingUp, Clock, MapPin, Star } from "@phosphor-icons/react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { OpportunityService, type Opportunity } from "@/lib/opportunity-service";
-import { OpportunityEditForm } from "./OpportunityEditForm";
-import { ResponsiveOpportunityDetail } from "./ResponsiveOpportunityDetail";
-import { toast } from "sonner";
+import { useState, useEffect } from 'react';
+import { useKV } from '@github/spark/hooks';
+import { Opportunity, Company, Contact, PEAK_STAGES } from '@/lib/types';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { 
+  Building,
+  User,
+  Calendar,
+  DollarSign,
+  Target,
+  TrendingUp,
+  ChartBar,
+  ChartLineUp,
+  ClockCounterClockwise,
+  Users,
+  FileText,
+  Phone,
+  Envelope,
+  MapPin,
+  Globe,
+  CheckCircle,
+  Warning,
+  Circle,
+  ArrowLeft,
+  PencilSimple,
+  Trash,
+  Plus,
+  Star,
+  Trophy,
+  Shield,
+  Lightbulb,
+  Flag
+} from '@phosphor-icons/react';
+import { formatCurrency, getMEDDPICCScore, getStageProgress } from '@/lib/crm-utils';
+import { format, differenceInDays } from 'date-fns';
+import { toast } from 'sonner';
 
-interface OpportunitiesViewProps {
-  className?: string;
+interface ResponsiveOpportunityDetailProps {
+  opportunity: Opportunity;
+  isOpen: boolean;
+  onClose: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
-export function OpportunitiesView({ className }: OpportunitiesViewProps) {
-  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
-  const [filteredOpportunities, setFilteredOpportunities] = useState<Opportunity[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [stageFilter, setStageFilter] = useState("all");
-  const [priorityFilter, setPriorityFilter] = useState("all");
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export function ResponsiveOpportunityDetail({ 
+  opportunity, 
+  isOpen, 
+  onClose,
+  onEdit,
+  onDelete
+}: ResponsiveOpportunityDetailProps) {
+  const [companies] = useKV<Company[]>('companies', []);
+  const [contacts] = useKV<Contact[]>('contacts', []);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Load opportunities on component mount
+  // Check for mobile screen size
   useEffect(() => {
-    const loadOpportunities = async () => {
-      try {
-        setIsLoading(true);
-        await OpportunityService.initializeSampleData();
-        const data = await OpportunityService.getAllOpportunities();
-        // Ensure data is always an array
-        const safeData = Array.isArray(data) ? data : [];
-        setOpportunities(safeData);
-        setFilteredOpportunities(safeData);
-      } catch (error) {
-        console.error("Error loading opportunities:", error);
-        toast.error("Failed to load opportunities");
-        // Set empty arrays on error
-        setOpportunities([]);
-        setFilteredOpportunities([]);
-      } finally {
-        setIsLoading(false);
-      }
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 768);
     };
 
-    loadOpportunities();
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
-  // Apply filters
-  useEffect(() => {
-    // Ensure opportunities is always an array
-    let filtered = Array.isArray(opportunities) ? opportunities : [];
+  // Get related data
+  const company = companies.find(c => c.id === opportunity.companyId);
+  const contact = contacts.find(c => c.id === opportunity.contactId);
+  const stageConfig = PEAK_STAGES.find(s => s.value === opportunity.stage) || PEAK_STAGES[0];
+  const meddpicScore = getMEDDPICCScore(opportunity.meddpicc);
+  const stageProgress = getStageProgress(opportunity.stage);
+  
+  // Calculate days in various states
+  const daysInStage = differenceInDays(new Date(), new Date(opportunity.updatedAt));
+  const daysInPipeline = differenceInDays(new Date(), new Date(opportunity.createdAt));
+  const daysToClose = differenceInDays(new Date(opportunity.expectedCloseDate), new Date());
 
-    // Search filter
-    if (searchQuery) {
-      filtered = filtered.filter(
-        (opp) =>
-          opp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          opp.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          opp.primaryContact.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    // Stage filter
-    if (stageFilter !== "all") {
-      filtered = filtered.filter((opp) => opp.stage === stageFilter);
-    }
-
-    // Priority filter
-    if (priorityFilter !== "all") {
-      filtered = filtered.filter((opp) => opp.priority === priorityFilter);
-    }
-
-    setFilteredOpportunities(filtered);
-  }, [opportunities, searchQuery, stageFilter, priorityFilter]);
-
-  const handleCreateOpportunity = async (data: Partial<Opportunity>) => {
-    try {
-      await OpportunityService.createOpportunity(data);
-      const updatedOpportunities = await OpportunityService.getAllOpportunities();
-      const safeData = Array.isArray(updatedOpportunities) ? updatedOpportunities : [];
-      setOpportunities(safeData);
-      setShowCreateForm(false);
-      toast.success("Opportunity created successfully!");
-    } catch (error) {
-      console.error("Error creating opportunity:", error);
-      toast.error("Failed to create opportunity");
-    }
-  };
-
-  const handleUpdateOpportunity = async (id: string, data: Partial<Opportunity>) => {
-    try {
-      await OpportunityService.updateOpportunity(id, data);
-      const updatedOpportunities = await OpportunityService.getAllOpportunities();
-      const safeData = Array.isArray(updatedOpportunities) ? updatedOpportunities : [];
-      setOpportunities(safeData);
-      setSelectedOpportunity(null);
-      toast.success("Opportunity updated successfully!");
-    } catch (error) {
-      console.error("Error updating opportunity:", error);
-      toast.error("Failed to update opportunity");
-    }
-  };
-
-  const handleDeleteOpportunity = async (id: string) => {
-    try {
-      await OpportunityService.deleteOpportunity(id);
-      const updatedOpportunities = await OpportunityService.getAllOpportunities();
-      const safeData = Array.isArray(updatedOpportunities) ? updatedOpportunities : [];
-      setOpportunities(safeData);
-      toast.success("Opportunity deleted successfully!");
-    } catch (error) {
-      console.error("Error deleting opportunity:", error);
-      toast.error("Failed to delete opportunity");
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
+  const getPriorityBadge = (priority?: string) => {
     switch (priority) {
-      case "critical": return "bg-red-100 text-red-800 border-red-200";
-      case "high": return "bg-orange-100 text-orange-800 border-orange-200";
-      case "medium": return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "low": return "bg-green-100 text-green-800 border-green-200";
-      default: return "bg-gray-100 text-gray-800 border-gray-200";
+      case 'low':
+        return { variant: 'secondary' as const, className: 'bg-gray-100 text-gray-800 border-gray-300' };
+      case 'medium':
+        return { variant: 'secondary' as const, className: 'bg-blue-100 text-blue-800 border-blue-300' };
+      case 'high':
+        return { variant: 'secondary' as const, className: 'bg-orange-100 text-orange-800 border-orange-300' };
+      case 'critical':
+        return { variant: 'destructive' as const, className: 'bg-red-100 text-red-800 border-red-300' };
+      default:
+        return { variant: 'secondary' as const, className: 'bg-gray-100 text-gray-800 border-gray-300' };
     }
   };
 
-  const getStageColor = (stage: string) => {
-    switch (stage) {
-      case "prospect": return "bg-blue-100 text-blue-800 border-blue-200";
-      case "engage": return "bg-purple-100 text-purple-800 border-purple-200";
-      case "acquire": return "bg-green-100 text-green-800 border-green-200";
-      case "keep": return "bg-teal-100 text-teal-800 border-teal-200";
-      case "closed-won": return "bg-emerald-100 text-emerald-800 border-emerald-200";
-      case "closed-lost": return "bg-red-100 text-red-800 border-red-200";
-      default: return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      notation: "compact",
-      maximumFractionDigits: 1,
-    }).format(amount);
-  };
-
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    }).format(date);
-  };
-
-  const getDaysUntilClose = (closeDate: Date) => {
-    const today = new Date();
-    const diffTime = closeDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
-
-  const getStageProgress = (stage: string) => {
-    const stageMap = {
-      "prospect": 25,
-      "engage": 50,
-      "acquire": 75,
-      "keep": 90,
-      "closed-won": 100,
-      "closed-lost": 0,
-    };
-    return stageMap[stage as keyof typeof stageMap] || 0;
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-content-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading opportunities...</p>
-        </div>
-      </div>
-    );
-  }
+  const priorityBadge = getPriorityBadge(opportunity.priority);
 
   return (
-    <TooltipProvider>
-      <div className={`flex flex-col h-full space-y-6 p-6 overflow-hidden ${className}`}>
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Opportunities</h1>
-            <p className="text-muted-foreground">
-              Manage your sales pipeline and track deal progress
-            </p>
-          </div>
-          <Button onClick={() => setShowCreateForm(true)} className="shrink-0">
-            <Plus className="h-4 w-4 mr-2" />
-            New Opportunity
-          </Button>
-        </div>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-[100vw] max-h-[100vh] w-full h-full p-0 gap-0 overflow-hidden">
+        <div className="flex flex-col h-full">
+          {/* Modern Header - Responsive */}
+          <div className="shrink-0 bg-gradient-to-r from-background via-background/95 to-background/90 backdrop-blur-xl border-b border-border/30 p-3 sm:p-4 lg:p-6">
+            <div className="flex flex-col gap-3 sm:gap-4">
+              {/* Top Row - Back button and Actions */}
+              <div className="flex items-center justify-between">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={onClose}
+                  className="text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+                >
+                  <ArrowLeft size={16} className="mr-2" />
+                  {isMobile ? 'Back' : 'Back to Opportunities'}
+                </Button>
+                
+                <div className="flex items-center gap-2">
+                  {onEdit && (
+                    <Button 
+                      size="sm"
+                      onClick={onEdit}
+                      className="h-9 px-3 sm:px-4 font-medium"
+                    >
+                      <PencilSimple size={16} className="mr-1 sm:mr-2" />
+                      {!isMobile && 'Edit'}
+                    </Button>
+                  )}
+                  {onDelete && (
+                    <Button 
+                      size="sm"
+                      variant="outline"
+                      onClick={onDelete}
+                      className="h-9 px-3 text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash size={16} className={!isMobile ? 'mr-2' : ''} />
+                      {!isMobile && 'Delete'}
+                    </Button>
+                  )}
+                </div>
+              </div>
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search opportunities, companies, or contacts..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <Select value={stageFilter} onValueChange={setStageFilter}>
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder="Filter by stage" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Stages</SelectItem>
-              <SelectItem value="prospect">Prospect</SelectItem>
-              <SelectItem value="engage">Engage</SelectItem>
-              <SelectItem value="acquire">Acquire</SelectItem>
-              <SelectItem value="keep">Keep</SelectItem>
-              <SelectItem value="closed-won">Closed Won</SelectItem>
-              <SelectItem value="closed-lost">Closed Lost</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder="Filter by priority" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Priorities</SelectItem>
-              <SelectItem value="critical">Critical</SelectItem>
-              <SelectItem value="high">High</SelectItem>
-              <SelectItem value="medium">Medium</SelectItem>
-              <SelectItem value="low">Low</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Opportunities Table */}
-        <div className="flex-1 overflow-hidden">
-          <div className="opportunities-table-container h-full overflow-auto">
-            <div className="opportunities-table-wrapper">
-              <table className="opportunities-table">
-                <thead className="bg-muted/50 sticky top-0 z-10">
-                  <tr>
-                    <th className="col-opportunity-details text-left font-semibold">
-                      Opportunity Details
-                    </th>
-                    <th className="col-company-contact text-left font-semibold">
-                      Company & Contact
-                    </th>
-                    <th className="col-stage-progress text-left font-semibold">
-                      Stage & Progress
-                    </th>
-                    <th className="col-deal-value text-left font-semibold">
-                      Deal Value
-                    </th>
-                    <th className="col-win-probability text-left font-semibold">
-                      Win Probability
-                    </th>
-                    <th className="col-priority text-left font-semibold">
-                      Priority
-                    </th>
-                    <th className="col-timeline text-left font-semibold">
-                      Timeline
-                    </th>
-                    <th className="col-actions text-left font-semibold">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Array.isArray(filteredOpportunities) && filteredOpportunities.map((opportunity) => {
-                    const daysUntilClose = getDaysUntilClose(opportunity.expectedCloseDate);
-                    const stageProgress = getStageProgress(opportunity.stage);
-
-                    return (
-                      <tr
-                        key={opportunity.id}
-                        className="border-b hover:bg-muted/30 transition-colors cursor-pointer"
-                        onClick={() => setSelectedOpportunity(opportunity)}
-                      >
-                        {/* Opportunity Details */}
-                        <td className="col-opportunity-details">
-                          <div className="cell-content">
-                            <div className="font-semibold text-sm mb-1 truncate-content">
-                              {opportunity.name}
-                            </div>
-                            <div className="text-xs text-muted-foreground mb-2 truncate-content">
-                              {opportunity.description}
-                            </div>
-                            <div className="flex flex-wrap gap-1">
-                              {opportunity.tags.slice(0, 2).map((tag) => (
-                                <Badge
-                                  key={tag}
-                                  variant="outline"
-                                  className="text-xs px-1 py-0"
-                                >
-                                  {tag}
-                                </Badge>
-                              ))}
-                              {opportunity.tags.length > 2 && (
-                                <Badge variant="outline" className="text-xs px-1 py-0">
-                                  +{opportunity.tags.length - 2}
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-
-                        {/* Company & Contact */}
-                        <td className="col-company-contact">
-                          <div className="cell-content">
-                            <div className="flex items-center gap-2 mb-1">
-                              <Briefcase className="h-3 w-3 text-muted-foreground" />
-                              <span className="font-medium text-sm truncate-content">
-                                {opportunity.company}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <User className="h-3 w-3 text-muted-foreground" />
-                              <span className="text-xs text-muted-foreground truncate-content">
-                                {opportunity.primaryContact}
-                              </span>
-                            </div>
-                            <div className="text-xs text-muted-foreground capitalize">
-                              {opportunity.industry}
-                            </div>
-                          </div>
-                        </td>
-
-                        {/* Stage & Progress */}
-                        <td className="col-stage-progress">
-                          <div className="cell-content">
-                            <Badge
-                              className={`mb-2 text-xs ${getStageColor(opportunity.stage)}`}
-                            >
-                              {opportunity.stage.charAt(0).toUpperCase() + opportunity.stage.slice(1)}
-                            </Badge>
-                            <Progress value={stageProgress} className="h-2 mb-1" />
-                            <div className="text-xs text-muted-foreground">
-                              {stageProgress}% complete
-                            </div>
-                          </div>
-                        </td>
-
-                        {/* Deal Value */}
-                        <td className="col-deal-value">
-                          <div className="cell-content">
-                            <div className="flex items-center gap-1 mb-1">
-                              <DollarSign className="h-3 w-3 text-green-600" />
-                              <span className="font-semibold text-sm">
-                                {formatCurrency(opportunity.value)}
-                              </span>
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              Est. value
-                            </div>
-                          </div>
-                        </td>
-
-                        {/* Win Probability */}
-                        <td className="col-win-probability">
-                          <div className="cell-content">
-                            <div className="flex items-center gap-2 mb-1">
-                              <TrendingUp className="h-3 w-3 text-blue-600" />
-                              <span className="font-semibold text-sm">
-                                {opportunity.probability}%
-                              </span>
-                            </div>
-                            <Progress value={opportunity.probability} className="h-2 mb-1" />
-                            <div className="text-xs text-muted-foreground">
-                              Win probability
-                            </div>
-                          </div>
-                        </td>
-
-                        {/* Priority */}
-                        <td className="col-priority">
-                          <div className="cell-content">
-                            <Badge
-                              className={`text-xs ${getPriorityColor(opportunity.priority)}`}
-                            >
-                              {opportunity.priority.charAt(0).toUpperCase() + opportunity.priority.slice(1)}
-                            </Badge>
-                          </div>
-                        </td>
-
-                        {/* Timeline */}
-                        <td className="col-timeline">
-                          <div className="cell-content">
-                            <div className="flex items-center gap-1 mb-1">
-                              <Calendar className="h-3 w-3 text-orange-600" />
-                              <span className="text-xs font-medium">
-                                {formatDate(opportunity.expectedCloseDate)}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-3 w-3 text-muted-foreground" />
-                              <span
-                                className={`text-xs ${
-                                  daysUntilClose < 0
-                                    ? "text-red-600"
-                                    : daysUntilClose < 30
-                                    ? "text-orange-600"
-                                    : "text-muted-foreground"
-                                }`}
-                              >
-                                {daysUntilClose < 0
-                                  ? `${Math.abs(daysUntilClose)}d overdue`
-                                  : daysUntilClose === 0
-                                  ? "Due today"
-                                  : `${daysUntilClose}d left`}
-                              </span>
-                            </div>
-                          </div>
-                        </td>
-
-                        {/* Actions */}
-                        <td className="col-actions">
-                          <div className="cell-content">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 w-8 p-0"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedOpportunity(opportunity);
-                                  }}
-                                >
-                                  View Details
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    // Handle edit - you could open edit form here
-                                  }}
-                                >
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  className="text-red-600"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteOpportunity(opportunity.id);
-                                  }}
-                                >
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}}
-                </tbody>
-              </table>
+              {/* Title and Company Info */}
+              <div className="space-y-2 sm:space-y-3">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-foreground leading-tight">
+                  {opportunity.title}
+                </h1>
+                
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 lg:gap-6 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-blue-100 rounded-lg">
+                      <Building size={14} className="text-blue-600" />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="font-medium text-foreground text-sm">
+                        {company?.name || 'Unknown Company'}
+                      </span>
+                      {company?.industry && (
+                        <span className="block sm:inline sm:ml-1 text-xs text-muted-foreground">
+                          {!isMobile && '•'} {company.industry}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 sm:gap-4">
+                    <Badge 
+                      variant="secondary" 
+                      className={`${stageConfig.color} text-xs px-2 py-1 font-medium`}
+                    >
+                      {stageConfig.label}
+                    </Badge>
+                    
+                    <Badge 
+                      variant="secondary" 
+                      className={`${priorityBadge.className} text-xs px-2 py-1 font-medium border`}
+                    >
+                      {(opportunity.priority || 'medium').charAt(0).toUpperCase() + (opportunity.priority || 'medium').slice(1)}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Empty state */}
-        {Array.isArray(filteredOpportunities) && filteredOpportunities.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-64 text-center">
-            <Briefcase className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No opportunities found</h3>
-            <p className="text-muted-foreground mb-4">
-              {searchQuery || stageFilter !== "all" || priorityFilter !== "all"
-                ? "Try adjusting your filters or search terms."
-                : "Get started by creating your first opportunity."}
-            </p>
-            {(!searchQuery && stageFilter === "all" && priorityFilter === "all") && (
-              <Button onClick={() => setShowCreateForm(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Create Opportunity
-              </Button>
-            )}
+          {/* Content Area with Tabs - Scrollable */}
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
+              {/* Tab Navigation - Horizontal scrollable on mobile */}
+              <div className="shrink-0 border-b border-border/30 bg-muted/20">
+                <div className="px-3 sm:px-4 lg:px-6">
+                  <TabsList className={`h-12 bg-transparent w-full ${isMobile ? 'justify-start' : 'justify-center'} gap-1 p-1`}>
+                    <div className={`flex ${isMobile ? 'overflow-x-auto scrollbar-hide' : 'flex-wrap justify-center'} gap-1 min-w-0`}>
+                      <TabsTrigger 
+                        value="overview" 
+                        className="h-10 px-3 sm:px-4 text-xs sm:text-sm font-medium whitespace-nowrap data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                      >
+                        <FileText size={14} className="mr-1 sm:mr-2" />
+                        Overview
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        value="metrics" 
+                        className="h-10 px-3 sm:px-4 text-xs sm:text-sm font-medium whitespace-nowrap data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                      >
+                        <ChartBar size={14} className="mr-1 sm:mr-2" />
+                        Metrics
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        value="peak" 
+                        className="h-10 px-3 sm:px-4 text-xs sm:text-sm font-medium whitespace-nowrap data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                      >
+                        <Target size={14} className="mr-1 sm:mr-2" />
+                        PEAK
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        value="meddpicc" 
+                        className="h-10 px-3 sm:px-4 text-xs sm:text-sm font-medium whitespace-nowrap data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                      >
+                        <ChartLineUp size={14} className="mr-1 sm:mr-2" />
+                        MEDDPICC
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        value="contact" 
+                        className="h-10 px-3 sm:px-4 text-xs sm:text-sm font-medium whitespace-nowrap data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                      >
+                        <Users size={14} className="mr-1 sm:mr-2" />
+                        Contact
+                      </TabsTrigger>
+                    </div>
+                  </TabsList>
+                </div>
+              </div>
+
+              {/* Tab Content - Scrollable */}
+              <ScrollArea className="flex-1">
+                <div className="p-3 sm:p-4 lg:p-6">
+                  <TabsContent value="overview" className="mt-0 space-y-4 sm:space-y-6">
+                    {/* Key Metrics Cards - Responsive Grid */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+                      <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-emerald-50 to-emerald-100/50 hover:shadow-lg transition-all duration-300">
+                        <CardContent className="p-3 sm:p-4 lg:p-6 text-center">
+                          <div className="mb-2 sm:mb-4">
+                            <div className="p-2 sm:p-3 bg-emerald-200/50 rounded-xl w-fit mx-auto group-hover:scale-110 transition-transform duration-200">
+                              <DollarSign size={isMobile ? 20 : 24} className="text-emerald-600" />
+                            </div>
+                          </div>
+                          <div className="space-y-1 sm:space-y-2">
+                            <div className="text-lg sm:text-xl lg:text-2xl font-bold text-emerald-900">
+                              {formatCurrency(opportunity.value)}
+                            </div>
+                            <div className="text-xs sm:text-sm font-medium text-emerald-700">Deal Value</div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-blue-50 to-blue-100/50 hover:shadow-lg transition-all duration-300">
+                        <CardContent className="p-3 sm:p-4 lg:p-6 text-center">
+                          <div className="mb-2 sm:mb-4">
+                            <div className="p-2 sm:p-3 bg-blue-200/50 rounded-xl w-fit mx-auto group-hover:scale-110 transition-transform duration-200">
+                              <Target size={isMobile ? 20 : 24} className="text-blue-600" />
+                            </div>
+                          </div>
+                          <div className="space-y-1 sm:space-y-2">
+                            <div className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-900">
+                              {opportunity.probability}%
+                            </div>
+                            <div className="text-xs sm:text-sm font-medium text-blue-700">Win Rate</div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-purple-50 to-purple-100/50 hover:shadow-lg transition-all duration-300">
+                        <CardContent className="p-3 sm:p-4 lg:p-6 text-center">
+                          <div className="mb-2 sm:mb-4">
+                            <div className="p-2 sm:p-3 bg-purple-200/50 rounded-xl w-fit mx-auto group-hover:scale-110 transition-transform duration-200">
+                              <TrendingUp size={isMobile ? 20 : 24} className={`${meddpicScore < 50 ? 'text-red-500' : meddpicScore < 80 ? 'text-yellow-500' : 'text-green-500'}`} />
+                            </div>
+                          </div>
+                          <div className="space-y-1 sm:space-y-2">
+                            <div className={`text-lg sm:text-xl lg:text-2xl font-bold ${meddpicScore < 50 ? 'text-red-600' : meddpicScore < 80 ? 'text-yellow-600' : 'text-green-600'}`}>
+                              {meddpicScore}%
+                            </div>
+                            <div className="text-xs sm:text-sm font-medium text-purple-700">MEDDPICC</div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-amber-50 to-amber-100/50 hover:shadow-lg transition-all duration-300">
+                        <CardContent className="p-3 sm:p-4 lg:p-6 text-center">
+                          <div className="mb-2 sm:mb-4">
+                            <div className="p-2 sm:p-3 bg-amber-200/50 rounded-xl w-fit mx-auto group-hover:scale-110 transition-transform duration-200">
+                              <Calendar size={isMobile ? 20 : 24} className="text-amber-600" />
+                            </div>
+                          </div>
+                          <div className="space-y-1 sm:space-y-2">
+                            <div className="text-sm sm:text-base lg:text-lg font-bold text-amber-900">
+                              {daysToClose > 0 ? `${daysToClose} days` : 'Overdue'}
+                            </div>
+                            <div className="text-xs sm:text-sm font-medium text-amber-700">To Close</div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Details Section - Responsive Layout */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+                      {/* Main Details */}
+                      <div className="lg:col-span-2">
+                        <Card className="border-0 shadow-lg bg-gradient-to-br from-background to-muted/20">
+                          <CardHeader>
+                            <CardTitle className="text-lg sm:text-xl font-semibold flex items-center gap-2">
+                              <FileText size={18} className="text-primary" />
+                              Opportunity Details
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-4 sm:space-y-6">
+                            {/* Stage and Progress */}
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-sm font-medium text-muted-foreground">Current Stage</Label>
+                                <Badge className={`${stageConfig.color} text-sm px-3 py-1 font-medium`}>
+                                  {stageConfig.label}
+                                </Badge>
+                              </div>
+                              <div className="space-y-2">
+                                <Progress value={stageProgress} className="h-3" />
+                                <div className="flex justify-between text-xs text-muted-foreground">
+                                  <span>{stageProgress}% complete</span>
+                                  <span>{daysInStage} days in stage</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <Separator />
+
+                            {/* Timeline Info */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label className="text-sm font-medium text-muted-foreground">Created Date</Label>
+                                <div className="text-sm font-medium text-foreground">
+                                  {format(new Date(opportunity.createdAt), 'MMM dd, yyyy')}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {daysInPipeline} days in pipeline
+                                </div>
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <Label className="text-sm font-medium text-muted-foreground">Expected Close</Label>
+                                <div className="text-sm font-medium text-foreground">
+                                  {format(new Date(opportunity.expectedCloseDate), 'MMM dd, yyyy')}
+                                </div>
+                                <div className={`text-xs font-medium ${daysToClose < 0 ? 'text-red-600' : daysToClose < 7 ? 'text-amber-600' : 'text-green-600'}`}>
+                                  {daysToClose < 0 ? `${Math.abs(daysToClose)} days overdue` : 
+                                   daysToClose === 0 ? 'Due today' :
+                                   `${daysToClose} days remaining`}
+                                </div>
+                              </div>
+                            </div>
+
+                            {opportunity.description && (
+                              <>
+                                <Separator />
+                                <div className="space-y-2">
+                                  <Label className="text-sm font-medium text-muted-foreground">Description</Label>
+                                  <div className="p-4 bg-muted/50 rounded-lg">
+                                    <p className="text-sm text-foreground leading-relaxed">
+                                      {opportunity.description}
+                                    </p>
+                                  </div>
+                                </div>
+                              </>
+                            )}
+
+                            {opportunity.tags && opportunity.tags.length > 0 && (
+                              <>
+                                <Separator />
+                                <div className="space-y-3">
+                                  <Label className="text-sm font-medium text-muted-foreground">Tags</Label>
+                                  <div className="flex flex-wrap gap-2">
+                                    {opportunity.tags.map((tag, index) => (
+                                      <Badge 
+                                        key={index} 
+                                        variant="secondary" 
+                                        className="text-xs px-3 py-1 bg-primary/10 text-primary border-primary/20"
+                                      >
+                                        {tag}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              </>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </div>
+
+                      {/* Company Information */}
+                      <div>
+                        <Card className="border-0 shadow-lg bg-gradient-to-br from-background to-blue-50/30">
+                          <CardHeader>
+                            <CardTitle className="text-lg sm:text-xl font-semibold flex items-center gap-2">
+                              <Building size={18} className="text-blue-600" />
+                              Company Information
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            {company ? (
+                              <div className="space-y-4">
+                                <div className="space-y-3">
+                                  <div>
+                                    <div className="font-semibold text-lg text-foreground">
+                                      {company.name}
+                                    </div>
+                                    <div className="text-sm text-blue-600 font-medium">
+                                      {company.industry}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">
+                                      {company.size}
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="space-y-3">
+                                    {company.website && (
+                                      <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+                                        <div className="p-2 bg-blue-100 rounded-lg">
+                                          <Globe size={14} className="text-blue-600" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <div className="text-xs text-muted-foreground">Website</div>
+                                          <a 
+                                            href={company.website} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="text-sm font-medium text-blue-600 hover:underline truncate block"
+                                          >
+                                            {company.website}
+                                          </a>
+                                        </div>
+                                      </div>
+                                    )}
+                                    
+                                    {company.address && (
+                                      <div className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
+                                        <div className="p-2 bg-green-100 rounded-lg">
+                                          <MapPin size={14} className="text-green-600" />
+                                        </div>
+                                        <div className="flex-1">
+                                          <div className="text-xs text-muted-foreground">Address</div>
+                                          <div className="text-sm font-medium leading-relaxed">{company.address}</div>
+                                        </div>
+                                      </div>
+                                    )}
+                                    
+                                    <div className="grid grid-cols-2 gap-3">
+                                      <div className="p-3 bg-muted/30 rounded-lg text-center">
+                                        <div className="text-lg font-bold text-foreground">
+                                          {company.employees ? company.employees.toLocaleString() : 'N/A'}
+                                        </div>
+                                        <div className="text-xs text-muted-foreground">Employees</div>
+                                      </div>
+                                      <div className="p-3 bg-muted/30 rounded-lg text-center">
+                                        <div className="text-sm font-bold text-foreground">
+                                          {company.revenue ? formatCurrency(company.revenue) : 'N/A'}
+                                        </div>
+                                        <div className="text-xs text-muted-foreground">Revenue</div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="text-center py-8">
+                                <div className="mb-4">
+                                  <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-50 to-blue-100 rounded-full flex items-center justify-center">
+                                    <Building size={24} className="text-blue-600" />
+                                  </div>
+                                </div>
+                                <div className="space-y-2">
+                                  <div className="font-medium text-foreground">No Company Information</div>
+                                  <div className="text-sm text-muted-foreground">
+                                    Company details not available
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="metrics" className="mt-0 space-y-4 sm:space-y-6">
+                    <div className="text-center py-12 space-y-6">
+                      <div className="mx-auto w-20 h-20 bg-gradient-to-br from-purple-50 to-purple-100 rounded-full flex items-center justify-center">
+                        <ChartBar size={32} className="text-purple-600" />
+                      </div>
+                      <div className="space-y-3">
+                        <h3 className="text-xl font-semibold text-foreground">Advanced Metrics Dashboard</h3>
+                        <p className="text-muted-foreground max-w-md mx-auto">
+                          Detailed performance analytics, trend analysis, and predictive insights will be available here.
+                        </p>
+                      </div>
+                      <Button variant="outline" size="lg" disabled>
+                        <ChartLineUp size={16} className="mr-2" />
+                        Coming Soon
+                      </Button>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="peak" className="mt-0 space-y-4 sm:space-y-6">
+                    <Card className="border-0 shadow-lg bg-gradient-to-br from-background to-primary/5">
+                      <CardHeader>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <CardTitle className="text-lg sm:text-xl font-semibold flex items-center gap-2">
+                            <Target size={18} className="text-primary" />
+                            PEAK Methodology Progress
+                          </CardTitle>
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm text-muted-foreground">Overall Progress:</span>
+                            <span className="text-lg font-bold text-primary">{stageProgress}%</span>
+                          </div>
+                        </div>
+                        <div className="mt-4 space-y-2">
+                          <Progress value={stageProgress} className="h-3" />
+                          <div className="text-sm text-muted-foreground">
+                            {stageProgress === 100 ? 'All stages completed' : 
+                             stageProgress >= 75 ? 'Near completion' :
+                             stageProgress >= 50 ? 'Good progress' :
+                             'Early stages'}
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-4 sm:space-y-6">
+                        <div className="space-y-4 sm:space-y-6">
+                          {PEAK_STAGES.map((stage, index) => {
+                            const isCurrentStage = stage.value === opportunity.stage;
+                            const isPastStage = PEAK_STAGES.findIndex(s => s.value === opportunity.stage) > index;
+                            
+                            return (
+                              <Card key={stage.value} className={`border-2 transition-all duration-300 ${
+                                isCurrentStage ? 'border-primary bg-primary/5 shadow-lg' : 
+                                isPastStage ? 'border-green-200 bg-green-50/50' : 
+                                'border-border bg-muted/20'
+                              }`}>
+                                <CardContent className="p-4 sm:p-6">
+                                  <div className="flex items-start gap-3 sm:gap-4">
+                                    <div className={`p-2 sm:p-3 rounded-full shrink-0 ${
+                                      isCurrentStage ? 'bg-primary text-primary-foreground shadow-lg' :
+                                      isPastStage ? 'bg-green-500 text-white' :
+                                      'bg-muted text-muted-foreground'
+                                    }`}>
+                                      {isPastStage ? <CheckCircle size={isMobile ? 18 : 20} /> :
+                                       isCurrentStage ? <ClockCounterClockwise size={isMobile ? 18 : 20} /> :
+                                       <Circle size={isMobile ? 18 : 20} />}
+                                    </div>
+                                    <div className="flex-1 space-y-2 sm:space-y-3 min-w-0">
+                                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                        <h3 className={`text-lg sm:text-xl font-semibold ${
+                                          isCurrentStage ? 'text-primary' :
+                                          isPastStage ? 'text-green-700' :
+                                          'text-muted-foreground'
+                                        }`}>
+                                          {stage.label}
+                                        </h3>
+                                        <Badge variant={
+                                          isCurrentStage ? 'default' :
+                                          isPastStage ? 'secondary' :
+                                          'outline'
+                                        } className={`shrink-0 ${
+                                          isCurrentStage ? 'bg-primary' :
+                                          isPastStage ? 'bg-green-100 text-green-700' :
+                                          'text-muted-foreground'
+                                        }`}>
+                                          {isPastStage ? 'Completed' :
+                                           isCurrentStage ? 'In Progress' :
+                                           'Pending'}
+                                        </Badge>
+                                      </div>
+                                      
+                                      <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
+                                        {stage.description}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            );
+                          })}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="meddpicc" className="mt-0 space-y-4 sm:space-y-6">
+                    <Card className="border-0 shadow-lg bg-gradient-to-br from-background to-purple/5">
+                      <CardHeader>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <CardTitle className="text-lg sm:text-xl font-semibold flex items-center gap-2">
+                            <ChartLineUp size={18} className="text-purple-600" />
+                            MEDDPICC Qualification
+                          </CardTitle>
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm text-muted-foreground">Score:</span>
+                            <div className={`text-xl font-bold px-3 py-1 rounded-lg ${
+                              meddpicScore < 50 ? 'text-red-600 bg-red-50' : 
+                              meddpicScore < 80 ? 'text-yellow-600 bg-yellow-50' : 
+                              'text-green-600 bg-green-50'
+                            }`}>{meddpicScore}%</div>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Progress value={meddpicScore} className="h-3" />
+                          <div className="flex justify-between text-xs">
+                            <span className={meddpicScore < 50 ? 'text-red-600 font-medium' : 'text-muted-foreground'}>
+                              Poor (0-49%)
+                            </span>
+                            <span className={meddpicScore >= 50 && meddpicScore < 80 ? 'text-yellow-600 font-medium' : 'text-muted-foreground'}>
+                              Good (50-79%)
+                            </span>
+                            <span className={meddpicScore >= 80 ? 'text-green-600 font-medium' : 'text-muted-foreground'}>
+                              Excellent (80-100%)
+                            </span>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      
+                      <CardContent className="space-y-6">
+                        <div className="grid grid-cols-1 gap-4">
+                          {/* MEDDPICC Components */}
+                          {[
+                            { 
+                              key: 'metrics', 
+                              title: 'Metrics', 
+                              description: 'What economic impact can we measure and quantify?',
+                              icon: ChartBar,
+                              color: 'blue'
+                            },
+                            { 
+                              key: 'economicBuyer', 
+                              title: 'Economic Buyer', 
+                              description: 'Who has the economic authority to make this purchase decision?',
+                              icon: User,
+                              color: 'emerald'
+                            },
+                            { 
+                              key: 'decisionCriteria', 
+                              title: 'Decision Criteria', 
+                              description: 'What specific criteria will they use to evaluate solutions?',
+                              icon: FileText,
+                              color: 'purple'
+                            },
+                            { 
+                              key: 'decisionProcess', 
+                              title: 'Decision Process', 
+                              description: 'How will they make the final decision? What\'s the process?',
+                              icon: Target,
+                              color: 'indigo'
+                            },
+                            { 
+                              key: 'paperProcess', 
+                              title: 'Paper Process', 
+                              description: 'What\'s the procurement and approval process they follow?',
+                              icon: FileText,
+                              color: 'rose'
+                            },
+                            { 
+                              key: 'implicatePain', 
+                              title: 'Implicate Pain', 
+                              description: 'What specific pain points are we addressing for them?',
+                              icon: Warning,
+                              color: 'amber'
+                            },
+                            { 
+                              key: 'champion', 
+                              title: 'Champion', 
+                              description: 'Who is actively selling our solution internally for us?',
+                              icon: Trophy,
+                              color: 'green'
+                            }
+                          ].map((component) => {
+                            const IconComponent = component.icon;
+                            const hasContent = opportunity.meddpicc[component.key as keyof typeof opportunity.meddpicc];
+                            
+                            return (
+                              <Card key={component.key} className="border-border/50 bg-gradient-to-br from-background to-muted/10">
+                                <CardContent className="p-4">
+                                  <div className="flex items-start gap-3">
+                                    <div className={`p-2 sm:p-3 bg-${component.color}-100 rounded-lg shrink-0`}>
+                                      <IconComponent size={isMobile ? 16 : 18} className={`text-${component.color}-600`} />
+                                    </div>
+                                    <div className="flex-1 space-y-2 min-w-0">
+                                      <div className="flex items-center justify-between">
+                                        <h3 className="font-semibold text-sm sm:text-base">{component.title}</h3>
+                                        {hasContent ? (
+                                          <CheckCircle size={16} className="text-green-500 shrink-0" />
+                                        ) : (
+                                          <Warning size={16} className="text-amber-500 shrink-0" />
+                                        )}
+                                      </div>
+                                      <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                                        {component.description}
+                                      </p>
+                                      <div className="p-3 bg-muted/50 rounded-lg">
+                                        <p className="text-xs sm:text-sm font-medium text-foreground">
+                                          {hasContent || 'Not yet defined'}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            );
+                          })}
+                        </div>
+
+                        {/* Qualification Health Summary */}
+                        <Card className={`border-2 ${
+                          meddpicScore >= 80 ? 'border-green-200 bg-green-50/30' :
+                          meddpicScore >= 50 ? 'border-yellow-200 bg-yellow-50/30' :
+                          'border-red-200 bg-red-50/30'
+                        }`}>
+                          <CardContent className="p-4 sm:p-6">
+                            <div className="flex items-start gap-4">
+                              <div className={`p-3 rounded-lg ${
+                                meddpicScore >= 80 ? 'bg-green-100' :
+                                meddpicScore >= 50 ? 'bg-yellow-100' :
+                                'bg-red-100'
+                              }`}>
+                                {meddpicScore >= 80 ? 
+                                  <CheckCircle size={24} className="text-green-600" /> :
+                                  <Warning size={24} className={meddpicScore >= 50 ? 'text-yellow-600' : 'text-red-600'} />
+                                }
+                              </div>
+                              <div className="flex-1 space-y-2">
+                                <h3 className="text-lg sm:text-xl font-semibold text-foreground">
+                                  Qualification Health Assessment
+                                </h3>
+                                <div className="space-y-2">
+                                  {meddpicScore >= 80 && (
+                                    <div className="p-4 bg-green-100/50 rounded-lg">
+                                      <div className="font-medium text-green-800 mb-2">🎯 Excellent Qualification</div>
+                                      <p className="text-sm text-green-700">
+                                        This opportunity is well-qualified across all MEDDPICC criteria. 
+                                        High probability of successful close.
+                                      </p>
+                                    </div>
+                                  )}
+                                  {meddpicScore >= 50 && meddpicScore < 80 && (
+                                    <div className="p-4 bg-yellow-100/50 rounded-lg">
+                                      <div className="font-medium text-yellow-800 mb-2">⚠️ Good - Areas for Improvement</div>
+                                      <p className="text-sm text-yellow-700">
+                                        This opportunity shows promise but has gaps. 
+                                        Focus on completing missing MEDDPICC elements.
+                                      </p>
+                                    </div>
+                                  )}
+                                  {meddpicScore < 50 && (
+                                    <div className="p-4 bg-red-100/50 rounded-lg">
+                                      <div className="font-medium text-red-800 mb-2">🚨 Poor - Action Required</div>
+                                      <p className="text-sm text-red-700">
+                                        This opportunity has significant qualification gaps. 
+                                        Prioritize discovery activities before investing further resources.
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="contact" className="mt-0 space-y-4 sm:space-y-6">
+                    <Card className="border-0 shadow-lg bg-gradient-to-br from-background to-blue-50/30">
+                      <CardHeader>
+                        <CardTitle className="text-lg sm:text-xl font-semibold flex items-center gap-2">
+                          <User size={18} className="text-blue-600" />
+                          Primary Contact
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {contact ? (
+                          <div className="space-y-6">
+                            <div className="flex flex-col sm:flex-row items-start gap-4">
+                              <Avatar className="h-16 w-16 border-2 border-blue-100 shrink-0">
+                                <AvatarImage src={contact.avatarUrl} />
+                                <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold text-lg">
+                                  {contact.firstName[0]}{contact.lastName[0]}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 space-y-1 min-w-0">
+                                <div className="font-semibold text-lg text-foreground">
+                                  {contact.firstName} {contact.lastName}
+                                </div>
+                                <div className="text-sm text-blue-600 font-medium">
+                                  {contact.title || 'Contact'}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {company?.name || 'Unknown Company'}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-4">
+                              <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+                                <div className="p-2 bg-blue-100 rounded-lg shrink-0">
+                                  <Envelope size={16} className="text-blue-600" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-xs text-muted-foreground">Email</div>
+                                  <a 
+                                    href={`mailto:${contact.email}`}
+                                    className="text-sm font-medium text-foreground hover:text-blue-600 truncate block"
+                                  >
+                                    {contact.email}
+                                  </a>
+                                </div>
+                              </div>
+                              
+                              {contact.phone && (
+                                <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+                                  <div className="p-2 bg-green-100 rounded-lg shrink-0">
+                                    <Phone size={16} className="text-green-600" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <div className="text-xs text-muted-foreground">Phone</div>
+                                    <a 
+                                      href={`tel:${contact.phone}`}
+                                      className="text-sm font-medium text-foreground hover:text-green-600"
+                                    >
+                                      {contact.phone}
+                                    </a>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            
+                            <div className="flex flex-col sm:flex-row gap-3">
+                              <Button variant="outline" size="sm" className="flex-1" disabled>
+                                <Envelope size={14} className="mr-2" />
+                                Send Email
+                              </Button>
+                              <Button variant="outline" size="sm" className="flex-1" disabled>
+                                <Phone size={14} className="mr-2" />
+                                Call Contact
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-center py-12">
+                            <div className="mb-6">
+                              <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-50 to-blue-100 rounded-full flex items-center justify-center">
+                                <Users size={24} className="text-blue-600" />
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <div className="font-medium text-foreground">No Primary Contact</div>
+                              <div className="text-sm text-muted-foreground">
+                                Assign a contact to improve tracking
+                              </div>
+                            </div>
+                            <Button variant="outline" size="sm" className="mt-4" disabled>
+                              <Plus size={14} className="mr-2" />
+                              Add Contact
+                            </Button>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </div>
+              </ScrollArea>
+            </Tabs>
           </div>
-        )}
-
-        {/* Create/Edit Opportunity Dialog */}
-        {showCreateForm && (
-          <OpportunityEditForm
-            open={showCreateForm}
-            onOpenChange={setShowCreateForm}
-            onSave={handleCreateOpportunity}
-          />
-        )}
-
-        {/* Opportunity Detail Dialog */}
-        {selectedOpportunity && (
-          <ResponsiveOpportunityDetail
-            opportunity={selectedOpportunity}
-            open={!!selectedOpportunity}
-            onOpenChange={(open) => !open && setSelectedOpportunity(null)}
-            onSave={(data) => handleUpdateOpportunity(selectedOpportunity.id, data)}
-          />
-        )}
-      </div>
-    </TooltipProvider>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
