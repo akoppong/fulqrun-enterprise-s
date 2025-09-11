@@ -7,6 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { 
   DeviceMobile,
   DeviceTablet,
@@ -114,7 +115,11 @@ export function ResponsiveTestSuite() {
 
   // Show enhanced testing dashboard for detailed view
   if (viewMode === 'detailed') {
-    return <ResponsiveTestingDashboard />;
+    return (
+      <div className="min-h-screen bg-background">
+        <ResponsiveTestingDashboard />
+      </div>
+    );
   }
 
   const runResponsiveTests = async () => {

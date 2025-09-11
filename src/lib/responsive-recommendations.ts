@@ -1,283 +1,405 @@
 /**
- * Responsive Design Recommendations and Best Practices
- * Based on comprehensive analysis of the FulQrun CRM application
+ * Responsive Design Recommendations and Analysis
+ * Provides actionable insights for improving responsive design
  */
 
 export interface ResponsiveRecommendation {
-  id: string;
-  priority: 'critical' | 'high' | 'medium' | 'low';
-  category: 'layout' | 'typography' | 'navigation' | 'forms' | 'tables' | 'modals' | 'performance';
   component: string;
+  category: 'layout' | 'navigation' | 'typography' | 'interaction' | 'performance' | 'accessibility';
+  priority: 'critical' | 'high' | 'medium' | 'low';
   issue: string;
   solution: string;
   implementation: string;
   affectedBreakpoints: string[];
-  estimatedImpact: string;
+  codeExample?: string;
+  estimatedEffort: 'low' | 'medium' | 'high';
 }
 
+export interface ResponsiveAnalysis {
+  strengths: string[];
+  weaknesses: string[];
+  priorityActions: ResponsiveRecommendation[];
+  implementationRoadmap: {
+    phase: string;
+    recommendations: ResponsiveRecommendation[];
+    estimatedTime: string;
+  }[];
+}
+
+// Comprehensive recommendations based on common responsive design issues
 export const RESPONSIVE_RECOMMENDATIONS: ResponsiveRecommendation[] = [
-  // Critical Issues
+  // Critical Layout Issues
   {
-    id: 'nav-mobile-hamburger',
-    priority: 'critical',
-    category: 'navigation',
-    component: 'Header Navigation',
-    issue: 'Navigation menu not accessible on mobile devices',
-    solution: 'Implement hamburger menu with proper accessibility',
-    implementation: 'Add mobile menu toggle, off-canvas navigation, and proper ARIA labels',
-    affectedBreakpoints: ['Mobile S', 'Mobile M', 'Mobile L'],
-    estimatedImpact: 'High - Critical for mobile user experience'
-  },
-  {
-    id: 'opportunity-modal-fullscreen',
-    priority: 'critical',
-    category: 'modals',
-    component: 'Opportunity Detail Modal',
-    issue: 'Modal content overflows and is not scrollable on mobile',
-    solution: 'Full-screen modal layout with proper scrolling areas',
-    implementation: 'Use full viewport dimensions with nested scroll areas',
-    affectedBreakpoints: ['Mobile S', 'Mobile M', 'Mobile L', 'Tablet Portrait'],
-    estimatedImpact: 'High - Core functionality broken on mobile'
-  },
-  {
-    id: 'table-horizontal-scroll',
-    priority: 'critical',
-    category: 'tables',
     component: 'Opportunities Table',
-    issue: 'Table data not accessible on mobile due to width constraints',
-    solution: 'Responsive table with horizontal scroll and fixed columns',
-    implementation: 'Add horizontal scroll container with sticky first column',
-    affectedBreakpoints: ['Mobile S', 'Mobile M', 'Mobile L', 'Tablet Portrait'],
-    estimatedImpact: 'High - Data visibility critical for business operations'
+    category: 'layout',
+    priority: 'critical',
+    issue: 'Table content overflows on mobile devices causing horizontal scroll',
+    solution: 'Implement responsive table pattern with card layout for mobile',
+    implementation: 'Create conditional rendering that shows cards on mobile and table on desktop',
+    affectedBreakpoints: ['Mobile Portrait', 'Mobile Landscape'],
+    codeExample: `
+// ResponsiveTable.tsx
+const ResponsiveTable = ({ data }) => {
+  const [isMobile] = useMediaQuery('(max-width: 768px)');
+  
+  return isMobile ? (
+    <div className="space-y-4">
+      {data.map(item => (
+        <Card key={item.id} className="p-4">
+          {/* Card layout for mobile */}
+        </Card>
+      ))}
+    </div>
+  ) : (
+    <Table>
+      {/* Traditional table for desktop */}
+    </Table>
+  );
+};`,
+    estimatedEffort: 'high'
+  },
+  
+  {
+    component: 'Navigation Sidebar',
+    category: 'navigation',
+    priority: 'critical',
+    issue: 'Sidebar takes up too much space on tablet devices',
+    solution: 'Implement collapsible sidebar with overlay mode for tablets',
+    implementation: 'Add responsive sidebar behavior that collapses to icons on tablet',
+    affectedBreakpoints: ['iPad Portrait', 'Android Tablet'],
+    codeExample: `
+// ResponsiveSidebar.tsx
+const ResponsiveSidebar = () => {
+  const [isTablet] = useMediaQuery('(max-width: 1024px) and (min-width: 768px)');
+  const [isCollapsed, setIsCollapsed] = useState(isTablet);
+  
+  return (
+    <aside className={cn(
+      'transition-all duration-300',
+      isCollapsed ? 'w-16' : 'w-64'
+    )}>
+      {/* Sidebar content */}
+    </aside>
+  );
+};`,
+    estimatedEffort: 'medium'
   },
 
   // High Priority Issues
   {
-    id: 'sidebar-responsive-collapse',
-    priority: 'high',
-    category: 'navigation',
-    component: 'Sidebar Navigation',
-    issue: 'Sidebar takes too much space on tablet and mobile',
-    solution: 'Collapsible sidebar with overlay on smaller screens',
-    implementation: 'Auto-collapse below 1024px with overlay behavior',
-    affectedBreakpoints: ['Tablet Portrait', 'Tablet Landscape', 'Mobile devices'],
-    estimatedImpact: 'Medium - Improves content area usage'
-  },
-  {
-    id: 'form-three-column-responsive',
-    priority: 'high',
-    category: 'forms',
-    component: 'Opportunity Edit Form',
-    issue: 'Three-column form layout cramped on smaller screens',
-    solution: 'Progressive column reduction based on screen size',
-    implementation: 'lg:grid-cols-3 md:grid-cols-2 grid-cols-1 pattern',
-    affectedBreakpoints: ['Tablet Portrait', 'Mobile devices'],
-    estimatedImpact: 'Medium - Better form usability'
-  },
-  {
-    id: 'dashboard-widget-stacking',
-    priority: 'high',
+    component: 'Form Dialogs',
     category: 'layout',
+    priority: 'high',
+    issue: 'Form fields stack poorly on mobile creating excessive scrolling',
+    solution: 'Implement progressive column reduction and optimize field ordering',
+    implementation: 'Use responsive grid that reduces from 3 columns to 2 to 1',
+    affectedBreakpoints: ['All Mobile', 'Small Tablet'],
+    codeExample: `
+// ResponsiveForm.tsx
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+  {formFields.map(field => (
+    <FormField key={field.name} className="w-full" />
+  ))}
+</div>`,
+    estimatedEffort: 'low'
+  },
+
+  {
     component: 'Dashboard Widgets',
-    issue: 'Widgets not stacking properly on mobile',
-    solution: 'Responsive grid with proper widget stacking',
-    implementation: 'CSS Grid with responsive columns and gap adjustments',
-    affectedBreakpoints: ['Mobile S', 'Mobile M', 'Mobile L'],
-    estimatedImpact: 'Medium - Dashboard usability on mobile'
+    category: 'layout',
+    priority: 'high',
+    issue: 'Widget grid creates gaps and poor spacing on various screen sizes',
+    solution: 'Implement container queries and flexible grid system',
+    implementation: 'Use CSS container queries for widget-level responsiveness',
+    affectedBreakpoints: ['Medium Laptop', 'iPad Landscape'],
+    estimatedEffort: 'medium'
+  },
+
+  {
+    component: 'Opportunity Detail Modal',
+    category: 'layout',
+    priority: 'high',
+    issue: 'Modal content becomes cramped and difficult to navigate on mobile',
+    solution: 'Convert to full-screen modal with proper tab navigation on mobile',
+    implementation: 'Implement responsive modal that goes full-screen below 768px',
+    affectedBreakpoints: ['All Mobile'],
+    codeExample: `
+// ResponsiveModal.tsx
+const ResponsiveModal = ({ children, ...props }) => {
+  const [isMobile] = useMediaQuery('(max-width: 768px)');
+  
+  return (
+    <Dialog {...props}>
+      <DialogContent className={cn(
+        isMobile ? 'w-screen h-screen max-w-none m-0 rounded-none' : 'max-w-4xl'
+      )}>
+        {children}
+      </DialogContent>
+    </Dialog>
+  );
+};`,
+    estimatedEffort: 'medium'
   },
 
   // Medium Priority Issues
   {
-    id: 'typography-scaling',
-    priority: 'medium',
+    component: 'Typography System',
     category: 'typography',
-    component: 'Global Typography',
-    issue: 'Text sizes not optimized for different screen sizes',
-    solution: 'Responsive typography scale with relative units',
-    implementation: 'Use clamp() for fluid typography and proper line heights',
-    affectedBreakpoints: ['All breakpoints'],
-    estimatedImpact: 'Medium - Improved readability across devices'
-  },
-  {
-    id: 'touch-targets',
     priority: 'medium',
-    category: 'navigation',
-    component: 'Interactive Elements',
-    issue: 'Touch targets smaller than 44px on mobile',
-    solution: 'Ensure minimum touch target sizes',
-    implementation: 'Add min-height and min-width classes for touch elements',
-    affectedBreakpoints: ['Mobile devices', 'Tablet Portrait'],
-    estimatedImpact: 'Medium - Better mobile accessibility'
-  },
-  {
-    id: 'card-spacing',
-    priority: 'medium',
-    category: 'layout',
-    component: 'Card Components',
-    issue: 'Inconsistent spacing and padding on different screen sizes',
-    solution: 'Responsive padding and margin system',
-    implementation: 'Use responsive padding classes (p-4 sm:p-6 lg:p-8)',
-    affectedBreakpoints: ['All breakpoints'],
-    estimatedImpact: 'Low - Visual consistency improvement'
+    issue: 'Font sizes do not scale appropriately across device types',
+    solution: 'Implement fluid typography using clamp() functions',
+    implementation: 'Replace fixed font sizes with fluid scaling',
+    affectedBreakpoints: ['All'],
+    codeExample: `
+/* Fluid Typography */
+:root {
+  --font-size-sm: clamp(0.875rem, 0.8rem + 0.25vw, 1rem);
+  --font-size-base: clamp(1rem, 0.9rem + 0.35vw, 1.125rem);
+  --font-size-lg: clamp(1.125rem, 1rem + 0.5vw, 1.25rem);
+}`,
+    estimatedEffort: 'low'
   },
 
-  // Low Priority Issues
   {
-    id: 'image-optimization',
-    priority: 'low',
-    category: 'performance',
-    component: 'Images and Media',
-    issue: 'Images not optimized for different screen densities',
-    solution: 'Responsive images with srcset and proper sizing',
-    implementation: 'Use picture element with multiple source sizes',
-    affectedBreakpoints: ['All breakpoints'],
-    estimatedImpact: 'Low - Performance optimization'
+    component: 'Touch Targets',
+    category: 'interaction',
+    priority: 'medium',
+    issue: 'Interactive elements too small for comfortable touch interaction',
+    solution: 'Implement minimum 44px touch targets for all interactive elements',
+    implementation: 'Add touch-target utility classes and apply consistently',
+    affectedBreakpoints: ['All Mobile', 'All Tablet'],
+    estimatedEffort: 'low'
   },
+
   {
-    id: 'scroll-indicators',
-    priority: 'low',
-    category: 'navigation',
-    component: 'Scrollable Areas',
-    issue: 'No visual indication of scrollable content',
-    solution: 'Add scroll indicators and better scrollbar styling',
-    implementation: 'Custom scrollbar styles and scroll shadows',
-    affectedBreakpoints: ['All breakpoints'],
-    estimatedImpact: 'Low - UX enhancement'
+    component: 'Content Prioritization',
+    category: 'layout',
+    priority: 'medium',
+    issue: 'Secondary content competes with primary content on small screens',
+    solution: 'Implement progressive disclosure and content hiding',
+    implementation: 'Use responsive utilities to hide/show content by importance',
+    affectedBreakpoints: ['Mobile Portrait'],
+    codeExample: `
+/* Content Priority System */
+.content-priority-high { order: -1; }
+.content-priority-medium { order: 0; }
+.content-priority-low { order: 1; }
+
+@media (max-width: 768px) {
+  .content-priority-low { display: none; }
+}`,
+    estimatedEffort: 'medium'
+  },
+
+  // Performance Related
+  {
+    component: 'Image Assets',
+    category: 'performance',
+    priority: 'medium',
+    issue: 'Images not optimized for different screen densities and sizes',
+    solution: 'Implement responsive images with srcset and proper sizing',
+    implementation: 'Use next/image or similar with responsive sizing',
+    affectedBreakpoints: ['All'],
+    estimatedEffort: 'medium'
+  },
+
+  // Accessibility Improvements
+  {
+    component: 'Focus Management',
+    category: 'accessibility',
+    priority: 'medium',
+    issue: 'Focus indicators not visible or appropriate across all screen sizes',
+    solution: 'Enhance focus styles with responsive considerations',
+    implementation: 'Implement larger focus indicators on touch devices',
+    affectedBreakpoints: ['All Mobile', 'All Tablet'],
+    estimatedEffort: 'low'
   }
 ];
 
+// Best practices organized by category
 export const RESPONSIVE_BEST_PRACTICES = {
   design: [
-    'Use mobile-first approach for CSS development',
-    'Design with content hierarchy in mind',
-    'Prioritize essential content for smaller screens',
-    'Maintain consistent spacing ratios across breakpoints',
-    'Consider thumb zones for mobile navigation',
-    'Use progressive disclosure for complex interfaces'
+    'Design mobile-first, then enhance for larger screens',
+    'Use relative units (rem, em, %) instead of fixed pixels',
+    'Maintain adequate contrast ratios across all themes',
+    'Design touch targets to be minimum 44×44px',
+    'Consider thumb-friendly zones for mobile navigation',
+    'Test on real devices, not just browser tools',
+    'Optimize for common device orientations',
+    'Use progressive enhancement for advanced features'
   ],
   technical: [
-    'Use CSS Grid and Flexbox for layout flexibility',
-    'Implement proper viewport meta tag',
-    'Use relative units (rem, em, %) instead of fixed pixels',
-    'Leverage CSS custom properties for consistent theming',
-    'Implement proper focus management for keyboard navigation',
-    'Test with real devices, not just browser tools'
-  ],
-  accessibility: [
-    'Ensure minimum 44px touch targets',
-    'Maintain proper color contrast ratios',
-    'Provide proper ARIA labels for responsive elements',
-    'Test with screen readers across different viewports',
-    'Implement proper heading hierarchy',
-    'Ensure keyboard navigation works on all screen sizes'
+    'Use CSS Grid and Flexbox for flexible layouts',
+    'Implement container queries for component-level responsiveness',
+    'Use media queries strategically, not excessively',
+    'Optimize images with responsive sizing and formats',
+    'Minimize layout shifts with proper size reservations',
+    'Use semantic HTML for better accessibility',
+    'Implement proper focus management and keyboard navigation',
+    'Test with screen readers and assistive technologies'
   ],
   performance: [
-    'Optimize images for different screen densities',
-    'Use CSS containment for better performance',
-    'Implement lazy loading for off-screen content',
-    'Minimize layout shifts during responsive changes',
-    'Use efficient CSS selectors and avoid deep nesting',
-    'Monitor Core Web Vitals across different devices'
+    'Lazy load images and non-critical content',
+    'Use efficient CSS selectors and minimize reflows',
+    'Implement critical CSS for above-the-fold content',
+    'Optimize JavaScript bundles for mobile networks',
+    'Use service workers for offline functionality',
+    'Monitor Core Web Vitals across devices',
+    'Implement proper caching strategies',
+    'Test on slow network connections'
+  ],
+  testing: [
+    'Test on multiple real devices and browsers',
+    'Use automated accessibility testing tools',
+    'Implement visual regression testing',
+    'Test with different font sizes and zoom levels',
+    'Validate color contrast across all themes',
+    'Test keyboard navigation thoroughly',
+    'Verify touch interactions work properly',
+    'Test with assistive technologies'
   ]
 };
 
-export const BREAKPOINT_STRATEGY = {
-  mobile: {
-    range: '320px - 767px',
-    strategy: 'Single column layout, stacked content, touch-optimized interactions',
-    considerations: [
-      'Content prioritization critical',
-      'Navigation must be accessible',
-      'Forms should use full width',
-      'Tables need alternative layouts'
-    ]
-  },
-  tablet: {
-    range: '768px - 1023px',
-    strategy: 'Two-column layouts, hybrid navigation, optimized for both touch and mouse',
-    considerations: [
-      'Balance between mobile and desktop patterns',
-      'Consider both portrait and landscape orientations',
-      'Maintain touch target sizes',
-      'Optimize for reading and data entry'
-    ]
-  },
-  desktop: {
-    range: '1024px+',
-    strategy: 'Multi-column layouts, full feature visibility, mouse-optimized interactions',
-    considerations: [
-      'Utilize available screen real estate',
-      'Support keyboard shortcuts',
-      'Enable advanced features',
-      'Optimize for productivity workflows'
-    ]
-  }
-};
-
-/**
- * Utility functions for responsive analysis
- */
 export class ResponsiveAnalyzer {
-  static analyzeCurrentImplementation(): {
-    strengths: string[];
-    weaknesses: string[];
-    recommendations: ResponsiveRecommendation[];
-  } {
+  /**
+   * Analyze current responsive implementation
+   */
+  static analyzeCurrentImplementation(): ResponsiveAnalysis {
+    const strengths: string[] = [
+      'Uses modern CSS Grid and Flexbox for layouts',
+      'Implements mobile-first responsive design approach',
+      'Provides comprehensive set of responsive utility classes',
+      'Includes touch-friendly interaction patterns',
+      'Uses semantic HTML structure for accessibility',
+      'Implements proper focus management',
+      'Provides consistent spacing and typography scales',
+      'Includes responsive navigation patterns'
+    ];
+
+    const weaknesses: string[] = [
+      'Tables need better mobile responsiveness patterns',
+      'Modal dialogs could be more mobile-friendly',
+      'Some components lack container query support',
+      'Typography scaling could be more fluid',
+      'Touch targets need consistent sizing verification',
+      'Content prioritization needs improvement on small screens',
+      'Image responsiveness needs optimization',
+      'Performance on low-end devices needs testing'
+    ];
+
+    // Get priority actions from recommendations
+    const priorityActions = RESPONSIVE_RECOMMENDATIONS
+      .filter(rec => rec.priority === 'critical' || rec.priority === 'high')
+      .sort((a, b) => {
+        const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+        return priorityOrder[a.priority] - priorityOrder[b.priority];
+      });
+
+    // Create implementation roadmap
+    const implementationRoadmap = [
+      {
+        phase: 'Phase 1: Critical Fixes',
+        recommendations: RESPONSIVE_RECOMMENDATIONS.filter(rec => rec.priority === 'critical'),
+        estimatedTime: '1-2 weeks'
+      },
+      {
+        phase: 'Phase 2: High Impact Improvements',
+        recommendations: RESPONSIVE_RECOMMENDATIONS.filter(rec => rec.priority === 'high'),
+        estimatedTime: '2-3 weeks'
+      },
+      {
+        phase: 'Phase 3: Polish and Optimization',
+        recommendations: RESPONSIVE_RECOMMENDATIONS.filter(rec => rec.priority === 'medium'),
+        estimatedTime: '1-2 weeks'
+      },
+      {
+        phase: 'Phase 4: Advanced Features',
+        recommendations: RESPONSIVE_RECOMMENDATIONS.filter(rec => rec.priority === 'low'),
+        estimatedTime: '1 week'
+      }
+    ];
+
     return {
-      strengths: [
-        'Mobile-first CSS approach implemented',
-        'Consistent breakpoint system using Tailwind',
-        'Flexible grid layouts with CSS Grid',
-        'Responsive typography baseline established',
-        'Accessibility considerations in navigation',
-        'Progressive enhancement approach'
-      ],
-      weaknesses: [
-        'Table layouts not mobile-optimized',
-        'Modal dialogs need mobile improvements',
-        'Form layouts could be more responsive',
-        'Touch target sizes need verification',
-        'Sidebar behavior needs tablet optimization',
-        'Performance optimization opportunities exist'
-      ],
-      recommendations: RESPONSIVE_RECOMMENDATIONS.filter(rec => rec.priority === 'critical' || rec.priority === 'high')
+      strengths,
+      weaknesses,
+      priorityActions,
+      implementationRoadmap
     };
   }
 
-  static getImplementationPlan(): {
-    phase1: ResponsiveRecommendation[];
-    phase2: ResponsiveRecommendation[];
-    phase3: ResponsiveRecommendation[];
+  /**
+   * Generate specific recommendations for a component
+   */
+  static getComponentRecommendations(componentName: string): ResponsiveRecommendation[] {
+    return RESPONSIVE_RECOMMENDATIONS.filter(rec => 
+      rec.component.toLowerCase().includes(componentName.toLowerCase())
+    );
+  }
+
+  /**
+   * Get recommendations by priority
+   */
+  static getRecommendationsByPriority(priority: ResponsiveRecommendation['priority']): ResponsiveRecommendation[] {
+    return RESPONSIVE_RECOMMENDATIONS.filter(rec => rec.priority === priority);
+  }
+
+  /**
+   * Get recommendations by category
+   */
+  static getRecommendationsByCategory(category: ResponsiveRecommendation['category']): ResponsiveRecommendation[] {
+    return RESPONSIVE_RECOMMENDATIONS.filter(rec => rec.category === category);
+  }
+
+  /**
+   * Calculate implementation effort score
+   */
+  static calculateImplementationEffort(): {
+    totalRecommendations: number;
+    effortBreakdown: Record<string, number>;
+    estimatedTimeRange: string;
   } {
+    const total = RESPONSIVE_RECOMMENDATIONS.length;
+    const effortBreakdown = RESPONSIVE_RECOMMENDATIONS.reduce((acc, rec) => {
+      acc[rec.estimatedEffort] = (acc[rec.estimatedEffort] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    // Rough time estimates
+    const lowEffortWeeks = (effortBreakdown.low || 0) * 0.5;
+    const mediumEffortWeeks = (effortBreakdown.medium || 0) * 1.5;
+    const highEffortWeeks = (effortBreakdown.high || 0) * 3;
+    
+    const totalWeeks = lowEffortWeeks + mediumEffortWeeks + highEffortWeeks;
+    const estimatedTimeRange = `${Math.ceil(totalWeeks * 0.8)}-${Math.ceil(totalWeeks * 1.2)} weeks`;
+
     return {
-      phase1: RESPONSIVE_RECOMMENDATIONS.filter(rec => rec.priority === 'critical'),
-      phase2: RESPONSIVE_RECOMMENDATIONS.filter(rec => rec.priority === 'high'),
-      phase3: RESPONSIVE_RECOMMENDATIONS.filter(rec => rec.priority === 'medium' || rec.priority === 'low')
+      totalRecommendations: total,
+      effortBreakdown,
+      estimatedTimeRange
     };
   }
 
-  static getBreakpointRecommendations(width: number): string[] {
-    if (width < 768) {
-      return [
-        'Prioritize essential content',
-        'Use single-column layouts',
-        'Implement touch-friendly navigation',
-        'Ensure forms are thumb-accessible'
-      ];
-    } else if (width < 1024) {
-      return [
-        'Use two-column layouts where appropriate',
-        'Balance touch and mouse interactions',
-        'Consider both orientations',
-        'Optimize for reading and data entry'
-      ];
-    } else {
-      return [
-        'Utilize full screen real estate',
-        'Enable advanced features',
-        'Optimize for productivity',
-        'Support keyboard shortcuts'
-      ];
-    }
+  /**
+   * Generate priority matrix
+   */
+  static generatePriorityMatrix(): {
+    criticalHigh: ResponsiveRecommendation[];
+    criticalMedium: ResponsiveRecommendation[];
+    highHigh: ResponsiveRecommendation[];
+    highMedium: ResponsiveRecommendation[];
+    quickWins: ResponsiveRecommendation[];
+  } {
+    const recommendations = RESPONSIVE_RECOMMENDATIONS;
+    
+    return {
+      criticalHigh: recommendations.filter(r => r.priority === 'critical' && r.estimatedEffort === 'high'),
+      criticalMedium: recommendations.filter(r => r.priority === 'critical' && r.estimatedEffort !== 'high'),
+      highHigh: recommendations.filter(r => r.priority === 'high' && r.estimatedEffort === 'high'),
+      highMedium: recommendations.filter(r => r.priority === 'high' && r.estimatedEffort !== 'high'),
+      quickWins: recommendations.filter(r => r.estimatedEffort === 'low' && r.priority !== 'low')
+    };
   }
 }
+
+// Export analysis instance
+export const responsiveAnalyzer = new ResponsiveAnalyzer();

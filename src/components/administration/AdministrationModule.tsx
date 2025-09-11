@@ -38,6 +38,9 @@ import { OpportunityTestSuite } from '@/components/opportunities/OpportunityTest
 // Import new real-time data integration components
 import { RealTimeDataHub } from '@/components/integrations/RealTimeDataHub';
 import { DataQualityDashboard } from '@/components/integrations/DataQualityDashboard';
+
+// Import responsive testing components
+import { ResponsiveTestSuite } from '@/components/testing/ResponsiveTestSuite';
 import { AutomationWorkflows } from '@/components/integrations/AutomationWorkflows';
 
 // Import administration sub-components
@@ -433,8 +436,9 @@ export function AdministrationModule({ userRole, isOwner = false, initialView = 
           </Card>
 
           <Tabs defaultValue="opportunity-suite" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-5">
+            <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-6">
               <TabsTrigger value="opportunity-suite">Opportunity Tests</TabsTrigger>
+              <TabsTrigger value="responsive-tests">Responsive Tests</TabsTrigger>
               <TabsTrigger value="validation-demo">Validation Demo</TabsTrigger>
               <TabsTrigger value="autosave-test">AutoSave Tests</TabsTrigger>
               <TabsTrigger value="validation-suite">Validation Suite</TabsTrigger>
@@ -443,6 +447,10 @@ export function AdministrationModule({ userRole, isOwner = false, initialView = 
 
             <TabsContent value="opportunity-suite">
               <OpportunityTestSuite />
+            </TabsContent>
+
+            <TabsContent value="responsive-tests">
+              <ResponsiveTestSuite />
             </TabsContent>
 
             <TabsContent value="validation-demo">

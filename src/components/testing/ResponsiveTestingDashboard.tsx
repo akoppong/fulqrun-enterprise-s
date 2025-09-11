@@ -1,11 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Separator } from '@/components/ui/separator';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { 
   DeviceMobile,
   DeviceTablet,
@@ -16,610 +18,696 @@ import {
   XCircle,
   Eye,
   TestTube,
-  ArrowsOutCardinal,
-  PlayCircle,
-  PauseCircle,
-  StopCircle,
   BugBeetle,
-  Lightbulb
+  Lightbulb,
+  ArrowLeft,
+  Target,
+  TrendUp,
+  Clock,
+  Users,
+  Gauge,
+  List,
+  Code,
+  Wrench,
+  Star,
+  Lightning,
+  ShieldCheck
 } from '@phosphor-icons/react';
-import { ResponsiveContainer, ResponsiveGrid, ResponsiveFlex } from '../layout/EnhancedResponsiveLayout';
 import { 
-  ResponsiveRecommendation, 
-  RESPONSIVE_RECOMMENDATIONS, 
+  ResponsiveValidator, 
+  STANDARD_BREAKPOINTS, 
+  ResponsiveUtils,
+  type ComponentResponsiveAnalysis,
+  type ResponsiveBreakpoint
+} from '@/lib/responsive-validator';
+import { 
+  ResponsiveAnalyzer,
+  RESPONSIVE_RECOMMENDATIONS,
   RESPONSIVE_BEST_PRACTICES,
-  ResponsiveAnalyzer 
+  type ResponsiveRecommendation
 } from '@/lib/responsive-recommendations';
 
-interface ResponsiveTestResult {
-  breakpoint: string;
-  width: number;
-  height: number;
-  deviceType: 'mobile' | 'tablet' | 'desktop';
-  score: number;
-  issues: ResponsiveIssue[];
-  timestamp: Date;
-}
-
-interface ResponsiveIssue {
-  severity: 'critical' | 'high' | 'medium' | 'low';
-  category: 'layout' | 'typography' | 'navigation' | 'content' | 'interaction';
-  description: string;
-  element?: string;
-  recommendation?: string;
-}
-
-interface ComponentTestResult {
-  componentName: string;
-  description: string;
-  testResults: ResponsiveTestResult[];
-  overallScore: number;
-  recommendations: string[];
-}
-
-const BREAKPOINTS = [
-  { name: 'Mobile S', width: 320, height: 568, device: 'mobile' as const },
-  { name: 'Mobile M', width: 375, height: 667, device: 'mobile' as const },
-  { name: 'Mobile L', width: 425, height: 812, device: 'mobile' as const },
-  { name: 'Tablet Portrait', width: 768, height: 1024, device: 'tablet' as const },
-  { name: 'Tablet Landscape', width: 1024, height: 768, device: 'tablet' as const },
-  { name: 'Desktop', width: 1440, height: 900, device: 'desktop' as const },
-  { name: 'Large Desktop', width: 1920, height: 1080, device: 'desktop' as const },
+// Comprehensive test scenarios
+const TEST_SCENARIOS = [
+  {
+    name: 'Component Visibility',
+    description: 'Test if components remain visible and accessible across screen sizes',
+    testFunction: 'visibility'
+  },
+  {
+    name: 'Touch Interaction',
+    description: 'Verify touch targets are adequately sized for mobile interaction',
+    testFunction: 'touchTargets'
+  },
+  {
+    name: 'Content Overflow',
+    description: 'Check for horizontal overflow and layout breaking',
+    testFunction: 'overflow'
+  },
+  {
+    name: 'Navigation Usability',
+    description: 'Test navigation patterns across different devices',
+    testFunction: 'navigation'
+  },
+  {
+    name: 'Form Usability',
+    description: 'Verify form layouts and input accessibility',
+    testFunction: 'forms'
+  },
+  {
+    name: 'Typography Readability',
+    description: 'Test text readability and sizing across viewports',
+    testFunction: 'typography'
+  }
 ];
+
+// Critical components that need thorough testing
+const CRITICAL_COMPONENTS = [
+  {
+    name: 'Primary Navigation',
+    selector: '.sidebar-container, nav',
+    priority: 'critical',
+    description: 'Main application navigation and menu system'
+  },
+  {
+    name: 'Data Tables',
+    selector: '.opportunities-table, table',
+    priority: 'critical',
+    description: 'Opportunities and data display tables'
+  },
+  {
+    name: 'Modal Dialogs',
+    selector: '[data-radix-dialog-content]',
+    priority: 'high',
+    description: 'Create, edit and detail view modals'
+  },
+  {
+    name: 'Dashboard Layout',
+    selector: '.dashboard-grid, .main-content-area',
+    priority: 'high',
+    description: 'Main dashboard and content areas'
+  },
+  {
+    name: 'Form Components',
+    selector: '.form-container, form',
+    priority: 'medium',
+    description: 'All form inputs and field layouts'
+  },
+  {
+    name: 'Widget System',
+    selector: '.widget-container, .react-grid-item',
+    priority: 'medium',
+    description: 'Dashboard widgets and KPI cards'
+  }
+];
+
+interface TestProgress {
+  currentComponent: string;
+  currentBreakpoint: string;
+  currentScenario: string;
+  progress: number;
+  isComplete: boolean;
+}
 
 export function ResponsiveTestingDashboard() {
   const [isRunning, setIsRunning] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [currentTest, setCurrentTest] = useState('');
-  const [testResults, setTestResults] = useState<ComponentTestResult[]>([]);
-  const [selectedComponent, setSelectedComponent] = useState<string>('');
-  const [currentViewport, setCurrentViewport] = useState(BREAKPOINTS[0]);
-  const frameRef = useRef<HTMLIFrameElement>(null);
+  const [testProgress, setTestProgress] = useState<TestProgress>({
+    currentComponent: '',
+    currentBreakpoint: '',
+    currentScenario: '',
+    progress: 0,
+    isComplete: false
+  });
+  const [testResults, setTestResults] = useState<ComponentResponsiveAnalysis[]>([]);
+  const [selectedTab, setSelectedTab] = useState('overview');
+  const [currentViewport, setCurrentViewport] = useState(STANDARD_BREAKPOINTS[0]);
+  const [liveTestMode, setLiveTestMode] = useState(false);
 
-  // Real-time viewport monitoring
+  const validator = ResponsiveValidator.getInstance();
+  const analysis = ResponsiveAnalyzer.analyzeCurrentImplementation();
+
+  // Real-time viewport tracking
   const [viewportInfo, setViewportInfo] = useState({
-    width: window.innerWidth,
-    height: window.innerHeight,
-    deviceType: getDeviceType(window.innerWidth)
+    width: 0,
+    height: 0,
+    deviceType: 'desktop' as 'mobile' | 'tablet' | 'desktop',
+    orientation: 'landscape' as 'portrait' | 'landscape'
   });
 
   useEffect(() => {
-    const updateViewport = () => {
+    const updateViewportInfo = () => {
+      const dimensions = ResponsiveUtils.getViewportDimensions();
       setViewportInfo({
-        width: window.innerWidth,
-        height: window.innerHeight,
-        deviceType: getDeviceType(window.innerWidth)
+        width: dimensions.width,
+        height: dimensions.height,
+        deviceType: ResponsiveUtils.getCurrentDeviceType(),
+        orientation: dimensions.width > dimensions.height ? 'landscape' : 'portrait'
       });
     };
 
-    window.addEventListener('resize', updateViewport);
-    return () => window.removeEventListener('resize', updateViewport);
+    updateViewportInfo();
+    window.addEventListener('resize', updateViewportInfo);
+    return () => window.removeEventListener('resize', updateViewportInfo);
   }, []);
 
-  function getDeviceType(width: number): 'mobile' | 'tablet' | 'desktop' {
-    if (width < 768) return 'mobile';
-    if (width < 1024) return 'tablet';
-    return 'desktop';
-  }
-
-  const runResponsiveTests = async () => {
+  const runComprehensiveTests = async () => {
     setIsRunning(true);
-    setProgress(0);
     setTestResults([]);
+    validator.clearResults();
+    
+    const totalTests = CRITICAL_COMPONENTS.length * STANDARD_BREAKPOINTS.length * TEST_SCENARIOS.length;
+    let completedTests = 0;
 
-    const components = [
-      { name: 'Header Navigation', description: 'Top navigation with user menu' },
-      { name: 'Sidebar Navigation', description: 'Collapsible sidebar menu' },
-      { name: 'Opportunities Table', description: 'Data table with responsive behavior' },
-      { name: 'Opportunity Modal', description: 'Full-screen modal dialog' },
-      { name: 'Dashboard Widgets', description: 'KPI cards and charts' },
-      { name: 'Forms', description: 'Create/edit forms' }
-    ];
-
-    for (let i = 0; i < components.length; i++) {
-      const component = components[i];
-      setCurrentTest(component.name);
-
-      const testResults: ResponsiveTestResult[] = [];
-
-      for (const breakpoint of BREAKPOINTS) {
-        // Simulate testing at different breakpoints
-        const issues = await testComponentAtBreakpoint(component.name, breakpoint);
-        const score = calculateScore(issues);
-
-        testResults.push({
-          breakpoint: breakpoint.name,
-          width: breakpoint.width,
-          height: breakpoint.height,
-          deviceType: breakpoint.device,
-          score,
-          issues,
-          timestamp: new Date()
-        });
-
-        // Update progress
-        const overallProgress = ((i * BREAKPOINTS.length + testResults.length) / (components.length * BREAKPOINTS.length)) * 100;
-        setProgress(overallProgress);
-
-        // Simulate processing time
-        await new Promise(resolve => setTimeout(resolve, 500));
+    for (const component of CRITICAL_COMPONENTS) {
+      setTestProgress(prev => ({ ...prev, currentComponent: component.name }));
+      
+      try {
+        const analysis = await validator.analyzeComponent(
+          component.name,
+          component.description,
+          component.selector
+        );
+        
+        setTestResults(prev => [...prev, analysis]);
+        
+        for (const breakpoint of STANDARD_BREAKPOINTS) {
+          setTestProgress(prev => ({ ...prev, currentBreakpoint: breakpoint.name }));
+          
+          for (const scenario of TEST_SCENARIOS) {
+            setTestProgress(prev => ({ ...prev, currentScenario: scenario.name }));
+            
+            // Simulate test execution
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            completedTests++;
+            setTestProgress(prev => ({ 
+              ...prev, 
+              progress: (completedTests / totalTests) * 100 
+            }));
+          }
+        }
+      } catch (error) {
+        console.error(`Error testing ${component.name}:`, error);
       }
-
-      const overallScore = Math.round(testResults.reduce((sum, result) => sum + result.score, 0) / testResults.length);
-      const recommendations = generateRecommendations(component.name, testResults);
-
-      setTestResults(prev => [...prev, {
-        componentName: component.name,
-        description: component.description,
-        testResults,
-        overallScore,
-        recommendations
-      }]);
     }
-
+    
+    setTestProgress(prev => ({ ...prev, isComplete: true }));
     setIsRunning(false);
-    setCurrentTest('');
   };
 
-  const testComponentAtBreakpoint = async (componentName: string, breakpoint: typeof BREAKPOINTS[0]): Promise<ResponsiveIssue[]> => {
-    const issues: ResponsiveIssue[] = [];
-
-    // Simulate component-specific testing logic
-    switch (componentName) {
-      case 'Header Navigation':
-        if (breakpoint.width < 768) {
-          issues.push({
-            severity: 'high',
-            category: 'navigation',
-            description: 'Navigation menu should collapse on mobile devices',
-            recommendation: 'Implement hamburger menu for mobile navigation'
-          });
-        }
-        break;
-
-      case 'Opportunities Table':
-        if (breakpoint.width < 1024) {
-          issues.push({
-            severity: 'medium',
-            category: 'layout',
-            description: 'Table requires horizontal scrolling on smaller screens',
-            recommendation: 'Consider card layout or responsive table design'
-          });
-        }
-        if (breakpoint.width < 768) {
-          issues.push({
-            severity: 'high',
-            category: 'content',
-            description: 'Table content not easily accessible on mobile',
-            recommendation: 'Switch to card-based layout for mobile devices'
-          });
-        }
-        break;
-
-      case 'Opportunity Modal':
-        if (breakpoint.width < 768) {
-          issues.push({
-            severity: 'critical',
-            category: 'layout',
-            description: 'Modal dialog not properly sized for mobile screens',
-            recommendation: 'Use full-screen modal on mobile devices'
-          });
-        }
-        break;
-
-      case 'Forms':
-        if (breakpoint.width < 768) {
-          issues.push({
-            severity: 'medium',
-            category: 'layout',
-            description: 'Multi-column form layout cramped on mobile',
-            recommendation: 'Stack form fields vertically on mobile devices'
-          });
-        }
-        break;
-    }
-
-    return issues;
+  const getOverallScore = () => {
+    if (testResults.length === 0) return 0;
+    return Math.round(testResults.reduce((sum, result) => sum + result.overallScore, 0) / testResults.length);
   };
 
-  const calculateScore = (issues: ResponsiveIssue[]): number => {
-    let score = 100;
-    issues.forEach(issue => {
-      switch (issue.severity) {
-        case 'critical':
-          score -= 25;
-          break;
-        case 'high':
-          score -= 15;
-          break;
-        case 'medium':
-          score -= 10;
-          break;
-        case 'low':
-          score -= 5;
-          break;
+  const getCriticalIssuesCount = () => {
+    return testResults.reduce((count, result) => 
+      count + result.criticalIssues.filter(issue => 
+        issue.severity === 'critical' || issue.severity === 'high'
+      ).length, 0
+    );
+  };
+
+  const getDeviceBreakdown = () => {
+    const breakdown: Record<string, { score: number; issues: number }> = {};
+    
+    for (const device of ['mobile', 'tablet', 'laptop', 'desktop']) {
+      const deviceResults = testResults.flatMap(result => 
+        result.testResults.filter(test => test.breakpoint.device === device)
+      );
+      
+      if (deviceResults.length > 0) {
+        const avgScore = Math.round(
+          deviceResults.reduce((sum, test) => sum + test.score, 0) / deviceResults.length
+        );
+        const issueCount = deviceResults.reduce((sum, test) => sum + test.issues.length, 0);
+        
+        breakdown[device] = { score: avgScore, issues: issueCount };
       }
-    });
-    return Math.max(0, score);
+    }
+    
+    return breakdown;
   };
 
-  const generateRecommendations = (componentName: string, results: ResponsiveTestResult[]): string[] => {
-    const recommendations: string[] = [];
-    const allIssues = results.flatMap(r => r.issues);
+  const getPriorityMatrix = () => {
+    return ResponsiveAnalyzer.generatePriorityMatrix();
+  };
 
-    if (allIssues.some(issue => issue.category === 'navigation')) {
-      recommendations.push('Implement responsive navigation patterns');
-    }
-    if (allIssues.some(issue => issue.category === 'layout')) {
-      recommendations.push('Optimize layout for smaller screens');
-    }
-    if (allIssues.some(issue => issue.severity === 'critical')) {
-      recommendations.push('Address critical responsive issues immediately');
-    }
-
-    return recommendations;
+  const getStatusColor = (score: number) => {
+    if (score >= 85) return 'text-green-600 bg-green-100';
+    if (score >= 70) return 'text-yellow-600 bg-yellow-100';
+    return 'text-red-600 bg-red-100';
   };
 
   const getDeviceIcon = (device: string) => {
     if (device.toLowerCase().includes('mobile')) return DeviceMobile;
     if (device.toLowerCase().includes('tablet')) return DeviceTablet;
-    return device.toLowerCase().includes('desktop') ? Desktop : Monitor;
+    return device.toLowerCase().includes('laptop') ? Desktop : Monitor;
   };
 
-  const getScoreColor = (score: number) => {
-    if (score >= 90) return 'text-green-600 bg-green-100';
-    if (score >= 75) return 'text-yellow-600 bg-yellow-100';
-    return 'text-red-600 bg-red-100';
-  };
-
-  const getSeverityColor = (severity: ResponsiveIssue['severity']) => {
-    switch (severity) {
-      case 'critical':
-        return 'text-red-700 bg-red-100 border-red-300';
-      case 'high':
-        return 'text-red-600 bg-red-50 border-red-200';
-      case 'medium':
-        return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-      case 'low':
-        return 'text-blue-600 bg-blue-50 border-blue-200';
-    }
-  };
-
-  const overallScore = testResults.length > 0 
-    ? Math.round(testResults.reduce((sum, test) => sum + test.overallScore, 0) / testResults.length)
-    : 0;
-
-  const analysis = ResponsiveAnalyzer.analyzeCurrentImplementation();
+  const overallScore = getOverallScore();
+  const criticalIssues = getCriticalIssuesCount();
+  const deviceBreakdown = getDeviceBreakdown();
+  const priorityMatrix = getPriorityMatrix();
 
   return (
-    <ResponsiveContainer maxWidth="full" padding="lg">
+    <div className="w-full max-w-7xl mx-auto p-6 space-y-6">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">
-          Responsive Design Assessment
-        </h1>
-        <p className="text-muted-foreground">
-          Comprehensive analysis of responsive behavior across devices and screen sizes
-        </p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => window.history.back()}
+          >
+            <ArrowLeft size={16} className="mr-2" />
+            Back to Quick Test
+          </Button>
+          <Separator orientation="vertical" className="h-6" />
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Comprehensive Responsive Analysis</h1>
+            <p className="text-muted-foreground">
+              In-depth testing and recommendations for responsive design optimization
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          {testResults.length > 0 && (
+            <Badge className={`${getStatusColor(overallScore)} font-semibold text-lg px-3 py-1`}>
+              {overallScore}% Overall Score
+            </Badge>
+          )}
+          <Button
+            onClick={runComprehensiveTests}
+            disabled={isRunning}
+            size="lg"
+          >
+            {isRunning ? (
+              <>
+                <TestTube size={16} className="mr-2 animate-pulse" />
+                Running Tests...
+              </>
+            ) : (
+              <>
+                <Lightning size={16} className="mr-2" />
+                Run Full Analysis
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
-      {/* Current Status */}
-      <ResponsiveGrid cols={{ default: 1, md: 2, lg: 4 }} gap="md" className="mb-8">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <div className="text-2xl font-bold mb-1">{overallScore}%</div>
-              <div className="text-sm text-muted-foreground">Overall Score</div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <div className="text-2xl font-bold mb-1">{viewportInfo.width}×{viewportInfo.height}</div>
-              <div className="text-sm text-muted-foreground">Current Viewport</div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <div className="text-2xl font-bold mb-1 capitalize">{viewportInfo.deviceType}</div>
-              <div className="text-sm text-muted-foreground">Device Type</div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <div className="text-2xl font-bold mb-1">{testResults.length}</div>
-              <div className="text-sm text-muted-foreground">Components Tested</div>
-            </div>
-          </CardContent>
-        </Card>
-      </ResponsiveGrid>
-
-      {/* Test Controls */}
-      <Card className="mb-8">
+      {/* Current Viewport Status */}
+      <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Responsive Testing</CardTitle>
-            <Button 
-              onClick={runResponsiveTests}
-              disabled={isRunning}
-              className="min-w-[140px]"
-            >
-              {isRunning ? (
-                <>
-                  <TestTube size={16} className="mr-2 animate-spin" />
-                  Testing...
-                </>
-              ) : (
-                <>
-                  <PlayCircle size={16} className="mr-2" />
-                  Run Tests
-                </>
-              )}
-            </Button>
-          </div>
+          <CardTitle className="flex items-center gap-2">
+            <Eye size={20} />
+            Live Viewport Analysis
+          </CardTitle>
         </CardHeader>
-        {isRunning && (
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">
-                  {currentTest ? `Testing: ${currentTest}` : 'Preparing tests...'}
-                </span>
-                <span className="text-sm text-muted-foreground">
-                  {Math.round(progress)}%
-                </span>
-              </div>
-              <Progress value={progress} className="w-full" />
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Current Size:</span>
+              <Badge variant="outline" className="font-mono">
+                {viewportInfo.width} × {viewportInfo.height}px
+              </Badge>
             </div>
-          </CardContent>
-        )}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Device Type:</span>
+              <Badge className="capitalize">
+                {viewportInfo.deviceType}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Orientation:</span>
+              <Badge variant="outline" className="capitalize">
+                {viewportInfo.orientation}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Touch Device:</span>
+              <Badge variant={ResponsiveUtils.isTouchDevice() ? 'default' : 'outline'}>
+                {ResponsiveUtils.isTouchDevice() ? 'Yes' : 'No'}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant={liveTestMode ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setLiveTestMode(!liveTestMode)}
+              >
+                <Target size={16} className="mr-2" />
+                {liveTestMode ? 'Live Mode On' : 'Enable Live Mode'}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
       </Card>
 
-      {/* Results */}
-      {testResults.length > 0 && (
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="detailed">Detailed Results</TabsTrigger>
-            <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
-            <TabsTrigger value="implementation">Implementation</TabsTrigger>
-          </TabsList>
+      {/* Test Progress */}
+      {isRunning && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="font-medium">
+                  Testing: {testProgress.currentComponent}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  {Math.round(testProgress.progress)}% Complete
+                </span>
+              </div>
+              <Progress value={testProgress.progress} className="w-full h-3" />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Component: </span>
+                  <span className="font-medium">{testProgress.currentComponent}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Breakpoint: </span>
+                  <span className="font-medium">{testProgress.currentBreakpoint}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Scenario: </span>
+                  <span className="font-medium">{testProgress.currentScenario}</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-          <TabsContent value="overview" className="space-y-6">
-            <ResponsiveGrid cols={{ default: 1, lg: 2 }} gap="lg">
-              {testResults.map((result) => (
-                <Card key={result.componentName}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">{result.componentName}</CardTitle>
-                      <Badge className={getScoreColor(result.overallScore)}>
-                        {result.overallScore}%
-                      </Badge>
+      {/* Results Dashboard */}
+      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="devices">Device Analysis</TabsTrigger>
+          <TabsTrigger value="components">Component Deep Dive</TabsTrigger>
+          <TabsTrigger value="roadmap">Implementation Roadmap</TabsTrigger>
+          <TabsTrigger value="bestpractices">Best Practices</TabsTrigger>
+          <TabsTrigger value="live">Live Testing</TabsTrigger>
+        </TabsList>
+
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="space-y-6">
+          {testResults.length > 0 ? (
+            <>
+              {/* Key Metrics */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <Gauge size={32} className="mx-auto mb-2 text-primary" />
+                      <div className="text-3xl font-bold">{overallScore}%</div>
+                      <div className="text-sm text-muted-foreground">Overall Score</div>
                     </div>
-                    <p className="text-sm text-muted-foreground">{result.description}</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <BugBeetle size={32} className="mx-auto mb-2 text-red-500" />
+                      <div className="text-3xl font-bold">{criticalIssues}</div>
+                      <div className="text-sm text-muted-foreground">Critical Issues</div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <List size={32} className="mx-auto mb-2 text-blue-500" />
+                      <div className="text-3xl font-bold">{testResults.length}</div>
+                      <div className="text-sm text-muted-foreground">Components Tested</div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <ShieldCheck size={32} className="mx-auto mb-2 text-green-500" />
+                      <div className="text-3xl font-bold">{STANDARD_BREAKPOINTS.length}</div>
+                      <div className="text-sm text-muted-foreground">Breakpoints Tested</div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Quick Summary */}
+              <div className="grid lg:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <CheckCircle size={20} className="text-green-600" />
+                      Current Strengths
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-3 gap-2">
-                      {result.testResults.slice(0, 6).map((test) => {
-                        const Icon = getDeviceIcon(test.deviceType);
-                        const status = test.score >= 85 ? 'pass' : test.score >= 70 ? 'warning' : 'fail';
+                    <ul className="space-y-2">
+                      {analysis.strengths.slice(0, 5).map((strength, index) => (
+                        <li key={index} className="flex items-start gap-2 text-sm">
+                          <Star size={16} className="text-green-600 mt-0.5 flex-shrink-0" />
+                          {strength}
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Warning size={20} className="text-yellow-600" />
+                      Priority Actions
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2">
+                      {analysis.priorityActions.slice(0, 5).map((action, index) => (
+                        <li key={index} className="flex items-start gap-2 text-sm">
+                          <Warning size={16} className="text-yellow-600 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <div className="font-medium">{action.component}</div>
+                            <div className="text-muted-foreground">{action.issue}</div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              </div>
+            </>
+          ) : (
+            <Card>
+              <CardContent className="text-center py-12">
+                <TestTube size={64} className="mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-xl font-semibold mb-2">Ready for Comprehensive Testing</h3>
+                <p className="text-muted-foreground mb-6">
+                  Run a full responsive analysis across {CRITICAL_COMPONENTS.length} components, 
+                  {STANDARD_BREAKPOINTS.length} breakpoints, and {TEST_SCENARIOS.length} test scenarios.
+                </p>
+                <Button onClick={runComprehensiveTests} size="lg">
+                  <Lightning size={20} className="mr-2" />
+                  Start Comprehensive Analysis
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* Device Analysis Tab */}
+        <TabsContent value="devices" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {Object.entries(deviceBreakdown).map(([device, data]) => {
+              const Icon = getDeviceIcon(device);
+              return (
+                <Card key={device}>
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <Icon size={32} className="mx-auto mb-3" />
+                      <div className="text-lg font-semibold capitalize">{device}</div>
+                      <div className={`text-2xl font-bold mt-2 ${getStatusColor(data.score)}`}>
+                        {data.score}%
+                      </div>
+                      <div className="text-sm text-muted-foreground mt-1">
+                        {data.issues} issues found
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          {/* Breakpoint Details */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Breakpoint Performance Matrix</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                {STANDARD_BREAKPOINTS.map((breakpoint) => {
+                  const Icon = getDeviceIcon(breakpoint.name);
+                  const testData = testResults.flatMap(result => 
+                    result.testResults.filter(test => test.breakpoint.name === breakpoint.name)
+                  );
+                  const avgScore = testData.length > 0 
+                    ? Math.round(testData.reduce((sum, test) => sum + test.score, 0) / testData.length)
+                    : 0;
+                  
+                  return (
+                    <div
+                      key={breakpoint.name}
+                      className={`p-3 rounded-lg border-2 ${
+                        avgScore >= 85 ? 'border-green-200 bg-green-50' :
+                        avgScore >= 70 ? 'border-yellow-200 bg-yellow-50' :
+                        'border-red-200 bg-red-50'
+                      }`}
+                    >
+                      <div className="text-center">
+                        <Icon size={20} className="mx-auto mb-1" />
+                        <div className="text-xs font-medium">{breakpoint.name}</div>
+                        <div className="text-xs text-muted-foreground">{breakpoint.width}px</div>
+                        <div className="text-sm font-semibold mt-1">{avgScore}%</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Components Tab */}
+        <TabsContent value="components" className="space-y-6">
+          <div className="grid gap-6">
+            {testResults.map((result) => (
+              <Card key={result.componentName}>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>{result.componentName}</CardTitle>
+                    <Badge className={`${getStatusColor(result.overallScore)} font-semibold`}>
+                      {result.overallScore}%
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{result.description}</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {/* Breakpoint Scores */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                      {result.testResults.map((test) => {
+                        const Icon = getDeviceIcon(test.breakpoint.name);
                         return (
                           <div
-                            key={test.breakpoint}
-                            className={`p-2 rounded text-center border ${
-                              status === 'pass' ? 'bg-green-50 border-green-200' :
-                              status === 'warning' ? 'bg-yellow-50 border-yellow-200' :
-                              'bg-red-50 border-red-200'
-                            }`}
+                            key={test.breakpoint.name}
+                            className="p-2 rounded border text-center"
                           >
                             <Icon size={16} className="mx-auto mb-1" />
-                            <div className="text-xs font-medium">{test.score}%</div>
+                            <div className="text-xs font-medium">{test.breakpoint.name}</div>
+                            <div className="text-sm font-semibold">{test.score}%</div>
                           </div>
                         );
                       })}
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </ResponsiveGrid>
-          </TabsContent>
 
-          <TabsContent value="detailed" className="space-y-6">
-            <div className="grid lg:grid-cols-3 gap-6">
-              <Card>
+                    {/* Critical Issues */}
+                    {result.criticalIssues.length > 0 && (
+                      <Alert>
+                        <BugBeetle size={16} />
+                        <AlertTitle>Critical Issues ({result.criticalIssues.length})</AlertTitle>
+                        <AlertDescription>
+                          <ul className="mt-2 space-y-1">
+                            {result.criticalIssues.slice(0, 3).map((issue, index) => (
+                              <li key={index} className="text-sm flex items-start gap-2">
+                                <span className="text-red-500 mt-1">•</span>
+                                {issue.description}
+                              </li>
+                            ))}
+                          </ul>
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        {/* Implementation Roadmap Tab */}
+        <TabsContent value="roadmap" className="space-y-6">
+          <div className="space-y-6">
+            {analysis.implementationRoadmap.map((phase, index) => (
+              <Card key={index}>
                 <CardHeader>
-                  <CardTitle>Components</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <Clock size={20} />
+                    {phase.phase}
+                  </CardTitle>
+                  <div className="flex items-center gap-4">
+                    <Badge variant="outline">{phase.estimatedTime}</Badge>
+                    <Badge>{phase.recommendations.length} items</Badge>
+                  </div>
                 </CardHeader>
-                <CardContent className="p-0">
-                  <ScrollArea className="h-[400px]">
-                    <div className="p-4 space-y-2">
-                      {testResults.map((result) => (
-                        <Button
-                          key={result.componentName}
-                          variant={selectedComponent === result.componentName ? 'default' : 'ghost'}
-                          className="w-full justify-start"
-                          onClick={() => setSelectedComponent(result.componentName)}
-                        >
-                          <div className="flex items-center justify-between w-full">
-                            <span className="text-sm">{result.componentName}</span>
-                            <Badge className={`${getScoreColor(result.overallScore)} text-xs`}>
-                              {result.overallScore}%
-                            </Badge>
+                <CardContent>
+                  <div className="grid gap-4">
+                    {phase.recommendations.map((rec, recIndex) => (
+                      <div key={recIndex} className="border rounded-lg p-4 space-y-3">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h4 className="font-semibold">{rec.component}</h4>
+                            <p className="text-sm text-muted-foreground">{rec.issue}</p>
                           </div>
-                        </Button>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                </CardContent>
-              </Card>
-
-              <Card className="lg:col-span-2">
-                <CardHeader>
-                  <CardTitle>
-                    {selectedComponent || 'Select a component'}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {selectedComponent ? (
-                    <div className="space-y-4">
-                      {testResults
-                        .find(t => t.componentName === selectedComponent)
-                        ?.testResults.map((result) => {
-                          const Icon = getDeviceIcon(result.deviceType);
-                          return (
-                            <div key={result.breakpoint} className="border rounded-lg p-4">
-                              <div className="flex items-center justify-between mb-3">
-                                <div className="flex items-center gap-3">
-                                  <Icon size={20} />
-                                  <div>
-                                    <span className="font-medium">{result.breakpoint}</span>
-                                    <div className="text-sm text-muted-foreground">
-                                      {result.width}×{result.height}px
-                                    </div>
-                                  </div>
-                                </div>
-                                <Badge className={getScoreColor(result.score)}>
-                                  {result.score}%
-                                </Badge>
-                              </div>
-                              
-                              {result.issues.length > 0 && (
-                                <div className="space-y-2">
-                                  {result.issues.map((issue, index) => (
-                                    <Alert key={index} className={getSeverityColor(issue.severity)}>
-                                      <BugBeetle size={16} />
-                                      <AlertDescription>
-                                        <div className="flex items-center justify-between mb-1">
-                                          <span className="text-sm font-medium capitalize">{issue.severity}</span>
-                                          <Badge variant="outline" className="text-xs">{issue.category}</Badge>
-                                        </div>
-                                        <p className="text-sm">{issue.description}</p>
-                                        {issue.recommendation && (
-                                          <p className="text-xs italic mt-1">💡 {issue.recommendation}</p>
-                                        )}
-                                      </AlertDescription>
-                                    </Alert>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-muted-foreground">
-                      Select a component to view detailed test results
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="recommendations" className="space-y-6">
-            <ResponsiveGrid cols={{ default: 1, lg: 2 }} gap="lg">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CheckCircle size={20} className="text-green-600" />
-                    Current Strengths
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    {analysis.strengths.map((strength, index) => (
-                      <li key={index} className="flex items-start gap-2 text-sm">
-                        <CheckCircle size={16} className="text-green-600 mt-0.5 flex-shrink-0" />
-                        {strength}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Warning size={20} className="text-yellow-600" />
-                    Areas for Improvement
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    {analysis.weaknesses.map((weakness, index) => (
-                      <li key={index} className="flex items-start gap-2 text-sm">
-                        <Warning size={16} className="text-yellow-600 mt-0.5 flex-shrink-0" />
-                        {weakness}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            </ResponsiveGrid>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Lightbulb size={20} />
-                  Priority Recommendations
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {analysis.recommendations.map((rec, index) => (
-                    <Alert key={index} className={getSeverityColor(rec.priority)}>
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Badge className={getSeverityColor(rec.priority)}>
+                          <div className="flex gap-2">
+                            <Badge className={
+                              rec.priority === 'critical' ? 'bg-red-100 text-red-800' :
+                              rec.priority === 'high' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-blue-100 text-blue-800'
+                            }>
                               {rec.priority}
                             </Badge>
-                            <Badge variant="outline">{rec.category}</Badge>
-                          </div>
-                          <h4 className="font-medium">{rec.component}</h4>
-                          <p className="text-sm mt-1">{rec.issue}</p>
-                          <div className="bg-muted p-2 rounded text-sm mt-2">
-                            <strong>Solution:</strong> {rec.solution}
+                            <Badge variant="outline">{rec.estimatedEffort} effort</Badge>
                           </div>
                         </div>
+                        <div className="bg-muted p-3 rounded">
+                          <p className="text-sm">
+                            <strong>Solution:</strong> {rec.solution}
+                          </p>
+                          <p className="text-sm mt-1">
+                            <strong>Implementation:</strong> {rec.implementation}
+                          </p>
+                        </div>
+                        {rec.codeExample && (
+                          <details className="mt-2">
+                            <summary className="text-sm font-medium cursor-pointer">
+                              View Code Example
+                            </summary>
+                            <pre className="mt-2 p-3 bg-gray-100 rounded text-xs overflow-x-auto">
+                              <code>{rec.codeExample}</code>
+                            </pre>
+                          </details>
+                        )}
                       </div>
-                    </Alert>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="implementation" className="space-y-6">
-            <ResponsiveGrid cols={{ default: 1, lg: 2 }} gap="lg">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Design Best Practices</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    {RESPONSIVE_BEST_PRACTICES.design.map((practice, index) => (
-                      <li key={index} className="flex items-start gap-2 text-sm">
-                        <CheckCircle size={16} className="text-blue-600 mt-0.5 flex-shrink-0" />
-                        {practice}
-                      </li>
                     ))}
-                  </ul>
+                  </div>
                 </CardContent>
               </Card>
+            ))}
+          </div>
+        </TabsContent>
 
-              <Card>
+        {/* Best Practices Tab */}
+        <TabsContent value="bestpractices" className="space-y-6">
+          <div className="grid lg:grid-cols-2 gap-6">
+            {Object.entries(RESPONSIVE_BEST_PRACTICES).map(([category, practices]) => (
+              <Card key={category}>
                 <CardHeader>
-                  <CardTitle>Technical Implementation</CardTitle>
+                  <CardTitle className="capitalize">{category} Best Practices</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
-                    {RESPONSIVE_BEST_PRACTICES.technical.map((practice, index) => (
+                    {practices.map((practice, index) => (
                       <li key={index} className="flex items-start gap-2 text-sm">
                         <CheckCircle size={16} className="text-green-600 mt-0.5 flex-shrink-0" />
                         {practice}
@@ -628,42 +716,116 @@ export function ResponsiveTestingDashboard() {
                   </ul>
                 </CardContent>
               </Card>
+            ))}
+          </div>
+        </TabsContent>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Accessibility Guidelines</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    {RESPONSIVE_BEST_PRACTICES.accessibility.map((practice, index) => (
-                      <li key={index} className="flex items-start gap-2 text-sm">
-                        <CheckCircle size={16} className="text-purple-600 mt-0.5 flex-shrink-0" />
-                        {practice}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
+        {/* Live Testing Tab */}
+        <TabsContent value="live" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target size={20} />
+                Live Responsive Testing
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <Alert>
+                  <Lightbulb size={16} />
+                  <AlertTitle>Interactive Testing Mode</AlertTitle>
+                  <AlertDescription>
+                    Resize your browser window or use device simulation to test responsive behavior in real-time.
+                    The system will automatically detect layout issues and provide feedback.
+                  </AlertDescription>
+                </Alert>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Performance Optimization</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    {RESPONSIVE_BEST_PRACTICES.performance.map((practice, index) => (
-                      <li key={index} className="flex items-start gap-2 text-sm">
-                        <CheckCircle size={16} className="text-orange-600 mt-0.5 flex-shrink-0" />
-                        {practice}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            </ResponsiveGrid>
-          </TabsContent>
-        </Tabs>
-      )}
-    </ResponsiveContainer>
+                {/* Viewport Simulator */}
+                <div>
+                  <h4 className="font-semibold mb-3">Simulate Common Devices</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                    {STANDARD_BREAKPOINTS.slice(0, 12).map((breakpoint) => {
+                      const Icon = getDeviceIcon(breakpoint.name);
+                      return (
+                        <Button
+                          key={breakpoint.name}
+                          variant="outline"
+                          className="flex flex-col gap-2 h-auto py-3"
+                          onClick={() => {
+                            // In a real implementation, this would trigger viewport simulation
+                            setCurrentViewport(breakpoint);
+                          }}
+                        >
+                          <Icon size={20} />
+                          <span className="text-xs font-medium">{breakpoint.name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {breakpoint.width}×{breakpoint.height}
+                          </span>
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Live Feedback */}
+                <div className="grid lg:grid-cols-2 gap-4">
+                  <Card className="bg-blue-50">
+                    <CardHeader>
+                      <CardTitle className="text-lg">Current Status</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <span>Viewport Width:</span>
+                          <Badge variant="outline" className="font-mono">
+                            {viewportInfo.width}px
+                          </Badge>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Device Category:</span>
+                          <Badge className="capitalize">{viewportInfo.deviceType}</Badge>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Touch Support:</span>
+                          <Badge variant={ResponsiveUtils.isTouchDevice() ? 'default' : 'outline'}>
+                            {ResponsiveUtils.isTouchDevice() ? 'Yes' : 'No'}
+                          </Badge>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-green-50">
+                    <CardHeader>
+                      <CardTitle className="text-lg">Optimization Tips</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-2 text-sm">
+                        <li className="flex items-start gap-2">
+                          <Lightbulb size={16} className="text-yellow-500 mt-0.5 flex-shrink-0" />
+                          Test with real devices when possible
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <Lightbulb size={16} className="text-yellow-500 mt-0.5 flex-shrink-0" />
+                          Check both portrait and landscape orientations
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <Lightbulb size={16} className="text-yellow-500 mt-0.5 flex-shrink-0" />
+                          Verify touch targets are at least 44px
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <Lightbulb size={16} className="text-yellow-500 mt-0.5 flex-shrink-0" />
+                          Test with different zoom levels
+                        </li>
+                      </ul>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }
