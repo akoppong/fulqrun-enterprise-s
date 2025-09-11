@@ -474,56 +474,60 @@ textarea[class*="w-full"],
   }
 
   /* Mobile opportunities table adjustments */
+  .opportunities-table-wrapper {
+    min-width: 1200px; /* Reduced for mobile */
+  }
+
   .opportunities-table {
-    min-width: 900px;
+    min-width: 1200px; /* Reduced for mobile */
   }
 
   .col-opportunity-details {
-    width: 280px;
-    min-width: 280px;
-    max-width: 280px;
+    width: 300px;
+    min-width: 300px;
+    max-width: 300px;
   }
 
   .col-company-contact {
+    width: 180px;
+    min-width: 180px;
+    max-width: 180px;
+  }
+
+  .col-stage-progress {
+    width: 150px;
+    min-width: 150px;
+    max-width: 150px;
+  }
+
+  .col-deal-value {
+    width: 130px;
+    min-width: 130px;
+    max-width: 130px;
+  }
+
+  .col-win-probability {
     width: 170px;
     min-width: 170px;
     max-width: 170px;
   }
 
-  .col-stage-progress {
-    width: 140px;
-    min-width: 140px;
-    max-width: 140px;
-  }
-
-  .col-deal-value {
-    width: 120px;
-    min-width: 120px;
-    max-width: 120px;
-  }
-
-  .col-win-probability {
-    width: 160px;
-    min-width: 160px;
-    max-width: 160px;
-  }
-
   .col-priority {
-    width: 100px;
-    min-width: 100px;
-    max-width: 100px;
+    width: 110px;
+    min-width: 110px;
+    max-width: 110px;
   }
 
   .col-timeline {
-    width: 120px;
-    min-width: 120px;
-    max-width: 120px;
+    width: 130px;
+    min-width: 130px;
+    max-width: 130px;
   }
 
   .col-actions {
-    width: 120px;
-    min-width: 120px;
-    max-width: 120px;
+    width: 130px;
+    min-width: 130px;
+    max-width: 130px;
   }
 }
 
@@ -589,17 +593,26 @@ textarea[class*="w-full"],
 .opportunities-table-container {
   overflow-x: auto;
   min-width: 100%;
+  width: 100%;
+}
+
+.opportunities-table-wrapper {
+  min-width: 2000px; /* Increased minimum width for better spacing */
+  width: 100%;
 }
 
 .opportunities-table {
-  min-width: 1600px;
+  min-width: 2000px; /* Increased minimum width for better column spacing */
   width: 100%;
+  table-layout: fixed; /* Use fixed layout for consistent column widths */
 }
 
 .opportunities-table th,
 .opportunities-table td {
   white-space: nowrap;
   padding: 1.5rem 1.25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .opportunities-table .cell-content {
@@ -614,35 +627,35 @@ textarea[class*="w-full"],
   max-width: 200px;
 }
 
-/* Fixed column widths for consistent layout */
+/* Enhanced fixed column widths for better distribution */
 .col-opportunity-details {
-  width: 450px;
-  min-width: 450px;
-  max-width: 450px;
+  width: 500px; /* Increased for better content display */
+  min-width: 500px;
+  max-width: 500px;
 }
 
 .col-company-contact {
-  width: 220px;
-  min-width: 220px;
-  max-width: 220px;
+  width: 260px; /* Increased for better contact info display */
+  min-width: 260px;
+  max-width: 260px;
 }
 
 .col-stage-progress {
-  width: 180px;
+  width: 200px; /* Increased for progress bars */
+  min-width: 200px;
+  max-width: 200px;
+}
+
+.col-deal-value {
+  width: 180px; /* Increased for currency display */
   min-width: 180px;
   max-width: 180px;
 }
 
-.col-deal-value {
-  width: 160px;
-  min-width: 160px;
-  max-width: 160px;
-}
-
 .col-win-probability {
-  width: 200px;
-  min-width: 200px;
-  max-width: 200px;
+  width: 220px; /* Increased for probability bars */
+  min-width: 220px;
+  max-width: 220px;
 }
 
 .col-priority {
@@ -658,9 +671,9 @@ textarea[class*="w-full"],
 }
 
 .col-actions {
-  width: 140px;
-  min-width: 140px;
-  max-width: 140px;
+  width: 160px; /* Increased for better button spacing */
+  min-width: 160px;
+  max-width: 160px;
 }
 
 /* === DASHBOARD === */

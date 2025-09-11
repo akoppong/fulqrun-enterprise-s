@@ -214,10 +214,10 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
   };
 
   return (
-    <div className={`w-full min-w-0 ${className}`}>
+    <div className={`w-full min-w-0 flex-1 flex flex-col ${className}`}>
       {/* Modern Header with Glass Effect */}
       <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border/50 px-6 lg:px-8 py-6 mb-6">
-        <div className="max-w-[1800px] mx-auto">
+        <div className="w-full max-w-none">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 w-full">
             <div className="space-y-1 min-w-0 flex-1">
               <h1 className="text-3xl lg:text-4xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
@@ -249,8 +249,8 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
         </div>
       </div>
 
-      <div className="px-6 lg:px-8 space-y-6 lg:space-y-8 w-full">
-        <div className="max-w-[1800px] mx-auto space-y-6 lg:space-y-8">
+      <div className="flex-1 px-6 lg:px-8 space-y-6 lg:space-y-8 w-full">
+        <div className="w-full space-y-6 lg:space-y-8">
         {/* Enhanced Metrics Dashboard */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-blue-50 to-blue-100/50 hover:shadow-xl transition-all duration-300">
@@ -418,7 +418,7 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
         </Card>
 
         {/* Enhanced Opportunities Table */}
-        <Card className="border-0 shadow-xl bg-card/70 backdrop-blur-sm overflow-hidden">
+        <Card className="border-0 shadow-xl bg-card/70 backdrop-blur-sm overflow-hidden w-full">
           {sortedOpportunities.length === 0 ? (
             <div className="text-center py-16 lg:py-24">
               <div className="mb-6">
@@ -450,9 +450,9 @@ export function OpportunitiesView({ className }: OpportunitiesViewProps) {
               )}
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <div className="min-w-[1600px]">
-                <Table className="opportunities-table">
+            <div className="opportunities-table-container w-full">
+              <div className="opportunities-table-wrapper w-full">
+                <Table className="opportunities-table w-full">
                   <TableHeader className="bg-muted/30 backdrop-blur-sm">
                     <TableRow className="border-border/50 hover:bg-transparent">
                       <TableHead className="font-semibold text-foreground py-4 px-8 col-opportunity-details">
