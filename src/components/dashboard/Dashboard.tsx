@@ -1,12 +1,4 @@
 import { Button } from '@/components/ui/button';
-import { AutoSaveDemo } from './AutoSaveDemo';
-import { AutoSaveTestRunner } from './AutoSaveTestRunner';
-import { AutoSaveTesting } from './AutoSaveTesting';
-import { AutoSaveInteractiveDemo } from './AutoSaveInteractiveDemo';
-import { FieldTypeTestingLab } from './FieldTypeTestingLab';
-import { ComprehensiveValidationTestSuite } from './ComprehensiveValidationTestSuite';
-import { ValidationTestingDemo } from './ValidationTestingDemo';
-import { DateValidationDemo } from './DateValidationDemo';
 import { useState, useEffect } from 'react';
 import { User, Opportunity, Contact, Company, KPITarget } from '@/lib/types';
 import { DemoDataGenerator } from '@/lib/demo-data';
@@ -19,9 +11,6 @@ import { CustomKPILayoutDashboard } from './CustomKPILayoutDashboard';
 import { PipelineView } from './PipelineView';
 import { OpportunityList } from './OpportunityList';
 import { OpportunitiesView } from '../opportunities/OpportunitiesView';
-import { OpportunityTestSuite } from '../opportunities/OpportunityTestSuite';
-import { EnhancedOpportunityTester } from '../opportunities/EnhancedOpportunityTester';
-import { FullScreenOpportunityTest } from '../opportunities/FullScreenOpportunityTest';
 import { ContactsView } from './ContactsView';
 import { AnalyticsView } from './AnalyticsView';
 import { CSTPVDashboard } from './CSTPVDashboard';
@@ -48,6 +37,7 @@ import { PharmaceuticalKPITemplates } from './PharmaceuticalKPITemplates';
 import { RoleTestingDashboard } from './RoleTestingDashboard';
 import { RoleShowcase } from './RoleShowcase';
 import { ResponsiveTestSuite } from '../testing/ResponsiveTestSuite';
+import { FloatingAutoFix } from '../testing/FloatingAutoFix';
 import { ResponsiveValidationSuite } from '../testing/ResponsiveValidationSuite';
 import { FloatingAutoFix } from '../testing/FloatingAutoFix';
 import { ResponsiveDesignRecommendations } from '../testing/ResponsiveDesignRecommendations';
@@ -61,7 +51,7 @@ interface DashboardProps {
   initialView?: string;
 }
 
-export type DashboardView = 'dashboard' | 'role-testing' | 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'advanced-analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'kpi-gallery' | 'kpi-manager' | 'kpi-layout' | 'pharma-kpi-templates' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'autosave-demo' | 'autosave-test' | 'autosave-manual' | 'autosave-interactive' | 'field-testing' | 'comprehensive-testing' | 'validation-demo' | 'date-validation' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit' | 'administration' | 'enhanced-opportunity-testing' | 'full-screen-opportunity-test' | 'responsive-testing';
+export type DashboardView = 'dashboard' | 'role-testing' | 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'advanced-analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'kpi-gallery' | 'kpi-manager' | 'kpi-layout' | 'pharma-kpi-templates' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit' | 'administration' | 'responsive-testing';
 
 export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialView }: DashboardProps) {
   // Safety check for user object and role
@@ -339,35 +329,9 @@ export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialV
           />
         );
       
-      // Testing Components
-      case 'autosave-demo':
-        return <AutoSaveDemo />;
-      case 'autosave-test':
-        return <AutoSaveTestRunner />;
-      case 'autosave-manual':
-        return <AutoSaveTesting />;
-      case 'autosave-interactive':
-        return <AutoSaveInteractiveDemo />;
-      case 'field-testing':
-        return <FieldTypeTestingLab />;
-      case 'comprehensive-testing':
-        return <ComprehensiveValidationTestSuite />;
-      case 'validation-demo':
-        return <ValidationTestingDemo />;
-      case 'date-validation':
-        return <DateValidationDemo />;
-      case 'enhanced-opportunity-testing':
-        return <EnhancedOpportunityTester />;
-      case 'full-screen-opportunity-test':
-        return <FullScreenOpportunityTest />;
+      // Enhanced Testing Suite (now integrated into main OpportunitiesView)
       case 'responsive-testing':
         return <ResponsiveTestSuite />;
-      case 'responsive-validation':
-        return <ResponsiveValidationSuite />;
-      case 'responsive-recommendations':
-        return <ResponsiveDesignRecommendations />;
-      case 'responsive-analyzer':
-        return <AutomatedResponsiveAnalyzer />;
       default:
         return <PipelineView />;
     }
