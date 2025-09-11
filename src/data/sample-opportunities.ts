@@ -133,3 +133,56 @@ export const enhancedSampleOpportunities: Opportunity[] = [
     }
   }
 ];
+
+/**
+ * Initialize sample data for opportunities, companies, and contacts
+ * This function sets up the storage with sample data if it doesn't already exist
+ */
+export async function initializeSampleData(): Promise<{
+  opportunities: Opportunity[];
+  companies: Company[];
+  contacts: Contact[];
+}> {
+  if (typeof window === 'undefined') {
+    return {
+      opportunities: [],
+      companies: [],
+      contacts: []
+    };
+  }
+
+  try {
+    // Check if data already exists
+    const existingOpportunities = localStorage.getItem('opportunities');
+    const existingCompanies = localStorage.getItem('companies');
+    const existingContacts = localStorage.getItem('contacts');
+
+    // Initialize opportunities if they don't exist
+    if (!existingOpportunities) {
+      localStorage.setItem('opportunities', JSON.stringify(enhancedSampleOpportunities));
+    }
+
+    // Initialize companies if they don't exist
+    if (!existingCompanies) {
+      localStorage.setItem('companies', JSON.stringify(sampleCompanies));
+    }
+
+    // Initialize contacts if they don't exist
+    if (!existingContacts) {
+      localStorage.setItem('contacts', JSON.stringify(sampleContacts));
+    }
+
+    return {
+      opportunities: enhancedSampleOpportunities,
+      companies: sampleCompanies,
+      contacts: sampleContacts
+    };
+  } catch (error) {
+    console.error('Error initializing sample data:', error);
+    return {
+      opportunities: [],
+      companies: [],
+      contacts: []
+    };
+  }
+}
