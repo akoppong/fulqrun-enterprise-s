@@ -39,7 +39,6 @@ import { RoleShowcase } from './RoleShowcase';
 import { ResponsiveTestSuite } from '../testing/ResponsiveTestSuite';
 import { FloatingAutoFix } from '../testing/FloatingAutoFix';
 import { ResponsiveValidationSuite } from '../testing/ResponsiveValidationSuite';
-import { FloatingAutoFix } from '../testing/FloatingAutoFix';
 import { ResponsiveDesignRecommendations } from '../testing/ResponsiveDesignRecommendations';
 import { AutomatedResponsiveAnalyzer } from '../testing/AutomatedResponsiveAnalyzer';
 
