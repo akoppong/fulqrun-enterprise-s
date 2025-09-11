@@ -341,17 +341,17 @@ export function ResponsiveOpportunityDetail({
 
                             {/* Timeline Info */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                              <div className="space-y-2">
-                                <Label className="text-sm font-medium">Created</Label>
-                                <div className="p-3 bg-muted/50 rounded-lg">
-                                  <div className="text-sm font-medium">
-                                    {format(new Date(opportunity.createdAt), 'MMM dd, yyyy')}
-                                  </div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {daysInPipeline} days in pipeline
-                                  </div>
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium">Created</Label>
+                              <div className="p-3 bg-muted/50 rounded-lg">
+                                <div className="text-sm font-medium">
+                                  {format(new Date(opportunity.createdAt), 'MMM dd, yyyy')}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {daysInPipeline} days in pipeline
                                 </div>
                               </div>
+                            </div>
                               
                               <div className="space-y-2">
                                 <Label className="text-sm font-medium">Expected Close</Label>

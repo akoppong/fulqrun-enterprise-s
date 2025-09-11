@@ -55,6 +55,12 @@ export const formatPercentage = (value: number): string => {
 };
 
 export const getMEDDPICCScore = (meddpicc: any): number => {
+  // If a score is explicitly provided, use it
+  if (meddpicc.score !== undefined && typeof meddpicc.score === 'number') {
+    return Math.min(100, Math.max(0, meddpicc.score));
+  }
+  
+  // Otherwise calculate based on completed fields
   const fields = [
     meddpicc.metrics,
     meddpicc.economicBuyer,

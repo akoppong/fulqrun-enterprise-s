@@ -6,3 +6,4 @@ export { QuickOpportunityTest } from './QuickOpportunityTest';
 export { ResponsiveOpportunityDetail } from './ResponsiveOpportunityDetail';
 export { EnhancedOpportunityTester } from './EnhancedOpportunityTester';
 export { OpportunityDetailTestRunner } from './OpportunityDetailTestRunner';
+export { FullScreenOpportunityTest } from './FullScreenOpportunityTest';

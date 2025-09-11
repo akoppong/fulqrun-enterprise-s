@@ -41,7 +41,8 @@ import {
   Lock,
   FileText,
   Crown,
-  ArrowsOutCardinal
+  ArrowsOutCardinal,
+  Eye
 } from '@phosphor-icons/react';
 
 interface SidebarProps {
@@ -398,6 +399,15 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
       icon: TestTube,
       defaultOpen: false,
       items: [
+        {
+          id: 'full-screen-opportunity-test',
+          label: 'Full-Screen Detail Test',
+          icon: Eye,
+          description: 'Comprehensive full-screen opportunity detail view testing',
+          permissionId: 'opportunities',
+          action: 'read',
+          isNew: true
+        },
         {
           id: 'enhanced-opportunity-testing',
           label: 'Enhanced Opportunity Testing',
