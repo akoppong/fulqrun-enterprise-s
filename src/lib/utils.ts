@@ -38,7 +38,7 @@ export function isNumber(value: unknown): value is number {
 /**
  * Type guard to check if a value is a valid Date object
  */
-export function isValidDate(value: unknown): value is Date {
+export function isValidDateObject(value: unknown): value is Date {
   return value instanceof Date && !isNaN(value.getTime());
 }
 
@@ -116,7 +116,7 @@ export function safeFormatDate(
 
   try {
     const dateObj = new Date(date);
-    if (!isValidDate(dateObj)) {
+    if (!isValidDateObject(dateObj)) {
       return fallback;
     }
     

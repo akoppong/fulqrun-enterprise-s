@@ -129,11 +129,16 @@ const opportunityValidationSchema: ValidationSchema = {
           }
         }
         
-        // Check if date is valid
-        if (!date || isNaN(date.getTime())) {
+        // Check if date is valid and actually a Date object
+        if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
           return 'Please enter a valid date';
         }
       } catch (error) {
+        return 'Please enter a valid date';
+      }
+      
+      // Double-check that we have a valid Date object before proceeding
+      if (!(date instanceof Date) || isNaN(date.getTime())) {
         return 'Please enter a valid date';
       }
       
