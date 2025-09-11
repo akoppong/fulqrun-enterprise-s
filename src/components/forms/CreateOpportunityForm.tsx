@@ -165,7 +165,12 @@ export function CreateOpportunityForm({ onSubmit, initialData = {} }: CreateOppo
         description: `"${data.title}" has been added to your pipeline.`,
         action: {
           label: 'View Pipeline',
-          onClick: () => console.log('Navigate to pipeline')
+          onClick: () => {
+            // TODO: Implement navigation to pipeline view
+            if (process.env.NODE_ENV === 'development') {
+              console.log('Navigate to pipeline');
+            }
+          }
         }
       });
     } catch (error) {

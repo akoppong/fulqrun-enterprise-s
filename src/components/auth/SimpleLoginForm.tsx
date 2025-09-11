@@ -17,9 +17,7 @@ export function SimpleLoginForm({ onLogin }: SimpleLoginFormProps) {
   const [role, setRole] = useState<'rep' | 'manager' | 'bu_head' | 'executive' | 'admin'>('rep');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const performLogin = async () => {
     if (!email || !role) {
       toast.error('Please fill in all fields');
       return;
@@ -56,6 +54,68 @@ export function SimpleLoginForm({ onLogin }: SimpleLoginFormProps) {
                 role === 'manager' ? { monthly: 112500, quarterly: 337500, annual: 1350000 } :
                 role === 'bu_head' ? { monthly: 1500000, quarterly: 4500000, annual: 18000000 } :
                 role === 'executive' ? { monthly: 6250000, quarterly: 18750000, annual: 75000000 } : undefined
+      };
+      
+      // Show success message
+      toast.success('Login successful!', {
+        description: `Welcome back, ${user.name}!`
+      });
+      
+      onLogin(user);
+    } catch (error) {
+      toast.error('Login failed', {
+        description: 'Please check your credentials and try again.'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await performLogin();
+  };
+
+  const handleQuickLogin = async (quickEmail: string, quickRole: typeof role) => {
+    setEmail(quickEmail);
+    setRole(quickRole);
+    // Perform login with updated values
+    if (!quickEmail || !quickRole) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+
+    if (!quickEmail.includes('@')) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Simulate authentication delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Create user object with role-specific details
+      const user: User = {
+        id: `user-${Date.now()}`,
+        name: quickEmail.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
+        email: quickEmail,
+        role: quickRole,
+        teamId: quickRole === 'rep' ? 'team-1' : undefined,
+        managerId: quickRole === 'rep' ? 'manager-1' : undefined,
+        territory: quickRole === 'rep' ? 'Demo Territory' : 
+                  quickRole === 'manager' ? 'Regional Territory' :
+                  quickRole === 'bu_head' ? 'Global Territory' :
+                  quickRole === 'executive' ? 'Worldwide' : undefined,
+        quota: quickRole === 'rep' ? 150000 :
+               quickRole === 'manager' ? 1350000 :
+               quickRole === 'bu_head' ? 18000000 :
+               quickRole === 'executive' ? 75000000 : undefined,
+        targets: quickRole === 'rep' ? { monthly: 12500, quarterly: 37500, annual: 150000 } :
+                quickRole === 'manager' ? { monthly: 112500, quarterly: 337500, annual: 1350000 } :
+                quickRole === 'bu_head' ? { monthly: 1500000, quarterly: 4500000, annual: 18000000 } :
+                quickRole === 'executive' ? { monthly: 6250000, quarterly: 18750000, annual: 75000000 } : undefined
       };
       
       // Show success message
@@ -137,11 +197,7 @@ export function SimpleLoginForm({ onLogin }: SimpleLoginFormProps) {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    setEmail('demo@fulqrun.com');
-                    setRole('rep');
-                    handleSubmit(new Event('submit') as any);
-                  }}
+                                    onClick={() => handleQuickLogin('demo@fulqrun.com', 'rep')}
                   disabled={isLoading}
                 >
                   Sales Rep Demo
@@ -150,11 +206,7 @@ export function SimpleLoginForm({ onLogin }: SimpleLoginFormProps) {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    setEmail('manager@fulqrun.com');
-                    setRole('manager');
-                    handleSubmit(new Event('submit') as any);
-                  }}
+                                    onClick={() => handleQuickLogin('manager@fulqrun.com', 'manager')}
                   disabled={isLoading}
                 >
                   Manager Demo
@@ -163,11 +215,7 @@ export function SimpleLoginForm({ onLogin }: SimpleLoginFormProps) {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    setEmail('bu.head@fulqrun.com');
-                    setRole('bu_head');
-                    handleSubmit(new Event('submit') as any);
-                  }}
+                                    onClick={() => handleQuickLogin('bu.head@fulqrun.com', 'bu_head')}
                   disabled={isLoading}
                 >
                   BU Head Demo
@@ -176,11 +224,7 @@ export function SimpleLoginForm({ onLogin }: SimpleLoginFormProps) {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    setEmail('ceo@fulqrun.com');
-                    setRole('executive');
-                    handleSubmit(new Event('submit') as any);
-                  }}
+                                    onClick={() => handleQuickLogin('ceo@fulqrun.com', 'executive')}
                   disabled={isLoading}
                 >
                   Executive Demo

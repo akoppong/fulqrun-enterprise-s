@@ -7,7 +7,7 @@ export interface ValidationRule {
   min?: number;
   max?: number;
   pattern?: RegExp;
-  custom?: (value: any) => string | null;
+  custom?: (value: any, data?: any) => string | null;
   email?: boolean;
   url?: boolean;
   date?: DateValidationOptions | boolean;
@@ -25,6 +25,7 @@ export interface ValidationError {
 export class FormValidator {
   private schema: ValidationSchema;
   private errors: ValidationError[] = [];
+  private data: any;
 
   constructor(schema: ValidationSchema) {
     this.schema = schema;
@@ -32,6 +33,7 @@ export class FormValidator {
 
   validate(data: Record<string, any>): { isValid: boolean; errors: ValidationError[] } {
     this.errors = [];
+    this.data = data; // Store data for custom validators
 
     for (const [field, rule] of Object.entries(this.schema)) {
       const value = this.getNestedValue(data, field);
@@ -123,7 +125,7 @@ export class FormValidator {
 
     // Custom validation
     if (rule.custom) {
-      const customError = rule.custom(value);
+      const customError = rule.custom(value, this.data);
       if (customError) {
         this.addError(field, customError);
       }

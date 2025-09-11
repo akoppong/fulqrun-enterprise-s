@@ -167,7 +167,8 @@ export function ValidatedInput({
       // Store validation function on the element for form submission
       const element = document.getElementById(id);
       if (element) {
-        (element as any).validate = () => performValidation(value, true);
+        // Use proper type-safe property assignment
+        (element as HTMLElement & { validate?: () => boolean }).validate = () => performValidation(value, true);
       }
     }
   }, [id, performValidation, value, validateOn]);

@@ -1,14 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ThemeProvider } from 'next-themes';
 import { User } from './lib/types';
 import { SimpleLoginForm } from './components/auth/SimpleLoginForm';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { Toaster } from './components/ui/sonner';
 import './lib/error-handlers'; // Initialize global error handlers
+import { setupGlobalErrorHandling } from './lib/error-handling'; // Initialize comprehensive error handling
 
 function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [originalUser, setOriginalUser] = useState<User | null>(null);
+
+  // Initialize error handling on app start
+  useEffect(() => {
+    setupGlobalErrorHandling();
+  }, []);
 
   const handleLogin = (user: User) => {
     setCurrentUser(user);

@@ -105,6 +105,9 @@ const opportunityValidationSchema: ValidationSchema = {
           date = new Date(value);
         } else if (value instanceof Date) {
           date = value;
+        } else if (typeof value === 'object' && value !== null && typeof value.getTime === 'function') {
+          // Handle Date-like objects
+          date = new Date(value.getTime());
         } else {
           return 'Please enter a valid date';
         }
@@ -598,7 +601,12 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
           description: `"${formData.title}" has been ${opportunity ? 'updated' : 'added to your pipeline'}`,
           action: {
             label: 'View Pipeline',
-            onClick: () => console.log('Navigate to pipeline')
+            onClick: () => {
+              // TODO: Implement navigation to pipeline view
+              if (process.env.NODE_ENV === 'development') {
+                console.log('Navigate to pipeline');
+              }
+            }
           }
         }
       );

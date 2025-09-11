@@ -2,24 +2,65 @@ import { Opportunity, Company, Contact, MEDDPICC } from './types/index';
 import { type DealData, DealAnalyticsEngine, type AnalyticsResult } from './analytics-engine';
 import { DealProgressionEngine, type ProgressionResult, type DealProgression } from './progression-engine';
 
+/**
+ * Extended analytics interface for opportunities that includes progression analysis
+ * and auto-advancement capabilities
+ */
 export interface OpportunityAnalytics extends AnalyticsResult {
   progressionResults: Record<string, ProgressionResult>;
   canAutoAdvance: boolean;
   nextStage?: string;
 }
 
+/**
+ * Opportunity with populated company and contact relationships
+ */
 export interface OpportunityWithRelations extends Opportunity {
   company?: Company;
   contact?: Contact;
 }
 
+/**
+ * Comprehensive service for managing opportunities including CRUD operations,
+ * analytics, progression tracking, and business logic validation.
+ * 
+ * Provides:
+ * - CRUD operations for opportunities
+ * - Business validation and rules enforcement
+ * - PEAK methodology and MEDDPICC qualification tracking
+ * - Integration with analytics and progression engines
+ * - Local storage persistence with automatic serialization
+ * 
+ * @example
+ * ```typescript
+ * // Create a new opportunity
+ * const opportunity = await OpportunityService.createOpportunity({
+ *   title: 'Enterprise Software Deal',
+ *   companyId: 'company-123',
+ *   value: 250000,
+ *   stage: 'prospect'
+ * });
+ * 
+ * // Analyze opportunity for insights
+ * const analytics = OpportunityService.analyzeOpportunity(opportunity.id);
+ * if (analytics?.canAutoAdvance) {
+ *   await OpportunityService.advanceStage(opportunity.id, analytics.nextStage!);
+ * }
+ * ```
+ */
 export class OpportunityService {
   private static STORAGE_KEY = 'opportunities';
   private static PROGRESSION_KEY = 'opportunity_progressions';
   private static COMPANIES_KEY = 'companies';
   private static CONTACTS_KEY = 'contacts';
 
-  // Convert Opportunity to DealData for analytics
+  /**
+   * Converts an Opportunity object to DealData format for analytics processing
+   * 
+   * @param opportunity - The opportunity to convert
+   * @returns DealData object compatible with analytics engine
+   * @internal
+   */
   private static toDealData(opportunity: Opportunity): DealData {
     return {
       id: opportunity.id,

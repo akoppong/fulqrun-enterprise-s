@@ -8,6 +8,83 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
+ * Type guard to check if a value is a string
+ */
+export function isString(value: unknown): value is string {
+  return typeof value === 'string';
+}
+
+/**
+ * Type guard to check if a value is a number
+ */
+export function isNumber(value: unknown): value is number {
+  return typeof value === 'number' && !isNaN(value);
+}
+
+/**
+ * Type guard to check if a value is a valid Date object
+ */
+export function isValidDate(value: unknown): value is Date {
+  return value instanceof Date && !isNaN(value.getTime());
+}
+
+/**
+ * Type guard to check if a value is a non-empty string
+ */
+export function isNonEmptyString(value: unknown): value is string {
+  return isString(value) && value.trim().length > 0;
+}
+
+/**
+ * Type guard to check if a value is an object (and not null or array)
+ */
+export function isObject(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+/**
+ * Type guard to check if a value is an array
+ */
+export function isArray<T = unknown>(value: unknown): value is T[] {
+  return Array.isArray(value);
+}
+
+/**
+ * Safely parses a JSON string, returning null for invalid JSON
+ */
+export function safeJSONParse<T = unknown>(jsonString: string): T | null {
+  try {
+    return JSON.parse(jsonString) as T;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Safely stringifies an object, handling circular references
+ */
+export function safeJSONStringify(obj: unknown): string | null {
+  try {
+    return JSON.stringify(obj);
+  } catch {
+    // Handle circular references by creating a simpler representation
+    try {
+      return JSON.stringify(obj, (key, value) => {
+        if (typeof value === 'object' && value !== null) {
+          // Simple circular reference detection
+          if (key && typeof value === 'object') {
+            return '[Circular]';
+          }
+        }
+        return value;
+      });
+    } catch {
+      return null;
+    }
+  }
+}
+
+/**
  * Safely formats a date value, handling invalid dates gracefully
  * @param date - Date string, Date object, or any value that can be passed to new Date()
  * @param fallback - Fallback string to return for invalid dates (default: 'Invalid Date')
@@ -25,7 +102,7 @@ export function safeFormatDate(
 
   try {
     const dateObj = new Date(date);
-    if (isNaN(dateObj.getTime())) {
+    if (!isValidDate(dateObj)) {
       return fallback;
     }
     

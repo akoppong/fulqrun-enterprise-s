@@ -88,7 +88,10 @@ export function ValidationDemo() {
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500));
     
-    console.log('Opportunity created:', opportunity);
+    // Log opportunity creation for debugging
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Opportunity created:', opportunity);
+    }
     toast.success('Demo opportunity created!', {
       description: 'This is a demonstration - no data was actually saved.'
     });
@@ -371,7 +374,9 @@ export function ValidationDemo() {
                       size="sm" 
                       onClick={() => {
                         const history = errorHandler.getErrorHistory();
-                        console.log('Error History:', history);
+                        if (process.env.NODE_ENV === 'development') {
+                          console.log('Error History:', history);
+                        }
                         toast.info(`${history.length} errors logged. Check console for details.`);
                       }}
                     >

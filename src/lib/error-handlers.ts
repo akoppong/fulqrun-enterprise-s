@@ -103,8 +103,10 @@ export class SafeResizeObserver {
   private observer: ResizeObserver | null = null;
   private callback: ResizeObserverCallback;
   private errorHandler = ErrorHandler.getInstance();
+  private debounceTimer: number | null = null;
+  private isDisconnected = false;
 
-  constructor(callback: ResizeObserverCallback) {
+  constructor(callback: ResizeObserverCallback, private debounceMs: number = 16) {
     this.callback = callback;
     this.initialize();
   }
@@ -115,16 +117,29 @@ export class SafeResizeObserver {
     }
 
     this.observer = new ResizeObserver((entries) => {
-      // Use requestAnimationFrame to prevent loops
-      requestAnimationFrame(() => {
-        try {
-          this.callback(entries, this.observer!);
-        } catch (error) {
-          if (error instanceof Error && !this.errorHandler.shouldSuppressError(error)) {
-            this.errorHandler.trackError(error);
+      if (this.isDisconnected) return;
+      
+      // Debounce resize events to prevent excessive callbacks
+      if (this.debounceTimer) {
+        clearTimeout(this.debounceTimer);
+      }
+      
+      this.debounceTimer = window.setTimeout(() => {
+        if (this.isDisconnected) return;
+        
+        // Use requestAnimationFrame to prevent loops
+        requestAnimationFrame(() => {
+          if (this.isDisconnected) return;
+          
+          try {
+            this.callback(entries, this.observer!);
+          } catch (error) {
+            if (error instanceof Error && !this.errorHandler.shouldSuppressError(error)) {
+              this.errorHandler.trackError(error);
+            }
           }
-        }
-      });
+        });
+      }, this.debounceMs);
     });
   }
 
@@ -149,12 +164,21 @@ export class SafeResizeObserver {
   }
 
   public disconnect(): void {
+    this.isDisconnected = true;
+    
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
+      this.debounceTimer = null;
+    }
+    
     try {
       this.observer?.disconnect();
     } catch (error) {
       if (error instanceof Error) {
         this.errorHandler.trackError(error);
       }
+    } finally {
+      this.observer = null;
     }
   }
 }
@@ -164,18 +188,27 @@ export class SafeResizeObserver {
  */
 export function useSafeResizeObserver(
   callback: ResizeObserverCallback,
-  deps: React.DependencyList = []
+  deps: React.DependencyList = [],
+  debounceMs: number = 16
 ): SafeResizeObserver | null {
   const [observer, setObserver] = React.useState<SafeResizeObserver | null>(null);
 
   React.useEffect(() => {
-    const safeObserver = new SafeResizeObserver(callback);
+    const safeObserver = new SafeResizeObserver(callback, debounceMs);
     setObserver(safeObserver);
 
     return () => {
       safeObserver.disconnect();
+      setObserver(null);
     };
-  }, deps);
+  }, [...deps, debounceMs]);
+
+  // Cleanup on unmount
+  React.useEffect(() => {
+    return () => {
+      observer?.disconnect();
+    };
+  }, [observer]);
 
   return observer;
 }

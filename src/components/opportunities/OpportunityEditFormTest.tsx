@@ -40,7 +40,9 @@ export function OpportunityEditFormTest() {
   };
 
   const handleFormSubmit = (opportunityData: Partial<Opportunity>) => {
-    console.log('Form submitted:', opportunityData);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Form submitted:', opportunityData);
+    }
     setIsOpen(false);
   };
 
