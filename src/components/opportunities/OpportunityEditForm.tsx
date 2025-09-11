@@ -97,13 +97,25 @@ const opportunityValidationSchema: ValidationSchema = {
     custom: (value: any) => {
       if (!value) return 'Expected close date is required';
       
-      // Ensure value is a Date object
-      const date = value instanceof Date ? value : new Date(value);
-      if (isNaN(date.getTime())) {
+      // Handle string or Date object
+      let date: Date;
+      if (typeof value === 'string') {
+        date = new Date(value);
+      } else if (value instanceof Date) {
+        date = value;
+      } else {
+        return 'Please enter a valid date';
+      }
+      
+      // Check if date is valid
+      if (!date || isNaN(date.getTime())) {
         return 'Please enter a valid date';
       }
       
       const now = new Date();
+      now.setHours(0, 0, 0, 0); // Reset time to start of day for comparison
+      date.setHours(0, 0, 0, 0);
+      
       const daysDiff = Math.ceil((date.getTime() - now.getTime()) / (1000 * 3600 * 24));
       
       if (date < now) {
@@ -116,11 +128,6 @@ const opportunityValidationSchema: ValidationSchema = {
       
       if (daysDiff > 730) {
         return 'Close date is more than 2 years away. Consider shorter milestones.';
-      }
-      
-      const maxDate = new Date(Date.now() + 2 * 365 * 24 * 60 * 60 * 1000);
-      if (date > maxDate) {
-        return 'Expected close date is too far in the future (max 2 years)';
       }
       
       return null;
@@ -609,10 +616,13 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
   // Get filtered contacts based on selected company
   const availableContacts = formData.companyId 
     ? contacts.filter(contact => contact.companyId === formData.companyId)
-    : contacts;
+    : [];
 
   const selectedCompany = companies.find(company => company.id === formData.companyId);
   const selectedContact = contacts.find(contact => contact.id === formData.contactId);
+  
+  // Show alert when company is selected but has no contacts
+  const shouldShowNoContactsAlert = formData.companyId && availableContacts.length === 0;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -672,7 +682,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
         )}
 
         <ScrollArea className="flex-1 min-h-0 dialog-scroll-area">
-          <div className="px-6 py-6 space-y-8">
+          <div className="px-6 py-6 space-y-12">
             {/* Opportunity Details Section */}
             <Card>
               <CardHeader>
@@ -685,11 +695,11 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                 <CardDescription>Core opportunity information and contact details</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-8">
+                <div className="space-y-10">
                   {/* Basic Information Row */}
                   <div>
-                    <h4 className="font-semibold text-base mb-4 pb-2 border-b text-foreground">Basic Information</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <h4 className="font-semibold text-base mb-6 pb-2 border-b text-foreground">Basic Information</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                       <ValidatedInput
                         id="title"
                         label="Opportunity Name"
@@ -723,6 +733,17 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                         onChange={(value) => {
                           handleInputChange('companyId', value);
                           handleInputChange('contactId', ''); // Reset contact when company changes
+                          
+                          // Check if selected company has contacts
+                          const selectedCompanyContacts = contacts.filter(contact => contact.companyId === value);
+                          const selectedCompanyData = companies.find(company => company.id === value);
+                          
+                          if (value && selectedCompanyContacts.length === 0) {
+                            toast.warning('No contacts found', {
+                              description: `${selectedCompanyData?.name} has no contacts. Consider adding a contact for better opportunity tracking.`,
+                              duration: 6000
+                            });
+                          }
                         }}
                         options={companies.map(company => ({
                           value: company.id,
@@ -784,8 +805,8 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
 
                   {/* Sales Information Row */}
                   <div>
-                    <h4 className="font-semibold text-base mb-4 pb-2 border-b text-foreground">Sales Information</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <h4 className="font-semibold text-base mb-6 pb-2 border-b text-foreground">Sales Information</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                       <ValidatedInput
                         id="probability"
                         label="Win Probability (%)"
@@ -874,28 +895,57 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
 
                   {/* Contact & Status Details Row */}
                   <div>
-                    <h4 className="font-semibold text-base mb-4 pb-2 border-b text-foreground">Contact & Status Details</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <h4 className="font-semibold text-base mb-6 pb-2 border-b text-foreground">Contact & Status Details</h4>
+                    
+                    {/* Alert for no contacts */}
+                    {shouldShowNoContactsAlert && (
+                      <Alert className="mb-6">
+                        <Warning className="w-4 h-4" />
+                        <AlertDescription>
+                          The selected company ({selectedCompany?.name}) has no contacts in the system. 
+                          Consider adding a contact for this company first to ensure proper opportunity tracking.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                       <div className="space-y-2">
                         <Label htmlFor="primary-contact" className="text-sm font-medium">
                           Primary Contact
                         </Label>
                         <Select 
-                          value={formData.contactId} 
+                          value={formData.contactId || ''} 
                           onValueChange={(value) => handleInputChange('contactId', value)}
-                          disabled={!formData.companyId}
+                          disabled={!formData.companyId || availableContacts.length === 0}
                         >
                           <SelectTrigger id="primary-contact" className="w-full">
-                            <SelectValue placeholder={formData.companyId ? "Select contact" : "Select company first"} />
+                            <SelectValue placeholder={
+                              !formData.companyId ? "Select company first" :
+                              availableContacts.length === 0 ? "No contacts available" :
+                              "Select contact"
+                            } />
                           </SelectTrigger>
                           <SelectContent>
                             {availableContacts.map((contact) => (
                               <SelectItem key={contact.id} value={contact.id}>
-                                {contact.firstName} {contact.lastName} - {contact.title}
+                                <div className="flex flex-col">
+                                  <span>{contact.firstName} {contact.lastName}</span>
+                                  <span className="text-xs text-muted-foreground">{contact.title}</span>
+                                </div>
                               </SelectItem>
                             ))}
+                            {availableContacts.length === 0 && formData.companyId && (
+                              <SelectItem value="" disabled>
+                                No contacts found for this company
+                              </SelectItem>
+                            )}
                           </SelectContent>
                         </Select>
+                        {shouldShowNoContactsAlert && (
+                          <p className="text-xs text-muted-foreground">
+                            Add contacts to {selectedCompany?.name} to track key relationships
+                          </p>
+                        )}
                       </div>
 
                       <div className="space-y-2">
@@ -905,7 +955,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                         <Input
                           id="contact-email"
                           type="email"
-                          placeholder="john.anderson@techflow.com"
+                          placeholder={selectedContact ? selectedContact.email : "No contact selected"}
                           value={selectedContact?.email || ''}
                           disabled
                           className="w-full bg-muted"
@@ -919,7 +969,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                         <Input
                           id="contact-phone"
                           type="tel"
-                          placeholder="+1-555-0101"
+                          placeholder={selectedContact ? selectedContact.phone : "No contact selected"}
                           value={selectedContact?.phone || ''}
                           disabled
                           className="w-full bg-muted"
@@ -930,8 +980,8 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
 
                   {/* Business & Market Details Row */}
                   <div>
-                    <h4 className="font-semibold text-base mb-4 pb-2 border-b text-foreground">Business & Market Details</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <h4 className="font-semibold text-base mb-6 pb-2 border-b text-foreground">Business & Market Details</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                       <div className="space-y-2">
                         <Label htmlFor="industry" className="text-sm font-medium">
                           Industry
@@ -1021,8 +1071,8 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
 
                   {/* Tags Section */}
                   <div>
-                    <h4 className="font-semibold text-base mb-4 pb-2 border-b text-foreground">Tags</h4>
-                    <div className="space-y-3">
+                    <h4 className="font-semibold text-base mb-6 pb-2 border-b text-foreground">Tags</h4>
+                    <div className="space-y-4">
                       <div className="flex flex-wrap gap-2 min-h-[40px] p-3 border rounded-md bg-background">
                         {tags.length > 0 ? (
                           tags.map((tag, index) => (

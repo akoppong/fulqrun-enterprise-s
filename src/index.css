@@ -506,6 +506,51 @@ body {
   border: 0 !important;
 }
 
+/* Enhanced form field spacing */
+.form-grid-improved {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.form-grid-improved .form-field {
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-grid-improved .form-field label {
+  flex-shrink: 0;
+  margin-bottom: 0.5rem;
+}
+
+.form-grid-improved .form-field input,
+.form-grid-improved .form-field select,
+.form-grid-improved .form-field [data-radix-select-trigger] {
+  flex: 1;
+  min-height: 44px;
+}
+
+/* Prevent form field overlapping */
+.form-section-spacing {
+  padding: 2rem 0;
+  border-bottom: 1px solid hsl(var(--border));
+  margin-bottom: 2rem;
+}
+
+.form-section-spacing:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.form-section-spacing h4 {
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid hsl(var(--border));
+}
+
 input[class*="w-full"], 
 textarea[class*="w-full"], 
 [data-radix-select-trigger] {
