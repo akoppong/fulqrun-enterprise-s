@@ -94,13 +94,19 @@ const opportunityValidationSchema: ValidationSchema = {
   },
   expectedCloseDate: {
     required: true,
-    custom: (value: Date) => {
+    custom: (value: any) => {
       if (!value) return 'Expected close date is required';
       
-      const now = new Date();
-      const daysDiff = Math.ceil((value.getTime() - now.getTime()) / (1000 * 3600 * 24));
+      // Ensure value is a Date object
+      const date = value instanceof Date ? value : new Date(value);
+      if (isNaN(date.getTime())) {
+        return 'Please enter a valid date';
+      }
       
-      if (value < now) {
+      const now = new Date();
+      const daysDiff = Math.ceil((date.getTime() - now.getTime()) / (1000 * 3600 * 24));
+      
+      if (date < now) {
         return 'Expected close date cannot be in the past';
       }
       
@@ -113,7 +119,7 @@ const opportunityValidationSchema: ValidationSchema = {
       }
       
       const maxDate = new Date(Date.now() + 2 * 365 * 24 * 60 * 60 * 1000);
-      if (value > maxDate) {
+      if (date > maxDate) {
         return 'Expected close date is too far in the future (max 2 years)';
       }
       
