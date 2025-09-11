@@ -108,7 +108,6 @@ export function OpportunityTestSuite() {
   const [testProgress, setTestProgress] = useState(0);
   const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics[]>([]);
   const [validationRules] = useState<ValidationRule[]>([]);
-  const [isMonitoring, setIsMonitoring] = useState(false);
   const [automatedTestsEnabled, setAutomatedTestsEnabled] = useState(false);
   
   // Performance monitoring refs
