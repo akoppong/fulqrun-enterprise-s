@@ -106,21 +106,26 @@ export function ResponsiveOpportunityDetail({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[100vw] max-h-[100vh] w-full h-full p-0 gap-0 overflow-hidden">
-        <div className="flex flex-col h-full">
-          {/* Modern Header - Responsive */}
-          <div className="shrink-0 bg-gradient-to-r from-background via-background/95 to-background/90 backdrop-blur-xl border-b border-border/30 p-3 sm:p-4 lg:p-6">
-            <div className="flex flex-col gap-3 sm:gap-4">
-              {/* Top Row - Back button and Actions */}
+      <DialogContent className="dialog-content max-w-[98vw] max-h-[98vh] min-w-[90vw] h-[95vh] p-0 gap-0 overflow-hidden">
+        <DialogTitle className="sr-only">
+          Opportunity Details - {opportunity.title}
+        </DialogTitle>
+        
+        <div className="flex flex-col h-full bg-background">
+          {/* Improved Header Layout */}
+          <div className="shrink-0 bg-gradient-to-r from-background via-card to-background border-b border-border px-4 py-3 lg:px-6 lg:py-4">
+            <div className="flex flex-col gap-3">
+              {/* Top Action Bar */}
               <div className="flex items-center justify-between">
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={onClose}
-                  className="text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  <ArrowLeft size={16} className="mr-2" />
-                  {isMobile ? 'Back' : 'Back to Opportunities'}
+                  <ArrowLeft size={18} className="mr-2" />
+                  <span className="hidden sm:inline">Back to Opportunities</span>
+                  <span className="sm:hidden">Back</span>
                 </Button>
                 
                 <div className="flex items-center gap-2">
@@ -128,10 +133,10 @@ export function ResponsiveOpportunityDetail({
                     <Button 
                       size="sm"
                       onClick={onEdit}
-                      className="h-9 px-3 sm:px-4 font-medium"
+                      className="px-4 py-2 font-medium"
                     >
-                      <PencilSimple size={16} className="mr-1 sm:mr-2" />
-                      {!isMobile && 'Edit'}
+                      <PencilSimple size={16} className="mr-2" />
+                      <span className="hidden sm:inline">Edit</span>
                     </Button>
                   )}
                   {onDelete && (
@@ -139,49 +144,54 @@ export function ResponsiveOpportunityDetail({
                       size="sm"
                       variant="outline"
                       onClick={onDelete}
-                      className="h-9 px-3 text-red-600 hover:text-red-700 hover:bg-red-50"
+                      className="px-4 py-2 text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
                     >
-                      <Trash size={16} className={!isMobile ? 'mr-2' : ''} />
-                      {!isMobile && 'Delete'}
+                      <Trash size={16} className="mr-2" />
+                      <span className="hidden sm:inline">Delete</span>
                     </Button>
                   )}
                 </div>
               </div>
 
-              {/* Title and Company Info */}
-              <div className="space-y-2 sm:space-y-3">
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-foreground leading-tight">
-                  {opportunity.title}
-                </h1>
-                
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 lg:gap-6 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <div className="p-1.5 bg-blue-100 rounded-lg">
-                      <Building size={14} className="text-blue-600" />
-                    </div>
-                    <div className="min-w-0">
-                      <span className="font-medium text-foreground text-sm">
-                        {company?.name || 'Unknown Company'}
-                      </span>
-                      {company?.industry && (
-                        <span className="block sm:inline sm:ml-1 text-xs text-muted-foreground">
-                          {!isMobile && '•'} {company.industry}
-                        </span>
-                      )}
+              {/* Title Section - Better Spacing */}
+              <div className="space-y-3">
+                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground leading-tight break-words">
+                      {opportunity.title}
+                    </h1>
+                    
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-2 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 bg-blue-100 rounded-lg shrink-0">
+                          <Building size={14} className="text-blue-600" />
+                        </div>
+                        <div className="min-w-0">
+                          <span className="font-medium text-foreground">
+                            {company?.name || 'Unknown Company'}
+                          </span>
+                          {company?.industry && (
+                            <span className="block sm:inline sm:ml-1 text-xs">
+                              <span className="hidden sm:inline">•</span> {company.industry}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-2 sm:gap-4">
+                  {/* Badges - Better Alignment */}
+                  <div className="flex items-center gap-2 lg:gap-3 shrink-0">
                     <Badge 
                       variant="secondary" 
-                      className={`${stageConfig.color} text-xs px-2 py-1 font-medium`}
+                      className={`${stageConfig.color} px-3 py-1 font-medium text-sm`}
                     >
                       {stageConfig.label}
                     </Badge>
                     
                     <Badge 
                       variant="secondary" 
-                      className={`${priorityBadge.className} text-xs px-2 py-1 font-medium border`}
+                      className={`${priorityBadge.className} px-3 py-1 font-medium text-sm border`}
                     >
                       {(opportunity.priority || 'medium').charAt(0).toUpperCase() + (opportunity.priority || 'medium').slice(1)}
                     </Badge>
@@ -191,342 +201,363 @@ export function ResponsiveOpportunityDetail({
             </div>
           </div>
 
-          {/* Content Area with Tabs - Scrollable */}
+          {/* Main Content Area - Improved Layout */}
           <div className="flex-1 min-h-0 overflow-hidden">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-              {/* Tab Navigation - Horizontal scrollable on mobile */}
-              <div className="shrink-0 border-b border-border/30 bg-muted/20">
-                <div className="px-3 sm:px-4 lg:px-6">
-                  <TabsList className={`h-12 bg-transparent w-full ${isMobile ? 'justify-start' : 'justify-center'} gap-1 p-1`}>
-                    <div className={`flex ${isMobile ? 'overflow-x-auto scrollbar-hide' : 'flex-wrap justify-center'} gap-1 min-w-0`}>
-                      <TabsTrigger 
-                        value="overview" 
-                        className="h-10 px-3 sm:px-4 text-xs sm:text-sm font-medium whitespace-nowrap data-[state=active]:bg-background data-[state=active]:shadow-sm"
-                      >
-                        <FileText size={14} className="mr-1 sm:mr-2" />
-                        Overview
-                      </TabsTrigger>
-                      <TabsTrigger 
-                        value="metrics" 
-                        className="h-10 px-3 sm:px-4 text-xs sm:text-sm font-medium whitespace-nowrap data-[state=active]:bg-background data-[state=active]:shadow-sm"
-                      >
-                        <ChartBar size={14} className="mr-1 sm:mr-2" />
-                        Metrics
-                      </TabsTrigger>
-                      <TabsTrigger 
-                        value="peak" 
-                        className="h-10 px-3 sm:px-4 text-xs sm:text-sm font-medium whitespace-nowrap data-[state=active]:bg-background data-[state=active]:shadow-sm"
-                      >
-                        <Target size={14} className="mr-1 sm:mr-2" />
-                        PEAK
-                      </TabsTrigger>
-                      <TabsTrigger 
-                        value="meddpicc" 
-                        className="h-10 px-3 sm:px-4 text-xs sm:text-sm font-medium whitespace-nowrap data-[state=active]:bg-background data-[state=active]:shadow-sm"
-                      >
-                        <ChartLineUp size={14} className="mr-1 sm:mr-2" />
-                        MEDDPICC
-                      </TabsTrigger>
-                      <TabsTrigger 
-                        value="contact" 
-                        className="h-10 px-3 sm:px-4 text-xs sm:text-sm font-medium whitespace-nowrap data-[state=active]:bg-background data-[state=active]:shadow-sm"
-                      >
-                        <Users size={14} className="mr-1 sm:mr-2" />
-                        Contact
-                      </TabsTrigger>
-                    </div>
+              {/* Tab Navigation - Better Responsive Design */}
+              <div className="shrink-0 border-b border-border bg-card/50">
+                <div className="px-4 lg:px-6">
+                  <TabsList className="h-14 bg-transparent w-full justify-start gap-1 p-1">
+                    <ScrollArea className="w-full" orientation="horizontal">
+                      <div className="flex gap-1 min-w-max">
+                        <TabsTrigger 
+                          value="overview" 
+                          className="h-12 px-4 text-sm font-medium whitespace-nowrap data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+                        >
+                          <FileText size={16} className="mr-2" />
+                          Overview
+                        </TabsTrigger>
+                        <TabsTrigger 
+                          value="metrics" 
+                          className="h-12 px-4 text-sm font-medium whitespace-nowrap data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+                        >
+                          <ChartBar size={16} className="mr-2" />
+                          Metrics
+                        </TabsTrigger>
+                        <TabsTrigger 
+                          value="peak" 
+                          className="h-12 px-4 text-sm font-medium whitespace-nowrap data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+                        >
+                          <Target size={16} className="mr-2" />
+                          PEAK
+                        </TabsTrigger>
+                        <TabsTrigger 
+                          value="meddpicc" 
+                          className="h-12 px-4 text-sm font-medium whitespace-nowrap data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+                        >
+                          <ChartLineUp size={16} className="mr-2" />
+                          MEDDPICC
+                        </TabsTrigger>
+                        <TabsTrigger 
+                          value="contact" 
+                          className="h-12 px-4 text-sm font-medium whitespace-nowrap data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+                        >
+                          <Users size={16} className="mr-2" />
+                          Contact
+                        </TabsTrigger>
+                      </div>
+                    </ScrollArea>
                   </TabsList>
                 </div>
               </div>
 
-              {/* Tab Content - Scrollable */}
-              <ScrollArea className="flex-1">
-                <div className="p-3 sm:p-4 lg:p-6">
-                  <TabsContent value="overview" className="mt-0 space-y-4 sm:space-y-6">
-                    {/* Key Metrics Cards - Responsive Grid */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-                      <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-emerald-50 to-emerald-100/50 hover:shadow-lg transition-all duration-300">
-                        <CardContent className="p-3 sm:p-4 lg:p-6 text-center">
-                          <div className="mb-2 sm:mb-4">
-                            <div className="p-2 sm:p-3 bg-emerald-200/50 rounded-xl w-fit mx-auto group-hover:scale-110 transition-transform duration-200">
-                              <DollarSign size={isMobile ? 20 : 24} className="text-emerald-600" />
-                            </div>
-                          </div>
-                          <div className="space-y-1 sm:space-y-2">
-                            <div className="text-lg sm:text-xl lg:text-2xl font-bold text-emerald-900">
-                              {formatCurrency(opportunity.value)}
-                            </div>
-                            <div className="text-xs sm:text-sm font-medium text-emerald-700">Deal Value</div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                      
-                      <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-blue-50 to-blue-100/50 hover:shadow-lg transition-all duration-300">
-                        <CardContent className="p-3 sm:p-4 lg:p-6 text-center">
-                          <div className="mb-2 sm:mb-4">
-                            <div className="p-2 sm:p-3 bg-blue-200/50 rounded-xl w-fit mx-auto group-hover:scale-110 transition-transform duration-200">
-                              <Target size={isMobile ? 20 : 24} className="text-blue-600" />
-                            </div>
-                          </div>
-                          <div className="space-y-1 sm:space-y-2">
-                            <div className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-900">
-                              {opportunity.probability}%
-                            </div>
-                            <div className="text-xs sm:text-sm font-medium text-blue-700">Win Rate</div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                      
-                      <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-purple-50 to-purple-100/50 hover:shadow-lg transition-all duration-300">
-                        <CardContent className="p-3 sm:p-4 lg:p-6 text-center">
-                          <div className="mb-2 sm:mb-4">
-                            <div className="p-2 sm:p-3 bg-purple-200/50 rounded-xl w-fit mx-auto group-hover:scale-110 transition-transform duration-200">
-                              <TrendingUp size={isMobile ? 20 : 24} className={`${meddpicScore < 50 ? 'text-red-500' : meddpicScore < 80 ? 'text-yellow-500' : 'text-green-500'}`} />
-                            </div>
-                          </div>
-                          <div className="space-y-1 sm:space-y-2">
-                            <div className={`text-lg sm:text-xl lg:text-2xl font-bold ${meddpicScore < 50 ? 'text-red-600' : meddpicScore < 80 ? 'text-yellow-600' : 'text-green-600'}`}>
-                              {meddpicScore}%
-                            </div>
-                            <div className="text-xs sm:text-sm font-medium text-purple-700">MEDDPICC</div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                      
-                      <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-amber-50 to-amber-100/50 hover:shadow-lg transition-all duration-300">
-                        <CardContent className="p-3 sm:p-4 lg:p-6 text-center">
-                          <div className="mb-2 sm:mb-4">
-                            <div className="p-2 sm:p-3 bg-amber-200/50 rounded-xl w-fit mx-auto group-hover:scale-110 transition-transform duration-200">
-                              <Calendar size={isMobile ? 20 : 24} className="text-amber-600" />
-                            </div>
-                          </div>
-                          <div className="space-y-1 sm:space-y-2">
-                            <div className="text-sm sm:text-base lg:text-lg font-bold text-amber-900">
-                              {daysToClose > 0 ? `${daysToClose} days` : 'Overdue'}
-                            </div>
-                            <div className="text-xs sm:text-sm font-medium text-amber-700">To Close</div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-
-                    {/* Details Section - Responsive Layout */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-                      {/* Main Details */}
-                      <div className="lg:col-span-2">
-                        <Card className="border-0 shadow-lg bg-gradient-to-br from-background to-muted/20">
-                          <CardHeader>
-                            <CardTitle className="text-lg sm:text-xl font-semibold flex items-center gap-2">
-                              <FileText size={18} className="text-primary" />
-                              Opportunity Details
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="space-y-4 sm:space-y-6">
-                            {/* Stage and Progress */}
-                            <div className="space-y-3">
-                              <div className="flex items-center justify-between">
-                                <Label className="text-sm font-medium text-muted-foreground">Current Stage</Label>
-                                <Badge className={`${stageConfig.color} text-sm px-3 py-1 font-medium`}>
-                                  {stageConfig.label}
-                                </Badge>
-                              </div>
-                              <div className="space-y-2">
-                                <Progress value={stageProgress} className="h-3" />
-                                <div className="flex justify-between text-xs text-muted-foreground">
-                                  <span>{stageProgress}% complete</span>
-                                  <span>{daysInStage} days in stage</span>
-                                </div>
+              {/* Tab Content - Optimized Scrolling */}
+              <div className="flex-1 overflow-hidden">
+                <ScrollArea className="h-full">
+                  <div className="px-4 py-6 lg:px-6 lg:py-8">
+                    <TabsContent value="overview" className="mt-0 space-y-6">
+                      {/* Key Metrics Cards - Improved Grid Layout */}
+                      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6">
+                        <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-emerald-50 to-emerald-100/50 hover:shadow-lg transition-all duration-300">
+                          <CardContent className="p-4 lg:p-6 text-center">
+                            <div className="mb-3 lg:mb-4">
+                              <div className="p-3 bg-emerald-200/50 rounded-xl w-fit mx-auto group-hover:scale-110 transition-transform duration-200">
+                                <DollarSign size={24} className="text-emerald-600" />
                               </div>
                             </div>
-
-                            <Separator />
-
-                            {/* Timeline Info */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label className="text-sm font-medium text-muted-foreground">Created Date</Label>
-                                <div className="text-sm font-medium text-foreground">
-                                  {format(new Date(opportunity.createdAt), 'MMM dd, yyyy')}
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                  {daysInPipeline} days in pipeline
-                                </div>
+                            <div className="space-y-1">
+                              <div className="text-xl lg:text-2xl font-bold text-emerald-900">
+                                {formatCurrency(opportunity.value)}
                               </div>
-                              
-                              <div className="space-y-2">
-                                <Label className="text-sm font-medium text-muted-foreground">Expected Close</Label>
-                                <div className="text-sm font-medium text-foreground">
-                                  {format(new Date(opportunity.expectedCloseDate), 'MMM dd, yyyy')}
-                                </div>
-                                <div className={`text-xs font-medium ${daysToClose < 0 ? 'text-red-600' : daysToClose < 7 ? 'text-amber-600' : 'text-green-600'}`}>
-                                  {daysToClose < 0 ? `${Math.abs(daysToClose)} days overdue` : 
-                                   daysToClose === 0 ? 'Due today' :
-                                   `${daysToClose} days remaining`}
-                                </div>
+                              <div className="text-sm font-medium text-emerald-700">Deal Value</div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                        
+                        <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-blue-50 to-blue-100/50 hover:shadow-lg transition-all duration-300">
+                          <CardContent className="p-4 lg:p-6 text-center">
+                            <div className="mb-3 lg:mb-4">
+                              <div className="p-3 bg-blue-200/50 rounded-xl w-fit mx-auto group-hover:scale-110 transition-transform duration-200">
+                                <Target size={24} className="text-blue-600" />
                               </div>
                             </div>
-
-                            {opportunity.description && (
-                              <>
-                                <Separator />
-                                <div className="space-y-2">
-                                  <Label className="text-sm font-medium text-muted-foreground">Description</Label>
-                                  <div className="p-4 bg-muted/50 rounded-lg">
-                                    <p className="text-sm text-foreground leading-relaxed">
-                                      {opportunity.description}
-                                    </p>
-                                  </div>
-                                </div>
-                              </>
-                            )}
-
-                            {opportunity.tags && opportunity.tags.length > 0 && (
-                              <>
-                                <Separator />
-                                <div className="space-y-3">
-                                  <Label className="text-sm font-medium text-muted-foreground">Tags</Label>
-                                  <div className="flex flex-wrap gap-2">
-                                    {opportunity.tags.map((tag, index) => (
-                                      <Badge 
-                                        key={index} 
-                                        variant="secondary" 
-                                        className="text-xs px-3 py-1 bg-primary/10 text-primary border-primary/20"
-                                      >
-                                        {tag}
-                                      </Badge>
-                                    ))}
-                                  </div>
-                                </div>
-                              </>
-                            )}
+                            <div className="space-y-1">
+                              <div className="text-xl lg:text-2xl font-bold text-blue-900">
+                                {opportunity.probability}%
+                              </div>
+                              <div className="text-sm font-medium text-blue-700">Win Rate</div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                        
+                        <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-purple-50 to-purple-100/50 hover:shadow-lg transition-all duration-300">
+                          <CardContent className="p-4 lg:p-6 text-center">
+                            <div className="mb-3 lg:mb-4">
+                              <div className="p-3 bg-purple-200/50 rounded-xl w-fit mx-auto group-hover:scale-110 transition-transform duration-200">
+                                <TrendingUp size={24} className={`${meddpicScore < 50 ? 'text-red-500' : meddpicScore < 80 ? 'text-yellow-500' : 'text-green-500'}`} />
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <div className={`text-xl lg:text-2xl font-bold ${meddpicScore < 50 ? 'text-red-600' : meddpicScore < 80 ? 'text-yellow-600' : 'text-green-600'}`}>
+                                {meddpicScore}%
+                              </div>
+                              <div className="text-sm font-medium text-purple-700">MEDDPICC</div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                        
+                        <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-amber-50 to-amber-100/50 hover:shadow-lg transition-all duration-300">
+                          <CardContent className="p-4 lg:p-6 text-center">
+                            <div className="mb-3 lg:mb-4">
+                              <div className="p-3 bg-amber-200/50 rounded-xl w-fit mx-auto group-hover:scale-110 transition-transform duration-200">
+                                <Calendar size={24} className="text-amber-600" />
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <div className="text-lg lg:text-xl font-bold text-amber-900">
+                                {daysToClose > 0 ? `${daysToClose} days` : 'Overdue'}
+                              </div>
+                              <div className="text-sm font-medium text-amber-700">To Close</div>
+                            </div>
                           </CardContent>
                         </Card>
                       </div>
 
-                      {/* Company Information */}
-                      <div>
-                        <Card className="border-0 shadow-lg bg-gradient-to-br from-background to-blue-50/30">
-                          <CardHeader>
-                            <CardTitle className="text-lg sm:text-xl font-semibold flex items-center gap-2">
-                              <Building size={18} className="text-blue-600" />
-                              Company Information
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            {company ? (
+                      {/* Details Section - Better Responsive Layout */}
+                      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                        {/* Main Details - Takes 2 columns on large screens */}
+                        <div className="xl:col-span-2">
+                          <Card className="border-0 shadow-lg bg-gradient-to-br from-background to-muted/20 h-full">
+                            <CardHeader className="pb-4">
+                              <CardTitle className="text-xl font-semibold flex items-center gap-3">
+                                <div className="p-2 bg-primary/10 rounded-lg">
+                                  <FileText size={20} className="text-primary" />
+                                </div>
+                                Opportunity Details
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                              {/* Stage and Progress */}
                               <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                  <Label className="text-sm font-medium text-muted-foreground">Current Stage</Label>
+                                  <Badge className={`${stageConfig.color} text-sm px-3 py-1 font-medium`}>
+                                    {stageConfig.label}
+                                  </Badge>
+                                </div>
                                 <div className="space-y-3">
-                                  <div>
-                                    <div className="font-semibold text-lg text-foreground">
-                                      {company.name}
-                                    </div>
-                                    <div className="text-sm text-blue-600 font-medium">
-                                      {company.industry}
-                                    </div>
-                                    <div className="text-xs text-muted-foreground">
-                                      {company.size}
-                                    </div>
-                                  </div>
-                                  
-                                  <div className="space-y-3">
-                                    {company.website && (
-                                      <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-                                        <div className="p-2 bg-blue-100 rounded-lg">
-                                          <Globe size={14} className="text-blue-600" />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                          <div className="text-xs text-muted-foreground">Website</div>
-                                          <a 
-                                            href={company.website} 
-                                            target="_blank" 
-                                            rel="noopener noreferrer"
-                                            className="text-sm font-medium text-blue-600 hover:underline truncate block"
-                                          >
-                                            {company.website}
-                                          </a>
-                                        </div>
-                                      </div>
-                                    )}
-                                    
-                                    {company.address && (
-                                      <div className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
-                                        <div className="p-2 bg-green-100 rounded-lg">
-                                          <MapPin size={14} className="text-green-600" />
-                                        </div>
-                                        <div className="flex-1">
-                                          <div className="text-xs text-muted-foreground">Address</div>
-                                          <div className="text-sm font-medium leading-relaxed">{company.address}</div>
-                                        </div>
-                                      </div>
-                                    )}
-                                    
-                                    <div className="grid grid-cols-2 gap-3">
-                                      <div className="p-3 bg-muted/30 rounded-lg text-center">
-                                        <div className="text-lg font-bold text-foreground">
-                                          {company.employees ? company.employees.toLocaleString() : 'N/A'}
-                                        </div>
-                                        <div className="text-xs text-muted-foreground">Employees</div>
-                                      </div>
-                                      <div className="p-3 bg-muted/30 rounded-lg text-center">
-                                        <div className="text-sm font-bold text-foreground">
-                                          {company.revenue ? formatCurrency(company.revenue) : 'N/A'}
-                                        </div>
-                                        <div className="text-xs text-muted-foreground">Revenue</div>
-                                      </div>
-                                    </div>
+                                  <Progress value={stageProgress} className="h-3" />
+                                  <div className="flex justify-between text-sm text-muted-foreground">
+                                    <span>{stageProgress}% complete</span>
+                                    <span>{daysInStage} days in stage</span>
                                   </div>
                                 </div>
                               </div>
-                            ) : (
-                              <div className="text-center py-8">
-                                <div className="mb-4">
-                                  <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-50 to-blue-100 rounded-full flex items-center justify-center">
-                                    <Building size={24} className="text-blue-600" />
-                                  </div>
-                                </div>
-                                <div className="space-y-2">
-                                  <div className="font-medium text-foreground">No Company Information</div>
-                                  <div className="text-sm text-muted-foreground">
-                                    Company details not available
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </CardContent>
-                        </Card>
-                      </div>
-                    </div>
-                  </TabsContent>
 
-                  <TabsContent value="metrics" className="mt-0 space-y-4 sm:space-y-6">
-                    <div className="text-center py-12 space-y-6">
-                      <div className="mx-auto w-20 h-20 bg-gradient-to-br from-purple-50 to-purple-100 rounded-full flex items-center justify-center">
-                        <ChartBar size={32} className="text-purple-600" />
+                              <Separator />
+
+                              {/* Timeline Info - Better Grid */}
+                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <div className="space-y-3">
+                                  <Label className="text-sm font-medium text-muted-foreground">Created Date</Label>
+                                  <div className="p-4 bg-muted/50 rounded-lg">
+                                    <div className="text-sm font-medium text-foreground">
+                                      {format(new Date(opportunity.createdAt), 'MMM dd, yyyy')}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground mt-1">
+                                      {daysInPipeline} days in pipeline
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                <div className="space-y-3">
+                                  <Label className="text-sm font-medium text-muted-foreground">Expected Close</Label>
+                                  <div className="p-4 bg-muted/50 rounded-lg">
+                                    <div className="text-sm font-medium text-foreground">
+                                      {format(new Date(opportunity.expectedCloseDate), 'MMM dd, yyyy')}
+                                    </div>
+                                    <div className={`text-xs font-medium mt-1 ${daysToClose < 0 ? 'text-red-600' : daysToClose < 7 ? 'text-amber-600' : 'text-green-600'}`}>
+                                      {daysToClose < 0 ? `${Math.abs(daysToClose)} days overdue` : 
+                                       daysToClose === 0 ? 'Due today' :
+                                       `${daysToClose} days remaining`}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {opportunity.description && (
+                                <>
+                                  <Separator />
+                                  <div className="space-y-3">
+                                    <Label className="text-sm font-medium text-muted-foreground">Description</Label>
+                                    <div className="p-4 bg-muted/50 rounded-lg">
+                                      <p className="text-sm text-foreground leading-relaxed">
+                                        {opportunity.description}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </>
+                              )}
+
+                              {opportunity.tags && opportunity.tags.length > 0 && (
+                                <>
+                                  <Separator />
+                                  <div className="space-y-3">
+                                    <Label className="text-sm font-medium text-muted-foreground">Tags</Label>
+                                    <div className="flex flex-wrap gap-2">
+                                      {opportunity.tags.map((tag, index) => (
+                                        <Badge 
+                                          key={index} 
+                                          variant="secondary" 
+                                          className="text-xs px-3 py-1 bg-primary/10 text-primary border-primary/20"
+                                        >
+                                          {tag}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  </div>
+                                </>
+                              )}
+                            </CardContent>
+                          </Card>
+                        </div>
+
+                        {/* Company Information - Sidebar */}
+                        <div className="xl:col-span-1">
+                          <Card className="border-0 shadow-lg bg-gradient-to-br from-background to-blue-50/30 h-full">
+                            <CardHeader className="pb-4">
+                              <CardTitle className="text-xl font-semibold flex items-center gap-3">
+                                <div className="p-2 bg-blue-100 rounded-lg">
+                                  <Building size={20} className="text-blue-600" />
+                                </div>
+                                Company Information
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              {company ? (
+                                <div className="space-y-4">
+                                  <div className="space-y-3">
+                                    <div className="text-center pb-4 border-b border-border/30">
+                                      <div className="font-semibold text-lg text-foreground">
+                                        {company.name}
+                                      </div>
+                                      <div className="text-sm text-blue-600 font-medium">
+                                        {company.industry}
+                                      </div>
+                                      <div className="text-xs text-muted-foreground">
+                                        {company.size}
+                                      </div>
+                                    </div>
+                                    
+                                    <div className="space-y-3">
+                                      {company.website && (
+                                        <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+                                          <div className="p-2 bg-blue-100 rounded-lg shrink-0">
+                                            <Globe size={16} className="text-blue-600" />
+                                          </div>
+                                          <div className="flex-1 min-w-0">
+                                            <div className="text-xs text-muted-foreground">Website</div>
+                                            <a 
+                                              href={company.website} 
+                                              target="_blank" 
+                                              rel="noopener noreferrer"
+                                              className="text-sm font-medium text-blue-600 hover:underline truncate block"
+                                            >
+                                              {company.website}
+                                            </a>
+                                          </div>
+                                        </div>
+                                      )}
+                                      
+                                      {company.address && (
+                                        <div className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
+                                          <div className="p-2 bg-green-100 rounded-lg shrink-0">
+                                            <MapPin size={16} className="text-green-600" />
+                                          </div>
+                                          <div className="flex-1">
+                                            <div className="text-xs text-muted-foreground">Address</div>
+                                            <div className="text-sm font-medium leading-relaxed">{company.address}</div>
+                                          </div>
+                                        </div>
+                                      )}
+                                      
+                                      <div className="grid grid-cols-2 gap-3">
+                                        <div className="p-3 bg-muted/30 rounded-lg text-center">
+                                          <div className="text-lg font-bold text-foreground">
+                                            {company.employees ? company.employees.toLocaleString() : 'N/A'}
+                                          </div>
+                                          <div className="text-xs text-muted-foreground">Employees</div>
+                                        </div>
+                                        <div className="p-3 bg-muted/30 rounded-lg text-center">
+                                          <div className="text-sm font-bold text-foreground">
+                                            {company.revenue ? formatCurrency(company.revenue) : 'N/A'}
+                                          </div>
+                                          <div className="text-xs text-muted-foreground">Revenue</div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="text-center py-8">
+                                  <div className="mb-4">
+                                    <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-50 to-blue-100 rounded-full flex items-center justify-center">
+                                      <Building size={24} className="text-blue-600" />
+                                    </div>
+                                  </div>
+                                  <div className="space-y-2">
+                                    <div className="font-medium text-foreground">No Company Information</div>
+                                    <div className="text-sm text-muted-foreground">
+                                      Company details not available
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        </div>
                       </div>
-                      <div className="space-y-3">
-                        <h3 className="text-xl font-semibold text-foreground">Advanced Metrics Dashboard</h3>
-                        <p className="text-muted-foreground max-w-md mx-auto">
+                    </TabsContent>
+
+                  <TabsContent value="metrics" className="mt-0 space-y-6">
+                    <div className="text-center py-16 space-y-8">
+                      <div className="mx-auto w-24 h-24 bg-gradient-to-br from-purple-50 to-purple-100 rounded-full flex items-center justify-center">
+                        <ChartBar size={40} className="text-purple-600" />
+                      </div>
+                      <div className="space-y-4">
+                        <h3 className="text-2xl font-semibold text-foreground">Advanced Metrics Dashboard</h3>
+                        <p className="text-muted-foreground max-w-md mx-auto text-lg">
                           Detailed performance analytics, trend analysis, and predictive insights will be available here.
                         </p>
                       </div>
-                      <Button variant="outline" size="lg" disabled>
-                        <ChartLineUp size={16} className="mr-2" />
+                      <Button variant="outline" size="lg" disabled className="px-8 py-3">
+                        <ChartLineUp size={18} className="mr-3" />
                         Coming Soon
                       </Button>
                     </div>
                   </TabsContent>
 
-                  <TabsContent value="peak" className="mt-0 space-y-4 sm:space-y-6">
+                  <TabsContent value="peak" className="mt-0 space-y-6">
                     <Card className="border-0 shadow-lg bg-gradient-to-br from-background to-primary/5">
-                      <CardHeader>
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                          <CardTitle className="text-lg sm:text-xl font-semibold flex items-center gap-2">
-                            <Target size={18} className="text-primary" />
+                      <CardHeader className="pb-6">
+                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                          <CardTitle className="text-xl font-semibold flex items-center gap-3">
+                            <div className="p-2 bg-primary/10 rounded-lg">
+                              <Target size={20} className="text-primary" />
+                            </div>
                             PEAK Methodology Progress
                           </CardTitle>
                           <div className="flex items-center gap-3">
                             <span className="text-sm text-muted-foreground">Overall Progress:</span>
-                            <span className="text-lg font-bold text-primary">{stageProgress}%</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-2xl font-bold text-primary">{stageProgress}%</span>
+                              <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-primary rounded-full transition-all duration-500" 
+                                  style={{ width: `${stageProgress}%` }}
+                                />
+                              </div>
+                            </div>
                           </div>
                         </div>
                         <div className="mt-4 space-y-2">
@@ -539,8 +570,8 @@ export function ResponsiveOpportunityDetail({
                           </div>
                         </div>
                       </CardHeader>
-                      <CardContent className="space-y-4 sm:space-y-6">
-                        <div className="space-y-4 sm:space-y-6">
+                      <CardContent className="space-y-6">
+                        <div className="space-y-4">
                           {PEAK_STAGES.map((stage, index) => {
                             const isCurrentStage = stage.value === opportunity.stage;
                             const isPastStage = PEAK_STAGES.findIndex(s => s.value === opportunity.stage) > index;
@@ -551,20 +582,20 @@ export function ResponsiveOpportunityDetail({
                                 isPastStage ? 'border-green-200 bg-green-50/50' : 
                                 'border-border bg-muted/20'
                               }`}>
-                                <CardContent className="p-4 sm:p-6">
-                                  <div className="flex items-start gap-3 sm:gap-4">
-                                    <div className={`p-2 sm:p-3 rounded-full shrink-0 ${
+                                <CardContent className="p-6">
+                                  <div className="flex items-start gap-4">
+                                    <div className={`p-3 rounded-full shrink-0 ${
                                       isCurrentStage ? 'bg-primary text-primary-foreground shadow-lg' :
                                       isPastStage ? 'bg-green-500 text-white' :
                                       'bg-muted text-muted-foreground'
                                     }`}>
-                                      {isPastStage ? <CheckCircle size={isMobile ? 18 : 20} /> :
-                                       isCurrentStage ? <ClockCounterClockwise size={isMobile ? 18 : 20} /> :
-                                       <Circle size={isMobile ? 18 : 20} />}
+                                      {isPastStage ? <CheckCircle size={20} /> :
+                                       isCurrentStage ? <ClockCounterClockwise size={20} /> :
+                                       <Circle size={20} />}
                                     </div>
-                                    <div className="flex-1 space-y-2 sm:space-y-3 min-w-0">
-                                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                        <h3 className={`text-lg sm:text-xl font-semibold ${
+                                    <div className="flex-1 space-y-3 min-w-0">
+                                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2">
+                                        <h3 className={`text-xl font-semibold ${
                                           isCurrentStage ? 'text-primary' :
                                           isPastStage ? 'text-green-700' :
                                           'text-muted-foreground'
@@ -586,7 +617,7 @@ export function ResponsiveOpportunityDetail({
                                         </Badge>
                                       </div>
                                       
-                                      <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
+                                      <p className="text-muted-foreground leading-relaxed">
                                         {stage.description}
                                       </p>
                                     </div>
@@ -600,17 +631,19 @@ export function ResponsiveOpportunityDetail({
                     </Card>
                   </TabsContent>
 
-                  <TabsContent value="meddpicc" className="mt-0 space-y-4 sm:space-y-6">
+                  <TabsContent value="meddpicc" className="mt-0 space-y-6">
                     <Card className="border-0 shadow-lg bg-gradient-to-br from-background to-purple/5">
-                      <CardHeader>
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                          <CardTitle className="text-lg sm:text-xl font-semibold flex items-center gap-2">
-                            <ChartLineUp size={18} className="text-purple-600" />
+                      <CardHeader className="pb-6">
+                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                          <CardTitle className="text-xl font-semibold flex items-center gap-3">
+                            <div className="p-2 bg-purple-100 rounded-lg">
+                              <ChartLineUp size={20} className="text-purple-600" />
+                            </div>
                             MEDDPICC Qualification
                           </CardTitle>
                           <div className="flex items-center gap-3">
                             <span className="text-sm text-muted-foreground">Score:</span>
-                            <div className={`text-xl font-bold px-3 py-1 rounded-lg ${
+                            <div className={`text-2xl font-bold px-4 py-2 rounded-lg ${
                               meddpicScore < 50 ? 'text-red-600 bg-red-50' : 
                               meddpicScore < 80 ? 'text-yellow-600 bg-yellow-50' : 
                               'text-green-600 bg-green-50'
@@ -694,23 +727,23 @@ export function ResponsiveOpportunityDetail({
                               <Card key={component.key} className="border-border/50 bg-gradient-to-br from-background to-muted/10">
                                 <CardContent className="p-4">
                                   <div className="flex items-start gap-3">
-                                    <div className={`p-2 sm:p-3 bg-${component.color}-100 rounded-lg shrink-0`}>
-                                      <IconComponent size={isMobile ? 16 : 18} className={`text-${component.color}-600`} />
+                                    <div className={`p-3 bg-${component.color}-100 rounded-lg shrink-0`}>
+                                      <IconComponent size={18} className={`text-${component.color}-600`} />
                                     </div>
                                     <div className="flex-1 space-y-2 min-w-0">
                                       <div className="flex items-center justify-between">
-                                        <h3 className="font-semibold text-sm sm:text-base">{component.title}</h3>
+                                        <h3 className="font-semibold">{component.title}</h3>
                                         {hasContent ? (
                                           <CheckCircle size={16} className="text-green-500 shrink-0" />
                                         ) : (
                                           <Warning size={16} className="text-amber-500 shrink-0" />
                                         )}
                                       </div>
-                                      <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                                      <p className="text-sm text-muted-foreground leading-relaxed">
                                         {component.description}
                                       </p>
                                       <div className="p-3 bg-muted/50 rounded-lg">
-                                        <p className="text-xs sm:text-sm font-medium text-foreground">
+                                        <p className="text-sm font-medium text-foreground">
                                           {hasContent || 'Not yet defined'}
                                         </p>
                                       </div>
@@ -728,7 +761,7 @@ export function ResponsiveOpportunityDetail({
                           meddpicScore >= 50 ? 'border-yellow-200 bg-yellow-50/30' :
                           'border-red-200 bg-red-50/30'
                         }`}>
-                          <CardContent className="p-4 sm:p-6">
+                          <CardContent className="p-6">
                             <div className="flex items-start gap-4">
                               <div className={`p-3 rounded-lg ${
                                 meddpicScore >= 80 ? 'bg-green-100' :
@@ -741,7 +774,7 @@ export function ResponsiveOpportunityDetail({
                                 }
                               </div>
                               <div className="flex-1 space-y-2">
-                                <h3 className="text-lg sm:text-xl font-semibold text-foreground">
+                                <h3 className="text-xl font-semibold text-foreground">
                                   Qualification Health Assessment
                                 </h3>
                                 <div className="space-y-2">
@@ -781,44 +814,46 @@ export function ResponsiveOpportunityDetail({
                     </Card>
                   </TabsContent>
 
-                  <TabsContent value="contact" className="mt-0 space-y-4 sm:space-y-6">
+                  <TabsContent value="contact" className="mt-0 space-y-6">
                     <Card className="border-0 shadow-lg bg-gradient-to-br from-background to-blue-50/30">
-                      <CardHeader>
-                        <CardTitle className="text-lg sm:text-xl font-semibold flex items-center gap-2">
-                          <User size={18} className="text-blue-600" />
+                      <CardHeader className="pb-6">
+                        <CardTitle className="text-xl font-semibold flex items-center gap-3">
+                          <div className="p-2 bg-blue-100 rounded-lg">
+                            <User size={20} className="text-blue-600" />
+                          </div>
                           Primary Contact
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
                         {contact ? (
                           <div className="space-y-6">
-                            <div className="flex flex-col sm:flex-row items-start gap-4">
-                              <Avatar className="h-16 w-16 border-2 border-blue-100 shrink-0">
+                            <div className="flex flex-col lg:flex-row items-start gap-6">
+                              <Avatar className="h-20 w-20 border-4 border-blue-100 shrink-0">
                                 <AvatarImage src={contact.avatarUrl} />
-                                <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold text-lg">
+                                <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold text-xl">
                                   {contact.firstName[0]}{contact.lastName[0]}
                                 </AvatarFallback>
                               </Avatar>
-                              <div className="flex-1 space-y-1 min-w-0">
-                                <div className="font-semibold text-lg text-foreground">
+                              <div className="flex-1 space-y-2 min-w-0">
+                                <div className="font-semibold text-xl text-foreground">
                                   {contact.firstName} {contact.lastName}
                                 </div>
                                 <div className="text-sm text-blue-600 font-medium">
                                   {contact.title || 'Contact'}
                                 </div>
-                                <div className="text-xs text-muted-foreground">
+                                <div className="text-sm text-muted-foreground">
                                   {company?.name || 'Unknown Company'}
                                 </div>
                               </div>
                             </div>
                             
                             <div className="space-y-4">
-                              <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-                                <div className="p-2 bg-blue-100 rounded-lg shrink-0">
-                                  <Envelope size={16} className="text-blue-600" />
+                              <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg">
+                                <div className="p-3 bg-blue-100 rounded-lg shrink-0">
+                                  <Envelope size={18} className="text-blue-600" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <div className="text-xs text-muted-foreground">Email</div>
+                                  <div className="text-xs text-muted-foreground font-medium">Email</div>
                                   <a 
                                     href={`mailto:${contact.email}`}
                                     className="text-sm font-medium text-foreground hover:text-blue-600 truncate block"
@@ -829,12 +864,12 @@ export function ResponsiveOpportunityDetail({
                               </div>
                               
                               {contact.phone && (
-                                <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-                                  <div className="p-2 bg-green-100 rounded-lg shrink-0">
-                                    <Phone size={16} className="text-green-600" />
+                                <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg">
+                                  <div className="p-3 bg-green-100 rounded-lg shrink-0">
+                                    <Phone size={18} className="text-green-600" />
                                   </div>
                                   <div className="flex-1">
-                                    <div className="text-xs text-muted-foreground">Phone</div>
+                                    <div className="text-xs text-muted-foreground font-medium">Phone</div>
                                     <a 
                                       href={`tel:${contact.phone}`}
                                       className="text-sm font-medium text-foreground hover:text-green-600"
@@ -846,32 +881,32 @@ export function ResponsiveOpportunityDetail({
                               )}
                             </div>
                             
-                            <div className="flex flex-col sm:flex-row gap-3">
+                            <div className="flex flex-col lg:flex-row gap-3">
                               <Button variant="outline" size="sm" className="flex-1" disabled>
-                                <Envelope size={14} className="mr-2" />
+                                <Envelope size={16} className="mr-2" />
                                 Send Email
                               </Button>
                               <Button variant="outline" size="sm" className="flex-1" disabled>
-                                <Phone size={14} className="mr-2" />
+                                <Phone size={16} className="mr-2" />
                                 Call Contact
                               </Button>
                             </div>
                           </div>
                         ) : (
-                          <div className="text-center py-12">
+                          <div className="text-center py-16">
                             <div className="mb-6">
-                              <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-50 to-blue-100 rounded-full flex items-center justify-center">
-                                <Users size={24} className="text-blue-600" />
+                              <div className="mx-auto w-20 h-20 bg-gradient-to-br from-blue-50 to-blue-100 rounded-full flex items-center justify-center">
+                                <Users size={28} className="text-blue-600" />
                               </div>
                             </div>
                             <div className="space-y-2">
-                              <div className="font-medium text-foreground">No Primary Contact</div>
+                              <div className="font-medium text-foreground text-lg">No Primary Contact</div>
                               <div className="text-sm text-muted-foreground">
                                 Assign a contact to improve tracking
                               </div>
                             </div>
-                            <Button variant="outline" size="sm" className="mt-4" disabled>
-                              <Plus size={14} className="mr-2" />
+                            <Button variant="outline" size="sm" className="mt-6" disabled>
+                              <Plus size={16} className="mr-2" />
                               Add Contact
                             </Button>
                           </div>
@@ -881,10 +916,11 @@ export function ResponsiveOpportunityDetail({
                   </TabsContent>
                 </div>
               </ScrollArea>
-            </Tabs>
-          </div>
+            </div>
+          </Tabs>
         </div>
-      </DialogContent>
-    </Dialog>
-  );
+      </div>
+    </DialogContent>
+  </Dialog>
+);
 }
