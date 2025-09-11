@@ -397,6 +397,50 @@ textarea[class*="w-full"],
 
 /* === RESPONSIVE DESIGN === */
 
+/* Enhanced fluid typography */
+.text-fluid-sm { font-size: clamp(0.875rem, 0.8rem + 0.25vw, 1rem); }
+.text-fluid-base { font-size: clamp(1rem, 0.9rem + 0.35vw, 1.125rem); }
+.text-fluid-lg { font-size: clamp(1.125rem, 1rem + 0.5vw, 1.25rem); }
+.text-fluid-xl { font-size: clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem); }
+.text-fluid-2xl { font-size: clamp(1.5rem, 1.3rem + 1vw, 2rem); }
+.text-fluid-3xl { font-size: clamp(1.875rem, 1.6rem + 1.5vw, 2.5rem); }
+
+/* Touch-friendly interactive elements */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.touch-target-large {
+  min-height: 48px;
+  min-width: 48px;
+}
+
+/* Responsive container queries */
+@container (max-width: 400px) {
+  .container-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@container (max-width: 600px) {
+  .container-cols-3 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* Enhanced focus styles for accessibility */
+.focus-enhanced:focus-visible {
+  outline: 3px solid hsl(var(--ring));
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px hsl(var(--ring) / 0.1);
+}
+
+/* Responsive content prioritization */
+.content-priority-high { order: -1; }
+.content-priority-medium { order: 0; }
+.content-priority-low { order: 1; }
+
 @media (max-width: 1023px) {
   .grid-cols-4 { grid-template-columns: repeat(2, 1fr) !important; }
   .grid-cols-5 { grid-template-columns: repeat(2, 1fr) !important; }
@@ -413,6 +457,20 @@ textarea[class*="w-full"],
   textarea[class*="w-full"], 
   [data-radix-select-trigger] {
     min-width: 200px;
+  }
+
+  /* Enhanced sidebar behavior on tablet */
+  .sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+  }
+
+  /* Content prioritization on smaller screens */
+  .content-priority-low {
+    display: none;
   }
 }
 
@@ -528,6 +586,111 @@ textarea[class*="w-full"],
     width: 130px;
     min-width: 130px;
     max-width: 130px;
+  }
+
+  /* Enhanced mobile typography */
+  .text-fluid-sm { font-size: 0.875rem; }
+  .text-fluid-base { font-size: 1rem; }
+  .text-fluid-lg { font-size: 1.125rem; }
+  .text-fluid-xl { font-size: 1.25rem; }
+  .text-fluid-2xl { font-size: 1.5rem; }
+  .text-fluid-3xl { font-size: 1.875rem; }
+
+  /* Mobile-specific content behavior */
+  .content-priority-medium,
+  .content-priority-low {
+    display: none;
+  }
+
+  /* Mobile navigation enhancements */
+  .mobile-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 60;
+    background: hsl(var(--background));
+  }
+
+  .mobile-nav-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    border-bottom: 1px solid hsl(var(--border));
+  }
+
+  /* Enhanced touch targets */
+  .touch-target {
+    min-height: 48px;
+    min-width: 48px;
+  }
+
+  .touch-target-large {
+    min-height: 56px;
+    min-width: 56px;
+  }
+
+  /* Mobile-optimized forms */
+  .mobile-form-stack > * {
+    margin-bottom: 1rem;
+  }
+
+  .mobile-form-stack > *:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Mobile table alternatives */
+  .mobile-table-card {
+    border: 1px solid hsl(var(--border));
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background: hsl(var(--card));
+  }
+
+  .mobile-table-card:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Scroll indicators for mobile */
+  .mobile-scroll-indicator {
+    position: relative;
+  }
+
+  .mobile-scroll-indicator::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 20px;
+    background: linear-gradient(90deg, transparent, hsl(var(--background)) 70%);
+    pointer-events: none;
+  }
+
+  /* Enhanced modal behavior on mobile */
+  .mobile-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: hsl(var(--background));
+    overflow-y: auto;
+  }
+
+  .mobile-modal-header {
+    position: sticky;
+    top: 0;
+    background: hsl(var(--background));
+    border-bottom: 1px solid hsl(var(--border));
+    padding: 1rem;
+    z-index: 10;
+  }
+
+  .mobile-modal-content {
+    padding: 1rem;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
   }
 }
 

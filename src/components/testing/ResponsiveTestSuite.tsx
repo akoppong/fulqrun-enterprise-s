@@ -23,7 +23,8 @@ import {
   ArrowsOutCardinal,
   PlayCircle,
   PauseCircle,
-  StopCircle
+  StopCircle,
+  Lightbulb
 } from '@phosphor-icons/react';
 import { 
   ResponsiveValidator, 
@@ -33,6 +34,13 @@ import {
   type ResponsiveBreakpoint,
   type ResponsiveIssue
 } from '@/lib/responsive-validator';
+import { 
+  ResponsiveRecommendation, 
+  RESPONSIVE_RECOMMENDATIONS, 
+  RESPONSIVE_BEST_PRACTICES,
+  ResponsiveAnalyzer 
+} from '@/lib/responsive-recommendations';
+import { ResponsiveTestingDashboard } from './ResponsiveTestingDashboard';
 
 // Components to test
 const COMPONENTS_TO_TEST = [
@@ -76,6 +84,7 @@ export function ResponsiveTestSuite() {
   const [currentViewport, setCurrentViewport] = useState(STANDARD_BREAKPOINTS[0]);
   const [progress, setProgress] = useState(0);
   const [currentlyTesting, setCurrentlyTesting] = useState<string>('');
+  const [viewMode, setViewMode] = useState<'simple' | 'detailed'>('simple');
   
   const validator = ResponsiveValidator.getInstance();
 
@@ -102,6 +111,11 @@ export function ResponsiveTestSuite() {
     window.addEventListener('resize', updateViewportInfo);
     return () => window.removeEventListener('resize', updateViewportInfo);
   }, []);
+
+  // Show enhanced testing dashboard for detailed view
+  if (viewMode === 'detailed') {
+    return <ResponsiveTestingDashboard />;
+  }
 
   const runResponsiveTests = async () => {
     setIsRunning(true);
@@ -222,6 +236,9 @@ export function ResponsiveTestSuite() {
     return acc.concat(result.criticalIssues);
   }, [] as ResponsiveIssue[]);
 
+  // Get analysis data
+  const analysis = ResponsiveAnalyzer.analyzeCurrentImplementation();
+
   return (
     <div className="w-full max-w-7xl mx-auto p-6 space-y-6">
       {/* Header */}
@@ -233,6 +250,23 @@ export function ResponsiveTestSuite() {
           </p>
         </div>
         <div className="flex items-center gap-4">
+          <div className="flex gap-2">
+            <Button
+              variant={viewMode === 'simple' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('simple')}
+            >
+              Quick Test
+            </Button>
+            <Button
+              variant={viewMode === 'detailed' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('detailed')}
+            >
+              <Lightbulb size={16} className="mr-2" />
+              Detailed Analysis
+            </Button>
+          </div>
           {testResults.length > 0 && (
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">Overall Score:</span>
@@ -369,10 +403,11 @@ export function ResponsiveTestSuite() {
       {/* Test Results */}
       {testResults.length > 0 ? (
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview">Test Overview</TabsTrigger>
             <TabsTrigger value="detailed">Detailed Results</TabsTrigger>
             <TabsTrigger value="issues">Critical Issues</TabsTrigger>
+            <TabsTrigger value="recommendations">Implementation Guide</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4">
@@ -584,6 +619,190 @@ export function ResponsiveTestSuite() {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          <TabsContent value="recommendations" className="space-y-6">
+            <div className="grid lg:grid-cols-2 gap-6">
+              {/* Current Assessment */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <CheckCircle size={20} className="text-green-600" />
+                    Current Strengths
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2">
+                    {analysis.strengths.map((strength, index) => (
+                      <li key={index} className="flex items-start gap-2 text-sm">
+                        <CheckCircle size={16} className="text-green-600 mt-0.5 flex-shrink-0" />
+                        {strength}
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Warning size={20} className="text-yellow-600" />
+                    Areas for Improvement
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2">
+                    {analysis.weaknesses.map((weakness, index) => (
+                      <li key={index} className="flex items-start gap-2 text-sm">
+                        <Warning size={16} className="text-yellow-600 mt-0.5 flex-shrink-0" />
+                        {weakness}
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Priority Recommendations */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Lightbulb size={20} />
+                  Priority Implementation Guide
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {/* Phase 1: Critical */}
+                  <div>
+                    <h4 className="font-semibold text-red-600 mb-3 flex items-center gap-2">
+                      <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-medium">
+                        PHASE 1 - CRITICAL
+                      </span>
+                      Immediate Implementation Required
+                    </h4>
+                    <div className="space-y-3">
+                      {RESPONSIVE_RECOMMENDATIONS
+                        .filter(rec => rec.priority === 'critical')
+                        .map((rec, index) => (
+                          <Alert key={index} className="border-red-200 bg-red-50">
+                            <div className="space-y-2">
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <h5 className="font-medium text-red-800">{rec.component}</h5>
+                                  <p className="text-sm text-red-700">{rec.issue}</p>
+                                </div>
+                                <Badge className="bg-red-100 text-red-800">{rec.category}</Badge>
+                              </div>
+                              <div className="bg-red-100 p-3 rounded border border-red-200">
+                                <p className="text-sm text-red-800">
+                                  <strong>Solution:</strong> {rec.solution}
+                                </p>
+                                <p className="text-xs text-red-700 mt-1">
+                                  <strong>Implementation:</strong> {rec.implementation}
+                                </p>
+                              </div>
+                              <div className="text-xs text-red-600">
+                                <strong>Affected:</strong> {rec.affectedBreakpoints.join(', ')}
+                              </div>
+                            </div>
+                          </Alert>
+                        ))}
+                    </div>
+                  </div>
+
+                  {/* Phase 2: High Priority */}
+                  <div>
+                    <h4 className="font-semibold text-yellow-600 mb-3 flex items-center gap-2">
+                      <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-medium">
+                        PHASE 2 - HIGH PRIORITY
+                      </span>
+                      Next Implementation Phase
+                    </h4>
+                    <div className="space-y-3">
+                      {RESPONSIVE_RECOMMENDATIONS
+                        .filter(rec => rec.priority === 'high')
+                        .slice(0, 3)
+                        .map((rec, index) => (
+                          <Alert key={index} className="border-yellow-200 bg-yellow-50">
+                            <div className="space-y-2">
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <h5 className="font-medium text-yellow-800">{rec.component}</h5>
+                                  <p className="text-sm text-yellow-700">{rec.issue}</p>
+                                </div>
+                                <Badge className="bg-yellow-100 text-yellow-800">{rec.category}</Badge>
+                              </div>
+                              <div className="bg-yellow-100 p-3 rounded border border-yellow-200">
+                                <p className="text-sm text-yellow-800">
+                                  <strong>Solution:</strong> {rec.solution}
+                                </p>
+                              </div>
+                            </div>
+                          </Alert>
+                        ))}
+                    </div>
+                  </div>
+
+                  {/* Best Practices Quick Reference */}
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <Card className="bg-blue-50 border-blue-200">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm text-blue-800">Design Principles</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ul className="space-y-1">
+                          {RESPONSIVE_BEST_PRACTICES.design.slice(0, 4).map((practice, index) => (
+                            <li key={index} className="text-xs text-blue-700 flex items-start gap-1">
+                              <span className="text-blue-500 mt-1">•</span>
+                              {practice}
+                            </li>
+                          ))}
+                        </ul>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-green-50 border-green-200">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm text-green-800">Technical Implementation</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ul className="space-y-1">
+                          {RESPONSIVE_BEST_PRACTICES.technical.slice(0, 4).map((practice, index) => (
+                            <li key={index} className="text-xs text-green-700 flex items-start gap-1">
+                              <span className="text-green-500 mt-1">•</span>
+                              {practice}
+                            </li>
+                          ))}
+                        </ul>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Implementation Resources */}
+                  <Alert>
+                    <Code size={16} />
+                    <AlertTitle>Implementation Resources</AlertTitle>
+                    <AlertDescription>
+                      <div className="mt-3 space-y-2">
+                        <p className="text-sm">
+                          <strong>Enhanced Components Available:</strong>
+                        </p>
+                        <ul className="text-sm space-y-1 ml-4">
+                          <li>• <code>ResponsiveNavigation</code> - Mobile-first navigation with hamburger menu</li>
+                          <li>• <code>ResponsiveTable</code> - Auto-switching table/card layout</li>
+                          <li>• <code>ResponsiveForm</code> - Progressive column reduction forms</li>
+                          <li>• <code>EnhancedResponsiveLayout</code> - Comprehensive layout system</li>
+                        </ul>
+                        <p className="text-sm mt-3">
+                          <strong>Documentation:</strong> See <code>/src/docs/responsive-implementation-guide.md</code> for complete implementation details.
+                        </p>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       ) : !isRunning && !isPaused ? (
