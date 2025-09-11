@@ -205,7 +205,7 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, onSubmit, opportu
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl w-[95vw] h-[95vh] p-0 gap-0">
+      <DialogContent className="max-w-6xl w-[95vw] h-[95vh] p-0 gap-0 flex flex-col">
         <DialogHeader className="px-6 py-4 border-b shrink-0">
           <DialogTitle className="text-2xl font-semibold">
             {opportunity ? 'Edit Opportunity' : 'Create New Opportunity'}
@@ -218,8 +218,8 @@ export function OpportunityEditForm({ isOpen, onClose, onSave, onSubmit, opportu
           </p>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 px-6">
-          <div className="py-6 space-y-8">
+        <ScrollArea className="flex-1 min-h-0 dialog-scroll-area">
+          <div className="px-6 py-6 space-y-8">
             {/* Opportunity Details Section */}
             <Card>
               <CardHeader>

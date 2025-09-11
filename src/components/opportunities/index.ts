@@ -2,3 +2,4 @@ export { ResponsiveOpportunityDetail, OpportunitiesView } from './OpportunitiesV
 export { OpportunitiesMainView } from './OpportunitiesMainView';
 export { OpportunityEditForm } from './OpportunityEditForm';
 export { FullScreenOpportunityTest } from './FullScreenOpportunityTest';
+export { OpportunityEditFormTest } from './OpportunityEditFormTest';

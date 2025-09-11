@@ -21,6 +21,7 @@ import {
   Lightbulb
 } from '@phosphor-icons/react';
 import { ResponsiveOpportunityDetail } from './OpportunitiesView';
+import { OpportunityEditFormTest } from './OpportunityEditFormTest';
 import { toast } from 'sonner';
 
 /**
@@ -429,6 +430,24 @@ export function FullScreenOpportunityTest() {
               className="h-3"
             />
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Opportunity Edit Form Test Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold flex items-center gap-2">
+            <div className="p-2 bg-primary rounded-lg">
+              <Lightbulb size={24} className="text-primary-foreground" />
+            </div>
+            Opportunity Edit Form Test
+          </CardTitle>
+          <p className="text-muted-foreground">
+            Test the opportunity edit form's vertical scrolling functionality and responsive behavior
+          </p>
+        </CardHeader>
+        <CardContent>
+          <OpportunityEditFormTest />
         </CardContent>
       </Card>
 
