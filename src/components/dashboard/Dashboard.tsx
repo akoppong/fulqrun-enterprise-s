@@ -47,6 +47,9 @@ import { PharmaceuticalKPITemplates } from './PharmaceuticalKPITemplates';
 import { RoleTestingDashboard } from './RoleTestingDashboard';
 import { RoleShowcase } from './RoleShowcase';
 import { ResponsiveTestSuite } from '../testing/ResponsiveTestSuite';
+import { ResponsiveValidationSuite } from '../testing/ResponsiveValidationSuite';
+import { ResponsiveDesignRecommendations } from '../testing/ResponsiveDesignRecommendations';
+import { AutomatedResponsiveAnalyzer } from '../testing/AutomatedResponsiveAnalyzer';
 
 interface DashboardProps {
   user: User;
@@ -355,6 +358,12 @@ export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialV
         return <EnhancedOpportunityTester />;
       case 'responsive-testing':
         return <ResponsiveTestSuite />;
+      case 'responsive-validation':
+        return <ResponsiveValidationSuite />;
+      case 'responsive-recommendations':
+        return <ResponsiveDesignRecommendations />;
+      case 'responsive-analyzer':
+        return <AutomatedResponsiveAnalyzer />;
       default:
         return <PipelineView />;
     }

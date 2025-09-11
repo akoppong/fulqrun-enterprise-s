@@ -41,6 +41,9 @@ import { DataQualityDashboard } from '@/components/integrations/DataQualityDashb
 
 // Import responsive testing components
 import { ResponsiveTestSuite } from '@/components/testing/ResponsiveTestSuite';
+import { ResponsiveValidationSuite } from '@/components/testing/ResponsiveValidationSuite';
+import { ResponsiveDesignRecommendations } from '@/components/testing/ResponsiveDesignRecommendations';
+import { AutomatedResponsiveAnalyzer } from '@/components/testing/AutomatedResponsiveAnalyzer';
 import { AutomationWorkflows } from '@/components/integrations/AutomationWorkflows';
 
 // Import administration sub-components
@@ -436,9 +439,12 @@ export function AdministrationModule({ userRole, isOwner = false, initialView = 
           </Card>
 
           <Tabs defaultValue="opportunity-suite" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-6">
+            <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-9">
               <TabsTrigger value="opportunity-suite">Opportunity Tests</TabsTrigger>
               <TabsTrigger value="responsive-tests">Responsive Tests</TabsTrigger>
+              <TabsTrigger value="responsive-validation">Validation Suite</TabsTrigger>
+              <TabsTrigger value="responsive-recommendations">Design Guide</TabsTrigger>
+              <TabsTrigger value="responsive-analyzer">AI Analyzer</TabsTrigger>
               <TabsTrigger value="validation-demo">Validation Demo</TabsTrigger>
               <TabsTrigger value="autosave-test">AutoSave Tests</TabsTrigger>
               <TabsTrigger value="validation-suite">Validation Suite</TabsTrigger>
@@ -451,6 +457,18 @@ export function AdministrationModule({ userRole, isOwner = false, initialView = 
 
             <TabsContent value="responsive-tests">
               <ResponsiveTestSuite />
+            </TabsContent>
+
+            <TabsContent value="responsive-validation">
+              <ResponsiveValidationSuite />
+            </TabsContent>
+
+            <TabsContent value="responsive-recommendations">
+              <ResponsiveDesignRecommendations />
+            </TabsContent>
+
+            <TabsContent value="responsive-analyzer">
+              <AutomatedResponsiveAnalyzer />
             </TabsContent>
 
             <TabsContent value="validation-demo">
