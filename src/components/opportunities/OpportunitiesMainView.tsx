@@ -33,6 +33,7 @@ import {
 } from '@phosphor-icons/react';
 import { OpportunityEditForm } from './ModernOpportunityEditForm';
 import { ResponsiveOpportunityDetail } from './OpportunitiesView';
+import { FormValidationTestDashboard } from './FormValidationTestDashboard';
 import { toast } from 'sonner';
 import { format, differenceInDays } from 'date-fns';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -67,6 +68,7 @@ function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewPro
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
   const [showDetail, setShowDetail] = useState(false);
+  const [activeTab, setActiveTab] = useState<'opportunities' | 'validation-test'>('opportunities');
   
   // Dialog states
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -212,42 +214,52 @@ function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewPro
 
   return (
     <div className={`h-full flex flex-col ${className}`}>
-      {/* Header */}
-      <div className="flex flex-col gap-6 mb-6">
-        <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Opportunities</h1>
-            <p className="text-muted-foreground mt-1">
-              Manage your sales pipeline and track deal progress
-            </p>
+      {/* Tab Navigation */}
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'opportunities' | 'validation-test')} className="h-full flex flex-col">
+        <div className="flex flex-col gap-4 mb-6">
+          <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">Opportunities Management</h1>
+              <p className="text-muted-foreground mt-1">
+                Manage your sales pipeline and test form validation improvements
+              </p>
+            </div>
+            <Button onClick={() => setIsCreateDialogOpen(true)} className="w-full sm:w-auto">
+              <Plus size={16} className="mr-2" />
+              Create Opportunity
+            </Button>
           </div>
-          <Button onClick={() => setIsCreateDialogOpen(true)} className="w-full sm:w-auto">
-            <Plus size={16} className="mr-2" />
-            Create Opportunity
-          </Button>
+
+          <TabsList className="grid w-full grid-cols-2 max-w-md">
+            <TabsTrigger value="opportunities">Opportunities</TabsTrigger>
+            <TabsTrigger value="validation-test">🧪 Form Validation Test</TabsTrigger>
+          </TabsList>
         </div>
 
-        {/* Filters and Search */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex flex-col lg:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search opportunities, companies, or contacts..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Select value={stageFilter} onValueChange={setStageFilter}>
-                  <SelectTrigger className="w-full sm:w-[140px]">
-                    <SelectValue placeholder="All Stages" />
-                  </SelectTrigger>
+        <TabsContent value="opportunities" className="flex-1 min-h-0 space-y-6">
+          {/* Header */}
+          <div className="flex flex-col gap-6">
+            {/* Filters and Search */}
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex flex-col lg:flex-row gap-4">
+                  <div className="flex-1">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search opportunities, companies, or contacts..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Select value={stageFilter} onValueChange={setStageFilter}>
+                      <SelectTrigger className="w-full sm:w-[140px]">
+                        <SelectValue placeholder="All Stages" />
+                      </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Stages</SelectItem>
                     {PEAK_STAGES.map(stage => (
@@ -576,6 +588,12 @@ function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewPro
           </div>
         )}
       </div>
+      </TabsContent>
+
+      <TabsContent value="validation-test" className="flex-1 min-h-0">
+        <FormValidationTestDashboard />
+      </TabsContent>
+      </Tabs>
 
       {/* Create Opportunity Dialog */}
       {isCreateDialogOpen && (
