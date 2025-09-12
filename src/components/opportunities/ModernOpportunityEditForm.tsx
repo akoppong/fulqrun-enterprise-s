@@ -554,33 +554,47 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                   <p className="font-medium">Please fix the following errors:</p>
                   <ul className="list-disc list-inside text-sm space-y-1 max-h-20 overflow-y-auto">
                     {Object.entries(validationState.errors)
-                      .filter(([_, error]) => {
-                        if (process.env.NODE_ENV === 'development') {
-                          console.log('Validation error entry:', { field: _, error, type: typeof error });
-                        }
-                        return error && typeof error === 'string' && error.trim().length > 0;
-                      })
-                      .slice(0, 5)
                       .map(([field, error]) => {
-                        const errorText = typeof error === 'string' ? error : 
-                                         typeof error === 'object' && error && 'message' in error ? String(error.message) :
-                                         'Invalid field';
+                        if (process.env.NODE_ENV === 'development') {
+                          console.log('Validation error entry:', { field, error, type: typeof error });
+                        }
+                        
+                        // Convert error to string safely
+                        let errorText = '';
+                        if (typeof error === 'string') {
+                          errorText = error.trim();
+                        } else if (typeof error === 'object' && error && 'message' in error) {
+                          errorText = String(error.message).trim();
+                        } else if (error) {
+                          errorText = String(error).trim();
+                        }
+                        
+                        // Only return if we have a valid error text
+                        if (!errorText) return null;
+                        
                         return (
                           <li key={field} className="text-destructive">
                             <span className="font-medium">{field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:</span> {errorText}
                           </li>
                         );
-                      })}
+                      })
+                      .filter(Boolean) // Remove null entries
+                      .slice(0, 5)}
                   </ul>
-                  {Object.keys(validationState.errors).filter(key => 
-                    validationState.errors[key] && typeof validationState.errors[key] === 'string'
-                  ).length > 5 && (
-                    <p className="text-sm text-destructive">
-                      And {Object.keys(validationState.errors).filter(key => 
-                        validationState.errors[key] && typeof validationState.errors[key] === 'string'
-                      ).length - 5} more error(s)...
-                    </p>
-                  )}
+                  {(() => {
+                    const validErrorCount = Object.entries(validationState.errors)
+                      .filter(([_, error]) => {
+                        if (typeof error === 'string') return error.trim().length > 0;
+                        if (typeof error === 'object' && error && 'message' in error) return String(error.message).trim().length > 0;
+                        return error && String(error).trim().length > 0;
+                      }).length;
+                    
+                    return validErrorCount > 5 && (
+                      <p className="text-sm text-destructive">
+                        And {validErrorCount - 5} more error(s)...
+                      </p>
+                    );
+                  })()}
                 </div>
               </AlertDescription>
             </Alert>

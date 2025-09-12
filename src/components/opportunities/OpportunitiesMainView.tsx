@@ -31,7 +31,7 @@ import {
   List,
   ArrowRight
 } from '@phosphor-icons/react';
-import { OpportunityEditForm } from './OpportunityEditForm';
+import { OpportunityEditForm } from './ModernOpportunityEditForm';
 import { ResponsiveOpportunityDetail } from './OpportunitiesView';
 import { toast } from 'sonner';
 import { format, differenceInDays } from 'date-fns';
