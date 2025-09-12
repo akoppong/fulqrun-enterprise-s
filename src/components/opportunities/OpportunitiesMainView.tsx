@@ -122,19 +122,13 @@ function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewPro
         stage: data.stage || 'prospect',
         priority: data.priority || 'medium',
         probability: data.probability || 50,
-        expectedCloseDate: data.expectedCloseDate || new Date(),
+        expectedCloseDate: data.expectedCloseDate || new Date().toISOString(),
         companyId: data.companyId || '',
         contactId: data.contactId || '',
-        assignedUserId: data.assignedUserId || '',
+        ownerId: data.ownerId || 'current-user',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         tags: data.tags || [],
-        peak: data.peak || {
-          prospect: 0,
-          engage: 0,
-          acquire: 0,
-          keep: 0
-        },
         meddpicc: data.meddpicc || {
           metrics: '',
           economicBuyer: '',
@@ -142,7 +136,8 @@ function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewPro
           decisionProcess: '',
           paperProcess: '',
           implicatePain: '',
-          champion: ''
+          champion: '',
+          score: 0
         }
       };
 

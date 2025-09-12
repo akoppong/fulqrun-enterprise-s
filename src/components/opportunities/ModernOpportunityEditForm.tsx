@@ -219,13 +219,24 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
     value: 0,
     stage: 'prospect',
     probability: 25,
-    expectedCloseDate: new Date(),
+    expectedCloseDate: new Date().toISOString(),
     companyId: '',
     contactId: '',
     priority: 'medium',
     industry: '',
     leadSource: '',
     tags: [],
+    ownerId: 'current-user',
+    meddpicc: {
+      metrics: '',
+      economicBuyer: '',
+      decisionCriteria: '',
+      decisionProcess: '',
+      paperProcess: '',
+      implicatePain: '',
+      champion: '',
+      score: 0
+    }
   });
   
   const [isLoading, setIsLoading] = useState(false);
@@ -236,7 +247,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
   const [validationState, setValidationState] = useState<FormValidationState>({
     errors: {},
     touched: new Set(),
-    isValid: false,
+    isValid: true,
     isValidating: false
   });
   
@@ -262,33 +273,67 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
 
   // Validation functions
   const validateField = useCallback((field: string, value: any, allData?: any) => {
-    const result = validator.validateField(field, value, allData || formData);
-    
-    setValidationState(prev => ({
-      ...prev,
-      errors: {
-        ...prev.errors,
-        [field]: result.error || ''
-      },
-      touched: new Set([...prev.touched, field])
-    }));
-    
-    return result.isValid;
+    try {
+      const result = validator.validateField(field, value, allData || formData);
+      
+      setValidationState(prev => ({
+        ...prev,
+        errors: {
+          ...prev.errors,
+          [field]: result.error || ''
+        },
+        touched: new Set([...prev.touched, field])
+      }));
+      
+      return result.isValid;
+    } catch (error) {
+      console.error('Validation error:', error);
+      setValidationState(prev => ({
+        ...prev,
+        errors: {
+          ...prev.errors,
+          [field]: 'Validation error occurred'
+        },
+        touched: new Set([...prev.touched, field])
+      }));
+      return false;
+    }
   }, [formData, validator]);
 
   const validateForm = useCallback(withErrorHandling(async (data: Partial<Opportunity>) => {
     setValidationState(prev => ({ ...prev, isValidating: true }));
     
-    const result = validator.validate(data);
-    
-    setValidationState(prev => ({
-      ...prev,
-      errors: result.errors,
-      isValid: result.isValid,
-      isValidating: false
-    }));
-    
-    return result.isValid;
+    try {
+      const result = validator.validate(data);
+      
+      // Convert ValidationError[] to ValidationErrors object
+      const errorMap: ValidationErrors = {};
+      if (result.errors && Array.isArray(result.errors)) {
+        result.errors.forEach(error => {
+          if (error && typeof error === 'object' && 'field' in error && 'message' in error) {
+            errorMap[error.field] = String(error.message);
+          }
+        });
+      }
+      
+      setValidationState(prev => ({
+        ...prev,
+        errors: errorMap,
+        isValid: result.isValid,
+        isValidating: false
+      }));
+      
+      return result.isValid;
+    } catch (error) {
+      console.error('Form validation error:', error);
+      setValidationState(prev => ({
+        ...prev,
+        errors: { general: 'Validation error occurred' },
+        isValid: false,
+        isValidating: false
+      }));
+      return false;
+    }
   }, { context: 'OpportunityEditForm.validateForm' }), [validator]);
 
   // Initialize form data when opportunity changes
@@ -300,16 +345,27 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
         value: opportunity.value || 0,
         stage: opportunity.stage || 'prospect',
         probability: opportunity.probability || 25,
-        expectedCloseDate: opportunity.expectedCloseDate || new Date(),
+        expectedCloseDate: opportunity.expectedCloseDate || new Date().toISOString(),
         companyId: opportunity.companyId || '',
         contactId: opportunity.contactId || '',
         priority: opportunity.priority || 'medium',
         industry: opportunity.industry || '',
         leadSource: opportunity.leadSource || '',
         tags: opportunity.tags || [],
+        ownerId: opportunity.ownerId || 'current-user',
+        meddpicc: opportunity.meddpicc || {
+          metrics: '',
+          economicBuyer: '',
+          decisionCriteria: '',
+          decisionProcess: '',
+          paperProcess: '',
+          implicatePain: '',
+          champion: '',
+          score: 0
+        }
       });
       
-      setSelectedDate(opportunity.expectedCloseDate || new Date());
+      setSelectedDate(new Date(opportunity.expectedCloseDate || new Date().toISOString()));
     } else if (isOpen) {
       // Reset form for new opportunity
       const defaultData = {
@@ -318,20 +374,31 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
         value: 0,
         stage: 'prospect',
         probability: 25,
-        expectedCloseDate: new Date(),
+        expectedCloseDate: new Date().toISOString(),
         companyId: '',
         contactId: '',
         priority: 'medium',
         industry: '',
         leadSource: '',
         tags: [],
+        ownerId: 'current-user',
+        meddpicc: {
+          metrics: '',
+          economicBuyer: '',
+          decisionCriteria: '',
+          decisionProcess: '',
+          paperProcess: '',
+          implicatePain: '',
+          champion: '',
+          score: 0
+        }
       };
       setFormData(defaultData);
       setSelectedDate(new Date());
       setValidationState({
         errors: {},
         touched: new Set(),
-        isValid: false,
+        isValid: true,
         isValidating: false
       });
     }
@@ -390,7 +457,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
       setSelectedDate(date);
-      handleInputChange('expectedCloseDate', date);
+      handleInputChange('expectedCloseDate', date.toISOString());
       setShowCalendar(false);
     }
   };
@@ -406,8 +473,9 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
     try {
       const opportunityData: Partial<Opportunity> = {
         ...formData,
-        expectedCloseDate: selectedDate || new Date(),
-        updatedAt: new Date(),
+        expectedCloseDate: selectedDate?.toISOString() || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        createdAt: opportunity?.createdAt || new Date().toISOString(),
         id: opportunity?.id || Date.now().toString(),
       };
 
@@ -446,8 +514,14 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
   const selectedCompany = companies.find(company => company.id === formData.companyId);
   const shouldShowNoContactsAlert = formData.companyId && availableContacts.length === 0;
 
-  const getFieldError = (field: string) => {
-    return validationState.touched.has(field) ? validationState.errors[field] : '';
+  const getFieldError = (field: string): string => {
+    if (!validationState.touched.has(field)) return '';
+    const error = validationState.errors[field];
+    if (typeof error === 'string') return error;
+    if (typeof error === 'object' && error !== null && 'message' in error) {
+      return String(error.message);
+    }
+    return '';
   };
 
   return (
@@ -471,7 +545,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
         </DialogHeader>
 
         {/* Validation Summary */}
-        {Object.keys(validationState.errors).length > 0 && (
+        {validationState.errors && Object.keys(validationState.errors).length > 0 && (
           <div className="px-8 py-4 bg-destructive/5 border-b border-destructive/20">
             <Alert variant="destructive" className="border-destructive/30">
               <Warning className="w-5 h-5" />
@@ -480,17 +554,31 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                   <p className="font-medium">Please fix the following errors:</p>
                   <ul className="list-disc list-inside text-sm space-y-1 max-h-20 overflow-y-auto">
                     {Object.entries(validationState.errors)
-                      .filter(([_, error]) => error)
+                      .filter(([_, error]) => {
+                        if (process.env.NODE_ENV === 'development') {
+                          console.log('Validation error entry:', { field: _, error, type: typeof error });
+                        }
+                        return error && typeof error === 'string' && error.trim().length > 0;
+                      })
                       .slice(0, 5)
-                      .map(([field, error]) => (
-                        <li key={field} className="text-destructive">
-                          {error}
-                        </li>
-                      ))}
+                      .map(([field, error]) => {
+                        const errorText = typeof error === 'string' ? error : 
+                                         typeof error === 'object' && error && 'message' in error ? String(error.message) :
+                                         'Invalid field';
+                        return (
+                          <li key={field} className="text-destructive">
+                            <span className="font-medium">{field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:</span> {errorText}
+                          </li>
+                        );
+                      })}
                   </ul>
-                  {Object.keys(validationState.errors).length > 5 && (
+                  {Object.keys(validationState.errors).filter(key => 
+                    validationState.errors[key] && typeof validationState.errors[key] === 'string'
+                  ).length > 5 && (
                     <p className="text-sm text-destructive">
-                      And {Object.keys(validationState.errors).length - 5} more error{Object.keys(validationState.errors).length - 5 !== 1 ? 's' : ''}...
+                      And {Object.keys(validationState.errors).filter(key => 
+                        validationState.errors[key] && typeof validationState.errors[key] === 'string'
+                      ).length - 5} more error(s)...
                     </p>
                   )}
                 </div>

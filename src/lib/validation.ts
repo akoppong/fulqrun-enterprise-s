@@ -31,13 +31,45 @@ export class FormValidator {
     this.schema = schema;
   }
 
+  validateField(field: string, value: any, data?: any): { isValid: boolean; error: string | null } {
+    const fieldRule = this.schema[field];
+    if (!fieldRule) {
+      return { isValid: true, error: null };
+    }
+
+    this.errors = [];
+    this.data = data || {};
+    this.validateField(field, value, fieldRule);
+    
+    return {
+      isValid: this.errors.length === 0,
+      error: this.errors.length > 0 ? this.errors[0].message : null
+    };
+  }
+
+  validateField(field: string, value: any, data?: any): { isValid: boolean; error: string | null } {
+    const fieldRule = this.schema[field];
+    if (!fieldRule) {
+      return { isValid: true, error: null };
+    }
+
+    this.errors = [];
+    this.data = data || {};
+    this.validateSingleField(field, value, fieldRule);
+    
+    return {
+      isValid: this.errors.length === 0,
+      error: this.errors.length > 0 ? this.errors[0].message : null
+    };
+  }
+
   validate(data: Record<string, any>): { isValid: boolean; errors: ValidationError[] } {
     this.errors = [];
     this.data = data; // Store data for custom validators
 
     for (const [field, rule] of Object.entries(this.schema)) {
       const value = this.getNestedValue(data, field);
-      this.validateField(field, value, rule);
+      this.validateSingleField(field, value, rule);
     }
 
     return {
@@ -50,7 +82,7 @@ export class FormValidator {
     return path.split('.').reduce((current, key) => current?.[key], obj);
   }
 
-  private validateField(field: string, value: any, rule: ValidationRule): void {
+  private validateSingleField(field: string, value: any, rule: ValidationRule): void {
     // Required validation
     if (rule.required && (value === undefined || value === null || value === '' || (Array.isArray(value) && value.length === 0))) {
       this.addError(field, `${this.formatFieldName(field)} is required`);
