@@ -146,30 +146,23 @@ const opportunityValidationSchema: ValidationSchema = {
         if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
           return 'Please enter a valid date';
         }
+        
+        // Additional date validation
+        const now = new Date();
+        const threeDaysAgo = new Date(now.getTime() - (3 * 24 * 60 * 60 * 1000));
+        
+        if (date < threeDaysAgo) {
+          return 'Expected close date cannot be more than 3 days in the past';
+        }
+        
+        const daysDiff = Math.ceil((date.getTime() - now.getTime()) / (1000 * 3600 * 24));
+        
+        if (daysDiff > 730) {
+          return 'Close date is more than 2 years away. Consider shorter milestones.';
+        }
+        
       } catch (error) {
         return 'Please enter a valid date';
-      }
-      
-      if (!(date instanceof Date) || isNaN(date.getTime())) {
-        return 'Please enter a valid date';
-      }
-      
-      const now = new Date();
-      now.setHours(0, 0, 0, 0);
-      date.setHours(0, 0, 0, 0);
-      
-      const daysDiff = Math.ceil((date.getTime() - now.getTime()) / (1000 * 3600 * 24));
-      
-      if (date < now) {
-        return 'Expected close date cannot be in the past';
-      }
-      
-      if (daysDiff < 7) {
-        return 'Close date is very soon. Consider if this timeline is realistic.';
-      }
-      
-      if (daysDiff > 730) {
-        return 'Close date is more than 2 years away. Consider shorter milestones.';
       }
       
       return null;
@@ -548,7 +541,10 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
         description: 'No contacts found for this company. You may need to add contacts first.'
       });
     }
-  }, [formData.companyId, formData.contactId, companies, contacts]);
+    
+    // Validate the company selection
+    validateField('companyId', companyId);
+  }, [formData.companyId, formData.contactId, companies, contacts, validateField]);
 
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
@@ -673,10 +669,6 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                   <ul className="list-disc list-inside text-sm space-y-1 max-h-20 overflow-y-auto">
                     {Object.entries(validationState.errors)
                       .map(([field, error]) => {
-                        if (process.env.NODE_ENV === 'development') {
-                          // Validation error entry logging removed in production
-                        }
-                        
                         // Convert error to string safely
                         let errorText = '';
                         if (typeof error === 'string') {
@@ -1151,7 +1143,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                         <SelectValue placeholder="Select industry" />
                       </SelectTrigger>
                       <SelectContent>
-                        {industryOptions.map(industry => (
+                        {industryOptions.filter(industry => industry && industry.trim()).map(industry => (
                           <SelectItem key={industry} value={industry}>
                             {industry}
                           </SelectItem>
@@ -1173,7 +1165,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                         <SelectValue placeholder="Select lead source" />
                       </SelectTrigger>
                       <SelectContent>
-                        {leadSourceOptions.map(source => (
+                        {leadSourceOptions.filter(source => source && source.trim()).map(source => (
                           <SelectItem key={source} value={source}>
                             {source}
                           </SelectItem>
@@ -1239,3 +1231,6 @@ export function OpportunityEditForm(props: OpportunityEditFormProps) {
     </EnhancedErrorBoundary>
   );
 }
+
+// Export as ModernOpportunityEditForm for compatibility
+export const ModernOpportunityEditForm = OpportunityEditForm;
