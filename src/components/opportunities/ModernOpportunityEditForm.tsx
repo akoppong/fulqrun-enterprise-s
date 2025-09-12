@@ -586,7 +586,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[98vw] w-[98vw] h-[98vh] p-0 gap-0 flex flex-col">
+      <DialogContent className="opportunity-edit-form-dialog max-w-[98vw] w-[98vw] h-[98vh] p-0 gap-0 flex flex-col">
         <DialogHeader className="px-8 py-6 border-b shrink-0 bg-muted/30">
           <DialogTitle className="text-2xl font-semibold flex items-center gap-3">
             {opportunity ? 'Edit Opportunity' : 'Create New Opportunity'}
@@ -675,7 +675,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                 <CardDescription>Core opportunity details and company selection</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {/* Opportunity Name */}
                   <div className="space-y-3">
                     <Label htmlFor="title" className="text-sm font-medium">
@@ -749,9 +749,60 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                       <p className="text-sm text-destructive">{getFieldError('companyId')}</p>
                     )}
                   </div>
+
+                  {/* Primary Contact */}
+                  <div className="space-y-3">
+                    <Label htmlFor="contact" className="text-sm font-medium">
+                      Primary Contact <span className="text-destructive">*</span>
+                    </Label>
+                    <Select 
+                      value={formData.contactId || ''} 
+                      onValueChange={(value) => handleInputChange('contactId', value)}
+                      disabled={!selectedCompany || availableContacts.length === 0}
+                    >
+                      <SelectTrigger 
+                        id="contact" 
+                        className={cn(
+                          "h-12 text-base",
+                          getFieldError('contactId') && "border-destructive focus-visible:ring-destructive"
+                        )}
+                      >
+                        <SelectValue 
+                          placeholder={
+                            !selectedCompany 
+                              ? "Select company first" 
+                              : availableContacts.length === 0
+                                ? "No contacts for this company"
+                                : "Select a contact"
+                          } 
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableContacts.length > 0 ? (
+                          availableContacts.map((contact) => (
+                            <SelectItem key={contact.id} value={contact.id}>
+                              <div className="flex flex-col items-start">
+                                <span className="font-medium">{contact.name}</span>
+                                {contact.title && (
+                                  <span className="text-xs text-muted-foreground">{contact.title}</span>
+                                )}
+                              </div>
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no-contacts" disabled>
+                            {!selectedCompany ? "Select company first" : "No contacts available"}
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    {getFieldError('contactId') && (
+                      <p className="text-sm text-destructive">{getFieldError('contactId')}</p>
+                    )}
+                  </div>
                 </div>
 
-                {/* Description */}
+                {/* Description - Full width */}
                 <div className="space-y-3">
                   <Label htmlFor="description" className="text-sm font-medium">
                     Description
@@ -763,7 +814,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                     onChange={(e) => handleInputChange('description', e.target.value)}
                     onBlur={() => validateField('description', formData.description)}
                     className={cn(
-                      "min-h-[100px] text-base",
+                      "min-h-[100px] text-base resize-y",
                       getFieldError('description') && "border-destructive focus-visible:ring-destructive"
                     )}
                   />
@@ -871,9 +922,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                       <p className="text-sm text-destructive">{getFieldError('stage')}</p>
                     )}
                   </div>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {/* Priority */}
                   <div className="space-y-3">
                     <Label htmlFor="priority" className="text-sm font-medium">
@@ -946,6 +995,27 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                       <p className="text-sm text-destructive">{getFieldError('expectedCloseDate')}</p>
                     )}
                   </div>
+
+                  {/* Owner Assignment - New field for better organization */}
+                  <div className="space-y-3">
+                    <Label htmlFor="owner" className="text-sm font-medium">
+                      Opportunity Owner
+                    </Label>
+                    <Select 
+                      value={formData.ownerId || 'current-user'} 
+                      onValueChange={(value) => handleInputChange('ownerId', value)}
+                    >
+                      <SelectTrigger id="owner" className="h-12 text-base">
+                        <SelectValue placeholder="Select owner" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="current-user">Current User</SelectItem>
+                        <SelectItem value="team-lead">Team Lead</SelectItem>
+                        <SelectItem value="sales-manager">Sales Manager</SelectItem>
+                        <SelectItem value="account-manager">Account Manager</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -953,8 +1023,8 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
             {/* Contact & Additional Information */}
             <Card>
               <CardHeader className="pb-4">
-                <CardTitle className="text-xl">Contact & Additional Information</CardTitle>
-                <CardDescription>Primary contact and opportunity metadata</CardDescription>
+                <CardTitle className="text-xl">Additional Information</CardTitle>
+                <CardDescription>Industry classification and lead source tracking</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* No contacts alert */}
@@ -969,46 +1039,6 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {/* Primary Contact */}
-                  <div className="space-y-3">
-                    <Label htmlFor="contact" className="text-sm font-medium">
-                      Primary Contact
-                    </Label>
-                    <Select 
-                      value={formData.contactId || ''} 
-                      onValueChange={(value) => handleInputChange('contactId', value)}
-                      disabled={!formData.companyId || availableContacts.length === 0}
-                    >
-                      <SelectTrigger id="contact" className="h-12 text-base">
-                        <SelectValue placeholder={
-                          !formData.companyId ? "Select company first" :
-                          availableContacts.length === 0 ? "No contacts available" :
-                          "Select contact"
-                        } />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableContacts.map((contact) => (
-                          <SelectItem key={contact.id} value={contact.id}>
-                            <div className="flex flex-col items-start">
-                              <span className="font-medium">{contact.firstName} {contact.lastName}</span>
-                              <span className="text-xs text-muted-foreground">{contact.title}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                        {availableContacts.length === 0 && formData.companyId && (
-                          <SelectItem value="no-contacts-available" disabled>
-                            No contacts found for this company
-                          </SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
-                    {shouldShowNoContactsAlert && (
-                      <p className="text-xs text-muted-foreground">
-                        Add contacts to {selectedCompany?.name} to track key relationships
-                      </p>
-                    )}
-                  </div>
-
                   {/* Industry */}
                   <div className="space-y-3">
                     <Label htmlFor="industry" className="text-sm font-medium">

@@ -465,14 +465,14 @@ body [data-radix-dialog-content] {
   max-height: min(90vh, 600px);
 }
 
-/* Enhanced width for opportunity edit form specifically */
+/* Enhanced width for opportunity edit form specifically - Increased by 4 inches (384px) */
 body [data-radix-dialog-content].opportunity-edit-form-dialog {
-  width: min(95vw, 1200px);
-  max-width: min(95vw, 1200px);
-  max-height: min(95vh, 800px);
+  width: min(98vw, 1584px);
+  max-width: min(98vw, 1584px);
+  max-height: min(95vh, 900px);
 }
 
-/* Responsive dialog sizing */
+/* Responsive dialog sizing - Updated for increased width */
 @media (max-width: 640px) {
   body [data-radix-dialog-content] {
     width: calc(100vw - 1rem);
@@ -483,9 +483,10 @@ body [data-radix-dialog-content].opportunity-edit-form-dialog {
   }
   
   body [data-radix-dialog-content].opportunity-edit-form-dialog {
-    width: calc(100vw - 1rem);
-    max-width: calc(100vw - 1rem);
+    width: calc(100vw - 0.5rem);
+    max-width: calc(100vw - 0.5rem);
     min-width: unset;
+    margin: 0.25rem;
   }
 }
 
@@ -532,11 +533,11 @@ body [data-radix-dialog-content].flex.flex-col {
   border: 0 !important;
 }
 
-/* Enhanced form field spacing for opportunity edit form */
+/* Enhanced form field spacing for opportunity edit form - Updated for wider layout */
 .opportunity-edit-form-dialog .form-section-spacing {
-  padding: 1.5rem 0;
+  padding: 2rem 0;
   border-bottom: 1px solid hsl(var(--border));
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .opportunity-edit-form-dialog .form-section-spacing:last-child {
@@ -545,34 +546,65 @@ body [data-radix-dialog-content].flex.flex-col {
 }
 
 .opportunity-edit-form-dialog .form-section-spacing h4 {
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
   border-bottom: 1px solid hsl(var(--border));
 }
 
-/* Improved grid spacing for wider form */
+/* Improved grid spacing for wider form - Updated for 3-column layout */
 .opportunity-edit-form-dialog .grid {
-  gap: 2rem;
+  gap: 3rem;
+}
+
+.opportunity-edit-form-dialog .grid-cols-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.opportunity-edit-form-dialog .grid-cols-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* Mobile responsiveness for 3-column layout */
+@media (max-width: 1280px) {
+  .opportunity-edit-form-dialog .grid-cols-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .opportunity-edit-form-dialog .grid-cols-3,
+  .opportunity-edit-form-dialog .grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+  
+  .opportunity-edit-form-dialog .grid {
+    gap: 2rem;
+  }
 }
 
 .opportunity-edit-form-dialog .grid > * {
-  min-height: 100px;
+  min-height: 120px;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
+  padding: 0.5rem;
 }
 
 .opportunity-edit-form-dialog .grid > * > label {
   flex-shrink: 0;
-  margin-bottom: 0.25rem;
-  font-weight: 500;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: hsl(var(--foreground));
 }
 
 .opportunity-edit-form-dialog .grid > * > input,
 .opportunity-edit-form-dialog .grid > * > [data-radix-select-trigger],
-.opportunity-edit-form-dialog .grid > * > button {
+.opportunity-edit-form-dialog .grid > * > button,
+.opportunity-edit-form-dialog .grid > * > textarea {
   flex: 1;
-  min-height: 44px;
+  min-height: 48px;
+  font-size: 0.95rem;
 }
 
 /* Prevent input field overlap */
