@@ -40,6 +40,8 @@ import { CreateOpportunityButtonDebugger } from './CreateOpportunityButtonDebugg
 import { CreateOpportunityFunctionalityTester } from './CreateOpportunityFunctionalityTester';
 import { CreateOpportunityLiveDemo } from './CreateOpportunityLiveDemo';
 import { CreateOpportunityDebugSummary } from './CreateOpportunityDebugSummary';
+import { CreateOpportunityMonitor } from './CreateOpportunityMonitor';
+import { ComprehensiveButtonDiagnostics } from './ComprehensiveButtonDiagnostics';
 import { toast } from 'sonner';
 import { format, differenceInDays } from 'date-fns';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -318,7 +320,7 @@ function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewPro
             <TabsTrigger value="validation-test">🧪 Basic Tests</TabsTrigger>
             <TabsTrigger value="company-contact-test">🏢 Company/Contact</TabsTrigger>
             <TabsTrigger value="comprehensive-test">🚀 Enhanced Testing</TabsTrigger>
-            <TabsTrigger value="button-debug">🔧 Button Debug</TabsTrigger>
+            <TabsTrigger value="button-debug">📊 Live Monitor</TabsTrigger>
           </TabsList>
         </div>
 
@@ -690,6 +692,8 @@ function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewPro
 
       <TabsContent value="button-debug" className="flex-1 min-h-0">
         <div className="space-y-6">
+          <CreateOpportunityMonitor />
+          <ComprehensiveButtonDiagnostics />
           <CreateOpportunityLiveDemo />
           <CreateOpportunityFunctionalityTester />
           <CreateOpportunityDebugSummary />
