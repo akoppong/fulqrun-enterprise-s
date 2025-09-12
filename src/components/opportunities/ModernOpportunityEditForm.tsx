@@ -168,15 +168,6 @@ const opportunityValidationSchema: ValidationSchema = {
       return null;
     }
   },
-  companyId: {
-    required: true,
-    custom: (value: string) => {
-      if (!value || value.trim() === '') {
-        return 'Please select a company for this opportunity';
-      }
-      return null;
-    }
-  },
   stage: {
     required: true,
     custom: (value: string) => {
@@ -220,6 +211,11 @@ interface OpportunityEditFormProps {
 function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportunity }: OpportunityEditFormProps) {
   // Performance monitoring
   usePerformanceMonitoring('OpportunityEditForm');
+
+  // Debug logging
+  useEffect(() => {
+    console.log('OpportunityEditForm rendered - isOpen:', isOpen, 'opportunity:', opportunity);
+  }, [isOpen, opportunity]);
 
   const [companies, setCompanies] = useKV<Company[]>('companies', []);
   const [contacts, setContacts] = useKV<Contact[]>('contacts', []);

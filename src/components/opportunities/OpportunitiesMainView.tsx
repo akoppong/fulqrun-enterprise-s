@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useKV } from '@github/spark/hooks';
 import { Opportunity, PEAK_STAGES, Company, Contact } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -63,8 +63,75 @@ interface OpportunitiesMainViewProps {
 
 function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewProps) {
   const [opportunities, setOpportunities] = useKV<Opportunity[]>('opportunities', []);
-  const [companies] = useKV<Company[]>('companies', []);
-  const [contacts] = useKV<Contact[]>('contacts', []);
+  const [companies, setCompanies] = useKV<Company[]>('companies', []);
+  const [contacts, setContacts] = useKV<Contact[]>('contacts', []);
+
+  // Initialize sample data if empty
+  useEffect(() => {
+    if (companies.length === 0) {
+      const sampleCompanies: Company[] = [
+        {
+          id: 'company-1',
+          name: 'TechFlow Solutions',
+          industry: 'Technology',
+          size: '100-500',
+          website: 'https://techflow.com',
+          address: '123 Tech Street, San Francisco, CA',
+          revenue: 750000000,
+          employees: 300,
+          geography: 'North America',
+          customFields: {},
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        {
+          id: 'company-2',
+          name: 'DataCorp Industries', 
+          industry: 'Healthcare',
+          size: '50-100',
+          website: 'https://datacorp.com',
+          address: '456 Data Ave, Austin, TX',
+          revenue: 150000000,
+          employees: 75,
+          geography: 'North America',
+          customFields: {},
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+      ];
+      setCompanies(sampleCompanies);
+    }
+
+    if (contacts.length === 0) {
+      const sampleContacts: Contact[] = [
+        {
+          id: 'contact-1',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john.smith@techflow.com',
+          phone: '+1-555-0123',
+          title: 'CTO',
+          companyId: 'company-1',
+          department: 'Technology',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        {
+          id: 'contact-2',
+          firstName: 'Sarah',
+          lastName: 'Johnson',
+          email: 'sarah.johnson@datacorp.com',
+          phone: '+1-555-0124',
+          title: 'VP of Sales',
+          companyId: 'company-2',
+          department: 'Sales',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+      ];
+      setContacts(sampleContacts);
+    }
+  }, [companies.length, contacts.length, setCompanies, setContacts]);
   
   // View state
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
@@ -76,6 +143,11 @@ function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewPro
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingOpportunity, setEditingOpportunity] = useState<Opportunity | null>(null);
+
+  // Debug dialog state changes
+  useEffect(() => {
+    console.log('Create dialog state changed:', isCreateDialogOpen);
+  }, [isCreateDialogOpen]);
   
   // Filters and search
   const [searchTerm, setSearchTerm] = useState('');
@@ -226,7 +298,16 @@ function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewPro
                 Manage your sales pipeline and test enhanced form validation features
               </p>
             </div>
-            <Button onClick={() => setIsCreateDialogOpen(true)} className="w-full sm:w-auto">
+            <Button 
+              onClick={() => {
+                console.log('Create button clicked');
+                toast.success('Create button clicked!'); // Test to confirm button works
+                setIsCreateDialogOpen(true);
+              }} 
+              className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90 shadow-md relative z-10"
+              variant="default"
+              size="default"
+            >
               <Plus size={16} className="mr-2" />
               Create Opportunity
             </Button>
@@ -608,26 +689,26 @@ function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewPro
       </Tabs>
 
       {/* Create Opportunity Dialog */}
-      {isCreateDialogOpen && (
-        <OpportunityEditForm
-          isOpen={isCreateDialogOpen}
-          onClose={() => setIsCreateDialogOpen(false)}
-          onSubmit={handleCreateOpportunity}
-        />
-      )}
+      <OpportunityEditForm
+        isOpen={isCreateDialogOpen}
+        onClose={() => {
+          console.log('Closing create dialog');
+          setIsCreateDialogOpen(false);
+        }}
+        onSubmit={handleCreateOpportunity}
+      />
 
       {/* Edit Opportunity Dialog */}
-      {isEditDialogOpen && editingOpportunity && (
-        <OpportunityEditForm
-          isOpen={isEditDialogOpen}
-          onClose={() => {
-            setIsEditDialogOpen(false);
-            setEditingOpportunity(null);
-          }}
-          onSubmit={handleUpdateOpportunity}
-          opportunity={editingOpportunity}
-        />
-      )}
+      <OpportunityEditForm
+        isOpen={isEditDialogOpen}
+        onClose={() => {
+          console.log('Closing edit dialog');
+          setIsEditDialogOpen(false);
+          setEditingOpportunity(null);
+        }}
+        onSubmit={handleUpdateOpportunity}
+        opportunity={editingOpportunity}
+      />
     </div>
   );
 }
