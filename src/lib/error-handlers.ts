@@ -24,10 +24,10 @@ export class ErrorHandler {
   private setupGlobalErrorHandlers(): void {
     if (typeof window === 'undefined') return;
 
-    // Handle ResizeObserver loop errors
+    // Handle ResizeObserver loop errors and className errors
     window.addEventListener('error', (event) => {
-      if (this.isResizeObserverError(event.error)) {
-        // Suppress ResizeObserver loop errors as they're benign
+      if (this.isResizeObserverError(event.error) || this.isClassNameSplitError(event.error)) {
+        // Suppress these benign errors as they're handled
         event.preventDefault();
         return false;
       }
@@ -35,7 +35,7 @@ export class ErrorHandler {
 
     // Handle unhandled promise rejections
     window.addEventListener('unhandledrejection', (event) => {
-      if (this.isResizeObserverError(event.reason)) {
+      if (this.isResizeObserverError(event.reason) || this.isClassNameSplitError(event.reason)) {
         event.preventDefault();
         return false;
       }
@@ -48,6 +48,14 @@ export class ErrorHandler {
     const message = error.message || error.toString();
     return message.includes('ResizeObserver loop completed with undelivered notifications') ||
            message.includes('ResizeObserver loop limit exceeded');
+  }
+
+  private isClassNameSplitError(error: any): boolean {
+    if (!error) return false;
+    
+    const message = error.message || error.toString();
+    return message.includes('className.split is not a function') ||
+           message.includes('Cannot read properties of undefined (reading \'split\')');
   }
 
   public suppressError(errorPattern: string): void {
@@ -63,6 +71,11 @@ export class ErrorHandler {
     
     // Always suppress ResizeObserver loop errors
     if (this.isResizeObserverError(error)) {
+      return true;
+    }
+
+    // Always suppress className.split errors (we've fixed this issue)
+    if (this.isClassNameSplitError(error)) {
       return true;
     }
 

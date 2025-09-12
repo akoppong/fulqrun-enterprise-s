@@ -119,11 +119,20 @@ export const EnhancedDateInput: React.FC<EnhancedDateInputProps> = ({
   const handleCalendarSelect = useCallback((selectedDate: Date | undefined) => {
     if (selectedDate) {
       // If time input is shown, combine date and time
-      if (showTimeInput && timeValue) {
-        const [hours, minutes] = timeValue.split(':').map(Number);
-        const combinedDate = new Date(selectedDate);
-        combinedDate.setHours(hours, minutes, 0, 0);
-        setValue(combinedDate);
+      if (showTimeInput && timeValue && timeValue.includes(':')) {
+        try {
+          const [hours, minutes] = timeValue.split(':').map(Number);
+          if (!isNaN(hours) && !isNaN(minutes) && hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
+            const combinedDate = new Date(selectedDate);
+            combinedDate.setHours(hours, minutes, 0, 0);
+            setValue(combinedDate);
+          } else {
+            setValue(selectedDate);
+          }
+        } catch (error) {
+          console.warn('Invalid time format:', timeValue);
+          setValue(selectedDate);
+        }
       } else {
         setValue(selectedDate);
       }
@@ -135,11 +144,17 @@ export const EnhancedDateInput: React.FC<EnhancedDateInputProps> = ({
     const newTimeValue = e.target.value;
     setTimeValue(newTimeValue);
     
-    if (dateValue.date) {
-      const [hours, minutes] = newTimeValue.split(':').map(Number);
-      const combinedDate = new Date(dateValue.date);
-      combinedDate.setHours(hours, minutes, 0, 0);
-      setValue(combinedDate);
+    if (dateValue.date && newTimeValue && newTimeValue.includes(':')) {
+      try {
+        const [hours, minutes] = newTimeValue.split(':').map(Number);
+        if (!isNaN(hours) && !isNaN(minutes) && hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
+          const combinedDate = new Date(dateValue.date);
+          combinedDate.setHours(hours, minutes, 0, 0);
+          setValue(combinedDate);
+        }
+      } catch (error) {
+        console.warn('Invalid time format:', newTimeValue);
+      }
     }
   }, [dateValue.date, setValue]);
 

@@ -13,6 +13,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { getElementClassNames, getElementSelector } from '@/lib/className-utils';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
@@ -256,7 +257,7 @@ export function UIValidationTester() {
     const elements = document.querySelectorAll('[class]');
     let unusedClasses = 0;
     elements.forEach(element => {
-      const classes = element.className.split(' ');
+      const classes = getElementClassNames(element);
       classes.forEach(className => {
         if (className && document.querySelectorAll(`.${className}`).length === 1) {
           unusedClasses++;
@@ -277,14 +278,7 @@ export function UIValidationTester() {
     return issues;
   };
 
-  const getElementSelector = (element: Element): string => {
-    if (element.id) return `#${element.id}`;
-    if (element.className) {
-      const classes = element.className.split(' ').filter(c => c.length > 0);
-      if (classes.length > 0) return `.${classes[0]}`;
-    }
-    return element.tagName.toLowerCase();
-  };
+  const getElementSelector = getElementSelector;
 
   const fixIssue = (index: number) => {
     const issue = issues[index];

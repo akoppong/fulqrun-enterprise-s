@@ -12,6 +12,7 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import { toast } from 'sonner';
+import { getElementDescription } from '@/lib/className-utils';
 
 export interface UIIssue {
   id: string;
@@ -601,12 +602,7 @@ class UIConsistencyChecker {
              rect2.bottom <= rect1.top);
   }
 
-  private getElementDescription(element: Element): string {
-    const tag = element.tagName.toLowerCase();
-    const id = element.id ? `#${element.id}` : '';
-    const classes = element.className ? `.${element.className.split(' ').join('.')}` : '';
-    return `${tag}${id}${classes}`.substring(0, 50);
-  }
+  private getElementDescription = getElementDescription;
 
   private calculateContrast(color1: string, color2: string): number {
     // Simplified contrast calculation - in real implementation, 
