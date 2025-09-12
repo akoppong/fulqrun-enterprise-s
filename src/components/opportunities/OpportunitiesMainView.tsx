@@ -34,6 +34,7 @@ import {
 import { OpportunityEditForm } from './OpportunityEditForm';
 import { ResponsiveOpportunityDetail } from './OpportunitiesView';
 import { FormValidationTestDashboard } from './FormValidationTestDashboard';
+import { CompanyContactSelectionTest } from './CompanyContactSelectionTest';
 import { toast } from 'sonner';
 import { format, differenceInDays } from 'date-fns';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -68,7 +69,7 @@ function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewPro
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
   const [showDetail, setShowDetail] = useState(false);
-  const [activeTab, setActiveTab] = useState<'opportunities' | 'validation-test'>('opportunities');
+  const [activeTab, setActiveTab] = useState<'opportunities' | 'validation-test' | 'company-contact-test'>('opportunities');
   
   // Dialog states
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -215,7 +216,7 @@ function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewPro
   return (
     <div className={`h-full flex flex-col ${className}`}>
       {/* Tab Navigation */}
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'opportunities' | 'validation-test')} className="h-full flex flex-col">
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'opportunities' | 'validation-test' | 'company-contact-test')} className="h-full flex flex-col">
         <div className="flex flex-col gap-4 mb-6">
           <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
             <div>
@@ -230,9 +231,10 @@ function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewPro
             </Button>
           </div>
 
-          <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsList className="grid w-full grid-cols-3 max-w-lg">
             <TabsTrigger value="opportunities">Opportunities</TabsTrigger>
-            <TabsTrigger value="validation-test">🧪 Form Validation Test</TabsTrigger>
+            <TabsTrigger value="validation-test">🧪 Form Validation</TabsTrigger>
+            <TabsTrigger value="company-contact-test">🏢 Company/Contact Test</TabsTrigger>
           </TabsList>
         </div>
 
@@ -592,6 +594,10 @@ function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewPro
 
       <TabsContent value="validation-test" className="flex-1 min-h-0">
         <FormValidationTestDashboard />
+      </TabsContent>
+
+      <TabsContent value="company-contact-test" className="flex-1 min-h-0">
+        <CompanyContactSelectionTest />
       </TabsContent>
       </Tabs>
 

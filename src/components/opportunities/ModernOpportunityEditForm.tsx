@@ -42,6 +42,25 @@ const opportunityValidationSchema: ValidationSchema = {
       return null;
     }
   },
+  companyId: {
+    required: true,
+    custom: (value: string) => {
+      if (!value || value === 'no-companies-available') {
+        return 'Please select a company for this opportunity';
+      }
+      return null;
+    }
+  },
+  contactId: {
+    required: false, // Contact is optional if no contacts available for company
+    custom: (value: string, data?: any) => {
+      // If a company is selected and contacts are available, contact should be selected
+      if (data?.companyId && !value) {
+        return 'Please select a primary contact if available, or add contacts for this company';
+      }
+      return null;
+    }
+  },
   description: {
     maxLength: 2000,
     custom: (value: string) => {
@@ -494,12 +513,17 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
       return;
     }
 
+    // Get the company details for auto-filling
+    const selectedCompany = companies.find(company => company.id === companyId);
+    
     setFormData(prev => {
       const newData = {
         ...prev,
         companyId,
         // Clear contact if switching to a different company
-        contactId: companyId !== prev.companyId ? '' : prev.contactId
+        contactId: companyId !== prev.companyId ? '' : prev.contactId,
+        // Auto-fill industry if available and not already set
+        industry: prev.industry || (selectedCompany?.industry) || '',
       };
       
       console.log('Updated form data with company:', newData);
@@ -512,7 +536,19 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
         description: 'Contact selection cleared due to company change'
       });
     }
-  }, [formData.companyId, formData.contactId]);
+    
+    // Show information about available contacts
+    const availableContactsForCompany = contacts.filter(contact => contact.companyId === companyId);
+    if (availableContactsForCompany.length > 0) {
+      toast.success(`Company selected`, {
+        description: `${availableContactsForCompany.length} contact${availableContactsForCompany.length === 1 ? '' : 's'} available for this company`
+      });
+    } else {
+      toast.warning('No contacts available', {
+        description: 'No contacts found for this company. You may need to add contacts first.'
+      });
+    }
+  }, [formData.companyId, formData.contactId, companies, contacts]);
 
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
@@ -523,9 +559,25 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
   };
 
   const handleSave = useCallback(withErrorHandling(async () => {
-    if (!validationState.isValid) {
+    // Validate form before proceeding
+    const isValid = await validateForm(formData);
+    
+    if (!isValid) {
       toast.error('Please fix form errors before saving');
       return;
+    }
+
+    // Additional business validation
+    if (!formData.companyId) {
+      toast.error('Please select a company');
+      return;
+    }
+
+    if (formData.companyId && availableContacts.length === 0 && !formData.contactId) {
+      // Show a warning but allow saving without contact if none are available
+      toast.warning('No contacts available', {
+        description: 'Saving opportunity without primary contact. Add contacts for this company later.'
+      });
     }
 
     setIsLoading(true);
@@ -563,7 +615,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
       setIsLoading(false);
     }
   }, { context: 'OpportunityEditForm.handleSave' }), [
-    validationState.isValid, formData, selectedDate, opportunity, onSave, onSubmit, onClose
+    formData, selectedDate, opportunity, onSave, onSubmit, onClose, validateForm, availableContacts
   ]);
 
   // Get filtered contacts based on selected company
@@ -572,7 +624,13 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
     : [];
 
   const selectedCompany = companies.find(company => company.id === formData.companyId);
+  const selectedContact = contacts.find(contact => contact.id === formData.contactId);
   const shouldShowNoContactsAlert = formData.companyId && availableContacts.length === 0;
+
+  // Helper function to get contact display name
+  const getContactDisplayName = (contact: Contact): string => {
+    return `${contact.firstName} ${contact.lastName}`.trim() || contact.email || 'Unknown Contact';
+  };
 
   const getFieldError = (field: string): string => {
     if (!validationState.touched.has(field)) return '';
@@ -709,11 +767,14 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                         <p>Companies loaded: {companies.length}</p>
                         <p>Current companyId: {formData.companyId || 'none'}</p>
                         <p>Selected company: {selectedCompany?.name || 'none'}</p>
+                        <p>Available contacts: {availableContacts.length}</p>
+                        <p>Current contactId: {formData.contactId || 'none'}</p>
+                        <p>Selected contact: {selectedContact ? getContactDisplayName(selectedContact) : 'none'}</p>
                       </div>
                     )}
                     
                     <Select 
-                      key={`company-select-${companies.length}-${formData.companyId}`}
+                      key={`company-select-${companies.length}-${formData.companyId}-refresh`}
                       value={formData.companyId || ''} 
                       onValueChange={handleCompanyChange}
                     >
@@ -724,7 +785,9 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                           getFieldError('companyId') && "border-destructive focus-visible:ring-destructive"
                         )}
                       >
-                        <SelectValue placeholder="Select a company" />
+                        <SelectValue 
+                          placeholder={companies.length === 0 ? "Loading companies..." : "Select a company"}
+                        />
                       </SelectTrigger>
                       <SelectContent className="max-h-[300px]">
                         {companies.length > 0 ? (
@@ -756,15 +819,17 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                       Primary Contact <span className="text-destructive">*</span>
                     </Label>
                     <Select 
+                      key={`contact-select-${availableContacts.length}-${formData.contactId}-${formData.companyId}`}
                       value={formData.contactId || ''} 
                       onValueChange={(value) => handleInputChange('contactId', value)}
-                      disabled={!selectedCompany || availableContacts.length === 0}
+                      disabled={!selectedCompany}
                     >
                       <SelectTrigger 
                         id="contact" 
                         className={cn(
                           "h-12 text-base",
-                          getFieldError('contactId') && "border-destructive focus-visible:ring-destructive"
+                          getFieldError('contactId') && "border-destructive focus-visible:ring-destructive",
+                          !selectedCompany && "opacity-50 cursor-not-allowed"
                         )}
                       >
                         <SelectValue 
@@ -778,13 +843,16 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                         />
                       </SelectTrigger>
                       <SelectContent>
-                        {availableContacts.length > 0 ? (
+                        {selectedCompany && availableContacts.length > 0 ? (
                           availableContacts.map((contact) => (
                             <SelectItem key={contact.id} value={contact.id}>
                               <div className="flex flex-col items-start">
-                                <span className="font-medium">{contact.name}</span>
+                                <span className="font-medium">{getContactDisplayName(contact)}</span>
                                 {contact.title && (
                                   <span className="text-xs text-muted-foreground">{contact.title}</span>
+                                )}
+                                {contact.email && (
+                                  <span className="text-xs text-muted-foreground">{contact.email}</span>
                                 )}
                               </div>
                             </SelectItem>
@@ -801,6 +869,37 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                     )}
                   </div>
                 </div>
+                
+                {/* No contacts alert */}
+                {shouldShowNoContactsAlert && (
+                  <Alert className="bg-yellow-50 border-yellow-200">
+                    <Info className="w-4 h-4 text-yellow-600" />
+                    <AlertDescription className="text-yellow-800">
+                      <div className="flex flex-col gap-2">
+                        <p>
+                          <strong>No contacts available for {selectedCompany?.name}</strong>
+                        </p>
+                        <p className="text-sm">
+                          You can proceed without a primary contact and add one later, or you can add a contact for this company first.
+                        </p>
+                        <Button 
+                          type="button"
+                          variant="outline" 
+                          size="sm"
+                          className="w-fit mt-2"
+                          onClick={() => {
+                            toast.info('Contact Management', {
+                              description: 'Contact management feature will be available in the next update'
+                            });
+                          }}
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Add Contact for {selectedCompany?.name}
+                        </Button>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
 
                 {/* Description - Full width */}
                 <div className="space-y-3">
