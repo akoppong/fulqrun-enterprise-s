@@ -212,11 +212,6 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
   // Performance monitoring
   usePerformanceMonitoring('OpportunityEditForm');
 
-  // Debug logging
-  useEffect(() => {
-    console.log('OpportunityEditForm rendered - isOpen:', isOpen, 'opportunity:', opportunity);
-  }, [isOpen, opportunity]);
-
   const [companies, setCompanies] = useKV<Company[]>('companies', []);
   const [contacts, setContacts] = useKV<Contact[]>('contacts', []);
   
@@ -251,11 +246,11 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [showCalendar, setShowCalendar] = useState(false);
   
-  // Enhanced validation state
+  // Enhanced validation state - allow creation initially for new opportunities
   const [validationState, setValidationState] = useState<FormValidationState>({
     errors: {},
     touched: new Set(),
-    isValid: true,
+    isValid: !opportunity, // New opportunities start as valid, existing ones need validation
     isValidating: false
   });
   
@@ -449,14 +444,11 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
   }, [formData, validationState.isValidating, validateForm]);
 
   const handleInputChange = useCallback((field: string, value: any) => {
-    console.log(`Field "${field}" changed to:`, value); // Debug log
-    
     const newData = {
       ...formData,
       [field]: value
     };
     
-    console.log('Setting new form data:', newData); // Debug log
     setFormData(newData);
     
     // Validate field if it's been touched
@@ -496,8 +488,6 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
 
   // Specialized handler for company selection
   const handleCompanyChange = useCallback((companyId: string) => {
-    console.log('Company selection:', companyId);
-    
     if (!companyId || companyId === 'no-companies-available') {
       return;
     }
@@ -515,7 +505,6 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
         industry: prev.industry || (selectedCompany?.industry) || '',
       };
       
-      console.log('Updated form data with company:', newData);
       return newData;
     });
 
@@ -549,6 +538,11 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
       setShowCalendar(false);
     }
   };
+
+  // Get filtered contacts based on selected company - moved before handleSave
+  const availableContacts = formData.companyId 
+    ? contacts.filter(contact => contact.companyId === formData.companyId)
+    : [];
 
   const handleSave = useCallback(withErrorHandling(async () => {
     // Validate form before proceeding
@@ -609,11 +603,6 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
   }, { context: 'OpportunityEditForm.handleSave' }), [
     formData, selectedDate, opportunity, onSave, onSubmit, onClose, validateForm, availableContacts
   ]);
-
-  // Get filtered contacts based on selected company
-  const availableContacts = formData.companyId 
-    ? contacts.filter(contact => contact.companyId === formData.companyId)
-    : [];
 
   const selectedCompany = companies.find(company => company.id === formData.companyId);
   const selectedContact = contacts.find(contact => contact.id === formData.contactId);
@@ -1193,7 +1182,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
             </Button>
             <Button 
               onClick={handleSave}
-              disabled={!validationState.isValid || isLoading}
+              disabled={isLoading}
               className="min-w-[140px]"
             >
               {isLoading ? (

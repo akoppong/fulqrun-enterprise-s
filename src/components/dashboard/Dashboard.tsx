@@ -36,7 +36,6 @@ import { AdvancedKPIAnalytics } from './AdvancedKPIAnalytics';
 import { PharmaceuticalKPITemplates } from './PharmaceuticalKPITemplates';
 import { RoleTestingDashboard } from './RoleTestingDashboard';
 import { RoleShowcase } from './RoleShowcase';
-import { FloatingAutoFix } from '../testing/FloatingAutoFix';
 
 
 interface DashboardProps {
@@ -50,24 +49,7 @@ interface DashboardProps {
 export type DashboardView = 'dashboard' | 'role-testing' | 'opportunity-test' | 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'advanced-analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'kpi-gallery' | 'kpi-manager' | 'kpi-layout' | 'pharma-kpi-templates' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit' | 'administration';
 
 export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialView }: DashboardProps) {
-  // Safety check for user object and role
-  if (!user || !user.role) {
-    console.error('Dashboard: Invalid user object provided:', user);
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-red-600">Invalid User State</h2>
-          <p className="text-muted-foreground">Please log in again to continue.</p>
-          {onLogout && (
-            <Button onClick={onLogout} className="mt-4">
-              Return to Login
-            </Button>
-          )}
-        </div>
-      </div>
-    );
-  }
-
+  // All hooks must be called before any early returns
   const [currentView, setCurrentView] = useState<DashboardView>(
     (initialView as DashboardView) || 'dashboard'
   );
@@ -156,6 +138,24 @@ export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialV
     
     initializeDemoData();
   }, [companies, contacts, opportunities, setCompanies, setContacts, setOpportunities]);
+
+  // Safety check for user object and role - after all hooks
+  if (!user || !user.role) {
+    console.error('Dashboard: Invalid user object provided:', user);
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-red-600">Invalid User State</h2>
+          <p className="text-muted-foreground">Please log in again to continue.</p>
+          {onLogout && (
+            <Button onClick={onLogout} className="mt-4">
+              Return to Login
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   const renderView = () => {
     switch (currentView) {
@@ -356,13 +356,6 @@ export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialV
       </div>
       
       <FinancialAlerts opportunities={opportunities} />
-      
-      {/* Floating Auto-Fix for responsive design issues */}
-      <FloatingAutoFix 
-        position="bottom-right"
-        showOnIssuesOnly={false}
-        autoDetect={true}
-      />
     </div>
   );
 }

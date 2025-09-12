@@ -8,10 +8,6 @@ import { EnhancedErrorBoundary } from './components/ui/enhanced-error-boundary';
 import './lib/error-handlers'; // Initialize global error handlers
 import { setupGlobalErrorHandling } from './lib/error-handling'; // Initialize comprehensive error handling
 import { performanceMonitor } from './lib/performance-monitor';
-import './lib/test-performance-monitor'; // Test performance monitor
-import './lib/test-className-utils'; // Test className utilities
-import './lib/verify-error-fixes'; // Verify all error fixes
-import './lib/verify-reported-error-fix'; // Verify the specific reported error fix
 
 function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
