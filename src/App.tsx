@@ -8,6 +8,7 @@ import { EnhancedErrorBoundary } from './components/ui/enhanced-error-boundary';
 import './lib/error-handlers'; // Initialize global error handlers
 import { setupGlobalErrorHandling } from './lib/error-handling'; // Initialize comprehensive error handling
 import { performanceMonitor } from './lib/performance-monitor';
+import { dataRecovery } from './lib/data-recovery';
 
 function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -26,6 +27,31 @@ function App() {
         console.warn('High priority optimization opportunity:', opportunity);
       }
     });
+
+    // Run data recovery and health check
+    const runDataRecovery = async () => {
+      try {
+        const healthCheck = await dataRecovery.healthCheck();
+        
+        if (healthCheck.status === 'critical') {
+          console.warn('Critical data issues detected, running recovery...');
+          const recovery = await dataRecovery.recoverAllData();
+          
+          if (recovery.recovered) {
+            console.log('Data recovery completed successfully');
+          } else {
+            console.error('Data recovery failed:', recovery.errors);
+          }
+        } else if (healthCheck.status === 'warning') {
+          console.info('Data warnings detected:', healthCheck.issues);
+        }
+      } catch (error) {
+        console.error('Data recovery check failed:', error);
+      }
+    };
+
+    // Run data recovery after a brief delay to allow app initialization
+    setTimeout(runDataRecovery, 2000);
   }, []);
 
   const handleLogin = (user: User) => {

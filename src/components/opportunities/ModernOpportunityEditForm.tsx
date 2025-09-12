@@ -601,7 +601,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
       setIsLoading(false);
     }
   }, { context: 'OpportunityEditForm.handleSave' }), [
-    formData, selectedDate, opportunity, onSave, onSubmit, onClose, validateForm, availableContacts
+    formData, selectedDate, opportunity, onSave, onSubmit, onClose, validateForm
   ]);
 
   const selectedCompany = companies.find(company => company.id === formData.companyId);
@@ -653,6 +653,15 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                   <p className="font-medium">Please fix the following errors:</p>
                   <ul className="list-disc list-inside text-sm space-y-1 max-h-20 overflow-y-auto">
                     {Object.entries(validationState.errors)
+                      .filter(([field, error]) => {
+                        // Filter out empty or invalid errors
+                        if (!error) return false;
+                        if (typeof error === 'string') return error.trim().length > 0;
+                        if (typeof error === 'object' && error && 'message' in error) {
+                          return String(error.message).trim().length > 0;
+                        }
+                        return false;
+                      })
                       .map(([field, error]) => {
                         // Convert error to string safely
                         let errorText = '';
@@ -660,12 +669,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                           errorText = error.trim();
                         } else if (typeof error === 'object' && error && 'message' in error) {
                           errorText = String(error.message).trim();
-                        } else if (error) {
-                          errorText = String(error).trim();
                         }
-                        
-                        // Only return if we have a valid error text
-                        if (!errorText) return null;
                         
                         return (
                           <li key={field} className="text-destructive">
@@ -673,15 +677,17 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                           </li>
                         );
                       })
-                      .filter(Boolean) // Remove null entries
                       .slice(0, 5)}
                   </ul>
                   {(() => {
                     const validErrorCount = Object.entries(validationState.errors)
-                      .filter(([_, error]) => {
+                      .filter(([field, error]) => {
+                        if (!error) return false;
                         if (typeof error === 'string') return error.trim().length > 0;
-                        if (typeof error === 'object' && error && 'message' in error) return String(error.message).trim().length > 0;
-                        return error && String(error).trim().length > 0;
+                        if (typeof error === 'object' && error && 'message' in error) {
+                          return String(error.message).trim().length > 0;
+                        }
+                        return false;
                       }).length;
                     
                     return validErrorCount > 5 && (
@@ -779,7 +785,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                             </SelectItem>
                           ))
                         ) : (
-                          <SelectItem value="no-companies-available" disabled>
+                          <SelectItem value="loading-companies" disabled>
                             Loading companies...
                           </SelectItem>
                         )}

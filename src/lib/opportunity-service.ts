@@ -1,6 +1,14 @@
 import { Opportunity, Company, Contact, MEDDPICC } from './types/index';
 import { type DealData, DealAnalyticsEngine, type AnalyticsResult } from './analytics-engine';
 import { DealProgressionEngine, type ProgressionResult, type DealProgression } from './progression-engine';
+import { 
+  normalizeOpportunity, 
+  validateOpportunity, 
+  migrateOpportunityData, 
+  validateKVData, 
+  safeJsonParse, 
+  safeDateConvert 
+} from './data-consistency';
 
 /**
  * Extended analytics interface for opportunities that includes progression analysis
@@ -130,14 +138,14 @@ export class OpportunityService {
         const newStored = localStorage.getItem(this.STORAGE_KEY);
         if (!newStored) return [];
         
-        const parsed = JSON.parse(newStored);
+        const parsed = safeJsonParse(newStored, []);
         const opportunities = Array.isArray(parsed) ? parsed : [];
-        return this.transformOpportunities(opportunities);
+        return this.transformAndValidateOpportunities(opportunities);
       }
       
-      const parsed = JSON.parse(stored);
+      const parsed = safeJsonParse(stored, []);
       const opportunities = Array.isArray(parsed) ? parsed : [];
-      return this.transformOpportunities(opportunities);
+      return this.transformAndValidateOpportunities(opportunities);
     } catch (error) {
       console.error('Error loading opportunities:', error);
       // Clear corrupted data and reinitialize
@@ -147,24 +155,57 @@ export class OpportunityService {
     }
   }
 
-  // Transform opportunities to match the expected format for the view
+  // Transform and validate opportunities to ensure data consistency
+  private static transformAndValidateOpportunities(opportunities: any[]): Opportunity[] {
+    const migrationResult = migrateOpportunityData(opportunities);
+    
+    if (migrationResult.changes.length > 0) {
+      console.log('Data migration applied:', migrationResult.changes);
+    }
+    
+    if (migrationResult.errors.length > 0) {
+      console.error('Data migration errors:', migrationResult.errors);
+    }
+
+    return opportunities.map(opp => {
+      try {
+        // Normalize the opportunity data
+        const normalized = normalizeOpportunity(opp);
+        
+        // Add computed fields for compatibility
+        return {
+          ...normalized,
+          name: normalized.title, // Map title to name for backward compatibility
+          company: this.getCompanyName(normalized.companyId),
+          primaryContact: this.getContactName(normalized.contactId),
+          expectedCloseDate: safeDateConvert(normalized.expectedCloseDate),
+          createdDate: safeDateConvert(normalized.createdAt),
+          industry: normalized.industry || this.getCompanyIndustry(normalized.companyId)
+        };
+      } catch (error) {
+        console.warn('Failed to normalize opportunity:', opp.id, error);
+        // Return original data if normalization fails
+        return {
+          ...opp,
+          name: opp.title || opp.name,
+          company: this.getCompanyName(opp.companyId),
+          primaryContact: this.getContactName(opp.contactId),
+          expectedCloseDate: safeDateConvert(opp.expectedCloseDate),
+          createdDate: safeDateConvert(opp.createdAt),
+          industry: opp.industry || this.getCompanyIndustry(opp.companyId)
+        };
+      }
+    });
+  }
+
+  // Transform opportunities to match the expected format for the view (legacy method)
   private static transformOpportunities(opportunities: any[]): any[] {
-    return opportunities.map(opp => ({
-      ...opp,
-      name: opp.title || opp.name, // Map title to name
-      company: this.getCompanyName(opp.companyId),
-      primaryContact: this.getContactName(opp.contactId),
-      tags: opp.tags || [],
-      expectedCloseDate: new Date(opp.expectedCloseDate),
-      createdDate: new Date(opp.createdAt),
-      updatedAt: new Date(opp.updatedAt),
-      industry: opp.industry || this.getCompanyIndustry(opp.companyId)
-    }));
+    return this.transformAndValidateOpportunities(opportunities);
   }
 
   private static getCompanyName(companyId: string): string {
     try {
-      const companies = JSON.parse(localStorage.getItem(this.COMPANIES_KEY) || '[]');
+      const companies = safeJsonParse(localStorage.getItem(this.COMPANIES_KEY) || '[]', []);
       const company = companies.find((c: any) => c.id === companyId);
       return company?.name || 'Unknown Company';
     } catch {
@@ -174,7 +215,7 @@ export class OpportunityService {
 
   private static getCompanyIndustry(companyId: string): string {
     try {
-      const companies = JSON.parse(localStorage.getItem(this.COMPANIES_KEY) || '[]');
+      const companies = safeJsonParse(localStorage.getItem(this.COMPANIES_KEY) || '[]', []);
       const company = companies.find((c: any) => c.id === companyId);
       return company?.industry || 'Technology';
     } catch {
@@ -184,9 +225,9 @@ export class OpportunityService {
 
   private static getContactName(contactId: string): string {
     try {
-      const contacts = JSON.parse(localStorage.getItem(this.CONTACTS_KEY) || '[]');
+      const contacts = safeJsonParse(localStorage.getItem(this.CONTACTS_KEY) || '[]', []);
       const contact = contacts.find((c: any) => c.id === contactId);
-      return contact ? `${contact.firstName} ${contact.lastName}` : 'Unknown Contact';
+      return contact ? `${contact.firstName || ''} ${contact.lastName || ''}`.trim() || contact.email || 'Unknown Contact' : 'Unknown Contact';
     } catch {
       return 'Unknown Contact';
     }
@@ -215,35 +256,33 @@ export class OpportunityService {
 
   static async createOpportunity(data: Partial<Opportunity>): Promise<Opportunity> {
     try {
-      const opportunity: Opportunity = {
+      // Validate and normalize input data
+      const normalizedData = normalizeOpportunity({
+        ...data,
         id: data.id || Date.now().toString(),
-        companyId: data.companyId || '',
-        contactId: data.contactId || '',
-        title: data.title || '',
-        description: data.description || '',
-        value: data.value || 0,
-        stage: data.stage || 'prospect',
-        probability: data.probability || 50,
-        expectedCloseDate: data.expectedCloseDate || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
-        ownerId: data.ownerId || 'current-user',
-        priority: data.priority || 'medium',
-        industry: data.industry,
-        leadSource: data.leadSource,
-        tags: data.tags || [],
-        meddpicc: data.meddpicc || this.getDefaultMeddpicc(),
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        aiInsights: data.aiInsights
-      };
+        updatedAt: new Date().toISOString()
+      });
+
+      // Validate the normalized opportunity
+      const validation = validateOpportunity(normalizedData);
+      if (!validation.isValid) {
+        throw new Error(`Invalid opportunity data: ${validation.errors.join(', ')}`);
+      }
+
+      // Log warnings if any
+      if (validation.warnings.length > 0) {
+        console.warn('Opportunity creation warnings:', validation.warnings);
+      }
 
       const opportunities = await this.getAllOpportunities();
-      opportunities.push(opportunity);
+      opportunities.push(normalizedData);
       await this.saveOpportunities(opportunities);
 
       // Initialize progression tracking
-      await this.initializeProgression(opportunity);
+      await this.initializeProgression(normalizedData);
 
-      return opportunity;
+      return normalizedData;
     } catch (error) {
       console.error('Failed to create opportunity:', error);
       throw new Error(`Failed to create opportunity: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -257,11 +296,26 @@ export class OpportunityService {
     if (index === -1) return null;
 
     const existing = opportunities[index];
-    const updated: Opportunity = {
+    
+    // Normalize and validate the updated data
+    const updated = normalizeOpportunity({
       ...existing,
       ...updates,
+      id, // Ensure ID doesn't change
       updatedAt: new Date().toISOString()
-    };
+    });
+
+    // Validate the updated opportunity
+    const validation = validateOpportunity(updated);
+    if (!validation.isValid) {
+      console.error('Invalid opportunity update:', validation.errors);
+      throw new Error(`Invalid opportunity data: ${validation.errors.join(', ')}`);
+    }
+
+    // Log warnings if any
+    if (validation.warnings.length > 0) {
+      console.warn('Opportunity update warnings:', validation.warnings);
+    }
 
     // Handle stage changes
     if (updates.stage && updates.stage !== existing.stage) {
