@@ -31,7 +31,7 @@ import {
   List,
   ArrowRight
 } from '@phosphor-icons/react';
-import { OpportunityEditForm } from './ModernOpportunityEditForm';
+import { OpportunityEditForm } from './OpportunityEditForm';
 import { ResponsiveOpportunityDetail } from './OpportunitiesView';
 import { FormValidationTestDashboard } from './FormValidationTestDashboard';
 import { toast } from 'sonner';
