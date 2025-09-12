@@ -248,6 +248,81 @@ class PerformanceMonitor {
   }
 
   /**
+   * Set up network monitoring
+   */
+  private setupNetworkMonitoring() {
+    if (typeof window === 'undefined') return;
+
+    // Monitor fetch requests
+    const originalFetch = window.fetch;
+    window.fetch = async (...args) => {
+      const startTime = performance.now();
+      try {
+        const response = await originalFetch(...args);
+        const endTime = performance.now();
+        const duration = endTime - startTime;
+        
+        // Track network metric
+        this.networkMetrics.requestCount++;
+        this.networkMetrics.averageResponseTime = 
+          (this.networkMetrics.averageResponseTime * (this.networkMetrics.requestCount - 1) + duration) / 
+          this.networkMetrics.requestCount;
+
+        if (duration > PERFORMANCE_THRESHOLDS.NETWORK_SLOW) {
+          this.networkMetrics.slowRequests++;
+        }
+
+        if (!response.ok) {
+          this.networkMetrics.failedRequests++;
+        }
+
+        // Create performance metric for slow requests
+        if (duration > PERFORMANCE_THRESHOLDS.NETWORK_SLOW / 2) {
+          const metric: PerformanceMetric = {
+            id: `network-${Date.now()}`,
+            name: 'Network Request',
+            value: duration,
+            unit: 'ms',
+            timestamp: Date.now(),
+            category: 'network',
+            severity: duration > PERFORMANCE_THRESHOLDS.NETWORK_SLOW ? 'warning' : 'info',
+            context: {
+              url: typeof args[0] === 'string' ? args[0] : args[0]?.url,
+              status: response.status,
+              ok: response.ok,
+            },
+          };
+          this.addMetric(metric);
+        }
+
+        return response;
+      } catch (error) {
+        const endTime = performance.now();
+        const duration = endTime - startTime;
+        
+        this.networkMetrics.failedRequests++;
+        
+        const metric: PerformanceMetric = {
+          id: `network-error-${Date.now()}`,
+          name: 'Network Request Failed',
+          value: duration,
+          unit: 'ms',
+          timestamp: Date.now(),
+          category: 'network',
+          severity: 'error',
+          context: {
+            url: typeof args[0] === 'string' ? args[0] : args[0]?.url,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          },
+        };
+        this.addMetric(metric);
+        
+        throw error;
+      }
+    };
+  }
+
+  /**
    * Update network metrics based on resource timing
    */
   private updateNetworkMetrics(entry: PerformanceResourceTiming) {

@@ -468,6 +468,15 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           isBeta: true
         },
         {
+          id: 'comprehensive-testing-dashboard',
+          label: 'Comprehensive Testing',
+          icon: Shield,
+          description: 'Complete testing suite with error boundaries, performance monitoring, UI validation, and responsive testing',
+          permissionId: 'pipeline',
+          action: 'read',
+          isNew: true
+        },
+        {
           id: 'responsive-testing',
           label: 'Responsive Design Test',
           icon: ArrowsOutCardinal,
