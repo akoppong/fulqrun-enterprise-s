@@ -28,6 +28,54 @@ import {
 import { errorHandler, type ErrorSeverity } from '@/lib/error-handling';
 import { toast } from 'sonner';
 
+// Safe JSON stringify that handles circular references
+function safeStringify(obj: any, maxDepth: number = 3): string {
+  const seen = new WeakSet();
+  
+  const replacer = (key: string, value: any, depth = 0): any => {
+    if (depth > maxDepth) {
+      return '[Max Depth Reached]';
+    }
+    
+    if (value === null || typeof value !== 'object') {
+      return value;
+    }
+    
+    if (seen.has(value)) {
+      return '[Circular Reference]';
+    }
+    
+    seen.add(value);
+    
+    // Handle functions
+    if (typeof value === 'function') {
+      return '[Function]';
+    }
+    
+    // Handle React elements and other complex objects
+    if (value.$$typeof || value._owner || value.props) {
+      return '[React Element]';
+    }
+    
+    // Recursively process objects and arrays
+    if (Array.isArray(value)) {
+      return value.map((item, index) => replacer(`${index}`, item, depth + 1));
+    }
+    
+    const result: any = {};
+    for (const [k, v] of Object.entries(value)) {
+      result[k] = replacer(k, v, depth + 1);
+    }
+    return result;
+  };
+  
+  try {
+    return JSON.stringify(replacer('', obj));
+  } catch (error) {
+    return '[Stringify Error]';
+  }
+}
+
 interface ErrorInfo {
   componentStack: string;
   errorBoundary?: string;
@@ -83,7 +131,7 @@ export class EnhancedErrorBoundary extends Component<
       isRecovering: false,
     };
 
-    this.lastProps = JSON.stringify(props);
+    this.lastProps = safeStringify(props);
   }
 
   componentDidMount() {
@@ -105,7 +153,7 @@ export class EnhancedErrorBoundary extends Component<
   componentDidUpdate(prevProps: EnhancedErrorBoundaryProps) {
     // Reset error state when props change (if enabled)
     if (this.props.resetOnPropsChange) {
-      const currentProps = JSON.stringify(this.props);
+      const currentProps = safeStringify(this.props);
       if (currentProps !== this.lastProps && this.state.hasError) {
         this.setState({
           hasError: false,
