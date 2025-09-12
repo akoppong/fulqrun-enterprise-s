@@ -461,14 +461,32 @@ body [data-radix-dialog-content] {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  min-width: 95vw;
+  width: min(90vw, 800px);
+  max-height: min(90vh, 600px);
 }
 
 /* Enhanced width for opportunity edit form specifically */
 body [data-radix-dialog-content].opportunity-edit-form-dialog {
-  width: 95vw;
-  max-width: 95vw;
-  min-width: 95vw;
+  width: min(95vw, 1200px);
+  max-width: min(95vw, 1200px);
+  max-height: min(95vh, 800px);
+}
+
+/* Responsive dialog sizing */
+@media (max-width: 640px) {
+  body [data-radix-dialog-content] {
+    width: calc(100vw - 1rem);
+    max-width: calc(100vw - 1rem);
+    min-width: unset;
+    margin: 0.5rem;
+    max-height: calc(100vh - 1rem);
+  }
+  
+  body [data-radix-dialog-content].opportunity-edit-form-dialog {
+    width: calc(100vw - 1rem);
+    max-width: calc(100vw - 1rem);
+    min-width: unset;
+  }
 }
 
 /* Fix for ScrollArea within dialog content */
@@ -613,22 +631,89 @@ body [data-radix-dialog-content].flex.flex-col {
 input[class*="w-full"], 
 textarea[class*="w-full"], 
 [data-radix-select-trigger] {
-  min-width: 320px;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Only apply larger minimum widths on larger screens */
+@media (min-width: 640px) {
+  input[class*="w-full"], 
+  textarea[class*="w-full"], 
+  [data-radix-select-trigger] {
+    min-width: 200px;
+  }
+}
+
+@media (min-width: 1024px) {
+  input[class*="w-full"], 
+  textarea[class*="w-full"], 
+  [data-radix-select-trigger] {
+    min-width: 280px;
+  }
 }
 
 [data-radix-select-content] {
-  min-width: max(var(--radix-select-trigger-width), 320px);
-  max-width: min(95vw, 700px);
+  min-width: max(var(--radix-select-trigger-width), 200px);
+  max-width: min(95vw, 500px);
+}
+
+/* Enhanced select content width for larger screens */
+@media (min-width: 640px) {
+  [data-radix-select-content] {
+    min-width: max(var(--radix-select-trigger-width), 280px);
+    max-width: min(95vw, 600px);
+  }
+}
+
+@media (min-width: 1024px) {
+  [data-radix-select-content] {
+    min-width: max(var(--radix-select-trigger-width), 320px);
+    max-width: min(95vw, 700px);
+  }
 }
 
 .field-error {
   border-color: hsl(var(--destructive));
   background-color: hsl(var(--destructive) / 0.05);
+  box-shadow: 0 0 0 1px hsl(var(--destructive) / 0.2);
+  transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
+}
+
+.field-error:focus {
+  outline: 2px solid hsl(var(--destructive));
+  outline-offset: 2px;
 }
 
 .field-success {
   border-color: hsl(34 197 94);
   background-color: hsl(34 197 94 / 0.05);
+  box-shadow: 0 0 0 1px hsl(34 197 94 / 0.2);
+  transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
+}
+
+.field-success:focus {
+  outline: 2px solid hsl(34 197 94);
+  outline-offset: 2px;
+}
+
+/* Error message styling */
+.field-error-message {
+  color: hsl(var(--destructive));
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.field-success-message {
+  color: hsl(34 197 94);
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .form-container {

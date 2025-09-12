@@ -42,6 +42,7 @@ import { FloatingAutoFix } from '../testing/FloatingAutoFix';
 import { ResponsiveDesignRecommendations } from '../testing/ResponsiveDesignRecommendations';
 import { AutomatedResponsiveAnalyzer } from '../testing/AutomatedResponsiveAnalyzer';
 import { FullScreenOpportunityTest } from '../opportunities/FullScreenOpportunityTest';
+import { ComprehensiveTestingDashboard } from '../testing/ComprehensiveTestingDashboard';
 
 interface DashboardProps {
   user: User;
@@ -51,7 +52,7 @@ interface DashboardProps {
   initialView?: string;
 }
 
-export type DashboardView = 'dashboard' | 'role-testing' | 'opportunity-test' | 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'advanced-analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'kpi-gallery' | 'kpi-manager' | 'kpi-layout' | 'pharma-kpi-templates' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit' | 'administration' | 'responsive-testing';
+export type DashboardView = 'dashboard' | 'role-testing' | 'opportunity-test' | 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'advanced-analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'kpi-gallery' | 'kpi-manager' | 'kpi-layout' | 'pharma-kpi-templates' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit' | 'administration' | 'responsive-testing' | 'comprehensive-testing-dashboard';
 
 export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialView }: DashboardProps) {
   // Safety check for user object and role
@@ -334,6 +335,10 @@ export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialV
       // Enhanced Testing Suite (now integrated into main OpportunitiesView)
       case 'responsive-testing':
         return <ResponsiveTestSuite />;
+      
+      case 'comprehensive-testing-dashboard':
+        return <ComprehensiveTestingDashboard />;
+      
       default:
         return <PipelineView />;
     }
