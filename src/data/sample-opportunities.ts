@@ -6,26 +6,90 @@ export const sampleCompanies: Company[] = [
     name: 'TechCorp Solutions',
     industry: 'Technology',
     size: 'Enterprise (1000+ employees)',
-    revenue: '$500M - $1B',
-    location: 'San Francisco, CA',
+    revenue: 750000000, // $750M
+    address: 'San Francisco, CA',
     website: 'https://techcorp.com',
-    description: 'Leading technology company specializing in enterprise software solutions',
     employees: 2500,
-    founded: 1995,
-    status: 'active'
+    geography: 'North America',
+    customFields: {
+      description: 'Leading technology company specializing in enterprise software solutions',
+      founded: 1995,
+      status: 'active'
+    },
+    createdAt: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date().toISOString()
   },
   {
     id: 'test-comp-2',
     name: 'Global Manufacturing Co',
     industry: 'Manufacturing',
     size: 'Large (500-999 employees)',
-    revenue: '$100M - $500M',
-    location: 'Detroit, MI',
+    revenue: 300000000, // $300M
+    address: 'Detroit, MI',
     website: 'https://globalmanufacturing.com',
-    description: 'International manufacturing company with operations across North America',
     employees: 750,
-    founded: 1987,
-    status: 'active'
+    geography: 'North America',
+    customFields: {
+      description: 'International manufacturing company with operations across North America',
+      founded: 1987,
+      status: 'active'
+    },
+    createdAt: new Date(Date.now() - 300 * 24 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: 'test-comp-3',
+    name: 'Healthcare Innovations Inc',
+    industry: 'Healthcare',
+    size: 'Medium (100-499 employees)',
+    revenue: 85000000, // $85M
+    address: 'Boston, MA',
+    website: 'https://healthinnovations.com',
+    employees: 320,
+    geography: 'North America',
+    customFields: {
+      description: 'Innovative healthcare technology solutions for hospitals and clinics',
+      founded: 2010,
+      status: 'active'
+    },
+    createdAt: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: 'test-comp-4',
+    name: 'Financial Services Corp',
+    industry: 'Financial Services',
+    size: 'Large (500-999 employees)',
+    revenue: 450000000, // $450M
+    address: 'New York, NY',
+    website: 'https://finservicescorp.com',
+    employees: 1200,
+    geography: 'North America',
+    customFields: {
+      description: 'Regional financial services provider offering banking and investment solutions',
+      founded: 1985,
+      status: 'active'
+    },
+    createdAt: new Date(Date.now() - 400 * 24 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: 'test-comp-5',
+    name: 'Retail Solutions Ltd',
+    industry: 'Retail',
+    size: 'Small (1-99 employees)',
+    revenue: 25000000, // $25M
+    address: 'Austin, TX',
+    website: 'https://retailsolutions.com',
+    employees: 85,
+    geography: 'North America',
+    customFields: {
+      description: 'E-commerce and retail technology solutions for small and medium businesses',
+      founded: 2015,
+      status: 'active'
+    },
+    createdAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date().toISOString()
   }
 ];
 
@@ -39,11 +103,23 @@ export const sampleContacts: Contact[] = [
     email: 'michael.johnson@techcorp.com',
     phone: '+1 (555) 123-4567',
     role: 'decision-maker',
-    department: 'Technology',
-    status: 'active'
+    createdAt: new Date(Date.now() - 300 * 24 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date().toISOString()
   },
   {
     id: 'test-contact-2',
+    companyId: 'test-comp-1',
+    firstName: 'Jennifer',
+    lastName: 'Smith',
+    title: 'VP of Engineering',
+    email: 'jennifer.smith@techcorp.com',
+    phone: '+1 (555) 123-4568',
+    role: 'influencer',
+    createdAt: new Date(Date.now() - 280 * 24 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: 'test-contact-3',
     companyId: 'test-comp-2',
     firstName: 'Sarah',
     lastName: 'Davis',
@@ -51,8 +127,56 @@ export const sampleContacts: Contact[] = [
     email: 'sarah.davis@globalmanufacturing.com',
     phone: '+1 (555) 987-6543',
     role: 'influencer',
-    department: 'Operations',
-    status: 'active'
+    createdAt: new Date(Date.now() - 260 * 24 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: 'test-contact-4',
+    companyId: 'test-comp-2',
+    firstName: 'Robert',
+    lastName: 'Wilson',
+    title: 'CEO',
+    email: 'robert.wilson@globalmanufacturing.com',
+    phone: '+1 (555) 987-6544',
+    role: 'champion',
+    createdAt: new Date(Date.now() - 240 * 24 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: 'test-contact-5',
+    companyId: 'test-comp-3',
+    firstName: 'Emily',
+    lastName: 'Brown',
+    title: 'Chief Medical Officer',
+    email: 'emily.brown@healthinnovations.com',
+    phone: '+1 (555) 234-5678',
+    role: 'champion',
+    createdAt: new Date(Date.now() - 150 * 24 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: 'test-contact-6',
+    companyId: 'test-comp-4',
+    firstName: 'David',
+    lastName: 'Martinez',
+    title: 'Chief Financial Officer',
+    email: 'david.martinez@finservicescorp.com',
+    phone: '+1 (555) 345-6789',
+    role: 'decision-maker',
+    createdAt: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: 'test-contact-7',
+    companyId: 'test-comp-5',
+    firstName: 'Lisa',
+    lastName: 'Anderson',
+    title: 'CTO',
+    email: 'lisa.anderson@retailsolutions.com',
+    phone: '+1 (555) 456-7890',
+    role: 'champion',
+    createdAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date().toISOString()
   }
 ];
 

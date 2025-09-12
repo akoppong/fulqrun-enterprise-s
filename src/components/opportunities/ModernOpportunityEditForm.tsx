@@ -209,8 +209,8 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
   // Performance monitoring
   usePerformanceMonitoring('OpportunityEditForm');
 
-  const [companies] = useKV<Company[]>('companies', []);
-  const [contacts] = useKV<Contact[]>('contacts', []);
+  const [companies, setCompanies] = useKV<Company[]>('companies', []);
+  const [contacts, setContacts] = useKV<Contact[]>('contacts', []);
   
   // Form state with proper defaults
   const [formData, setFormData] = useState<Partial<Opportunity>>({
@@ -252,6 +252,30 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
   });
   
   const [validator] = useState(() => new FormValidator(opportunityValidationSchema));
+
+  // Initialize sample data if needed
+  useEffect(() => {
+    const initializeSampleData = async () => {
+      if (companies.length === 0 || contacts.length === 0) {
+        try {
+          const { initializeSampleData } = await import('@/data/sample-opportunities');
+          const sampleData = await initializeSampleData();
+          
+          if (companies.length === 0 && sampleData.companies.length > 0) {
+            setCompanies(sampleData.companies);
+          }
+          
+          if (contacts.length === 0 && sampleData.contacts.length > 0) {
+            setContacts(sampleData.contacts);
+          }
+        } catch (error) {
+          console.error('Failed to initialize sample data:', error);
+        }
+      }
+    };
+
+    initializeSampleData();
+  }, [companies.length, contacts.length, setCompanies, setContacts]);
 
   // Options
   const priorityOptions = [
@@ -404,19 +428,27 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
     }
   }, [opportunity, isOpen]);
 
-  // Validate form whenever data changes
+  // Validate form whenever data changes (but prevent validation loops)
   useEffect(() => {
-    if (Object.keys(formData).length > 0) {
-      validateForm(formData);
+    if (Object.keys(formData).length > 0 && !validationState.isValidating) {
+      // Debounce validation to prevent excessive calls
+      const timeoutId = setTimeout(() => {
+        validateForm(formData);
+      }, 300);
+
+      return () => clearTimeout(timeoutId);
     }
-  }, [formData, validateForm]);
+  }, [formData, validationState.isValidating, validateForm]);
 
   const handleInputChange = useCallback((field: string, value: any) => {
+    console.log(`Field "${field}" changed to:`, value); // Debug log
+    
     const newData = {
       ...formData,
       [field]: value
     };
     
+    console.log('Setting new form data:', newData); // Debug log
     setFormData(newData);
     
     // Validate field if it's been touched
@@ -453,6 +485,34 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
       }
     }
   }, [formData, validationState.touched, validateField]);
+
+  // Specialized handler for company selection
+  const handleCompanyChange = useCallback((companyId: string) => {
+    console.log('Company selection:', companyId);
+    
+    if (!companyId || companyId === 'no-companies-available') {
+      return;
+    }
+
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        companyId,
+        // Clear contact if switching to a different company
+        contactId: companyId !== prev.companyId ? '' : prev.contactId
+      };
+      
+      console.log('Updated form data with company:', newData);
+      return newData;
+    });
+
+    // Show toast if contact was cleared
+    if (companyId !== formData.companyId && formData.contactId) {
+      toast.info('Contact cleared', {
+        description: 'Contact selection cleared due to company change'
+      });
+    }
+  }, [formData.companyId, formData.contactId]);
 
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
@@ -642,15 +702,20 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                     <Label htmlFor="company" className="text-sm font-medium">
                       Company <span className="text-destructive">*</span>
                     </Label>
+                    
+                    {/* Debug info (remove in production) */}
+                    {process.env.NODE_ENV === 'development' && (
+                      <div className="text-xs text-muted-foreground border p-2 rounded">
+                        <p>Companies loaded: {companies.length}</p>
+                        <p>Current companyId: {formData.companyId || 'none'}</p>
+                        <p>Selected company: {selectedCompany?.name || 'none'}</p>
+                      </div>
+                    )}
+                    
                     <Select 
+                      key={`company-select-${companies.length}-${formData.companyId}`}
                       value={formData.companyId || ''} 
-                      onValueChange={(value) => {
-                        handleInputChange('companyId', value);
-                        // Clear contact when company changes
-                        if (value !== formData.companyId) {
-                          handleInputChange('contactId', '');
-                        }
-                      }}
+                      onValueChange={handleCompanyChange}
                     >
                       <SelectTrigger 
                         id="company" 
@@ -662,19 +727,20 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                         <SelectValue placeholder="Select a company" />
                       </SelectTrigger>
                       <SelectContent className="max-h-[300px]">
-                        {companies.map((company) => (
-                          <SelectItem key={company.id} value={company.id}>
-                            <div className="flex flex-col items-start">
-                              <span className="font-medium">{company.name}</span>
-                              {company.industry && (
-                                <span className="text-xs text-muted-foreground">{company.industry}</span>
-                              )}
-                            </div>
-                          </SelectItem>
-                        ))}
-                        {companies.length === 0 && (
-                          <SelectItem value="no-companies" disabled>
-                            No companies available
+                        {companies.length > 0 ? (
+                          companies.map((company) => (
+                            <SelectItem key={company.id} value={company.id}>
+                              <div className="flex flex-col items-start">
+                                <span className="font-medium">{company.name}</span>
+                                {company.industry && (
+                                  <span className="text-xs text-muted-foreground">{company.industry}</span>
+                                )}
+                              </div>
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no-companies-available" disabled>
+                            Loading companies...
                           </SelectItem>
                         )}
                       </SelectContent>
