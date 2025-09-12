@@ -36,6 +36,10 @@ import { ResponsiveOpportunityDetail } from './OpportunitiesView';
 import { FormValidationTestDashboard } from './FormValidationTestDashboard';
 import { CompanyContactSelectionTest } from './CompanyContactSelectionTest';
 import { ComprehensiveFormTestSuite } from './ComprehensiveFormTestSuite';
+import { CreateOpportunityButtonDebugger } from './CreateOpportunityButtonDebugger';
+import { CreateOpportunityFunctionalityTester } from './CreateOpportunityFunctionalityTester';
+import { CreateOpportunityLiveDemo } from './CreateOpportunityLiveDemo';
+import { CreateOpportunityDebugSummary } from './CreateOpportunityDebugSummary';
 import { toast } from 'sonner';
 import { format, differenceInDays } from 'date-fns';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -137,7 +141,7 @@ function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewPro
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
   const [showDetail, setShowDetail] = useState(false);
-  const [activeTab, setActiveTab] = useState<'opportunities' | 'validation-test' | 'company-contact-test' | 'comprehensive-test'>('opportunities');
+  const [activeTab, setActiveTab] = useState<'opportunities' | 'validation-test' | 'company-contact-test' | 'comprehensive-test' | 'button-debug'>('opportunities');
   
   // Dialog states
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -289,7 +293,7 @@ function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewPro
   return (
     <div className={`h-full flex flex-col ${className}`}>
       {/* Tab Navigation */}
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'opportunities' | 'validation-test' | 'company-contact-test' | 'comprehensive-test')} className="h-full flex flex-col">
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'opportunities' | 'validation-test' | 'company-contact-test' | 'comprehensive-test' | 'button-debug')} className="h-full flex flex-col">
         <div className="flex flex-col gap-4 mb-6">
           <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
             <div>
@@ -298,26 +302,23 @@ function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewPro
                 Manage your sales pipeline and test enhanced form validation features
               </p>
             </div>
-            <Button 
-              onClick={() => {
+            <CreateOpportunityButtonDebugger
+              onCreateClick={() => {
                 console.log('Create button clicked');
                 toast.success('Create button clicked!'); // Test to confirm button works
                 setIsCreateDialogOpen(true);
-              }} 
-              className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90 shadow-md relative z-10"
-              variant="default"
-              size="default"
-            >
-              <Plus size={16} className="mr-2" />
-              Create Opportunity
-            </Button>
+              }}
+              isDialogOpen={isCreateDialogOpen}
+              className="w-full sm:w-auto"
+            />
           </div>
 
-          <TabsList className="grid w-full grid-cols-4 max-w-2xl">
+          <TabsList className="grid w-full grid-cols-5 max-w-3xl">
             <TabsTrigger value="opportunities">Opportunities</TabsTrigger>
             <TabsTrigger value="validation-test">🧪 Basic Tests</TabsTrigger>
             <TabsTrigger value="company-contact-test">🏢 Company/Contact</TabsTrigger>
             <TabsTrigger value="comprehensive-test">🚀 Enhanced Testing</TabsTrigger>
+            <TabsTrigger value="button-debug">🔧 Button Debug</TabsTrigger>
           </TabsList>
         </div>
 
@@ -685,6 +686,14 @@ function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewPro
 
       <TabsContent value="comprehensive-test" className="flex-1 min-h-0">
         <ComprehensiveFormTestSuite />
+      </TabsContent>
+
+      <TabsContent value="button-debug" className="flex-1 min-h-0">
+        <div className="space-y-6">
+          <CreateOpportunityLiveDemo />
+          <CreateOpportunityFunctionalityTester />
+          <CreateOpportunityDebugSummary />
+        </div>
       </TabsContent>
       </Tabs>
 
