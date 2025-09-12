@@ -5,3 +5,6 @@ export { OpportunityEditForm as ModernOpportunityEditForm } from './ModernOpport
 export { ImprovedFormValidationTest } from './ImprovedFormValidationTest';
 export { FullScreenOpportunityTest } from './FullScreenOpportunityTest';
 export { OpportunityEditFormTest } from './OpportunityEditFormTest';
+export { FormValidationDemo } from './FormValidationDemo';
+export { ImprovedFormValidationTester } from './ImprovedFormValidationTester';
+export { ComprehensiveFormTestSuite } from './ComprehensiveFormTestSuite';

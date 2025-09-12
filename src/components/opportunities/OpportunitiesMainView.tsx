@@ -35,6 +35,7 @@ import { OpportunityEditForm } from './OpportunityEditForm';
 import { ResponsiveOpportunityDetail } from './OpportunitiesView';
 import { FormValidationTestDashboard } from './FormValidationTestDashboard';
 import { CompanyContactSelectionTest } from './CompanyContactSelectionTest';
+import { ComprehensiveFormTestSuite } from './ComprehensiveFormTestSuite';
 import { toast } from 'sonner';
 import { format, differenceInDays } from 'date-fns';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -69,7 +70,7 @@ function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewPro
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
   const [showDetail, setShowDetail] = useState(false);
-  const [activeTab, setActiveTab] = useState<'opportunities' | 'validation-test' | 'company-contact-test'>('opportunities');
+  const [activeTab, setActiveTab] = useState<'opportunities' | 'validation-test' | 'company-contact-test' | 'comprehensive-test'>('opportunities');
   
   // Dialog states
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -216,13 +217,13 @@ function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewPro
   return (
     <div className={`h-full flex flex-col ${className}`}>
       {/* Tab Navigation */}
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'opportunities' | 'validation-test' | 'company-contact-test')} className="h-full flex flex-col">
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'opportunities' | 'validation-test' | 'company-contact-test' | 'comprehensive-test')} className="h-full flex flex-col">
         <div className="flex flex-col gap-4 mb-6">
           <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
             <div>
               <h1 className="text-3xl font-bold text-foreground">Opportunities Management</h1>
               <p className="text-muted-foreground mt-1">
-                Manage your sales pipeline and test form validation improvements
+                Manage your sales pipeline and test enhanced form validation features
               </p>
             </div>
             <Button onClick={() => setIsCreateDialogOpen(true)} className="w-full sm:w-auto">
@@ -231,10 +232,11 @@ function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewPro
             </Button>
           </div>
 
-          <TabsList className="grid w-full grid-cols-3 max-w-lg">
+          <TabsList className="grid w-full grid-cols-4 max-w-2xl">
             <TabsTrigger value="opportunities">Opportunities</TabsTrigger>
-            <TabsTrigger value="validation-test">🧪 Form Validation</TabsTrigger>
-            <TabsTrigger value="company-contact-test">🏢 Company/Contact Test</TabsTrigger>
+            <TabsTrigger value="validation-test">🧪 Basic Tests</TabsTrigger>
+            <TabsTrigger value="company-contact-test">🏢 Company/Contact</TabsTrigger>
+            <TabsTrigger value="comprehensive-test">🚀 Enhanced Testing</TabsTrigger>
           </TabsList>
         </div>
 
@@ -598,6 +600,10 @@ function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewPro
 
       <TabsContent value="company-contact-test" className="flex-1 min-h-0">
         <CompanyContactSelectionTest />
+      </TabsContent>
+
+      <TabsContent value="comprehensive-test" className="flex-1 min-h-0">
+        <ComprehensiveFormTestSuite />
       </TabsContent>
       </Tabs>
 
