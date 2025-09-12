@@ -43,18 +43,11 @@ export const FloatingAutoFix: React.FC<FloatingAutoFixProps> = ({
   const [hasIssues, setHasIssues] = useState(false);
   const [issueCount, setIssueCount] = useState(0);
 
-  const autoFix = useResponsiveAutoFix({
-    priorities: ['critical', 'high'],
-    categories: ['layout', 'interaction'],
-    dryRun: false,
-    onSuccess: (session) => {
-      toast.success(`Fixed ${session.totalIssuesFixed}/${session.totalIssuesFound} issues`);
-      setIsOpen(false);
-      checkForIssues();
-    },
-    onError: (error) => {
-      toast.error(`Auto-fix failed: ${error.message}`);
-    }
+  const { analyzeResponsiveness, state, ...autoFix } = useResponsiveAutoFix({
+    enabled: true,
+    autoFixCritical: true,
+    autoFixHigh: false,
+    watchForChanges: autoDetect
   });
 
   // Auto-detect issues on mount and page changes
@@ -66,35 +59,57 @@ export const FloatingAutoFix: React.FC<FloatingAutoFixProps> = ({
 
   const checkForIssues = async () => {
     try {
-      const validation = await autoFix.validateCurrentPage();
-      if (validation) {
-        const criticalIssues = validation.criticalIssues.filter(
+      // Use the analyze method from the hook instead
+      const metrics = await analyzeResponsiveness();
+      if (metrics && state.issues.length > 0) {
+        const criticalIssues = state.issues.filter(
           issue => issue.severity === 'critical' || issue.severity === 'high'
         );
         setHasIssues(criticalIssues.length > 0);
         setIssueCount(criticalIssues.length);
+      } else {
+        setHasIssues(false);
+        setIssueCount(0);
       }
     } catch (error) {
       console.warn('Failed to check for issues:', error);
+      setHasIssues(false);
+      setIssueCount(0);
     }
   };
 
   const runQuickFix = async (type: 'critical' | 'mobile' | 'all') => {
-    let options = {};
-    
-    switch (type) {
-      case 'critical':
-        options = { priorities: ['critical'], categories: ['layout', 'interaction'] };
-        break;
-      case 'mobile':
-        options = { categories: ['interaction'], priorities: ['critical', 'high'] };
-        break;
-      case 'all':
-        options = { priorities: ['critical', 'high', 'medium'], categories: ['layout', 'interaction', 'typography'] };
-        break;
+    try {
+      // First analyze to get current issues
+      await analyzeResponsiveness();
+      
+      // Then apply appropriate fixes
+      switch (type) {
+        case 'critical':
+          if (autoFix.autoFixBySeverity) {
+            autoFix.autoFixBySeverity('critical');
+          }
+          break;
+        case 'mobile':
+          if (autoFix.autoFixByType) {
+            autoFix.autoFixByType('mobile-optimization');
+          }
+          break;
+        case 'all':
+          if (autoFix.autoFixBySeverity) {
+            autoFix.autoFixBySeverity('critical');
+            autoFix.autoFixBySeverity('high');
+          }
+          break;
+      }
+      
+      toast.success('Auto-fix completed successfully');
+      setIsOpen(false);
+      checkForIssues();
+    } catch (error) {
+      console.error('Auto-fix failed:', error);
+      toast.error('Auto-fix failed');
     }
-
-    await autoFix.runAutoFix(options);
   };
 
   const getPositionClasses = () => {

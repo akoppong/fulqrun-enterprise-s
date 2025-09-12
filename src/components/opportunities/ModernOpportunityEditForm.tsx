@@ -556,7 +556,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                     {Object.entries(validationState.errors)
                       .map(([field, error]) => {
                         if (process.env.NODE_ENV === 'development') {
-                          console.log('Validation error entry:', { field, error, type: typeof error });
+                          // Validation error entry logging removed in production
                         }
                         
                         // Convert error to string safely
@@ -673,7 +673,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                           </SelectItem>
                         ))}
                         {companies.length === 0 && (
-                          <SelectItem value="" disabled>
+                          <SelectItem value="no-companies" disabled>
                             No companies available
                           </SelectItem>
                         )}
@@ -930,7 +930,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                           </SelectItem>
                         ))}
                         {availableContacts.length === 0 && formData.companyId && (
-                          <SelectItem value="" disabled>
+                          <SelectItem value="no-contacts-available" disabled>
                             No contacts found for this company
                           </SelectItem>
                         )}

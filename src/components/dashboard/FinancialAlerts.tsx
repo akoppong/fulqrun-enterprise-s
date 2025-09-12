@@ -12,7 +12,7 @@ interface FinancialAlert {
   type: 'revenue_milestone' | 'deal_risk' | 'target_progress' | 'growth_spike';
   title: string;
   message: string;
-  timestamp: Date;
+  timestamp: string; // ISO string instead of Date
   severity: 'info' | 'warning' | 'success';
   acknowledged: boolean;
 }
@@ -47,7 +47,7 @@ export function FinancialAlerts({ opportunities }: FinancialAlertsProps) {
             type: 'revenue_milestone',
             title: 'Revenue Milestone Reached!',
             message: `Congratulations! You've reached $${milestone.toLocaleString()} in closed revenue.`,
-            timestamp: new Date(),
+            timestamp: new Date().toISOString(),
             severity: 'success',
             acknowledged: false
           });
@@ -75,7 +75,7 @@ export function FinancialAlerts({ opportunities }: FinancialAlertsProps) {
               type: 'deal_risk',
               title: 'High-Value Deal Closing Soon',
               message: `"${opp.title}" ($${opp.value.toLocaleString()}) closes in ${daysUntilClose} days.`,
-              timestamp: new Date(),
+              timestamp: new Date().toISOString(),
               severity: 'warning',
               acknowledged: false
             });
@@ -97,7 +97,7 @@ export function FinancialAlerts({ opportunities }: FinancialAlertsProps) {
             type: 'target_progress',
             title: 'Target Progress Update',
             message: `You're ${milestone}% of the way to your revenue target!`,
-            timestamp: new Date(),
+            timestamp: new Date().toISOString(),
             severity: 'info',
             acknowledged: false
           });

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { OpportunityEditForm } from './OpportunityEditForm';
+import { OpportunityEditForm } from './ModernOpportunityEditForm';
 import { Opportunity } from '@/lib/types';
 
 /**

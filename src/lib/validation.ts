@@ -39,22 +39,6 @@ export class FormValidator {
 
     this.errors = [];
     this.data = data || {};
-    this.validateField(field, value, fieldRule);
-    
-    return {
-      isValid: this.errors.length === 0,
-      error: this.errors.length > 0 ? this.errors[0].message : null
-    };
-  }
-
-  validateField(field: string, value: any, data?: any): { isValid: boolean; error: string | null } {
-    const fieldRule = this.schema[field];
-    if (!fieldRule) {
-      return { isValid: true, error: null };
-    }
-
-    this.errors = [];
-    this.data = data || {};
     this.validateSingleField(field, value, fieldRule);
     
     return {
