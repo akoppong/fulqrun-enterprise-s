@@ -110,7 +110,6 @@ class PerformanceMonitor {
 
     this.setupPerformanceObserver();
     this.setupMemoryMonitoring();
-    this.setupNetworkMonitoring();
     this.setupUserInteractionMonitoring();
     this.setupAutomaticOptimizationDetection();
   }
