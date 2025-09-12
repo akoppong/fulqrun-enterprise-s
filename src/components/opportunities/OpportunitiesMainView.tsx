@@ -7,41 +7,23 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
 import { formatCurrency, getMEDDPICCScore, getStageProgress } from '@/lib/crm-utils';
-import { safeFormatDate } from '@/lib/utils';
 import { 
   Search, 
-  Filter, 
   Target, 
   Plus, 
   Eye, 
   PencilSimple, 
   Trash, 
-  SortAscending,
-  Calendar,
-  DollarSign,
-  TrendUp,
   Users,
   Building,
-  ChartBar,
   GridFour,
   List,
   ArrowRight
 } from '@phosphor-icons/react';
-import { OpportunityEditForm } from './OpportunityEditForm';
+import { ModernOpportunityEditForm } from './ModernOpportunityEditForm';
 import { ResponsiveOpportunityDetail } from './OpportunitiesView';
-import { FormValidationTestDashboard } from './FormValidationTestDashboard';
-import { CompanyContactSelectionTest } from './CompanyContactSelectionTest';
-import { ComprehensiveFormTestSuite } from './ComprehensiveFormTestSuite';
-import { CreateOpportunityButtonDebugger } from './CreateOpportunityButtonDebugger';
-import { CreateOpportunityFunctionalityTester } from './CreateOpportunityFunctionalityTester';
-import { CreateOpportunityLiveDemo } from './CreateOpportunityLiveDemo';
-import { CreateOpportunityDebugSummary } from './CreateOpportunityDebugSummary';
-import { CreateOpportunityMonitor } from './CreateOpportunityMonitor';
-import { ComprehensiveButtonDiagnostics } from './ComprehensiveButtonDiagnostics';
 import { toast } from 'sonner';
 import { format, differenceInDays } from 'date-fns';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -143,17 +125,11 @@ function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewPro
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
   const [showDetail, setShowDetail] = useState(false);
-  const [activeTab, setActiveTab] = useState<'opportunities' | 'validation-test' | 'company-contact-test' | 'comprehensive-test' | 'button-debug'>('opportunities');
   
   // Dialog states
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingOpportunity, setEditingOpportunity] = useState<Opportunity | null>(null);
-
-  // Debug dialog state changes
-  useEffect(() => {
-    console.log('Create dialog state changed:', isCreateDialogOpen);
-  }, [isCreateDialogOpen]);
   
   // Filters and search
   const [searchTerm, setSearchTerm] = useState('');
@@ -294,37 +270,24 @@ function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewPro
 
   return (
     <div className={`h-full flex flex-col ${className}`}>
-      {/* Tab Navigation */}
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'opportunities' | 'validation-test' | 'company-contact-test' | 'comprehensive-test' | 'button-debug')} className="h-full flex flex-col">
-        <div className="flex flex-col gap-4 mb-6">
-          <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">Opportunities Management</h1>
-              <p className="text-muted-foreground mt-1">
-                Manage your sales pipeline and test enhanced form validation features
-              </p>
-            </div>
-            <CreateOpportunityButtonDebugger
-              onCreateClick={() => {
-                console.log('Create button clicked');
-                toast.success('Create button clicked!'); // Test to confirm button works
-                setIsCreateDialogOpen(true);
-              }}
-              isDialogOpen={isCreateDialogOpen}
-              className="w-full sm:w-auto"
-            />
+      {/* Header */}
+      <div className="flex flex-col gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Opportunities Management</h1>
+            <p className="text-muted-foreground mt-1">
+              Manage your sales pipeline and track deals through the PEAK methodology
+            </p>
           </div>
-
-          <TabsList className="grid w-full grid-cols-5 max-w-3xl">
-            <TabsTrigger value="opportunities">Opportunities</TabsTrigger>
-            <TabsTrigger value="validation-test">🧪 Basic Tests</TabsTrigger>
-            <TabsTrigger value="company-contact-test">🏢 Company/Contact</TabsTrigger>
-            <TabsTrigger value="comprehensive-test">🚀 Enhanced Testing</TabsTrigger>
-            <TabsTrigger value="button-debug">📊 Live Monitor</TabsTrigger>
-          </TabsList>
+          <Button 
+            onClick={() => setIsCreateDialogOpen(true)}
+            className="w-full sm:w-auto"
+          >
+            <Plus size={16} className="mr-2" />
+            Create Opportunity
+          </Button>
         </div>
-
-        <TabsContent value="opportunities" className="flex-1 min-h-0 space-y-6">
+      </div>
           {/* Header */}
           <div className="flex flex-col gap-6">
             {/* Filters and Search */}
@@ -394,6 +357,73 @@ function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewPro
           </CardContent>
         </Card>
       </div>
+
+      {/* Filters and Search */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search opportunities, companies, or contacts..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Select value={stageFilter} onValueChange={setStageFilter}>
+                <SelectTrigger className="w-full sm:w-[140px]">
+                  <SelectValue placeholder="All Stages" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Stages</SelectItem>
+                  {PEAK_STAGES.map(stage => (
+                    <SelectItem key={stage.value} value={stage.value}>
+                      {stage.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                <SelectTrigger className="w-full sm:w-[140px]">
+                  <SelectValue placeholder="All Priorities" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Priorities</SelectItem>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="critical">Critical</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <div className="flex border rounded-lg">
+                <Button 
+                  variant={viewMode === 'table' ? 'default' : 'ghost'} 
+                  size="sm"
+                  onClick={() => setViewMode('table')}
+                  className="rounded-r-none"
+                >
+                  <List size={16} />
+                </Button>
+                <Button 
+                  variant={viewMode === 'cards' ? 'default' : 'ghost'} 
+                  size="sm"
+                  onClick={() => setViewMode('cards')}
+                  className="rounded-l-none"
+                >
+                  <GridFour size={16} />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Content */}
       <div className="flex-1 min-h-0">
@@ -676,46 +706,18 @@ function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewPro
           </div>
         )}
       </div>
-      </TabsContent>
-
-      <TabsContent value="validation-test" className="flex-1 min-h-0">
-        <FormValidationTestDashboard />
-      </TabsContent>
-
-      <TabsContent value="company-contact-test" className="flex-1 min-h-0">
-        <CompanyContactSelectionTest />
-      </TabsContent>
-
-      <TabsContent value="comprehensive-test" className="flex-1 min-h-0">
-        <ComprehensiveFormTestSuite />
-      </TabsContent>
-
-      <TabsContent value="button-debug" className="flex-1 min-h-0">
-        <div className="space-y-6">
-          <CreateOpportunityMonitor />
-          <ComprehensiveButtonDiagnostics />
-          <CreateOpportunityLiveDemo />
-          <CreateOpportunityFunctionalityTester />
-          <CreateOpportunityDebugSummary />
-        </div>
-      </TabsContent>
-      </Tabs>
 
       {/* Create Opportunity Dialog */}
-      <OpportunityEditForm
+      <ModernOpportunityEditForm
         isOpen={isCreateDialogOpen}
-        onClose={() => {
-          console.log('Closing create dialog');
-          setIsCreateDialogOpen(false);
-        }}
+        onClose={() => setIsCreateDialogOpen(false)}
         onSubmit={handleCreateOpportunity}
       />
 
       {/* Edit Opportunity Dialog */}
-      <OpportunityEditForm
+      <ModernOpportunityEditForm
         isOpen={isEditDialogOpen}
         onClose={() => {
-          console.log('Closing edit dialog');
           setIsEditDialogOpen(false);
           setEditingOpportunity(null);
         }}
