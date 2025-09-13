@@ -6,6 +6,7 @@ import { OpportunitiesDashboard } from './OpportunitiesDashboard';
 import { OpportunitiesListView } from './OpportunitiesListView';
 import { OpportunityDetailView } from './OpportunityDetailView';
 import { NewOpportunityForm } from './NewOpportunityForm';
+import { DashboardTestRunner } from './DashboardTestRunner';
 import { EnhancedErrorBoundary } from '@/components/ui/enhanced-error-boundary';
 import { toast } from 'sonner';
 
@@ -15,7 +16,7 @@ interface OpportunitiesModuleProps {
   initialData?: any;
 }
 
-type OpportunityView = 'dashboard' | 'list' | 'detail' | 'create' | 'edit';
+type OpportunityView = 'dashboard' | 'list' | 'detail' | 'create' | 'edit' | 'dashboard-test';
 
 export function OpportunitiesModule({ user, initialView = 'dashboard', initialData }: OpportunitiesModuleProps) {
   const [opportunities, setOpportunities] = useKV<Opportunity[]>('opportunities', []);
@@ -63,6 +64,12 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
       case 'opportunities-dashboard':
       case 'dashboard':
         setCurrentView('dashboard');
+        setSelectedOpportunityId(null);
+        setEditingOpportunity(null);
+        break;
+      
+      case 'dashboard-test':
+        setCurrentView('dashboard-test');
         setSelectedOpportunityId(null);
         setEditingOpportunity(null);
         break;
@@ -151,6 +158,16 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
         return (
           <EnhancedErrorBoundary context="OpportunitiesDashboard">
             <OpportunitiesDashboard 
+              user={user} 
+              onViewChange={handleViewChange}
+            />
+          </EnhancedErrorBoundary>
+        );
+      
+      case 'dashboard-test':
+        return (
+          <EnhancedErrorBoundary context="DashboardTestRunner">
+            <DashboardTestRunner 
               user={user} 
               onViewChange={handleViewChange}
             />

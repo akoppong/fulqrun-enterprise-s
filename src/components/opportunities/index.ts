@@ -11,3 +11,7 @@ export {
   OpportunityDetailView,
   NewOpportunityForm
 } from './OpportunitiesModule';
+
+// Testing and diagnostic exports
+export { OpportunitiesDashboardTest } from './OpportunitiesDashboardTest';
+export { DashboardTestRunner } from './DashboardTestRunner';

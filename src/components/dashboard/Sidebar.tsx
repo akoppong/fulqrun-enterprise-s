@@ -425,6 +425,15 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           isNew: true
         },
         {
+          id: 'opportunities-dashboard-test',
+          label: 'Opportunities Dashboard Test',
+          icon: TestTube,
+          description: 'Test opportunities dashboard with sample data validation',
+          permissionId: 'opportunities',
+          action: 'read',
+          isNew: true
+        },
+        {
           id: 'autosave-interactive',
           label: 'Interactive Demo',
           icon: MagicWand,
