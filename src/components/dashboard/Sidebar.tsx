@@ -120,9 +120,18 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           id: 'opportunities',
           label: 'Opportunities',
           icon: Target,
-          description: 'MEDDPICC qualification',
+          description: 'Deal management & tracking',
           permissionId: 'opportunities',
           action: 'read'
+        },
+        {
+          id: 'meddpicc',
+          label: 'MEDDPICC Module',
+          icon: ClipboardList,
+          description: 'B2B qualification methodology',
+          permissionId: 'meddpicc',
+          action: 'read',
+          isNew: true
         },
         {
           id: 'contacts',

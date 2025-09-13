@@ -124,12 +124,6 @@ export function UniversalSidebar({
           isNew: true
         },
         {
-          id: 'meddpicc',
-          label: 'MEDDPICC Assessment',
-          icon: CheckCircle,
-          description: 'Complete B2B qualification assessment'
-        },
-        {
           id: 'ai-qualification',
           label: 'AI Qualification',
           icon: Brain,
