@@ -42,7 +42,8 @@ import {
   FileText,
   Crown,
   ArrowsOutCardinal,
-  Eye
+  Eye,
+  CheckCircle
 } from '@phosphor-icons/react';
 
 interface SidebarProps {
@@ -120,8 +121,16 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           id: 'opportunities',
           label: 'Opportunities',
           icon: Target,
-          description: 'MEDDPICC qualification',
+          description: 'Deal management with PEAK & MEDDPICC',
           permissionId: 'opportunities',
+          action: 'read'
+        },
+        {
+          id: 'meddpicc',
+          label: 'MEDDPICC Assessment',
+          icon: CheckCircle,
+          description: 'B2B qualification methodology',
+          permissionId: 'meddpicc',
           action: 'read'
         },
         {
@@ -181,15 +190,6 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           icon: Crown,
           description: 'Experience different user dashboards',
           permissionId: 'dashboard',
-          action: 'read',
-          isNew: true
-        },
-        {
-          id: 'opportunity-test',
-          label: 'Opportunity Detail Test',
-          icon: Eye,
-          description: 'Test full-screen opportunity views',
-          permissionId: 'opportunities',
           action: 'read',
           isNew: true
         }
@@ -428,33 +428,6 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
       icon: TestTube,
       defaultOpen: false,
       items: [
-        {
-          id: 'full-screen-opportunity-test',
-          label: 'Full-Screen Detail Test',
-          icon: Eye,
-          description: 'Comprehensive full-screen opportunity detail view testing',
-          permissionId: 'opportunities',
-          action: 'read',
-          isNew: true
-        },
-        {
-          id: 'enhanced-opportunity-testing',
-          label: 'Enhanced Opportunity Testing',
-          icon: Target,
-          description: 'Advanced opportunity detail view testing with performance monitoring',
-          permissionId: 'opportunities',
-          action: 'read',
-          isNew: true
-        },
-        {
-          id: 'opportunity-test-suite',
-          label: 'Legacy Test Suite',
-          icon: ClipboardList,
-          description: 'Original comprehensive opportunity testing suite',
-          permissionId: 'opportunities',
-          action: 'read',
-          isNew: true
-        },
         {
           id: 'role-testing',
           label: 'Role-Based Dashboards',

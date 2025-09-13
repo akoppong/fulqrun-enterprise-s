@@ -47,7 +47,7 @@ interface DashboardProps {
   initialView?: string;
 }
 
-export type DashboardView = 'dashboard' | 'role-testing' | 'opportunity-test' | 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'advanced-analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'kpi-gallery' | 'kpi-manager' | 'kpi-layout' | 'pharma-kpi-templates' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'meddpicc' | 'meddpicc-analytics' | 'meddpicc-admin' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit' | 'administration';
+export type DashboardView = 'dashboard' | 'role-testing' | 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'advanced-analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'kpi-gallery' | 'kpi-manager' | 'kpi-layout' | 'pharma-kpi-templates' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'meddpicc' | 'meddpicc-analytics' | 'meddpicc-admin' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit' | 'administration';
 
 export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialView }: DashboardProps) {
   // All hooks must be called before any early returns
@@ -169,8 +169,6 @@ export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialV
             onRoleSwitch={onRoleSwitch || (() => {})}
           />
         );
-      case 'opportunity-test':
-        return <FullScreenOpportunityTest />;
       case 'pipeline':
         return <PipelineView />;
       case 'opportunities':

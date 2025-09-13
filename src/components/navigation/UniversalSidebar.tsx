@@ -77,11 +77,11 @@ export function UniversalSidebar({
           id: 'opportunities',
           label: 'Opportunities',
           icon: Star,
-          description: 'Deal management & MEDDPICC'
+          description: 'Deal management with PEAK & MEDDPICC'
         },
         {
           id: 'meddpicc',
-          label: 'MEDDPICC Module',
+          label: 'MEDDPICC Assessment',
           icon: CheckCircle,
           description: 'B2B qualification methodology'
         },
@@ -122,12 +122,6 @@ export function UniversalSidebar({
           icon: Bot,
           description: 'Interactive AI demonstrations',
           isNew: true
-        },
-        {
-          id: 'meddpicc',
-          label: 'MEDDPICC Assessment',
-          icon: CheckCircle,
-          description: 'Complete B2B qualification assessment'
         },
         {
           id: 'ai-qualification',
