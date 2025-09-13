@@ -119,9 +119,9 @@ export function UniversalSidebar({
         },
         {
           id: 'meddpicc',
-          label: 'MEDDPICC Enhanced',
+          label: 'MEDDPICC Assessment',
           icon: CheckCircle,
-          description: 'AI-powered deal qualification'
+          description: 'Complete B2B qualification assessment'
         },
         {
           id: 'ai-qualification',

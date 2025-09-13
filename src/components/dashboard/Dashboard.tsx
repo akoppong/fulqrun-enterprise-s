@@ -36,6 +36,7 @@ import { AdvancedKPIAnalytics } from './AdvancedKPIAnalytics';
 import { PharmaceuticalKPITemplates } from './PharmaceuticalKPITemplates';
 import { RoleTestingDashboard } from './RoleTestingDashboard';
 import { RoleShowcase } from './RoleShowcase';
+import { MEDDPICCAnalyticsDashboard, MEDDPICCAdminConfig, MEDDPICCLauncher } from '@/components/meddpicc';
 
 
 interface DashboardProps {
@@ -46,7 +47,7 @@ interface DashboardProps {
   initialView?: string;
 }
 
-export type DashboardView = 'dashboard' | 'role-testing' | 'opportunity-test' | 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'advanced-analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'kpi-gallery' | 'kpi-manager' | 'kpi-layout' | 'pharma-kpi-templates' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit' | 'administration';
+export type DashboardView = 'dashboard' | 'role-testing' | 'opportunity-test' | 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'advanced-analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'kpi-gallery' | 'kpi-manager' | 'kpi-layout' | 'pharma-kpi-templates' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'meddpicc-analytics' | 'meddpicc-admin' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit' | 'administration';
 
 export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialView }: DashboardProps) {
   // All hooks must be called before any early returns
@@ -274,6 +275,14 @@ export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialV
         );
       case 'segments':
         return <CustomerSegmentsList />;
+      
+      // MEDDPICC Module
+      case 'meddpicc':
+        return <MEDDPICCLauncher currentUser={user} />;
+      case 'meddpicc-analytics':
+        return <MEDDPICCAnalyticsDashboard />;
+      case 'meddpicc-admin':
+        return <MEDDPICCAdminConfig />;
       
       // Admin Components
       case 'admin-users':

@@ -150,6 +150,16 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           isNew: true
         },
         {
+          id: 'meddpicc-analytics',
+          label: 'MEDDPICC Analytics',
+          icon: Target,
+          description: 'B2B qualification analytics',
+          permissionId: 'meddpicc',
+          action: 'read',
+          isNew: true,
+          badge: 'NEW'
+        },
+        {
           id: 'analytics',
           label: 'Analytics',
           icon: ChartLine,
@@ -399,6 +409,16 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           permissionId: 'audit-logs',
           action: 'read',
           isNew: true
+        },
+        {
+          id: 'meddpicc-admin',
+          label: 'MEDDPICC Configuration',
+          icon: Target,
+          description: 'Configure MEDDPICC questions & scoring',
+          permissionId: 'system-config',
+          action: 'write',
+          isNew: true,
+          badge: 'NEW'
         }
       ]
     },
