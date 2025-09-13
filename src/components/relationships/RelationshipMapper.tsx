@@ -72,7 +72,7 @@ export const RelationshipMapper: React.FC = () => {
     setLoading(true);
     try {
       // Load opportunities (which contain company and contact relationships)
-      const opportunities = OpportunityService.getAllOpportunities();
+      const opportunities = await OpportunityService.getAllOpportunities();
       
       // Ensure opportunities is an array before processing
       const validOpportunities = Array.isArray(opportunities) ? opportunities : [];

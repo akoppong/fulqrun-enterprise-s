@@ -371,7 +371,7 @@ export function NewOpportunityMainView({
                   value={formData.priority} 
                   onValueChange={(value: any) => setFormData({...formData, priority: value})}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger aria-label="Select priority level">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -458,12 +458,19 @@ export function NewOpportunityMainView({
                   value={formData.companyId} 
                   onValueChange={(value) => setFormData({...formData, companyId: value, contactId: ''})}
                 >
-                  <SelectTrigger className={errors.companyId ? 'border-red-500' : ''}>
+                  <SelectTrigger 
+                    className={errors.companyId ? 'border-red-500' : ''}
+                    aria-label="Select company"
+                  >
                     <SelectValue placeholder="Select a company..." />
                   </SelectTrigger>
                   <SelectContent>
                     {validCompanies.map(company => (
-                      <SelectItem key={company.id} value={company.id}>
+                      <SelectItem 
+                        key={company.id} 
+                        value={company.id}
+                        textValue={`${company.name} - ${company.industry}`}
+                      >
                         <div className="flex items-center gap-2">
                           <Building className="w-4 h-4" />
                           <div>
@@ -499,7 +506,10 @@ export function NewOpportunityMainView({
                   onValueChange={(value) => setFormData({...formData, contactId: value})}
                   disabled={!formData.companyId}
                 >
-                  <SelectTrigger className={errors.contactId ? 'border-red-500' : ''}>
+                  <SelectTrigger 
+                    className={errors.contactId ? 'border-red-500' : ''}
+                    aria-label="Select primary contact"
+                  >
                     <SelectValue placeholder={
                       !formData.companyId 
                         ? "Select a company first..." 
@@ -510,7 +520,11 @@ export function NewOpportunityMainView({
                   </SelectTrigger>
                   <SelectContent>
                     {filteredContacts.map(contact => (
-                      <SelectItem key={contact.id} value={contact.id}>
+                      <SelectItem 
+                        key={contact.id} 
+                        value={contact.id}
+                        textValue={`${contact.name} - ${contact.title}`}
+                      >
                         <div className="flex items-center gap-2">
                           <Users className="w-4 h-4" />
                           <div>
@@ -558,12 +572,16 @@ export function NewOpportunityMainView({
                   value={formData.stage} 
                   onValueChange={(value: any) => setFormData({...formData, stage: value})}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger aria-label="Select PEAK stage">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {Object.entries(PEAK_STAGES).map(([key, stage]) => (
-                      <SelectItem key={key} value={key}>
+                      <SelectItem 
+                        key={key} 
+                        value={key}
+                        textValue={`${stage.name} - ${stage.description}`}
+                      >
                         <div className="flex items-center gap-2">
                           <div className="w-2 h-2 bg-primary rounded-full" />
                           <div>
@@ -583,12 +601,19 @@ export function NewOpportunityMainView({
                   value={formData.ownerId} 
                   onValueChange={(value) => setFormData({...formData, ownerId: value})}
                 >
-                  <SelectTrigger className={errors.ownerId ? 'border-red-500' : ''}>
+                  <SelectTrigger 
+                    className={errors.ownerId ? 'border-red-500' : ''}
+                    aria-label="Select opportunity owner"
+                  >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {validUsers.map(usr => (
-                      <SelectItem key={usr.id} value={usr.id}>
+                      <SelectItem 
+                        key={usr.id} 
+                        value={usr.id}
+                        textValue={`${usr.name} - ${usr.role}`}
+                      >
                         <div className="flex items-center gap-2">
                           <Users className="w-4 h-4" />
                           <div>
@@ -614,7 +639,7 @@ export function NewOpportunityMainView({
                   value={formData.leadSource} 
                   onValueChange={(value) => setFormData({...formData, leadSource: value})}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger aria-label="Select lead source">
                     <SelectValue placeholder="Select source..." />
                   </SelectTrigger>
                   <SelectContent>

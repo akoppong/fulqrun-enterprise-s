@@ -78,9 +78,9 @@ export function validateOpportunity(opportunity: any): ValidationResult {
     }
   }
 
-  // Stage validation
+  // Stage validation - support both PEAK stages and deal closure stages
   const validStages = ['prospect', 'engage', 'acquire', 'keep', 'closed-won', 'closed-lost'];
-  if (!validStages.includes(opportunity?.stage)) {
+  if (!opportunity?.stage || !validStages.includes(opportunity.stage)) {
     errors.push(`Stage must be one of: ${validStages.join(', ')}`);
   }
 

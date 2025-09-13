@@ -378,7 +378,7 @@ export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialV
         </main>
       </div>
       
-      <FinancialAlerts opportunities={opportunities} />
+      <FinancialAlerts opportunities={Array.isArray(opportunities) ? opportunities : []} />
     </div>
   );
 }

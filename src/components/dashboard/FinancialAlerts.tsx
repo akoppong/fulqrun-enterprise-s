@@ -94,8 +94,11 @@ export function FinancialAlerts({ opportunities }: FinancialAlertsProps) {
       // Only check for alerts every 5 minutes to avoid KV storage overload
       if (now - lastAlertCheck < 300000) return;
       
+      // Ensure opportunities is an array before filtering
+      const safeOpportunities = Array.isArray(opportunities) ? opportunities : [];
+      
       // Safely calculate totals with fallbacks
-      const validOpportunities = opportunities.filter(opp => 
+      const validOpportunities = safeOpportunities.filter(opp => 
         opp && typeof opp.value === 'number' && !isNaN(opp.value)
       );
       
