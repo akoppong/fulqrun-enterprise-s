@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -257,10 +257,18 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
         <DialogContent className="max-w-7xl w-[96vw] h-[95vh] flex flex-col p-0">
           <DialogHeader className="px-6 py-4 border-b flex-shrink-0">
             <div className="flex items-center justify-between">
-              <DialogTitle className="flex items-center gap-2">
-                <Target size={24} className="text-primary" />
-                {opportunity ? 'Edit Opportunity' : 'Create New Opportunity'}
-              </DialogTitle>
+              <div className="flex-1">
+                <DialogTitle className="flex items-center gap-2">
+                  <Target size={24} className="text-primary" />
+                  {opportunity ? 'Edit Opportunity' : 'Create New Opportunity'}
+                </DialogTitle>
+                <DialogDescription className="mt-1 text-sm text-muted-foreground">
+                  {opportunity 
+                    ? `Modify the details and track progress for "${opportunity.title}"`
+                    : 'Create a new sales opportunity and track it through the PEAK methodology'
+                  }
+                </DialogDescription>
+              </div>
               
               {/* Auto-save indicator */}
               <AutoSaveIndicator

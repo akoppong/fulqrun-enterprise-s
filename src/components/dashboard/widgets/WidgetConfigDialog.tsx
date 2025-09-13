@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -101,6 +101,9 @@ export function WidgetConfigDialog({
             <Settings className="h-5 w-5" />
             Configure Widget: {widget.title}
           </DialogTitle>
+          <DialogDescription>
+            Customize the appearance, data source, and behavior of your dashboard widget
+          </DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="general" className="space-y-6">

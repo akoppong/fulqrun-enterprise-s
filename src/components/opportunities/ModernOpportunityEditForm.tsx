@@ -781,7 +781,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                       <SelectContent className="max-h-[300px]">
                         {companies.length > 0 ? (
                           companies.map((company) => (
-                            <SelectItem key={company.id} value={company.id}>
+                            <SelectItem key={company.id} value={company.id} textValue={company.name}>
                               <div className="flex flex-col items-start">
                                 <span className="font-medium">{company.name}</span>
                                 {company.industry && (
@@ -834,7 +834,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                       <SelectContent>
                         {selectedCompany && availableContacts.length > 0 ? (
                           availableContacts.map((contact) => (
-                            <SelectItem key={contact.id} value={contact.id}>
+                            <SelectItem key={contact.id} value={contact.id} textValue={getContactDisplayName(contact)}>
                               <div className="flex flex-col items-start">
                                 <span className="font-medium">{getContactDisplayName(contact)}</span>
                                 {contact.title && (
@@ -990,7 +990,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                       </SelectTrigger>
                       <SelectContent>
                         {PEAK_STAGES.map(stage => (
-                          <SelectItem key={stage.value} value={stage.value}>
+                          <SelectItem key={stage.value} value={stage.value} textValue={stage.label}>
                             <div className="flex flex-col items-start">
                               <span className="font-medium">{stage.label}</span>
                               <span className="text-xs text-muted-foreground">

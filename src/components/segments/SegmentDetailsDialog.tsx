@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { CustomerSegment } from '@/lib/types';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -87,6 +87,9 @@ export function SegmentDetailsDialog({ segment, onClose, onUpdate, onDelete }: S
               </div>
               <div>
                 <DialogTitle className="text-xl">{segment.name}</DialogTitle>
+                <DialogDescription className="sr-only">
+                  View and manage details for the {segment.name} customer segment, including performance metrics and configuration settings
+                </DialogDescription>
                 <div className="flex items-center gap-2 mt-1">
                   <Badge variant={segment.isActive ? "default" : "secondary"}>
                     {segment.isActive ? "Active" : "Inactive"}
