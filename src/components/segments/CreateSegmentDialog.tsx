@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { CustomerSegment } from '@/lib/types';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -332,6 +332,9 @@ export function CreateSegmentDialog({ isOpen, onClose, onSubmit }: CreateSegment
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle>Create Customer Segment</DialogTitle>
+          <DialogDescription>
+            Define customer segments for targeted sales and marketing strategies
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto">

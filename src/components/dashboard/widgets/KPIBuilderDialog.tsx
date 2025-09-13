@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -278,6 +278,12 @@ export function KPIBuilderDialog({ isOpen, onClose, onSave, editingKPI }: KPIBui
             <Settings className="h-5 w-5" />
             {editingKPI ? 'Edit KPI Card' : 'Create Custom KPI Card'}
           </DialogTitle>
+          <DialogDescription>
+            {editingKPI 
+              ? 'Modify the configuration and appearance of your KPI card'
+              : 'Design and configure a custom KPI card with personalized metrics and styling'
+            }
+          </DialogDescription>
         </DialogHeader>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

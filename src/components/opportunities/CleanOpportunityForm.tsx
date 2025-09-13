@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -261,12 +261,12 @@ export function CleanOpportunityForm({
               <DialogTitle className="text-2xl font-bold">
                 {mode === 'edit' ? 'Edit Opportunity' : 'Create New Opportunity'}
               </DialogTitle>
-              <p className="text-muted-foreground mt-1">
+              <DialogDescription className="mt-1">
                 {mode === 'edit' 
                   ? 'Update the opportunity details and track progress through the PEAK methodology'
                   : 'Create a new sales opportunity and track it through the PEAK methodology'
                 }
-              </p>
+              </DialogDescription>
             </div>
             <Button
               variant="ghost"
