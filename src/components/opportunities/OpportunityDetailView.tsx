@@ -71,10 +71,17 @@ export function OpportunityDetailView({ opportunityId, user, onBack, onEdit }: O
     outcome: 'neutral' as ActivityEntry['outcome']
   });
 
-  const opportunity = opportunities.find(opp => opp.id === opportunityId);
-  const company = companies.find(c => c.id === opportunity?.companyId);
-  const contact = contacts.find(c => c.id === opportunity?.contactId);
-  const owner = allUsers.find(u => u.id === opportunity?.ownerId);
+  // Ensure opportunities is always an array before using array methods
+  const validOpportunities = Array.isArray(opportunities) ? opportunities : [];
+  const opportunity = validOpportunities.find(opp => opp.id === opportunityId);
+  // Ensure other arrays are valid before using array methods
+  const validCompanies = Array.isArray(companies) ? companies : [];
+  const validContacts = Array.isArray(contacts) ? contacts : [];
+  const validUsers = Array.isArray(allUsers) ? allUsers : [];
+  
+  const company = validCompanies.find(c => c.id === opportunity?.companyId);
+  const contact = validContacts.find(c => c.id === opportunity?.contactId);
+  const owner = validUsers.find(u => u.id === opportunity?.ownerId);
 
   if (!opportunity) {
     return (
@@ -664,7 +671,7 @@ export function OpportunityDetailView({ opportunityId, user, onBack, onEdit }: O
                 {activities.length > 0 ? (
                   <div className="space-y-4">
                     {activities.map((activity) => {
-                      const activityUser = allUsers.find(u => u.id === activity.userId);
+                      const activityUser = validUsers.find(u => u.id === activity.userId);
                       
                       return (
                         <div key={activity.id} className="flex gap-4 p-4 border rounded-lg">

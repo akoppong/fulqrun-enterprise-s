@@ -6,7 +6,7 @@ import { OpportunitiesDashboard } from './OpportunitiesDashboard';
 import { OpportunitiesListView } from './OpportunitiesListView';
 import { OpportunityDetailView } from './OpportunityDetailView';
 import { NewOpportunityForm } from './NewOpportunityForm';
-import { NewOpportunityFormPage } from './NewOpportunityFormPage';
+import { NewOpportunityMainView } from './NewOpportunityMainView';
 import { EnhancedOpportunityFormDemo } from './EnhancedOpportunityFormDemo';
 import { EnhancedOpportunityCreationTest } from './EnhancedOpportunityCreationTest';
 import { DashboardTestRunner } from './DashboardTestRunner';
@@ -276,8 +276,8 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
       
       case 'create':
         return (
-          <EnhancedErrorBoundary context="NewOpportunityForm">
-            <NewOpportunityFormPage
+          <EnhancedErrorBoundary context="NewOpportunityMainView">
+            <NewOpportunityMainView
               user={user}
               onSave={handleSave}
               onCancel={handleFormCancel}
@@ -289,8 +289,8 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
       
       case 'edit':
         return (
-          <EnhancedErrorBoundary context="EditOpportunityForm">
-            <NewOpportunityFormPage
+          <EnhancedErrorBoundary context="EditOpportunityMainView">
+            <NewOpportunityMainView
               user={user}
               onSave={handleSave}
               onCancel={handleFormCancel}
@@ -325,5 +325,5 @@ export {
   OpportunitiesListView,
   OpportunityDetailView,
   NewOpportunityForm,
-  NewOpportunityFormPage
+  NewOpportunityMainView
 };

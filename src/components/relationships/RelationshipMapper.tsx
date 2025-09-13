@@ -74,12 +74,15 @@ export const RelationshipMapper: React.FC = () => {
       // Load opportunities (which contain company and contact relationships)
       const opportunities = OpportunityService.getAllOpportunities();
       
+      // Ensure opportunities is an array before processing
+      const validOpportunities = Array.isArray(opportunities) ? opportunities : [];
+      
       // Extract unique companies and contacts from opportunities
       const companiesMap = new Map<string, Company>();
       const contactsMap = new Map<string, Contact>();
 
       // Generate sample companies and contacts based on opportunities
-      opportunities.forEach(opp => {
+      validOpportunities.forEach(opp => {
         // Create company if not exists
         if (!companiesMap.has(opp.companyId)) {
           companiesMap.set(opp.companyId, {
