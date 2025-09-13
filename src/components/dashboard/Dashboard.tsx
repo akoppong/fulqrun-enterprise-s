@@ -10,7 +10,8 @@ import { CustomizableDashboard } from './CustomizableDashboard';
 import { CustomKPILayoutDashboard } from './CustomKPILayoutDashboard';
 import { PipelineView } from './PipelineView';
 import { OpportunityList } from './OpportunityList';
-import { OpportunitiesView } from '../opportunities/OpportunitiesView';
+import { OpportunitiesModule } from '../opportunities/OpportunitiesModule';
+import { FullScreenOpportunityTest } from '../opportunities/FullScreenOpportunityTest';
 import { ContactsView } from './ContactsView';
 import { AnalyticsView } from './AnalyticsView';
 import { CSTPVDashboard } from './CSTPVDashboard';
@@ -174,7 +175,7 @@ export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialV
       case 'pipeline':
         return <PipelineView />;
       case 'opportunities':
-        return <OpportunitiesView />;
+        return <OpportunitiesModule user={user} />;
       case 'contacts':
         return <ContactsView />;
       case 'companies':
