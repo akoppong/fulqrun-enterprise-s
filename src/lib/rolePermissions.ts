@@ -77,6 +77,16 @@ export const ROLE_PERMISSIONS: Record<string, RolePermissions> = {
         ]
       },
       {
+        id: 'meddpicc',
+        name: 'MEDDPICC Module',
+        description: 'B2B qualification methodology',
+        module: 'core',
+        actions: [
+          { action: 'read', description: 'View MEDDPICC assessments' },
+          { action: 'write', description: 'Create and update MEDDPICC qualifications' }
+        ]
+      },
+      {
         id: 'ai-insights',
         name: 'AI Insights',
         description: 'Access AI-powered insights',

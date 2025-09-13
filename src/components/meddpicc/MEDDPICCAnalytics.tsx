@@ -59,6 +59,10 @@ export function MEDDPICCAnalyticsDashboard() {
     const loadAnalytics = async () => {
       setIsLoading(true);
       try {
+        // Initialize sample data if needed
+        MEDDPICCService.initializeSampleData();
+        
+        // Load analytics data
         const data = MEDDPICCService.generateAnalytics();
         setAnalytics(data);
       } catch (error) {

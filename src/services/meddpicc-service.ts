@@ -271,6 +271,97 @@ export class MEDDPICCService {
     return Math.random() * 20; // Mock improvement rate
   }
 
+  // Sample Data Generation
+  static initializeSampleData(): void {
+    const existingAssessments = this.getAllAssessments();
+    const existingSessions = this.getAllSessions();
+    
+    // Only initialize if no data exists
+    if (existingAssessments.length === 0 && existingSessions.length === 0) {
+      this.generateSampleAssessments();
+    }
+  }
+
+  private static generateSampleAssessments(): void {
+    const sampleOpportunities = [
+      'opp-enterprise-software-2024',
+      'opp-marketing-automation-2024',
+      'opp-healthcare-solution-2024',
+      'opp-financial-services-2024',
+      'opp-manufacturing-system-2024',
+      'opp-retail-platform-2024'
+    ];
+
+    const sampleUsers = ['user-1', 'user-2', 'user-3'];
+    
+    sampleOpportunities.forEach((oppId, index) => {
+      const userId = sampleUsers[index % sampleUsers.length];
+      
+      // Create a completed session
+      const session = this.createSession(oppId, userId);
+      
+      // Generate realistic answers based on opportunity maturity
+      const maturityLevel = index % 3; // 0: early, 1: mid, 2: late stage
+      const answers = this.generateRealisticAnswers(maturityLevel);
+      
+      session.answers = answers;
+      session.completed_at = new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000); // Within last 30 days
+      session.notes = this.generateSampleNotes(maturityLevel);
+      
+      this.saveSession(session);
+      
+      // Complete the assessment
+      this.completeAssessment(session.id, oppId, userId);
+    });
+    
+    console.log('Sample MEDDPICC data initialized');
+  }
+
+  private static generateRealisticAnswers(maturityLevel: number): Record<string, string> {
+    const answers: Record<string, string> = {};
+    
+    MEDDPICC_CONFIG.pillars.forEach(pillar => {
+      pillar.questions.forEach((question, qIndex) => {
+        // Higher maturity = better answers
+        let answerQuality: 'no' | 'partial' | 'yes';
+        
+        if (maturityLevel === 0) { // Early stage
+          answerQuality = qIndex < 2 ? 'no' : (Math.random() > 0.7 ? 'partial' : 'no');
+        } else if (maturityLevel === 1) { // Mid stage
+          answerQuality = Math.random() > 0.6 ? 'partial' : (Math.random() > 0.8 ? 'yes' : 'no');
+        } else { // Late stage
+          answerQuality = Math.random() > 0.3 ? 'yes' : (Math.random() > 0.7 ? 'partial' : 'no');
+        }
+        
+        // Ensure realistic progression within pillars
+        const validOptions = question.options.filter(opt => opt.value === answerQuality);
+        if (validOptions.length > 0) {
+          answers[question.id] = answerQuality;
+        } else {
+          // Fallback to first available option
+          answers[question.id] = question.options[0].value;
+        }
+      });
+    });
+    
+    return answers;
+  }
+
+  private static generateSampleNotes(maturityLevel: number): string {
+    const notes = [
+      // Early stage notes
+      "Initial discovery meeting completed. Need to identify economic buyer and understand decision criteria better. Champion identified but needs strengthening.",
+      
+      // Mid stage notes  
+      "Good progress on MEDDPICC qualification. Economic buyer engaged, decision criteria clarified. Competition analysis shows we're well positioned. Working on paper process timeline.",
+      
+      // Late stage notes
+      "Strong MEDDPICC scores across all pillars. Champion actively selling for us internally. Legal review in progress. High confidence in close probability."
+    ];
+    
+    return notes[maturityLevel] || notes[0];
+  }
+
   // Storage Methods
   private static getAllSessions(): MEDDPICCSession[] {
     if (typeof window === "undefined") return [];

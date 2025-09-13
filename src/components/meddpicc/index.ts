@@ -9,6 +9,7 @@ export { MEDDPICCLauncher } from './MEDDPICCLauncher';
 export { MEDDPICCDemo } from './MEDDPICCDemo';
 export { MEDDPICCAssessment } from './MEDDPICCAssessment';
 export { MEDDPICCAnalyticsDashboard } from './MEDDPICCAnalytics';
+export { MEDDPICCAnalyticsTest } from './MEDDPICCAnalyticsTest';
 export { MEDDPICCSummary, MEDDPICCScoreBadge, MEDDPICCHealthIndicator } from './MEDDPICCSummary';
 export { MEDDPICCAdminConfig } from './MEDDPICCAdminConfig';
 
