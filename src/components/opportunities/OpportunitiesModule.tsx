@@ -5,13 +5,7 @@ import { OpportunityService } from '@/lib/opportunity-service';
 import { OpportunitiesDashboard } from './OpportunitiesDashboard';
 import { OpportunitiesListView } from './OpportunitiesListView';
 import { OpportunityDetailView } from './OpportunityDetailView';
-import { NewOpportunityForm } from './NewOpportunityForm';
 import { NewOpportunityMainView } from './NewOpportunityMainView';
-import { EnhancedOpportunityFormDemo } from './EnhancedOpportunityFormDemo';
-import { EnhancedOpportunityCreationTest } from './EnhancedOpportunityCreationTest';
-import { DashboardTestRunner } from './DashboardTestRunner';
-import SmartCompanyContactDemo from './SmartCompanyContactDemo';
-import SmartOpportunityForm from './SmartOpportunityForm';
 import { EnhancedErrorBoundary } from '@/components/ui/enhanced-error-boundary';
 import { toast } from 'sonner';
 
@@ -21,7 +15,7 @@ interface OpportunitiesModuleProps {
   initialData?: any;
 }
 
-type OpportunityView = 'dashboard' | 'list' | 'detail' | 'create' | 'edit' | 'dashboard-test' | 'form-demo' | 'creation-test' | 'smart-contact-demo' | 'smart-form';
+type OpportunityView = 'dashboard' | 'list' | 'detail' | 'create' | 'edit';
 
 export function OpportunitiesModule({ user, initialView = 'dashboard', initialData }: OpportunitiesModuleProps) {
   const [opportunities, setOpportunities] = useKV<Opportunity[]>('opportunities', []);
@@ -185,55 +179,6 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
           </EnhancedErrorBoundary>
         );
       
-      case 'form-demo':
-        return (
-          <EnhancedErrorBoundary context="EnhancedOpportunityFormDemo">
-            <EnhancedOpportunityFormDemo 
-              user={user} 
-            />
-          </EnhancedErrorBoundary>
-        );
-      
-      case 'dashboard-test':
-        return (
-          <EnhancedErrorBoundary context="DashboardTestRunner">
-            <DashboardTestRunner 
-              user={user} 
-              onViewChange={handleViewChange}
-            />
-          </EnhancedErrorBoundary>
-        );
-      
-      case 'creation-test':
-        return (
-          <EnhancedErrorBoundary context="EnhancedOpportunityCreationTest">
-            <EnhancedOpportunityCreationTest />
-          </EnhancedErrorBoundary>
-        );
-      
-      case 'smart-contact-demo':
-        return (
-          <EnhancedErrorBoundary context="SmartCompanyContactDemo">
-            <SmartCompanyContactDemo />
-          </EnhancedErrorBoundary>
-        );
-      
-      case 'smart-form':
-        return (
-          <EnhancedErrorBoundary context="SmartOpportunityForm">
-            <div className="p-6">
-              <SmartOpportunityForm
-                isOpen={true}
-                onClose={() => setCurrentView('dashboard')}
-                onSave={(opportunity) => {
-                  toast.success('Smart opportunity created successfully!');
-                  setCurrentView('dashboard');
-                }}
-              />
-            </div>
-          </EnhancedErrorBoundary>
-        );
-      
       case 'list':
         return (
           <EnhancedErrorBoundary context="OpportunitiesListView">
@@ -319,11 +264,10 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
   );
 }
 
-// Export individual components for specific use cases
+// Clean up the export section - only export used components
 export {
   OpportunitiesDashboard,
   OpportunitiesListView,
   OpportunityDetailView,
-  NewOpportunityForm,
   NewOpportunityMainView
 };

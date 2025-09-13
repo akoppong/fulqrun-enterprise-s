@@ -19,7 +19,8 @@ import {
   GridFour,
   ChartLine,
   Warning,
-  CheckCircle
+  CheckCircle,
+  Plus
 } from '@phosphor-icons/react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 
@@ -449,7 +450,16 @@ export function OpportunitiesDashboard({ user, onViewChange }: OpportunitiesDash
         
         <div className="flex gap-2">
           <Button 
+            onClick={() => onViewChange?.('create')}
+            className="w-fit"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Create Opportunity
+          </Button>
+          
+          <Button 
             onClick={() => onViewChange?.('opportunities-list')}
+            variant="outline"
             className="w-fit"
           >
             <GridFour className="w-4 h-4 mr-2" />
