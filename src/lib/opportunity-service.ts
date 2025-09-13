@@ -133,45 +133,60 @@ export class OpportunityService {
 
     try {
       const stored = localStorage.getItem(this.STORAGE_KEY);
+      
+      // Always ensure we have initialized data
       if (!stored) {
+        console.log('No stored opportunities found, initializing sample data...');
         await this.initializeSampleData();
         const newStored = localStorage.getItem(this.STORAGE_KEY);
-        if (!newStored) return [];
-        
-        const parsed = safeJsonParse(newStored, []);
-        if (!Array.isArray(parsed)) {
-          console.error('Stored opportunities data is not an array:', typeof parsed);
+        if (!newStored) {
+          console.error('Failed to initialize opportunities data');
           return [];
         }
-        return this.transformAndValidateOpportunities(parsed);
+        
+        const parsed = safeJsonParse(newStored, []);
+        const result = Array.isArray(parsed) ? this.transformAndValidateOpportunities(parsed) : [];
+        console.log('Initialized opportunities:', result.length, 'items');
+        return result;
       }
       
       const parsed = safeJsonParse(stored, []);
       if (!Array.isArray(parsed)) {
-        console.error('Stored opportunities data is not an array:', typeof parsed);
+        console.error('Stored opportunities data is corrupted (not an array):', typeof parsed);
         // Clear corrupted data and reinitialize
         localStorage.removeItem(this.STORAGE_KEY);
         await this.initializeSampleData();
         const newStored = localStorage.getItem(this.STORAGE_KEY);
         if (!newStored) return [];
         const newParsed = safeJsonParse(newStored, []);
-        return Array.isArray(newParsed) ? this.transformAndValidateOpportunities(newParsed) : [];
+        const result = Array.isArray(newParsed) ? this.transformAndValidateOpportunities(newParsed) : [];
+        console.log('Recovered from corruption, opportunities:', result.length, 'items');
+        return result;
       }
-      return this.transformAndValidateOpportunities(parsed);
+      
+      const result = this.transformAndValidateOpportunities(parsed);
+      console.log('Loaded opportunities from storage:', result.length, 'items');
+      return result;
     } catch (error) {
-      console.error('Error loading opportunities:', error);
-      // Clear corrupted data and reinitialize
-      localStorage.removeItem(this.STORAGE_KEY);
+      console.error('Error loading opportunities, attempting recovery:', error);
+      
+      // Clear corrupted data and reinitialize as fallback
       try {
+        localStorage.removeItem(this.STORAGE_KEY);
         await this.initializeSampleData();
         const newStored = localStorage.getItem(this.STORAGE_KEY);
         if (newStored) {
           const parsed = safeJsonParse(newStored, []);
-          return Array.isArray(parsed) ? this.transformAndValidateOpportunities(parsed) : [];
+          const result = Array.isArray(parsed) ? this.transformAndValidateOpportunities(parsed) : [];
+          console.log('Recovery successful, opportunities:', result.length, 'items');
+          return result;
         }
       } catch (initError) {
-        console.error('Error reinitializing data:', initError);
+        console.error('Recovery failed:', initError);
       }
+      
+      // Ultimate fallback - return empty array
+      console.warn('All recovery attempts failed, returning empty array');
       return [];
     }
   }

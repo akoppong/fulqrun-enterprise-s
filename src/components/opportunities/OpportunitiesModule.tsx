@@ -30,11 +30,32 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
 
   // Initialize demo data
   useEffect(() => {
-    if (opportunities.length === 0) {
-      OpportunityService.initializeSampleData();
-      const stored = OpportunityService.getAllOpportunities();
-      setOpportunities(stored);
-    }
+    const initializeData = async () => {
+      try {
+        if (opportunities.length === 0) {
+          console.log('OpportunitiesModule: Initializing sample data...');
+          await OpportunityService.initializeSampleData();
+          const stored = await OpportunityService.getAllOpportunities();
+          console.log('OpportunitiesModule: Setting opportunities:', {
+            type: typeof stored,
+            isArray: Array.isArray(stored),
+            length: Array.isArray(stored) ? stored.length : 'N/A'
+          });
+          if (Array.isArray(stored)) {
+            setOpportunities(stored);
+          } else {
+            console.error('OpportunitiesModule: Invalid data from service');
+            setOpportunities([]);
+          }
+        }
+      } catch (error) {
+        console.error('OpportunitiesModule: Failed to initialize data:', error);
+        toast.error('Failed to load opportunities data');
+        setOpportunities([]);
+      }
+    };
+
+    initializeData();
   }, [opportunities.length, setOpportunities]);
 
   const handleViewChange = (view: string, data?: any) => {

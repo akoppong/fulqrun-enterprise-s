@@ -119,27 +119,65 @@ export function OpportunitiesDashboard({ user, onViewChange }: OpportunitiesDash
       console.log('OpportunitiesDashboard: Processing opportunities data:', {
         type: typeof opportunities,
         isArray: Array.isArray(opportunities),
-        value: opportunities
+        length: Array.isArray(opportunities) ? opportunities.length : 'N/A',
+        keys: typeof opportunities === 'object' && opportunities !== null ? Object.keys(opportunities) : 'N/A'
       });
       
+      // Ensure we always return an array, no matter what
       if (Array.isArray(opportunities)) {
-        const filtered = opportunities.filter(opp => opp && typeof opp === 'object' && opp.id);
+        const filtered = opportunities.filter(opp => {
+          try {
+            return opp && typeof opp === 'object' && (opp.id || opp._id);
+          } catch (error) {
+            console.warn('Error filtering opportunity:', error);
+            return false;
+          }
+        });
         console.log('OpportunitiesDashboard: Filtered opportunities:', filtered.length, 'valid items from', opportunities.length, 'total');
         return filtered;
-      } else if (opportunities && typeof opportunities === 'object') {
-        // Handle case where opportunities might be an object with a data property
+      } 
+      
+      // Handle various object structures that might contain array data
+      if (opportunities && typeof opportunities === 'object') {
+        // Check for data property (common in API responses)
         if (Array.isArray(opportunities.data)) {
-          const filtered = opportunities.data.filter(opp => opp && typeof opp === 'object' && opp.id);
+          const filtered = opportunities.data.filter(opp => opp && typeof opp === 'object' && (opp.id || opp._id));
           console.log('OpportunitiesDashboard: Extracted from .data property:', filtered.length, 'valid items');
           return filtered;
         }
+        
+        // Check for items property (another common pattern)
+        if (Array.isArray(opportunities.items)) {
+          const filtered = opportunities.items.filter(opp => opp && typeof opp === 'object' && (opp.id || opp._id));
+          console.log('OpportunitiesDashboard: Extracted from .items property:', filtered.length, 'valid items');
+          return filtered;
+        }
+        
+        // Check for results property
+        if (Array.isArray(opportunities.results)) {
+          const filtered = opportunities.results.filter(opp => opp && typeof opp === 'object' && (opp.id || opp._id));
+          console.log('OpportunitiesDashboard: Extracted from .results property:', filtered.length, 'valid items');
+          return filtered;
+        }
+        
         // Handle case where it's a single opportunity object
-        if (opportunities.id) {
+        if (opportunities.id || opportunities._id) {
           console.log('OpportunitiesDashboard: Converting single opportunity to array');
           return [opportunities];
         }
       }
-      console.warn('OpportunitiesDashboard: Invalid opportunities data type:', typeof opportunities, opportunities);
+      
+      // Handle null or undefined cases
+      if (opportunities === null || opportunities === undefined) {
+        console.log('OpportunitiesDashboard: Null/undefined opportunities, returning empty array');
+        return [];
+      }
+      
+      console.warn('OpportunitiesDashboard: Unhandled opportunities data structure:', {
+        type: typeof opportunities,
+        value: opportunities,
+        constructor: opportunities?.constructor?.name
+      });
       return [];
     } catch (error) {
       console.error('OpportunitiesDashboard: Error processing opportunities data:', error);
@@ -152,104 +190,207 @@ export function OpportunitiesDashboard({ user, onViewChange }: OpportunitiesDash
   const safeAllUsers = Array.isArray(allUsers) ? allUsers : [];
 
   // Calculate filtered opportunities based on user role and filters
-  const filteredOpportunities = safeOpportunities.filter(opp => {
+  const filteredOpportunities = (() => {
     try {
-      // Ensure opportunity has required fields
-      if (!opp || typeof opp !== 'object') return false;
-      
-      // Role-based filtering
-      if (user.role === 'rep' && opp.ownerId !== user.id) return false;
-      if (user.role === 'manager' && opp.ownerId !== user.id) {
-        // Check if opportunity owner reports to this manager
-        const owner = safeAllUsers.find(u => u.id === opp.ownerId);
-        if (!owner || owner.managerId !== user.id) return false;
+      // Ensure we start with a valid array
+      if (!Array.isArray(safeOpportunities)) {
+        console.error('safeOpportunities is not an array:', typeof safeOpportunities);
+        return [];
       }
-      
-      // Filter by region
-      if (selectedRegion !== 'all') {
-        const owner = safeAllUsers.find(u => u.id === opp.ownerId);
-        if (!owner || owner.territory !== selectedRegion) return false;
-      }
-      
-      // Filter by owner
-      if (selectedOwner !== 'all' && opp.ownerId !== selectedOwner) return false;
-      
-      // Filter by stage
-      if (selectedStage !== 'all' && opp.stage !== selectedStage) return false;
-      
-      return true;
+
+      return safeOpportunities.filter(opp => {
+        try {
+          // Ensure opportunity has required fields
+          if (!opp || typeof opp !== 'object') {
+            console.warn('Invalid opportunity object:', opp);
+            return false;
+          }
+          
+          // Ensure basic required fields exist
+          if (!opp.id && !opp._id) {
+            console.warn('Opportunity missing ID:', opp);
+            return false;
+          }
+          
+          // Role-based filtering with safe defaults
+          const ownerId = opp.ownerId || opp.assignedTo || opp.owner?.id;
+          if (user.role === 'rep' && ownerId !== user.id) return false;
+          
+          if (user.role === 'manager' && ownerId !== user.id) {
+            // Check if opportunity owner reports to this manager
+            const owner = safeAllUsers.find(u => u.id === ownerId);
+            if (!owner || owner.managerId !== user.id) return false;
+          }
+          
+          // Filter by region with safe access
+          if (selectedRegion !== 'all') {
+            const owner = safeAllUsers.find(u => u.id === ownerId);
+            if (!owner || owner.territory !== selectedRegion) return false;
+          }
+          
+          // Filter by owner
+          if (selectedOwner !== 'all' && ownerId !== selectedOwner) return false;
+          
+          // Filter by stage
+          if (selectedStage !== 'all' && opp.stage !== selectedStage) return false;
+          
+          return true;
+        } catch (error) {
+          console.warn('Error filtering opportunity:', opp?.id || opp?._id, error);
+          return false;
+        }
+      });
     } catch (error) {
-      console.warn('Error filtering opportunity:', opp?.id, error);
-      return false;
+      console.error('Error in filteredOpportunities calculation:', error);
+      return [];
     }
-  });
+  })();
 
-  // Calculate metrics
-  const metrics = {
-    totalValue: filteredOpportunities.reduce((sum, opp) => sum + (opp.value || 0), 0),
-    totalOpportunities: filteredOpportunities.length,
-    averageDealSize: filteredOpportunities.length > 0 
-      ? filteredOpportunities.reduce((sum, opp) => sum + (opp.value || 0), 0) / filteredOpportunities.length 
-      : 0,
-    weightedValue: filteredOpportunities.reduce((sum, opp) => sum + ((opp.value || 0) * (opp.probability || 0) / 100), 0),
-    topOpportunities: filteredOpportunities
-      .sort((a, b) => (b.value || 0) - (a.value || 0))
-      .slice(0, 5),
-    upcomingCloses: filteredOpportunities
-      .filter(opp => {
-        try {
-          if (!opp.expectedCloseDate) return false;
-          const closeDate = new Date(opp.expectedCloseDate);
-          const now = new Date();
-          const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-          return closeDate <= thirtyDaysFromNow && closeDate >= now;
-        } catch (error) {
-          console.warn('Error parsing close date for opportunity:', opp.id, error);
-          return false;
-        }
-      })
-      .sort((a, b) => {
-        try {
-          return new Date(a.expectedCloseDate).getTime() - new Date(b.expectedCloseDate).getTime();
-        } catch (error) {
-          return 0;
-        }
-      })
-      .slice(0, 5),
-    staleOpportunities: filteredOpportunities
-      .filter(opp => {
-        try {
-          if (!opp.updatedAt) return false;
-          const lastUpdate = new Date(opp.updatedAt);
-          const now = new Date();
-          const daysDiff = (now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24);
-          return daysDiff > 14;
-        } catch (error) {
-          console.warn('Error parsing update date for opportunity:', opp.id, error);
-          return false;
-        }
-      })
-      .slice(0, 5)
-  };
+  // Calculate metrics with safe array handling
+  const metrics = (() => {
+    try {
+      // Ensure we have a valid array for metrics calculation
+      const validOpportunities = Array.isArray(filteredOpportunities) ? filteredOpportunities : [];
+      
+      if (validOpportunities.length === 0) {
+        return {
+          totalValue: 0,
+          totalOpportunities: 0,
+          averageDealSize: 0,
+          weightedValue: 0,
+          topOpportunities: [],
+          upcomingCloses: [],
+          staleOpportunities: []
+        };
+      }
 
-  // Prepare chart data
-  const stageData = filteredOpportunities.reduce((acc, opp) => {
-    const stage = opp.stage;
-    if (!acc[stage]) {
-      acc[stage] = { stage, count: 0, value: 0 };
+      const totalValue = validOpportunities.reduce((sum, opp) => {
+        const value = Number(opp.value) || 0;
+        return sum + value;
+      }, 0);
+
+      const weightedValue = validOpportunities.reduce((sum, opp) => {
+        const value = Number(opp.value) || 0;
+        const probability = Number(opp.probability) || 0;
+        return sum + (value * probability / 100);
+      }, 0);
+
+      const topOpportunities = [...validOpportunities]
+        .sort((a, b) => (Number(b.value) || 0) - (Number(a.value) || 0))
+        .slice(0, 5);
+
+      const upcomingCloses = validOpportunities
+        .filter(opp => {
+          try {
+            if (!opp.expectedCloseDate) return false;
+            const closeDate = new Date(opp.expectedCloseDate);
+            const now = new Date();
+            const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+            return closeDate <= thirtyDaysFromNow && closeDate >= now;
+          } catch (error) {
+            console.warn('Error parsing close date for opportunity:', opp.id, error);
+            return false;
+          }
+        })
+        .sort((a, b) => {
+          try {
+            return new Date(a.expectedCloseDate).getTime() - new Date(b.expectedCloseDate).getTime();
+          } catch (error) {
+            return 0;
+          }
+        })
+        .slice(0, 5);
+
+      const staleOpportunities = validOpportunities
+        .filter(opp => {
+          try {
+            if (!opp.updatedAt) return false;
+            const lastUpdate = new Date(opp.updatedAt);
+            const now = new Date();
+            const daysDiff = (now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24);
+            return daysDiff > 14;
+          } catch (error) {
+            console.warn('Error parsing update date for opportunity:', opp.id, error);
+            return false;
+          }
+        })
+        .slice(0, 5);
+
+      return {
+        totalValue,
+        totalOpportunities: validOpportunities.length,
+        averageDealSize: validOpportunities.length > 0 ? totalValue / validOpportunities.length : 0,
+        weightedValue,
+        topOpportunities,
+        upcomingCloses,
+        staleOpportunities
+      };
+    } catch (error) {
+      console.error('Error calculating metrics:', error);
+      return {
+        totalValue: 0,
+        totalOpportunities: 0,
+        averageDealSize: 0,
+        weightedValue: 0,
+        topOpportunities: [],
+        upcomingCloses: [],
+        staleOpportunities: []
+      };
     }
-    acc[stage].count++;
-    acc[stage].value += opp.value;
-    return acc;
-  }, {} as Record<string, { stage: string; count: number; value: number }>);
+  })();
+
+  // Prepare chart data with safe array handling
+  const stageData = (() => {
+    try {
+      const validOpportunities = Array.isArray(filteredOpportunities) ? filteredOpportunities : [];
+      
+      return validOpportunities.reduce((acc, opp) => {
+        try {
+          const stage = opp.stage || 'unknown';
+          if (!acc[stage]) {
+            acc[stage] = { stage, count: 0, value: 0 };
+          }
+          acc[stage].count++;
+          acc[stage].value += Number(opp.value) || 0;
+          return acc;
+        } catch (error) {
+          console.warn('Error processing opportunity for stage data:', opp?.id, error);
+          return acc;
+        }
+      }, {} as Record<string, { stage: string; count: number; value: number }>);
+    } catch (error) {
+      console.error('Error preparing stage data:', error);
+      return {};
+    }
+  })();
 
   const stageChartData = Object.values(stageData);
 
-  const meddpiccData = filteredOpportunities.map(opp => ({
-    name: (opp.title || 'Untitled').substring(0, 20) + '...',
-    score: opp.meddpicc ? getMEDDPICCScore(opp.meddpicc) : 0,
-    value: opp.value || 0
-  }));
+  const meddpiccData = (() => {
+    try {
+      const validOpportunities = Array.isArray(filteredOpportunities) ? filteredOpportunities : [];
+      
+      return validOpportunities.map(opp => {
+        try {
+          return {
+            name: ((opp.title || opp.name || 'Untitled').substring(0, 20)) + '...',
+            score: opp.meddpicc ? getMEDDPICCScore(opp.meddpicc) : 0,
+            value: Number(opp.value) || 0
+          };
+        } catch (error) {
+          console.warn('Error processing opportunity for MEDDPICC data:', opp?.id, error);
+          return {
+            name: 'Error',
+            score: 0,
+            value: 0
+          };
+        }
+      }).filter(item => item.score > 0 || item.value > 0); // Only include meaningful data
+    } catch (error) {
+      console.error('Error preparing MEDDPICC data:', error);
+      return [];
+    }
+  })();
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
