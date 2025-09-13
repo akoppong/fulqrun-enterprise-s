@@ -38,6 +38,7 @@ import { PharmaceuticalKPITemplates } from './PharmaceuticalKPITemplates';
 import { RoleTestingDashboard } from './RoleTestingDashboard';
 import { RoleShowcase } from './RoleShowcase';
 import { MEDDPICCModule, MEDDPICCAnalyticsDashboard, MEDDPICCAdminConfig, MEDDPICCLauncher, MEDDPICCAnalyticsTest } from '@/components/meddpicc';
+import { RelationshipMapper } from '../relationships/RelationshipMapper';
 
 
 interface DashboardProps {
@@ -48,7 +49,7 @@ interface DashboardProps {
   initialView?: string;
 }
 
-export type DashboardView = 'dashboard' | 'role-testing' | 'opportunities-dashboard-test' | 'opportunity-creation-test' | 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'advanced-analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'kpi-gallery' | 'kpi-manager' | 'kpi-layout' | 'pharma-kpi-templates' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'meddpicc' | 'meddpicc-analytics' | 'meddpicc-admin' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit' | 'administration' | 'smart-contact-demo' | 'smart-form';
+export type DashboardView = 'dashboard' | 'role-testing' | 'opportunities-dashboard-test' | 'opportunity-creation-test' | 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'advanced-analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'kpi-gallery' | 'kpi-manager' | 'kpi-layout' | 'pharma-kpi-templates' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'relationship-mapping' | 'meddpicc' | 'meddpicc-analytics' | 'meddpicc-admin' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit' | 'administration' | 'smart-contact-demo' | 'smart-form';
 
 export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialView }: DashboardProps) {
   // All hooks must be called before any early returns
@@ -282,6 +283,10 @@ export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialV
         );
       case 'segments':
         return <CustomerSegmentsList />;
+      
+      // Relationship Mapping
+      case 'relationship-mapping':
+        return <RelationshipMapper />;
       
       // MEDDPICC Module
       case 'meddpicc':

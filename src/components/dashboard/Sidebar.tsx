@@ -43,7 +43,8 @@ import {
   Crown,
   ArrowsOutCardinal,
   Eye,
-  CheckCircle
+  CheckCircle,
+  Network
 } from '@phosphor-icons/react';
 
 interface SidebarProps {
@@ -164,6 +165,15 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           icon: Building2,
           description: 'Strategic segmentation',
           permissionId: 'segments',
+          action: 'read',
+          isNew: true
+        },
+        {
+          id: 'relationship-mapping',
+          label: 'Relationship Mapping',
+          icon: Network,
+          description: 'Company-contact network visualization',
+          permissionId: 'contacts',
           action: 'read',
           isNew: true
         },
