@@ -9,6 +9,8 @@ import { NewOpportunityForm } from './NewOpportunityForm';
 import { EnhancedOpportunityFormDemo } from './EnhancedOpportunityFormDemo';
 import { EnhancedOpportunityCreationTest } from './EnhancedOpportunityCreationTest';
 import { DashboardTestRunner } from './DashboardTestRunner';
+import SmartCompanyContactDemo from './SmartCompanyContactDemo';
+import SmartOpportunityForm from './SmartOpportunityForm';
 import { EnhancedErrorBoundary } from '@/components/ui/enhanced-error-boundary';
 import { toast } from 'sonner';
 
@@ -18,7 +20,7 @@ interface OpportunitiesModuleProps {
   initialData?: any;
 }
 
-type OpportunityView = 'dashboard' | 'list' | 'detail' | 'create' | 'edit' | 'dashboard-test' | 'form-demo' | 'creation-test';
+type OpportunityView = 'dashboard' | 'list' | 'detail' | 'create' | 'edit' | 'dashboard-test' | 'form-demo' | 'creation-test' | 'smart-contact-demo' | 'smart-form';
 
 export function OpportunitiesModule({ user, initialView = 'dashboard', initialData }: OpportunitiesModuleProps) {
   const [opportunities, setOpportunities] = useKV<Opportunity[]>('opportunities', []);
@@ -195,6 +197,29 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
         return (
           <EnhancedErrorBoundary context="EnhancedOpportunityCreationTest">
             <EnhancedOpportunityCreationTest />
+          </EnhancedErrorBoundary>
+        );
+      
+      case 'smart-contact-demo':
+        return (
+          <EnhancedErrorBoundary context="SmartCompanyContactDemo">
+            <SmartCompanyContactDemo />
+          </EnhancedErrorBoundary>
+        );
+      
+      case 'smart-form':
+        return (
+          <EnhancedErrorBoundary context="SmartOpportunityForm">
+            <div className="p-6">
+              <SmartOpportunityForm
+                isOpen={true}
+                onClose={() => setCurrentView('dashboard')}
+                onSave={(opportunity) => {
+                  toast.success('Smart opportunity created successfully!');
+                  setCurrentView('dashboard');
+                }}
+              />
+            </div>
           </EnhancedErrorBoundary>
         );
       

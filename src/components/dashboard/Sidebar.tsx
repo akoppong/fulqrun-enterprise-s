@@ -150,6 +150,15 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           action: 'read'
         },
         {
+          id: 'smart-contact-demo',
+          label: 'Smart Relationship Manager',
+          icon: Users,
+          description: 'Intelligent company-contact relationships',
+          permissionId: 'contacts',
+          action: 'read',
+          isNew: true
+        },
+        {
           id: 'segments',
           label: 'Customer Segments',
           icon: Building2,
