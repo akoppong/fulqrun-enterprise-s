@@ -39,6 +39,10 @@ import {
 import { formatCurrency, getMEDDPICCScore, getStageProgress } from '@/lib/crm-utils';
 import { format, differenceInDays } from 'date-fns';
 
+// MEDDPICC Integration
+import { MEDDPICCAssessment, MEDDPICCSummary, MEDDPICCService } from '@/components/meddpicc';
+import { MEDDPICCAssessment as MEDDPICCAssessmentType } from '@/types/meddpicc';
+
 interface ResponsiveOpportunityDetailProps {
   opportunity: Opportunity;
   isOpen: boolean;
@@ -57,12 +61,16 @@ export function ResponsiveOpportunityDetail({
   const [companies] = useKV<Company[]>('companies', []);
   const [contacts] = useKV<Contact[]>('contacts', []);
   const [activeTab, setActiveTab] = useState('overview');
+  const [meddpiccAssessment, setMeddpiccAssessment] = useState<MEDDPICCAssessmentType | null>(null);
+  const [showMEDDPICCModal, setShowMEDDPICCModal] = useState(false);
 
-  // Validate opportunity data
-  if (!opportunity) {
-    console.error('ResponsiveOpportunityDetail: No opportunity provided');
-    return null;
-  }
+  // Load MEDDPICC assessment
+  useEffect(() => {
+    if (opportunity?.id) {
+      const assessment = MEDDPICCService.getLatestAssessment(opportunity.id);
+      setMeddpiccAssessment(assessment);
+    }
+  }, [opportunity?.id]);
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -93,36 +101,38 @@ export function ResponsiveOpportunityDetail({
     if (isOpen) {
       setActiveTab('overview');
     }
-  }, [opportunity.id, isOpen]);
+  }, [opportunity?.id, isOpen]);
 
-  // Get related data with memoization
+  // Get related data with memoization (move before validation)
   const company = useMemo(() => 
-    companies.find(c => c.id === opportunity.companyId), 
-    [companies, opportunity.companyId]
+    opportunity ? companies.find(c => c.id === opportunity.companyId) : null, 
+    [companies, opportunity?.companyId]
   );
   
   const contact = useMemo(() => 
-    contacts.find(c => c.id === opportunity.contactId), 
-    [contacts, opportunity.contactId]
+    opportunity ? contacts.find(c => c.id === opportunity.contactId) : null, 
+    [contacts, opportunity?.contactId]
   );
   
   const stageConfig = useMemo(() => 
-    PEAK_STAGES.find(s => s.value === opportunity.stage) || PEAK_STAGES[0], 
-    [opportunity.stage]
+    opportunity ? PEAK_STAGES.find(s => s.value === opportunity.stage) || PEAK_STAGES[0] : PEAK_STAGES[0], 
+    [opportunity?.stage]
   );
   
   const meddpicScore = useMemo(() => 
-    getMEDDPICCScore(opportunity.meddpicc), 
-    [opportunity.meddpicc]
+    opportunity ? getMEDDPICCScore(opportunity.meddpicc) : 0, 
+    [opportunity?.meddpicc]
   );
   
   const stageProgress = useMemo(() => 
-    getStageProgress(opportunity.stage), 
-    [opportunity.stage]
+    opportunity ? getStageProgress(opportunity.stage) : 0, 
+    [opportunity?.stage]
   );
   
   // Calculate days in various states with memoization
   const timeCalculations = useMemo(() => {
+    if (!opportunity) return { daysInStage: 0, daysInPipeline: 0, daysToClose: 0 };
+    
     const now = new Date();
     const createdAt = new Date(opportunity.createdAt);
     const updatedAt = new Date(opportunity.updatedAt);
@@ -133,7 +143,18 @@ export function ResponsiveOpportunityDetail({
       daysInPipeline: differenceInDays(now, createdAt),
       daysToClose: differenceInDays(expectedCloseDate, now)
     };
-  }, [opportunity.createdAt, opportunity.updatedAt, opportunity.expectedCloseDate]);
+  }, [opportunity?.createdAt, opportunity?.updatedAt, opportunity?.expectedCloseDate]);
+
+  const priorityBadge = useMemo(() => 
+    opportunity ? getPriorityBadge(opportunity.priority) : { variant: 'secondary' as const, className: 'bg-gray-100 text-gray-800 border-gray-300' }, 
+    [opportunity?.priority]
+  );
+
+  // Validate opportunity data after all hooks
+  if (!opportunity) {
+    console.error('ResponsiveOpportunityDetail: No opportunity provided');
+    return null;
+  }
   
   const { daysInStage, daysInPipeline, daysToClose } = timeCalculations;
 
@@ -151,11 +172,6 @@ export function ResponsiveOpportunityDetail({
         return { variant: 'secondary' as const, className: 'bg-gray-100 text-gray-800 border-gray-300' };
     }
   };
-
-  const priorityBadge = useMemo(() => 
-    getPriorityBadge(opportunity.priority), 
-    [opportunity.priority]
-  );
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -572,163 +588,37 @@ export function ResponsiveOpportunityDetail({
                   </TabsContent>
 
                   <TabsContent value="meddpicc" className="mt-0 space-y-4">
-                    <Card>
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-base font-semibold flex items-center gap-2">
-                            <ChartLineUp size={16} className="text-purple-600" />
-                            MEDDPICC Qualification
-                          </CardTitle>
-                          <div className={`text-lg font-bold px-3 py-1 rounded ${
-                            meddpicScore < 50 ? 'text-red-600 bg-red-50' : 
-                            meddpicScore < 80 ? 'text-yellow-600 bg-yellow-50' : 
-                            'text-green-600 bg-green-50'
-                          }`}>{Math.round(meddpicScore)}%</div>
-                        </div>
-                        <Progress value={meddpicScore} className="h-2 mt-3" />
-                      </CardHeader>
-                      
-                      <CardContent className="space-y-3">
-                        {/* MEDDPICC Components */}
-                        {[
-                          { 
-                            key: 'metrics', 
-                            title: 'Metrics', 
-                            description: 'What economic impact can we measure and quantify?',
-                            icon: ChartBar,
-                            color: 'blue'
-                          },
-                          { 
-                            key: 'economicBuyer', 
-                            title: 'Economic Buyer', 
-                            description: 'Who has the economic authority to make this purchase decision?',
-                            icon: User,
-                            color: 'emerald'
-                          },
-                          { 
-                            key: 'decisionCriteria', 
-                            title: 'Decision Criteria', 
-                            description: 'What specific criteria will they use to evaluate solutions?',
-                            icon: FileText,
-                            color: 'purple'
-                          },
-                          { 
-                            key: 'decisionProcess', 
-                            title: 'Decision Process', 
-                            description: 'How will they make the final decision? What\'s the process?',
-                            icon: Target,
-                            color: 'indigo'
-                          },
-                          { 
-                            key: 'paperProcess', 
-                            title: 'Paper Process', 
-                            description: 'What\'s the procurement and approval process they follow?',
-                            icon: FileText,
-                            color: 'rose'
-                          },
-                          { 
-                            key: 'implicatePain', 
-                            title: 'Implicate Pain', 
-                            description: 'What specific pain points are we addressing for them?',
-                            icon: Warning,
-                            color: 'amber'
-                          },
-                          { 
-                            key: 'champion', 
-                            title: 'Champion', 
-                            description: 'Who is actively selling our solution internally for us?',
-                            icon: Trophy,
-                            color: 'green'
-                          }
-                        ].map((component) => {
-                          const IconComponent = component.icon;
-                          const hasContent = opportunity.meddpicc?.[component.key as keyof MEDDPICC];
-                          
-                          return (
-                            <Card key={component.key} className="border-border/50">
-                              <CardContent className="p-3">
-                                <div className="flex items-start gap-2">
-                                  <div className="p-2 bg-muted/50 rounded shrink-0">
-                                    <IconComponent size={14} />
-                                  </div>
-                                  <div className="flex-1 space-y-1 min-w-0">
-                                    <div className="flex items-center justify-between">
-                                      <h3 className="text-sm font-semibold">{component.title}</h3>
-                                      {hasContent ? (
-                                        <CheckCircle size={14} className="text-green-500 shrink-0" />
-                                      ) : (
-                                        <Warning size={14} className="text-amber-500 shrink-0" />
-                                      )}
-                                    </div>
-                                    <div className="text-xs text-muted-foreground">
-                                      {component.description}
-                                    </div>
-                                    <div className="p-2 bg-muted/50 rounded">
-                                      <p className="text-xs font-medium">
-                                        {hasContent ? String(hasContent) : 'Not yet defined'}
-                                      </p>
-                                    </div>
-                                  </div>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          );
-                        })}
-
-                        {/* Qualification Health Summary */}
-                        <Card className={`border ${
-                          meddpicScore >= 80 ? 'border-green-200 bg-green-50/30' :
-                          meddpicScore >= 50 ? 'border-yellow-200 bg-yellow-50/30' :
-                          'border-red-200 bg-red-50/30'
-                        }`}>
-                          <CardContent className="p-3">
-                            <div className="flex items-start gap-3">
-                              <div className={`p-2 rounded ${
-                                meddpicScore >= 80 ? 'bg-green-100' :
-                                meddpicScore >= 50 ? 'bg-yellow-100' :
-                                'bg-red-100'
-                              }`}>
-                                {meddpicScore >= 80 ? 
-                                  <CheckCircle size={16} className="text-green-600" /> :
-                                  <Warning size={16} className={meddpicScore >= 50 ? 'text-yellow-600' : 'text-red-600'} />
-                                }
-                              </div>
-                              <div className="flex-1 space-y-1">
-                                <h3 className="text-sm font-semibold">
-                                  Qualification Health Assessment
-                                </h3>
-                                <div className="space-y-1">
-                                  {meddpicScore >= 80 && (
-                                    <div className="p-2 bg-green-100/50 rounded">
-                                      <div className="text-xs font-medium text-green-800 mb-1">🎯 Excellent Qualification</div>
-                                      <p className="text-xs text-green-700">
-                                        Well-qualified across all MEDDPICC criteria. High probability of successful close.
-                                      </p>
-                                    </div>
-                                  )}
-                                  {meddpicScore >= 50 && meddpicScore < 80 && (
-                                    <div className="p-2 bg-yellow-100/50 rounded">
-                                      <div className="text-xs font-medium text-yellow-800 mb-1">⚠️ Good - Areas for Improvement</div>
-                                      <p className="text-xs text-yellow-700">
-                                        Shows promise but has gaps. Focus on completing missing MEDDPICC elements.
-                                      </p>
-                                    </div>
-                                  )}
-                                  {meddpicScore < 50 && (
-                                    <div className="p-2 bg-red-100/50 rounded">
-                                      <div className="text-xs font-medium text-red-800 mb-1">🚨 Poor - Action Required</div>
-                                      <p className="text-xs text-red-700">
-                                        Significant qualification gaps. Prioritize discovery activities.
-                                      </p>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </CardContent>
-                    </Card>
+                    {/* MEDDPICC Summary */}
+                    <MEDDPICCSummary 
+                      assessment={meddpiccAssessment}
+                      onOpenAssessment={() => setShowMEDDPICCModal(true)}
+                      showActions={true}
+                    />
+                    
+                    {/* MEDDPICC Assessment Modal */}
+                    <Dialog open={showMEDDPICCModal} onOpenChange={setShowMEDDPICCModal}>
+                      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>MEDDPICC Assessment</DialogTitle>
+                          <DialogDescription>
+                            Complete B2B sales qualification for {opportunity.name}
+                          </DialogDescription>
+                        </DialogHeader>
+                        <MEDDPICCAssessment
+                          opportunityId={opportunity.id}
+                          userId="current-user" // TODO: Get from auth context
+                          onAssessmentComplete={(assessment) => {
+                            setMeddpiccAssessment(assessment);
+                            setShowMEDDPICCModal(false);
+                          }}
+                          onSave={() => {
+                            // Refresh assessment data
+                            const latestAssessment = MEDDPICCService.getLatestAssessment(opportunity.id);
+                            setMeddpiccAssessment(latestAssessment);
+                          }}
+                        />
+                      </DialogContent>
+                    </Dialog>
                   </TabsContent>
 
                   <TabsContent value="contact" className="mt-0 space-y-4">
