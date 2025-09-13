@@ -434,6 +434,16 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           isNew: true
         },
         {
+          id: 'opportunity-creation-test',
+          label: 'Enhanced Creation Test',
+          icon: CheckCircle,
+          description: 'Test enhanced opportunity creation with comprehensive validation',
+          permissionId: 'opportunities',
+          action: 'create',
+          isNew: true,
+          isBeta: true
+        },
+        {
           id: 'autosave-interactive',
           label: 'Interactive Demo',
           icon: MagicWand,
