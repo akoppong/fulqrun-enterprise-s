@@ -91,8 +91,8 @@ export function FinancialAlerts({ opportunities }: FinancialAlertsProps) {
     try {
       const now = Date.now();
       
-      // Only check for alerts every 2 minutes to avoid KV storage overload
-      if (now - lastAlertCheck < 120000) return;
+      // Only check for alerts every 5 minutes to avoid KV storage overload
+      if (now - lastAlertCheck < 300000) return;
       
       // Safely calculate totals with fallbacks
       const validOpportunities = opportunities.filter(opp => 
@@ -103,7 +103,8 @@ export function FinancialAlerts({ opportunities }: FinancialAlertsProps) {
         try {
           await setLastAlertCheck(now);
         } catch (error) {
-          console.warn('Failed to update last alert check:', error);
+          // Silently handle KV storage errors - don't spam console
+          return;
         }
         return;
       }
@@ -194,11 +195,11 @@ export function FinancialAlerts({ opportunities }: FinancialAlertsProps) {
                 duration: 4000 // Reduced duration
               });
             } catch (toastError) {
-              console.warn('Error showing toast notification:', toastError);
+              // Silently handle toast errors
             }
           });
         } catch (alertError) {
-          console.warn('Failed to save new alerts:', alertError);
+          // Silently handle KV storage errors for alerts
         }
       }
       
@@ -206,7 +207,7 @@ export function FinancialAlerts({ opportunities }: FinancialAlertsProps) {
       try {
         await setLastAlertCheck(now);
       } catch (error) {
-        console.warn('Failed to update last check time:', error);
+        // Silently handle KV storage errors for lastAlertCheck
       }
       
     } catch (error) {
@@ -215,7 +216,7 @@ export function FinancialAlerts({ opportunities }: FinancialAlertsProps) {
       try {
         await setLastAlertCheck(Date.now());
       } catch (updateError) {
-        console.warn('Failed to update last check time after error:', updateError);
+        // Silently handle KV storage errors
       }
     }
   }, [opportunities, alerts, lastAlertCheck, setAlerts, setLastAlertCheck]);
@@ -225,10 +226,10 @@ export function FinancialAlerts({ opportunities }: FinancialAlertsProps) {
     if (!opportunities || opportunities.length === 0) return;
     
     // Initial check after a longer delay to prevent startup KV conflicts
-    const initialTimeout = setTimeout(checkForAlerts, 10000);
+    const initialTimeout = setTimeout(checkForAlerts, 30000);
     
-    // Set up interval for ongoing checks - even less frequent to prevent KV overload
-    const interval = setInterval(checkForAlerts, 300000); // Check every 5 minutes
+    // Set up interval for ongoing checks - reduced frequency to prevent KV overload
+    const interval = setInterval(checkForAlerts, 900000); // Check every 15 minutes
     
     return () => {
       clearTimeout(initialTimeout);

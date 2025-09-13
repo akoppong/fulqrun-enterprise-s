@@ -108,12 +108,12 @@ export function testClassNameUtils(): boolean {
   }
 }
 
-// Auto-run tests in development
-if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
-  // Run tests after DOM is ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', testClassNameUtils);
-  } else {
-    testClassNameUtils();
-  }
-}
+// Auto-run tests disabled to prevent console spam
+// if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
+//   // Run tests after DOM is ready
+//   if (document.readyState === 'loading') {
+//     document.addEventListener('DOMContentLoaded', testClassNameUtils);
+//   } else {
+//     testClassNameUtils();
+//   }
+// }

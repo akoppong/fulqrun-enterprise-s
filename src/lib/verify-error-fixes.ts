@@ -184,9 +184,9 @@ export function verifyErrorFixes(): boolean {
   return allFixesWorking;
 }
 
-// Auto-run verification in development
-if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
-  setTimeout(() => {
-    verifyErrorFixes();
-  }, 1000); // Run after components are loaded
-}
+// Auto-run verification disabled to prevent console spam
+// if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
+//   setTimeout(() => {
+//     verifyErrorFixes();
+//   }, 1000); // Run after components are loaded
+// }

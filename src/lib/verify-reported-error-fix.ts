@@ -52,8 +52,8 @@ export function verifyReportedErrorFix(): void {
   }
 }
 
-// Run this verification immediately
-if (typeof window !== 'undefined') {
-  // Delay slightly to ensure all modules are loaded
-  setTimeout(verifyReportedErrorFix, 500);
-}
+// Auto-run verification disabled to prevent console spam
+// if (typeof window !== 'undefined') {
+//   // Delay slightly to ensure all modules are loaded
+//   setTimeout(verifyReportedErrorFix, 500);
+// }

@@ -32,10 +32,10 @@ export function testPerformanceMonitor(): boolean {
   }
 }
 
-// Auto-run test when module is loaded
-if (typeof window !== 'undefined') {
-  // Delay to ensure DOM is ready
-  setTimeout(() => {
-    testPerformanceMonitor();
-  }, 1000);
-}
+// Auto-run test disabled to prevent console spam
+// if (typeof window !== 'undefined') {
+//   // Delay to ensure DOM is ready
+//   setTimeout(() => {
+//     testPerformanceMonitor();
+//   }, 1000);
+// }

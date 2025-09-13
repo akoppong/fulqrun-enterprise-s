@@ -606,9 +606,6 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
 
   const selectedCompany = companies.find(company => company.id === formData.companyId);
   const selectedContact = contacts.find(contact => contact.id === formData.contactId);
-  const availableContacts = formData.companyId 
-    ? contacts.filter(contact => contact.companyId === formData.companyId) 
-    : [];
   const shouldShowNoContactsAlert = formData.companyId && availableContacts.length === 0;
 
   // Helper function to get contact display name
@@ -672,7 +669,12 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                           errorText = error.trim();
                         } else if (typeof error === 'object' && error && 'message' in error) {
                           errorText = String(error.message).trim();
+                        } else {
+                          errorText = 'Validation error';
                         }
+                        
+                        // Only render if we have valid error text
+                        if (!errorText) return null;
                         
                         return (
                           <li key={field} className="text-destructive">
@@ -680,6 +682,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                           </li>
                         );
                       })
+                      .filter(Boolean)
                       .slice(0, 5)}
                   </ul>
                   {(() => {
@@ -1193,6 +1196,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
               onClick={handleSave}
               disabled={isLoading}
               className="min-w-[140px]"
+              type="button"
             >
               {isLoading ? (
                 <>
