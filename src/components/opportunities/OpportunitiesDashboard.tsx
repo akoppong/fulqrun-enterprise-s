@@ -29,7 +29,7 @@ interface OpportunitiesDashboardProps {
 }
 
 export function OpportunitiesDashboard({ user, onViewChange }: OpportunitiesDashboardProps) {
-  const [opportunities, setOpportunities] = useKV<Opportunity[]>('opportunities', []);
+  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [companies, setCompanies] = useKV<Company[]>('companies', []);
   const [contacts, setContacts] = useKV<Contact[]>('contacts', []);
   const [allUsers, setAllUsers] = useKV<User[]>('all-users', []);
@@ -40,19 +40,69 @@ export function OpportunitiesDashboard({ user, onViewChange }: OpportunitiesDash
   const [selectedStage, setSelectedStage] = useState<string>('all');
   const [selectedTimeframe, setSelectedTimeframe] = useState<string>('current-quarter');
 
+  // Function to refresh opportunities data
+  const refreshOpportunities = async () => {
+    try {
+      const fresh = await OpportunityService.getAllOpportunities();
+      console.log('OpportunitiesDashboard: Refreshed opportunities:', {
+        type: typeof fresh,
+        isArray: Array.isArray(fresh),
+        length: Array.isArray(fresh) ? fresh.length : 'N/A'
+      });
+      if (Array.isArray(fresh)) {
+        setOpportunities(fresh);
+      } else {
+        console.error('Refresh returned non-array data:', fresh);
+        setOpportunities([]);
+      }
+    } catch (error) {
+      console.error('Failed to refresh opportunities:', error);
+    }
+  };
+
   // Initialize demo data
   useEffect(() => {
     const initializeData = async () => {
       try {
         setIsLoading(true);
-        if (!Array.isArray(opportunities) || opportunities.length === 0) {
-          await OpportunityService.initializeSampleData();
-          // Trigger re-read from storage
-          const stored = await OpportunityService.getAllOpportunities();
+        
+        console.log('OpportunitiesDashboard: Initializing opportunity data...');
+        
+        // Clear any corrupted data and force fresh initialization
+        try {
+          const currentData = localStorage.getItem('opportunities');
+          if (currentData) {
+            const parsed = JSON.parse(currentData);
+            if (!Array.isArray(parsed)) {
+              console.warn('Clearing corrupted opportunities data:', typeof parsed);
+              localStorage.removeItem('opportunities');
+            }
+          }
+        } catch (error) {
+          console.warn('Clearing corrupted localStorage:', error);
+          localStorage.removeItem('opportunities');
+        }
+        
+        // Always get fresh data from service
+        const stored = await OpportunityService.getAllOpportunities();
+        
+        console.log('OpportunitiesDashboard: Received data from service:', {
+          type: typeof stored,
+          isArray: Array.isArray(stored),
+          length: Array.isArray(stored) ? stored.length : 'N/A',
+          firstItem: Array.isArray(stored) && stored.length > 0 ? stored[0]?.id : null
+        });
+        
+        // Validate and ensure we have an array
+        if (Array.isArray(stored)) {
           setOpportunities(stored);
+          console.log('OpportunitiesDashboard: Successfully set opportunities array with', stored.length, 'items');
+        } else {
+          console.error('OpportunitiesDashboard: Service returned non-array data, setting empty array');
+          setOpportunities([]);
         }
       } catch (error) {
-        console.error('Failed to initialize opportunity data:', error);
+        console.error('OpportunitiesDashboard: Failed to initialize opportunity data:', error);
         // Set empty array as fallback
         setOpportunities([]);
       } finally {
@@ -61,10 +111,42 @@ export function OpportunitiesDashboard({ user, onViewChange }: OpportunitiesDash
     };
     
     initializeData();
-  }, [opportunities, setOpportunities]);
+  }, []); // Remove dependency on opportunities to prevent infinite loops
 
-  // Ensure all data arrays are safe
-  const safeOpportunities = Array.isArray(opportunities) ? opportunities : [];
+  // Ensure all data arrays are safe and handle any non-array values
+  const safeOpportunities = (() => {
+    try {
+      console.log('OpportunitiesDashboard: Processing opportunities data:', {
+        type: typeof opportunities,
+        isArray: Array.isArray(opportunities),
+        value: opportunities
+      });
+      
+      if (Array.isArray(opportunities)) {
+        const filtered = opportunities.filter(opp => opp && typeof opp === 'object' && opp.id);
+        console.log('OpportunitiesDashboard: Filtered opportunities:', filtered.length, 'valid items from', opportunities.length, 'total');
+        return filtered;
+      } else if (opportunities && typeof opportunities === 'object') {
+        // Handle case where opportunities might be an object with a data property
+        if (Array.isArray(opportunities.data)) {
+          const filtered = opportunities.data.filter(opp => opp && typeof opp === 'object' && opp.id);
+          console.log('OpportunitiesDashboard: Extracted from .data property:', filtered.length, 'valid items');
+          return filtered;
+        }
+        // Handle case where it's a single opportunity object
+        if (opportunities.id) {
+          console.log('OpportunitiesDashboard: Converting single opportunity to array');
+          return [opportunities];
+        }
+      }
+      console.warn('OpportunitiesDashboard: Invalid opportunities data type:', typeof opportunities, opportunities);
+      return [];
+    } catch (error) {
+      console.error('OpportunitiesDashboard: Error processing opportunities data:', error);
+      return [];
+    }
+  })();
+  
   const safeCompanies = Array.isArray(companies) ? companies : [];
   const safeContacts = Array.isArray(contacts) ? contacts : [];
   const safeAllUsers = Array.isArray(allUsers) ? allUsers : [];
@@ -211,13 +293,25 @@ export function OpportunitiesDashboard({ user, onViewChange }: OpportunitiesDash
           </p>
         </div>
         
-        <Button 
-          onClick={() => onViewChange?.('opportunities-list')}
-          className="w-fit"
-        >
-          <GridFour className="w-4 h-4 mr-2" />
-          View All Opportunities
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={() => onViewChange?.('opportunities-list')}
+            className="w-fit"
+          >
+            <GridFour className="w-4 h-4 mr-2" />
+            View All Opportunities
+          </Button>
+          
+          <Button 
+            onClick={refreshOpportunities}
+            variant="outline"
+            className="w-fit"
+            disabled={isLoading}
+          >
+            <TrendingUp className="w-4 h-4 mr-2" />
+            Refresh Data
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}

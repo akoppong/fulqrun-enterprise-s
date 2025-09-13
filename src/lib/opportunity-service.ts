@@ -139,63 +139,103 @@ export class OpportunityService {
         if (!newStored) return [];
         
         const parsed = safeJsonParse(newStored, []);
-        const opportunities = Array.isArray(parsed) ? parsed : [];
-        return this.transformAndValidateOpportunities(opportunities);
+        if (!Array.isArray(parsed)) {
+          console.error('Stored opportunities data is not an array:', typeof parsed);
+          return [];
+        }
+        return this.transformAndValidateOpportunities(parsed);
       }
       
       const parsed = safeJsonParse(stored, []);
-      const opportunities = Array.isArray(parsed) ? parsed : [];
-      return this.transformAndValidateOpportunities(opportunities);
+      if (!Array.isArray(parsed)) {
+        console.error('Stored opportunities data is not an array:', typeof parsed);
+        // Clear corrupted data and reinitialize
+        localStorage.removeItem(this.STORAGE_KEY);
+        await this.initializeSampleData();
+        const newStored = localStorage.getItem(this.STORAGE_KEY);
+        if (!newStored) return [];
+        const newParsed = safeJsonParse(newStored, []);
+        return Array.isArray(newParsed) ? this.transformAndValidateOpportunities(newParsed) : [];
+      }
+      return this.transformAndValidateOpportunities(parsed);
     } catch (error) {
       console.error('Error loading opportunities:', error);
       // Clear corrupted data and reinitialize
       localStorage.removeItem(this.STORAGE_KEY);
-      await this.initializeSampleData();
+      try {
+        await this.initializeSampleData();
+        const newStored = localStorage.getItem(this.STORAGE_KEY);
+        if (newStored) {
+          const parsed = safeJsonParse(newStored, []);
+          return Array.isArray(parsed) ? this.transformAndValidateOpportunities(parsed) : [];
+        }
+      } catch (initError) {
+        console.error('Error reinitializing data:', initError);
+      }
       return [];
     }
   }
 
   // Transform and validate opportunities to ensure data consistency
   private static transformAndValidateOpportunities(opportunities: any[]): Opportunity[] {
-    const migrationResult = migrateOpportunityData(opportunities);
-    
-    if (migrationResult.changes.length > 0) {
-      console.log('Data migration applied:', migrationResult.changes);
-    }
-    
-    if (migrationResult.errors.length > 0) {
-      console.error('Data migration errors:', migrationResult.errors);
-    }
-
-    return opportunities.map(opp => {
-      try {
-        // Normalize the opportunity data
-        const normalized = normalizeOpportunity(opp);
-        
-        // Add computed fields for compatibility
-        return {
-          ...normalized,
-          name: normalized.title, // Map title to name for backward compatibility
-          company: this.getCompanyName(normalized.companyId),
-          primaryContact: this.getContactName(normalized.contactId),
-          expectedCloseDate: safeDateConvert(normalized.expectedCloseDate),
-          createdDate: safeDateConvert(normalized.createdAt),
-          industry: normalized.industry || this.getCompanyIndustry(normalized.companyId)
-        };
-      } catch (error) {
-        console.warn('Failed to normalize opportunity:', opp.id, error);
-        // Return original data if normalization fails
-        return {
-          ...opp,
-          name: opp.title || opp.name,
-          company: this.getCompanyName(opp.companyId),
-          primaryContact: this.getContactName(opp.contactId),
-          expectedCloseDate: safeDateConvert(opp.expectedCloseDate),
-          createdDate: safeDateConvert(opp.createdAt),
-          industry: opp.industry || this.getCompanyIndustry(opp.companyId)
-        };
+    try {
+      if (!Array.isArray(opportunities)) {
+        console.error('transformAndValidateOpportunities received non-array:', typeof opportunities);
+        return [];
       }
-    });
+      
+      const migrationResult = migrateOpportunityData(opportunities);
+      
+      if (migrationResult.changes.length > 0) {
+        console.log('Data migration applied:', migrationResult.changes);
+      }
+      
+      if (migrationResult.errors.length > 0) {
+        console.error('Data migration errors:', migrationResult.errors);
+      }
+
+      return opportunities.map(opp => {
+        try {
+          // Ensure we have a valid opportunity object
+          if (!opp || typeof opp !== 'object') {
+            console.warn('Invalid opportunity object:', opp);
+            return null;
+          }
+          
+          // Normalize the opportunity data
+          const normalized = normalizeOpportunity(opp);
+          
+          // Add computed fields for compatibility
+          return {
+            ...normalized,
+            name: normalized.title, // Map title to name for backward compatibility
+            company: this.getCompanyName(normalized.companyId),
+            primaryContact: this.getContactName(normalized.contactId),
+            expectedCloseDate: safeDateConvert(normalized.expectedCloseDate),
+            createdDate: safeDateConvert(normalized.createdAt),
+            industry: normalized.industry || this.getCompanyIndustry(normalized.companyId)
+          };
+        } catch (error) {
+          console.warn('Failed to normalize opportunity:', opp?.id, error);
+          // Return original data if normalization fails
+          if (opp && opp.id) {
+            return {
+              ...opp,
+              name: opp.title || opp.name,
+              company: this.getCompanyName(opp.companyId),
+              primaryContact: this.getContactName(opp.contactId),
+              expectedCloseDate: safeDateConvert(opp.expectedCloseDate),
+              createdDate: safeDateConvert(opp.createdAt),
+              industry: opp.industry || this.getCompanyIndustry(opp.companyId)
+            };
+          }
+          return null;
+        }
+      }).filter((opp): opp is Opportunity => opp !== null);
+    } catch (error) {
+      console.error('Error in transformAndValidateOpportunities:', error);
+      return [];
+    }
   }
 
   // Transform opportunities to match the expected format for the view (legacy method)
@@ -586,9 +626,24 @@ export class OpportunityService {
 
   private static async saveOpportunities(opportunities: Opportunity[]): Promise<void> {
     try {
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(opportunities));
+      if (!Array.isArray(opportunities)) {
+        console.error('Attempted to save non-array opportunities data:', typeof opportunities);
+        throw new Error('Opportunities must be an array');
+      }
+      
+      // Validate each opportunity has required fields
+      const validOpportunities = opportunities.filter(opp => {
+        if (!opp || typeof opp !== 'object' || !opp.id) {
+          console.warn('Filtering out invalid opportunity:', opp);
+          return false;
+        }
+        return true;
+      });
+      
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(validOpportunities));
     } catch (error) {
       console.error('Error saving opportunities:', error);
+      throw error;
     }
   }
 
