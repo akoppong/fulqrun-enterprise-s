@@ -4,6 +4,7 @@
  */
 
 // Main Components
+export { MEDDPICCModule } from './MEDDPICCModule';
 export { MEDDPICCLauncher } from './MEDDPICCLauncher';
 export { MEDDPICCDemo } from './MEDDPICCDemo';
 export { MEDDPICCAssessment } from './MEDDPICCAssessment';

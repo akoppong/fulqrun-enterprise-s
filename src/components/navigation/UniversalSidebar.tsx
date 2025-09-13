@@ -80,6 +80,12 @@ export function UniversalSidebar({
           description: 'Deal management & MEDDPICC'
         },
         {
+          id: 'meddpicc',
+          label: 'MEDDPICC Module',
+          icon: CheckCircle,
+          description: 'B2B qualification methodology'
+        },
+        {
           id: 'contacts',
           label: 'Contacts',
           icon: Users,
