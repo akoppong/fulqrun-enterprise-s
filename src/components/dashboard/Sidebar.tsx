@@ -134,6 +134,15 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           isNew: true
         },
         {
+          id: 'meddpicc-analytics',
+          label: 'MEDDPICC Analytics',
+          icon: Target,
+          description: 'B2B qualification analytics & pipeline insights',
+          permissionId: 'meddpicc',
+          action: 'read',
+          isNew: true
+        },
+        {
           id: 'contacts',
           label: 'Contacts',
           icon: AddressBook,
@@ -157,16 +166,6 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           permissionId: 'segments',
           action: 'read',
           isNew: true
-        },
-        {
-          id: 'meddpicc-analytics',
-          label: 'MEDDPICC Analytics',
-          icon: Target,
-          description: 'B2B qualification analytics',
-          permissionId: 'meddpicc',
-          action: 'read',
-          isNew: true,
-          badge: 'NEW'
         },
         {
           id: 'analytics',
@@ -309,8 +308,7 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           description: 'Industry-specific pharmaceutical B2B templates',
           permissionId: 'personal-kpis',
           action: 'read',
-          isNew: true,
-          badge: 'NEW'
+          isNew: true
         },
         {
           id: 'kpi-layout',
@@ -426,8 +424,7 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           description: 'Configure MEDDPICC questions & scoring',
           permissionId: 'system-config',
           action: 'write',
-          isNew: true,
-          badge: 'NEW'
+          isNew: true
         }
       ]
     },
@@ -437,6 +434,15 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
       icon: TestTube,
       defaultOpen: false,
       items: [
+        {
+          id: 'meddpicc-analytics-test',
+          label: 'MEDDPICC Analytics Test',
+          icon: Target,
+          description: 'Test MEDDPICC analytics functionality with sample data',
+          permissionId: 'meddpicc',
+          action: 'read',
+          isNew: true
+        },
         {
           id: 'full-screen-opportunity-test',
           label: 'Full-Screen Detail Test',

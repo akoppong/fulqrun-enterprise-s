@@ -36,7 +36,7 @@ import { AdvancedKPIAnalytics } from './AdvancedKPIAnalytics';
 import { PharmaceuticalKPITemplates } from './PharmaceuticalKPITemplates';
 import { RoleTestingDashboard } from './RoleTestingDashboard';
 import { RoleShowcase } from './RoleShowcase';
-import { MEDDPICCModule, MEDDPICCAnalyticsDashboard, MEDDPICCAdminConfig, MEDDPICCLauncher } from '@/components/meddpicc';
+import { MEDDPICCModule, MEDDPICCAnalyticsDashboard, MEDDPICCAdminConfig, MEDDPICCLauncher, MEDDPICCAnalyticsTest } from '@/components/meddpicc';
 
 
 interface DashboardProps {
@@ -47,7 +47,7 @@ interface DashboardProps {
   initialView?: string;
 }
 
-export type DashboardView = 'dashboard' | 'role-testing' | 'opportunity-test' | 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'advanced-analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'kpi-gallery' | 'kpi-manager' | 'kpi-layout' | 'pharma-kpi-templates' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'meddpicc' | 'meddpicc-analytics' | 'meddpicc-admin' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit' | 'administration';
+export type DashboardView = 'dashboard' | 'role-testing' | 'opportunity-test' | 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'advanced-analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'kpi-gallery' | 'kpi-manager' | 'kpi-layout' | 'pharma-kpi-templates' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'meddpicc' | 'meddpicc-analytics' | 'meddpicc-analytics-test' | 'meddpicc-admin' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit' | 'administration';
 
 export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialView }: DashboardProps) {
   // All hooks must be called before any early returns
@@ -281,6 +281,8 @@ export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialV
         return <MEDDPICCModule />;
       case 'meddpicc-analytics':
         return <MEDDPICCAnalyticsDashboard />;
+      case 'meddpicc-analytics-test':
+        return <MEDDPICCAnalyticsTest />;
       case 'meddpicc-admin':
         return <MEDDPICCAdminConfig />;
       
