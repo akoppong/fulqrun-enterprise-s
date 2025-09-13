@@ -57,18 +57,42 @@ export function OpportunitiesListView({ user, onViewChange, onEdit, onCreateNew 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+  const [isLoading, setIsLoading] = useState(false);
 
   // Initialize demo data
   useEffect(() => {
-    if (opportunities.length === 0) {
-      OpportunityService.initializeSampleData();
-      const stored = OpportunityService.getAllOpportunities();
-      setOpportunities(stored);
+    if (!Array.isArray(opportunities) || opportunities.length === 0) {
+      const initializeData = async () => {
+        try {
+          setIsLoading(true);
+          await OpportunityService.initializeSampleData();
+          const stored = OpportunityService.getAllOpportunities();
+          if (Array.isArray(stored)) {
+            setOpportunities(stored);
+          } else {
+            console.error('OpportunityService returned non-array data:', stored);
+            setOpportunities([]);
+          }
+        } catch (error) {
+          console.error('Failed to initialize opportunity data:', error);
+          setOpportunities([]);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      
+      initializeData();
     }
-  }, [opportunities.length, setOpportunities]);
+  }, [setOpportunities]);
 
   // Filter and sort opportunities
   const filteredAndSortedOpportunities = useMemo(() => {
+    // Ensure opportunities is an array
+    if (!Array.isArray(opportunities)) {
+      console.warn('Opportunities data is not an array:', typeof opportunities, opportunities);
+      return [];
+    }
+    
     let filtered = opportunities.filter(opp => {
       // Role-based access control
       if (user.role === 'rep' && opp.ownerId !== user.id) return false;
@@ -245,8 +269,25 @@ export function OpportunitiesListView({ user, onViewChange, onEdit, onCreateNew 
         </div>
       </div>
 
-      {/* Summary Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Loading State */}
+      {isLoading && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-center h-32">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Loading opportunities...</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Data Loaded */}
+      {!isLoading && (
+        <>
+          {/* Summary Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center justify-between">
@@ -623,6 +664,8 @@ export function OpportunitiesListView({ user, onViewChange, onEdit, onCreateNew 
             </Button>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );
