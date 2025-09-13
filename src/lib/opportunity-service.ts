@@ -622,11 +622,12 @@ export class OpportunityService {
 
     // Sample data would be imported from sample-opportunities.ts
     try {
-      const { sampleOpportunities, sampleCompanies, sampleContacts } = await import('../data/sample-opportunities');
+      const { sampleOpportunities, sampleCompanies, sampleContacts, sampleUsers } = await import('../data/sample-opportunities');
       
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(sampleOpportunities));
       localStorage.setItem(this.COMPANIES_KEY, JSON.stringify(sampleCompanies));
       localStorage.setItem(this.CONTACTS_KEY, JSON.stringify(sampleContacts));
+      localStorage.setItem('all-users', JSON.stringify(sampleUsers));
 
       // Initialize progression data for each opportunity
       for (const opportunity of sampleOpportunities) {

@@ -33,6 +33,7 @@ export function OpportunitiesDashboard({ user, onViewChange }: OpportunitiesDash
   const [companies, setCompanies] = useKV<Company[]>('companies', []);
   const [contacts, setContacts] = useKV<Contact[]>('contacts', []);
   const [allUsers, setAllUsers] = useKV<User[]>('all-users', []);
+  const [isLoading, setIsLoading] = useState(true);
   
   const [selectedRegion, setSelectedRegion] = useState<string>('all');
   const [selectedOwner, setSelectedOwner] = useState<string>('all');
@@ -41,65 +42,110 @@ export function OpportunitiesDashboard({ user, onViewChange }: OpportunitiesDash
 
   // Initialize demo data
   useEffect(() => {
-    if (opportunities.length === 0) {
-      OpportunityService.initializeSampleData();
-      // Trigger re-read from storage
-      const stored = OpportunityService.getAllOpportunities();
-      setOpportunities(stored);
-    }
-  }, [opportunities.length, setOpportunities]);
+    const initializeData = async () => {
+      try {
+        setIsLoading(true);
+        if (!Array.isArray(opportunities) || opportunities.length === 0) {
+          await OpportunityService.initializeSampleData();
+          // Trigger re-read from storage
+          const stored = await OpportunityService.getAllOpportunities();
+          setOpportunities(stored);
+        }
+      } catch (error) {
+        console.error('Failed to initialize opportunity data:', error);
+        // Set empty array as fallback
+        setOpportunities([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    initializeData();
+  }, [opportunities, setOpportunities]);
+
+  // Ensure all data arrays are safe
+  const safeOpportunities = Array.isArray(opportunities) ? opportunities : [];
+  const safeCompanies = Array.isArray(companies) ? companies : [];
+  const safeContacts = Array.isArray(contacts) ? contacts : [];
+  const safeAllUsers = Array.isArray(allUsers) ? allUsers : [];
 
   // Calculate filtered opportunities based on user role and filters
-  const filteredOpportunities = opportunities.filter(opp => {
-    // Role-based filtering
-    if (user.role === 'rep' && opp.ownerId !== user.id) return false;
-    if (user.role === 'manager' && opp.ownerId !== user.id) {
-      // Check if opportunity owner reports to this manager
-      const owner = allUsers.find(u => u.id === opp.ownerId);
-      if (!owner || owner.managerId !== user.id) return false;
+  const filteredOpportunities = safeOpportunities.filter(opp => {
+    try {
+      // Ensure opportunity has required fields
+      if (!opp || typeof opp !== 'object') return false;
+      
+      // Role-based filtering
+      if (user.role === 'rep' && opp.ownerId !== user.id) return false;
+      if (user.role === 'manager' && opp.ownerId !== user.id) {
+        // Check if opportunity owner reports to this manager
+        const owner = safeAllUsers.find(u => u.id === opp.ownerId);
+        if (!owner || owner.managerId !== user.id) return false;
+      }
+      
+      // Filter by region
+      if (selectedRegion !== 'all') {
+        const owner = safeAllUsers.find(u => u.id === opp.ownerId);
+        if (!owner || owner.territory !== selectedRegion) return false;
+      }
+      
+      // Filter by owner
+      if (selectedOwner !== 'all' && opp.ownerId !== selectedOwner) return false;
+      
+      // Filter by stage
+      if (selectedStage !== 'all' && opp.stage !== selectedStage) return false;
+      
+      return true;
+    } catch (error) {
+      console.warn('Error filtering opportunity:', opp?.id, error);
+      return false;
     }
-    
-    // Filter by region
-    if (selectedRegion !== 'all') {
-      const owner = allUsers.find(u => u.id === opp.ownerId);
-      if (!owner || owner.territory !== selectedRegion) return false;
-    }
-    
-    // Filter by owner
-    if (selectedOwner !== 'all' && opp.ownerId !== selectedOwner) return false;
-    
-    // Filter by stage
-    if (selectedStage !== 'all' && opp.stage !== selectedStage) return false;
-    
-    return true;
   });
 
   // Calculate metrics
   const metrics = {
-    totalValue: filteredOpportunities.reduce((sum, opp) => sum + opp.value, 0),
+    totalValue: filteredOpportunities.reduce((sum, opp) => sum + (opp.value || 0), 0),
     totalOpportunities: filteredOpportunities.length,
     averageDealSize: filteredOpportunities.length > 0 
-      ? filteredOpportunities.reduce((sum, opp) => sum + opp.value, 0) / filteredOpportunities.length 
+      ? filteredOpportunities.reduce((sum, opp) => sum + (opp.value || 0), 0) / filteredOpportunities.length 
       : 0,
-    weightedValue: filteredOpportunities.reduce((sum, opp) => sum + (opp.value * opp.probability / 100), 0),
+    weightedValue: filteredOpportunities.reduce((sum, opp) => sum + ((opp.value || 0) * (opp.probability || 0) / 100), 0),
     topOpportunities: filteredOpportunities
-      .sort((a, b) => b.value - a.value)
+      .sort((a, b) => (b.value || 0) - (a.value || 0))
       .slice(0, 5),
     upcomingCloses: filteredOpportunities
       .filter(opp => {
-        const closeDate = new Date(opp.expectedCloseDate);
-        const now = new Date();
-        const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-        return closeDate <= thirtyDaysFromNow && closeDate >= now;
+        try {
+          if (!opp.expectedCloseDate) return false;
+          const closeDate = new Date(opp.expectedCloseDate);
+          const now = new Date();
+          const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+          return closeDate <= thirtyDaysFromNow && closeDate >= now;
+        } catch (error) {
+          console.warn('Error parsing close date for opportunity:', opp.id, error);
+          return false;
+        }
       })
-      .sort((a, b) => new Date(a.expectedCloseDate).getTime() - new Date(b.expectedCloseDate).getTime())
+      .sort((a, b) => {
+        try {
+          return new Date(a.expectedCloseDate).getTime() - new Date(b.expectedCloseDate).getTime();
+        } catch (error) {
+          return 0;
+        }
+      })
       .slice(0, 5),
     staleOpportunities: filteredOpportunities
       .filter(opp => {
-        const lastUpdate = new Date(opp.updatedAt);
-        const now = new Date();
-        const daysDiff = (now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24);
-        return daysDiff > 14;
+        try {
+          if (!opp.updatedAt) return false;
+          const lastUpdate = new Date(opp.updatedAt);
+          const now = new Date();
+          const daysDiff = (now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24);
+          return daysDiff > 14;
+        } catch (error) {
+          console.warn('Error parsing update date for opportunity:', opp.id, error);
+          return false;
+        }
       })
       .slice(0, 5)
   };
@@ -118,15 +164,41 @@ export function OpportunitiesDashboard({ user, onViewChange }: OpportunitiesDash
   const stageChartData = Object.values(stageData);
 
   const meddpiccData = filteredOpportunities.map(opp => ({
-    name: opp.title.substring(0, 20) + '...',
-    score: getMEDDPICCScore(opp.meddpicc),
-    value: opp.value
+    name: (opp.title || 'Untitled').substring(0, 20) + '...',
+    score: opp.meddpicc ? getMEDDPICCScore(opp.meddpicc) : 0,
+    value: opp.value || 0
   }));
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
-  const regions = [...new Set(allUsers.map(u => u.territory).filter(Boolean))];
+  const regions = [...new Set(safeAllUsers.map(u => u.territory).filter(Boolean))];
   const stages = ['prospect', 'engage', 'acquire', 'closed-won', 'closed-lost'];
+
+  // Show loading state while data is being initialized
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Opportunities Dashboard</h1>
+            <p className="text-muted-foreground">Loading your sales pipeline and opportunities...</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i}>
+              <CardContent className="pt-6">
+                <div className="animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                  <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -177,7 +249,7 @@ export function OpportunitiesDashboard({ user, onViewChange }: OpportunitiesDash
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Owners</SelectItem>
-                  {allUsers
+                  {safeAllUsers
                     .filter(u => user.role === 'admin' || user.role === 'executive' || 
                       (user.role === 'manager' && u.managerId === user.id) || 
                       u.id === user.id)
@@ -347,8 +419,8 @@ export function OpportunitiesDashboard({ user, onViewChange }: OpportunitiesDash
             <CardContent>
               <div className="space-y-4">
                 {metrics.topOpportunities.map((opp) => {
-                  const company = companies.find(c => c.id === opp.companyId);
-                  const owner = allUsers.find(u => u.id === opp.ownerId);
+                  const company = safeCompanies.find(c => c.id === opp.companyId);
+                  const owner = safeAllUsers.find(u => u.id === opp.ownerId);
                   
                   return (
                     <div 
@@ -373,8 +445,8 @@ export function OpportunitiesDashboard({ user, onViewChange }: OpportunitiesDash
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold">{formatCurrency(opp.value)}</p>
-                        <p className="text-sm text-muted-foreground">{opp.probability}% probability</p>
+                        <p className="font-semibold">{formatCurrency(opp.value || 0)}</p>
+                        <p className="text-sm text-muted-foreground">{opp.probability || 0}% probability</p>
                       </div>
                     </div>
                   );
@@ -392,10 +464,16 @@ export function OpportunitiesDashboard({ user, onViewChange }: OpportunitiesDash
             <CardContent>
               <div className="space-y-4">
                 {metrics.upcomingCloses.map((opp) => {
-                  const company = companies.find(c => c.id === opp.companyId);
-                  const daysUntilClose = Math.ceil(
-                    (new Date(opp.expectedCloseDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
-                  );
+                  const company = safeCompanies.find(c => c.id === opp.companyId);
+                  let daysUntilClose = 0;
+                  
+                  try {
+                    daysUntilClose = Math.ceil(
+                      (new Date(opp.expectedCloseDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+                    );
+                  } catch (error) {
+                    console.warn('Error calculating days until close for opportunity:', opp.id, error);
+                  }
                   
                   return (
                     <div 
@@ -419,13 +497,13 @@ export function OpportunitiesDashboard({ user, onViewChange }: OpportunitiesDash
                           </span>
                           <span className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
-                            {new Date(opp.expectedCloseDate).toLocaleDateString()}
+                            {opp.expectedCloseDate ? new Date(opp.expectedCloseDate).toLocaleDateString() : 'No date set'}
                           </span>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold">{formatCurrency(opp.value)}</p>
-                        <Progress value={opp.probability} className="w-20 mt-1" />
+                        <p className="font-semibold">{formatCurrency(opp.value || 0)}</p>
+                        <Progress value={opp.probability || 0} className="w-20 mt-1" />
                       </div>
                     </div>
                   );
@@ -443,10 +521,16 @@ export function OpportunitiesDashboard({ user, onViewChange }: OpportunitiesDash
             <CardContent>
               <div className="space-y-4">
                 {metrics.staleOpportunities.map((opp) => {
-                  const company = companies.find(c => c.id === opp.companyId);
-                  const daysSinceUpdate = Math.ceil(
-                    (new Date().getTime() - new Date(opp.updatedAt).getTime()) / (1000 * 60 * 60 * 24)
-                  );
+                  const company = safeCompanies.find(c => c.id === opp.companyId);
+                  let daysSinceUpdate = 0;
+                  
+                  try {
+                    daysSinceUpdate = Math.ceil(
+                      (new Date().getTime() - new Date(opp.updatedAt).getTime()) / (1000 * 60 * 60 * 24)
+                    );
+                  } catch (error) {
+                    console.warn('Error calculating days since update for opportunity:', opp.id, error);
+                  }
                   
                   return (
                     <div 
@@ -471,7 +555,7 @@ export function OpportunitiesDashboard({ user, onViewChange }: OpportunitiesDash
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold">{formatCurrency(opp.value)}</p>
+                        <p className="font-semibold">{formatCurrency(opp.value || 0)}</p>
                         <Button size="sm" variant="outline" className="mt-1">
                           Update
                         </Button>

@@ -1,4 +1,4 @@
-import { Opportunity, Company, Contact } from '@/lib/types';
+import { Opportunity, Company, Contact, User } from '@/lib/types';
 
 export const sampleCompanies: Company[] = [
   {
@@ -180,6 +180,63 @@ export const sampleContacts: Contact[] = [
   }
 ];
 
+export const sampleUsers: User[] = [
+  {
+    id: 'user-1',
+    email: 'john.doe@example.com',
+    name: 'John Doe',
+    role: 'rep',
+    territory: 'North America',
+    managerId: 'manager-1',
+    permissions: ['view_opportunities', 'edit_opportunities'],
+    targets: {
+      revenue: 1000000,
+      deals: 10,
+      activities: 50
+    }
+  },
+  {
+    id: 'user-2',
+    email: 'jane.smith@example.com',
+    name: 'Jane Smith',
+    role: 'rep',
+    territory: 'Europe',
+    managerId: 'manager-1',
+    permissions: ['view_opportunities', 'edit_opportunities'],
+    targets: {
+      revenue: 800000,
+      deals: 8,
+      activities: 40
+    }
+  },
+  {
+    id: 'manager-1',
+    email: 'manager@example.com',
+    name: 'Mike Manager',
+    role: 'manager',
+    territory: 'Global',
+    permissions: ['view_opportunities', 'edit_opportunities', 'manage_team'],
+    targets: {
+      revenue: 5000000,
+      deals: 50,
+      activities: 200
+    }
+  },
+  {
+    id: 'admin-1',
+    email: 'admin@example.com',
+    name: 'Alice Admin',
+    role: 'admin',
+    territory: 'Global',
+    permissions: ['all'],
+    targets: {
+      revenue: 0,
+      deals: 0,
+      activities: 0
+    }
+  }
+];
+
 export const sampleOpportunities: Opportunity[] = [
   {
     id: 'enhanced-test-opp-1',
@@ -248,7 +305,7 @@ export const sampleOpportunities: Opportunity[] = [
     ownerId: 'user-1',
     companyId: 'test-comp-1',
     contactId: 'test-contact-1',
-    expectedCloseDate: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000),
+    expectedCloseDate: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString(),
     createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
     updatedAt: new Date().toISOString(),
     meddpicc: {
@@ -272,12 +329,14 @@ export async function initializeSampleData(): Promise<{
   opportunities: Opportunity[];
   companies: Company[];
   contacts: Contact[];
+  users: User[];
 }> {
   if (typeof window === 'undefined') {
     return {
       opportunities: [],
       companies: [],
-      contacts: []
+      contacts: [],
+      users: []
     };
   }
 
@@ -286,6 +345,7 @@ export async function initializeSampleData(): Promise<{
     const existingOpportunities = localStorage.getItem('opportunities');
     const existingCompanies = localStorage.getItem('companies');
     const existingContacts = localStorage.getItem('contacts');
+    const existingUsers = localStorage.getItem('all-users');
 
     // Initialize opportunities if they don't exist
     if (!existingOpportunities) {
@@ -302,17 +362,24 @@ export async function initializeSampleData(): Promise<{
       localStorage.setItem('contacts', JSON.stringify(sampleContacts));
     }
 
+    // Initialize users if they don't exist
+    if (!existingUsers) {
+      localStorage.setItem('all-users', JSON.stringify(sampleUsers));
+    }
+
     return {
       opportunities: sampleOpportunities,
       companies: sampleCompanies,
-      contacts: sampleContacts
+      contacts: sampleContacts,
+      users: sampleUsers
     };
   } catch (error) {
     console.error('Error initializing sample data:', error);
     return {
       opportunities: [],
       companies: [],
-      contacts: []
+      contacts: [],
+      users: []
     };
   }
 }

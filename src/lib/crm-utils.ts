@@ -55,6 +55,11 @@ export const formatPercentage = (value: number): string => {
 };
 
 export const getMEDDPICCScore = (meddpicc: any): number => {
+  // Handle null or undefined
+  if (!meddpicc || typeof meddpicc !== 'object') {
+    return 0;
+  }
+  
   // If a score is explicitly provided, use it
   if (meddpicc.score !== undefined && typeof meddpicc.score === 'number') {
     return Math.min(100, Math.max(0, meddpicc.score));
@@ -71,7 +76,7 @@ export const getMEDDPICCScore = (meddpicc: any): number => {
     meddpicc.champion
   ];
   
-  const completedFields = fields.filter(field => field && field.trim().length > 0).length;
+  const completedFields = fields.filter(field => field && typeof field === 'string' && field.trim().length > 0).length;
   return Math.round((completedFields / fields.length) * 100);
 };
 
