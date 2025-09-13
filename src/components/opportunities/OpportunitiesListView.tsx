@@ -72,7 +72,7 @@ export function OpportunitiesListView({ user, onViewChange, onEdit, onCreateNew 
         try {
           setIsLoading(true);
           await OpportunityService.initializeSampleData();
-          const stored = OpportunityService.getAllOpportunities();
+          const stored = await OpportunityService.getAllOpportunities();
           if (Array.isArray(stored)) {
             setRawOpportunities(stored);
           } else {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useKV } from '@github/spark/hooks';
-import { Opportunity, PEAK_STAGES, Company, Contact } from '@/lib/types';
+import { Opportunity, PEAK_STAGES, Company, Contact, User } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,7 @@ import {
   List,
   ArrowRight
 } from '@phosphor-icons/react';
-import { ModernOpportunityEditForm } from './ModernOpportunityEditForm';
+import { EnhancedNewOpportunityForm } from './EnhancedNewOpportunityForm';
 import { ResponsiveOpportunityDetail } from './OpportunitiesView';
 import { toast } from 'sonner';
 import { format, differenceInDays } from 'date-fns';
@@ -47,9 +47,10 @@ function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetError
 
 interface OpportunitiesMainViewProps {
   className?: string;
+  user: User;
 }
 
-function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewProps) {
+function OpportunitiesMainViewInner({ className = '', user }: OpportunitiesMainViewProps) {
   const [rawOpportunities, setRawOpportunities] = useKV<Opportunity[]>('opportunities', []);
   const [rawCompanies, setRawCompanies] = useKV<Company[]>('companies', []);
   const [rawContacts, setRawContacts] = useKV<Contact[]>('contacts', []);
@@ -644,21 +645,23 @@ function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewPro
       </div>
 
       {/* Create Opportunity Dialog */}
-      <ModernOpportunityEditForm
+      <EnhancedNewOpportunityForm
         isOpen={isCreateDialogOpen}
         onClose={() => setIsCreateDialogOpen(false)}
         onSave={handleCreateOpportunity}
+        user={user}
       />
 
       {/* Edit Opportunity Dialog */}
-      <ModernOpportunityEditForm
+      <EnhancedNewOpportunityForm
         isOpen={isEditDialogOpen}
         onClose={() => {
           setIsEditDialogOpen(false);
           setEditingOpportunity(null);
         }}
         onSave={handleUpdateOpportunity}
-        opportunity={editingOpportunity}
+        editingOpportunity={editingOpportunity}
+        user={user}
       />
     </div>
   );

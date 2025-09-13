@@ -6,7 +6,7 @@ import { OpportunitiesDashboard } from './OpportunitiesDashboard';
 import { OpportunitiesListView } from './OpportunitiesListView';
 import { OpportunityDetailView } from './OpportunityDetailView';
 import { NewOpportunityForm } from './NewOpportunityForm';
-import { DashboardTestRunner } from './DashboardTestRunner';
+import { EnhancedOpportunityFormDemo } from './EnhancedOpportunityFormDemo';
 import { EnhancedErrorBoundary } from '@/components/ui/enhanced-error-boundary';
 import { toast } from 'sonner';
 
@@ -16,7 +16,7 @@ interface OpportunitiesModuleProps {
   initialData?: any;
 }
 
-type OpportunityView = 'dashboard' | 'list' | 'detail' | 'create' | 'edit' | 'dashboard-test';
+type OpportunityView = 'dashboard' | 'list' | 'detail' | 'create' | 'edit' | 'dashboard-test' | 'form-demo';
 
 export function OpportunitiesModule({ user, initialView = 'dashboard', initialData }: OpportunitiesModuleProps) {
   const [opportunities, setOpportunities] = useKV<Opportunity[]>('opportunities', []);
@@ -160,6 +160,15 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
             <OpportunitiesDashboard 
               user={user} 
               onViewChange={handleViewChange}
+            />
+          </EnhancedErrorBoundary>
+        );
+      
+      case 'form-demo':
+        return (
+          <EnhancedErrorBoundary context="EnhancedOpportunityFormDemo">
+            <EnhancedOpportunityFormDemo 
+              user={user} 
             />
           </EnhancedErrorBoundary>
         );
