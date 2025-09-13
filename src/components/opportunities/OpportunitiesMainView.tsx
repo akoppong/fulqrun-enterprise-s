@@ -22,7 +22,7 @@ import {
   List,
   ArrowRight
 } from '@phosphor-icons/react';
-import { CleanOpportunityForm } from './CleanOpportunityForm';
+import { ModernOpportunityEditForm } from './ModernOpportunityEditForm';
 import { ResponsiveOpportunityDetail } from './OpportunitiesView';
 import { toast } from 'sonner';
 import { format, differenceInDays } from 'date-fns';
@@ -639,15 +639,14 @@ function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewPro
       </div>
 
       {/* Create Opportunity Dialog */}
-      <CleanOpportunityForm
+      <ModernOpportunityEditForm
         isOpen={isCreateDialogOpen}
         onClose={() => setIsCreateDialogOpen(false)}
         onSave={handleCreateOpportunity}
-        mode="create"
       />
 
       {/* Edit Opportunity Dialog */}
-      <CleanOpportunityForm
+      <ModernOpportunityEditForm
         isOpen={isEditDialogOpen}
         onClose={() => {
           setIsEditDialogOpen(false);
@@ -655,7 +654,6 @@ function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewPro
         }}
         onSave={handleUpdateOpportunity}
         opportunity={editingOpportunity}
-        mode="edit"
       />
     </div>
   );

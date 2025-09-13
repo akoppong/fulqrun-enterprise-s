@@ -606,6 +606,9 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
 
   const selectedCompany = companies.find(company => company.id === formData.companyId);
   const selectedContact = contacts.find(contact => contact.id === formData.contactId);
+  const availableContacts = formData.companyId 
+    ? contacts.filter(contact => contact.companyId === formData.companyId) 
+    : [];
   const shouldShowNoContactsAlert = formData.companyId && availableContacts.length === 0;
 
   // Helper function to get contact display name

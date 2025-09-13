@@ -26,27 +26,51 @@ export function FinancialAlerts({ opportunities }: FinancialAlertsProps) {
   // Wrapper functions for safer operations
   const setAlerts = useCallback(async (newAlerts: FinancialAlert[]) => {
     try {
-      // Validate and limit alerts to prevent storage bloat
+      // Validate and clean alerts to prevent storage bloat
       const validAlerts = newAlerts
-        .filter(alert => alert && alert.id && alert.type && alert.message)
-        .slice(0, 20); // Limit to 20 alerts max
+        .filter(alert => {
+          // More strict validation
+          return alert && 
+                 typeof alert.id === 'string' && alert.id.length > 0 &&
+                 typeof alert.type === 'string' && alert.type.length > 0 &&
+                 typeof alert.message === 'string' && alert.message.length > 0 &&
+                 typeof alert.title === 'string' && alert.title.length > 0 &&
+                 typeof alert.timestamp === 'string' && alert.timestamp.length > 0 &&
+                 ['info', 'warning', 'success'].includes(alert.severity) &&
+                 typeof alert.acknowledged === 'boolean';
+        })
+        .slice(0, 15); // Limit to 15 alerts max
+
+      // Only proceed if we have valid alerts and they're different from current
+      if (validAlerts.length > 0 && JSON.stringify(validAlerts) !== JSON.stringify(alerts)) {
+        const success = await safeKVSet('financial-alerts', validAlerts, {
+          maxRetries: 1, // Reduced retries to prevent flooding
+          validateData: true,
+          errorHandler: {
+            onError: (key, error) => {
+              console.warn(`Failed to save alerts (will retry later): ${error.message}`);
+            },
+            onFallback: () => {
+              console.info('Using local state for alerts');
+              setAlertsKV(validAlerts);
+            }
+          }
+        });
         
-      const success = await safeKVSet('financial-alerts', validAlerts, {
-        maxRetries: 2,
-        validateData: true,
-        errorHandler: {
-          onError: (key, error) => console.warn(`Failed to save alerts: ${error.message}`),
-          onFallback: () => console.info('Using local state for alerts')
+        if (success) {
+          setAlertsKV(validAlerts);
         }
-      });
-      
-      if (success) {
-        setAlertsKV(validAlerts);
       }
     } catch (error) {
       console.warn('Error updating alerts:', error);
+      // Fallback to local state only
+      try {
+        setAlertsKV(newAlerts.slice(0, 15));
+      } catch (localError) {
+        console.warn('Failed to update local alert state:', localError);
+      }
     }
-  }, [setAlertsKV]);
+  }, [setAlertsKV, alerts]);
 
   const setLastAlertCheck = useCallback(async (timestamp: number) => {
     try {
@@ -63,12 +87,12 @@ export function FinancialAlerts({ opportunities }: FinancialAlertsProps) {
     }
   }, [setLastAlertCheckKV]);
 
-  const checkForAlerts = useCallback(() => {
+  const checkForAlerts = useCallback(async () => {
     try {
       const now = Date.now();
       
-      // Only check for alerts every 60 seconds to avoid KV storage overload
-      if (now - lastAlertCheck < 60000) return;
+      // Only check for alerts every 2 minutes to avoid KV storage overload
+      if (now - lastAlertCheck < 120000) return;
       
       // Safely calculate totals with fallbacks
       const validOpportunities = opportunities.filter(opp => 
@@ -76,7 +100,11 @@ export function FinancialAlerts({ opportunities }: FinancialAlertsProps) {
       );
       
       if (validOpportunities.length === 0) {
-        setLastAlertCheck(now);
+        try {
+          await setLastAlertCheck(now);
+        } catch (error) {
+          console.warn('Failed to update last alert check:', error);
+        }
         return;
       }
       
@@ -111,7 +139,7 @@ export function FinancialAlerts({ opportunities }: FinancialAlertsProps) {
       const oneWeekFromNow = now + (7 * 24 * 60 * 60 * 1000);
       validOpportunities
         .filter(opp => opp.value > 50000 && (opp.stage === 'acquire' || opp.stage === 'proposal'))
-        .slice(0, 5) // Limit to 5 deals to prevent KV storage overload
+        .slice(0, 3) // Limit to 3 deals to prevent KV storage overload
         .forEach(opp => {
           try {
             const expectedCloseDate = new Date(opp.expectedCloseDate);
@@ -141,37 +169,45 @@ export function FinancialAlerts({ opportunities }: FinancialAlertsProps) {
           }
         });
       
-      // Batch update to prevent multiple KV calls
+      // Batch update to prevent multiple KV calls - only if we have new alerts
       if (newAlerts.length > 0) {
         const combinedAlerts = [...alerts, ...newAlerts];
         // Limit total alerts to prevent storage bloat
-        const maxAlerts = 15;
+        const maxAlerts = 10; // Reduced from 15
         const limitedAlerts = combinedAlerts
           .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
           .slice(0, maxAlerts);
         
         // Update using safe setter
-        await setAlerts(limitedAlerts);
-        
-        // Show toast notifications for new alerts
-        newAlerts.forEach(alert => {
-          try {
-            const toastFunction = alert.severity === 'success' ? toast.success : 
-                                alert.severity === 'warning' ? toast.warning : 
-                                toast.info;
-            
-            toastFunction(alert.title, {
-              description: alert.message,
-              duration: 5000
-            });
-          } catch (toastError) {
-            console.warn('Error showing toast notification:', toastError);
-          }
-        });
+        try {
+          await setAlerts(limitedAlerts);
+          
+          // Show toast notifications for new alerts only
+          newAlerts.slice(0, 2).forEach(alert => { // Limit toast notifications
+            try {
+              const toastFunction = alert.severity === 'success' ? toast.success : 
+                                  alert.severity === 'warning' ? toast.warning : 
+                                  toast.info;
+              
+              toastFunction(alert.title, {
+                description: alert.message,
+                duration: 4000 // Reduced duration
+              });
+            } catch (toastError) {
+              console.warn('Error showing toast notification:', toastError);
+            }
+          });
+        } catch (alertError) {
+          console.warn('Failed to save new alerts:', alertError);
+        }
       }
       
       // Always update last check time using safe setter
-      await setLastAlertCheck(now);
+      try {
+        await setLastAlertCheck(now);
+      } catch (error) {
+        console.warn('Failed to update last check time:', error);
+      }
       
     } catch (error) {
       console.error('Error in financial alerts check:', error);
@@ -179,7 +215,7 @@ export function FinancialAlerts({ opportunities }: FinancialAlertsProps) {
       try {
         await setLastAlertCheck(Date.now());
       } catch (updateError) {
-        console.warn('Failed to update last check time:', updateError);
+        console.warn('Failed to update last check time after error:', updateError);
       }
     }
   }, [opportunities, alerts, lastAlertCheck, setAlerts, setLastAlertCheck]);
@@ -188,11 +224,11 @@ export function FinancialAlerts({ opportunities }: FinancialAlertsProps) {
     // Only run if we have opportunities
     if (!opportunities || opportunities.length === 0) return;
     
-    // Initial check after a delay to prevent startup KV conflicts
-    const initialTimeout = setTimeout(checkForAlerts, 5000);
+    // Initial check after a longer delay to prevent startup KV conflicts
+    const initialTimeout = setTimeout(checkForAlerts, 10000);
     
-    // Set up interval for ongoing checks - much less frequent to prevent KV overload
-    const interval = setInterval(checkForAlerts, 120000); // Check every 2 minutes
+    // Set up interval for ongoing checks - even less frequent to prevent KV overload
+    const interval = setInterval(checkForAlerts, 300000); // Check every 5 minutes
     
     return () => {
       clearTimeout(initialTimeout);
