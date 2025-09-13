@@ -1,3 +1,4 @@
+// Comprehensive opportunities list view component
 import { useState, useEffect, useMemo } from 'react';
 import { useKV } from '@github/spark/hooks';
 import { Opportunity, Company, Contact, User } from '@/lib/types';
@@ -41,7 +42,7 @@ interface OpportunitiesListProps {
 type SortField = 'title' | 'value' | 'probability' | 'expectedCloseDate' | 'stage' | 'meddpiccScore';
 type SortDirection = 'asc' | 'desc';
 
-export function OpportunitiesList({ user, onViewChange, onEdit, onCreateNew }: OpportunitiesListProps) {
+export function OpportunitiesListView({ user, onViewChange, onEdit, onCreateNew }: OpportunitiesListProps) {
   const [opportunities, setOpportunities] = useKV<Opportunity[]>('opportunities', []);
   const [companies, setCompanies] = useKV<Company[]>('companies', []);
   const [contacts, setContacts] = useKV<Contact[]>('contacts', []);
