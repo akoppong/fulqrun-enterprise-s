@@ -6,6 +6,7 @@ import { OpportunitiesDashboard } from './OpportunitiesDashboard';
 import { OpportunitiesListView } from './OpportunitiesListView';
 import { OpportunityDetailView } from './OpportunityDetailView';
 import { NewOpportunityForm } from './NewOpportunityForm';
+import { NewOpportunityFormPage } from './NewOpportunityFormPage';
 import { EnhancedOpportunityFormDemo } from './EnhancedOpportunityFormDemo';
 import { EnhancedOpportunityCreationTest } from './EnhancedOpportunityCreationTest';
 import { DashboardTestRunner } from './DashboardTestRunner';
@@ -31,7 +32,6 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
     initialData?.opportunityId || null
   );
   const [editingOpportunity, setEditingOpportunity] = useState<Opportunity | null>(null);
-  const [showCreateForm, setShowCreateForm] = useState(false);
 
   // Initialize demo data
   useEffect(() => {
@@ -101,14 +101,16 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
         break;
       
       case 'create':
-        setShowCreateForm(true);
+        setCurrentView('create');
         setEditingOpportunity(null);
+        setSelectedOpportunityId(null);
         break;
       
       case 'edit':
         if (data?.opportunity) {
+          setCurrentView('edit');
           setEditingOpportunity(data.opportunity);
-          setShowCreateForm(true);
+          setSelectedOpportunityId(null);
         }
         break;
       
@@ -119,12 +121,12 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
 
   const handleCreateNew = () => {
     setEditingOpportunity(null);
-    setShowCreateForm(true);
+    setCurrentView('create');
   };
 
   const handleEdit = (opportunity: Opportunity) => {
     setEditingOpportunity(opportunity);
-    setShowCreateForm(true);
+    setCurrentView('edit');
   };
 
   const handleSave = async (opportunity: Opportunity) => {
@@ -133,13 +135,10 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
       const updatedOpportunities = OpportunityService.getAllOpportunities();
       setOpportunities(updatedOpportunities);
       
-      // Close form
-      setShowCreateForm(false);
-      setEditingOpportunity(null);
-      
       // Navigate to detail view for the saved opportunity
       setSelectedOpportunityId(opportunity.id);
       setCurrentView('detail');
+      setEditingOpportunity(null);
       
       toast.success(
         editingOpportunity 
@@ -149,6 +148,18 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
     } catch (error) {
       console.error('Error saving opportunity:', error);
       toast.error('Failed to save opportunity');
+    }
+  };
+
+  const handleFormCancel = () => {
+    // Navigate back to previous view
+    setEditingOpportunity(null);
+    if (currentView === 'edit') {
+      // If editing, go back to detail view
+      setCurrentView('detail');
+    } else {
+      // If creating, go back to list view
+      setCurrentView('list');
     }
   };
 
@@ -263,6 +274,32 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
           </EnhancedErrorBoundary>
         );
       
+      case 'create':
+        return (
+          <EnhancedErrorBoundary context="NewOpportunityForm">
+            <NewOpportunityFormPage
+              user={user}
+              onSave={handleSave}
+              onCancel={handleFormCancel}
+              editingOpportunity={null}
+              isEditing={false}
+            />
+          </EnhancedErrorBoundary>
+        );
+      
+      case 'edit':
+        return (
+          <EnhancedErrorBoundary context="EditOpportunityForm">
+            <NewOpportunityFormPage
+              user={user}
+              onSave={handleSave}
+              onCancel={handleFormCancel}
+              editingOpportunity={editingOpportunity}
+              isEditing={true}
+            />
+          </EnhancedErrorBoundary>
+        );
+      
       default:
         return (
           <EnhancedErrorBoundary context="OpportunitiesDashboard">
@@ -278,18 +315,6 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
   return (
     <div className="h-full">
       {renderCurrentView()}
-      
-      {/* Create/Edit Form Modal */}
-      <NewOpportunityForm
-        isOpen={showCreateForm}
-        onClose={() => {
-          setShowCreateForm(false);
-          setEditingOpportunity(null);
-        }}
-        onSave={handleSave}
-        editingOpportunity={editingOpportunity}
-        user={user}
-      />
     </div>
   );
 }
@@ -299,5 +324,6 @@ export {
   OpportunitiesDashboard,
   OpportunitiesListView,
   OpportunityDetailView,
-  NewOpportunityForm
+  NewOpportunityForm,
+  NewOpportunityFormPage
 };
