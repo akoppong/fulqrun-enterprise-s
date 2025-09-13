@@ -30,10 +30,15 @@ interface OpportunitiesDashboardProps {
 
 export function OpportunitiesDashboard({ user, onViewChange }: OpportunitiesDashboardProps) {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
-  const [companies, setCompanies] = useKV<Company[]>('companies', []);
-  const [contacts, setContacts] = useKV<Contact[]>('contacts', []);
-  const [allUsers, setAllUsers] = useKV<User[]>('all-users', []);
+  const [rawCompanies, setRawCompanies] = useKV<Company[]>('companies', []);
+  const [rawContacts, setRawContacts] = useKV<Contact[]>('contacts', []);
+  const [rawAllUsers, setRawAllUsers] = useKV<User[]>('all-users', []);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Ensure all data is always arrays with validation
+  const companies = Array.isArray(rawCompanies) ? rawCompanies : [];
+  const contacts = Array.isArray(rawContacts) ? rawContacts : [];
+  const allUsers = Array.isArray(rawAllUsers) ? rawAllUsers : [];
   
   const [selectedRegion, setSelectedRegion] = useState<string>('all');
   const [selectedOwner, setSelectedOwner] = useState<string>('all');
@@ -185,20 +190,25 @@ export function OpportunitiesDashboard({ user, onViewChange }: OpportunitiesDash
     }
   })();
   
-  const safeCompanies = Array.isArray(companies) ? companies : [];
-  const safeContacts = Array.isArray(contacts) ? contacts : [];
-  const safeAllUsers = Array.isArray(allUsers) ? allUsers : [];
+  const safeCompanies = companies;
+  const safeContacts = contacts;
+  const safeAllUsers = allUsers;
 
   // Calculate filtered opportunities based on user role and filters
   const filteredOpportunities = (() => {
     try {
-      // Ensure we start with a valid array
+      // Ensure we start with a valid array - multiple levels of validation
       if (!Array.isArray(safeOpportunities)) {
         console.error('safeOpportunities is not an array:', typeof safeOpportunities);
         return [];
       }
 
-      return safeOpportunities.filter(opp => {
+      if (safeOpportunities.length === 0) {
+        console.log('OpportunitiesDashboard: No opportunities available for filtering');
+        return [];
+      }
+
+      const filtered = safeOpportunities.filter(opp => {
         try {
           // Ensure opportunity has required fields
           if (!opp || typeof opp !== 'object') {
@@ -240,8 +250,11 @@ export function OpportunitiesDashboard({ user, onViewChange }: OpportunitiesDash
           return false;
         }
       });
+
+      console.log('OpportunitiesDashboard: Successfully filtered', filtered.length, 'opportunities from', safeOpportunities.length, 'total');
+      return filtered;
     } catch (error) {
-      console.error('Error in filteredOpportunities calculation:', error);
+      console.error('OpportunitiesDashboard: Critical error in filteredOpportunities:', error);
       return [];
     }
   })();

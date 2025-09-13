@@ -43,10 +43,16 @@ type SortField = 'title' | 'value' | 'probability' | 'expectedCloseDate' | 'stag
 type SortDirection = 'asc' | 'desc';
 
 export function OpportunitiesListView({ user, onViewChange, onEdit, onCreateNew }: OpportunitiesListProps) {
-  const [opportunities, setOpportunities] = useKV<Opportunity[]>('opportunities', []);
-  const [companies, setCompanies] = useKV<Company[]>('companies', []);
-  const [contacts, setContacts] = useKV<Contact[]>('contacts', []);
-  const [allUsers, setAllUsers] = useKV<User[]>('all-users', []);
+  const [rawOpportunities, setRawOpportunities] = useKV<Opportunity[]>('opportunities', []);
+  const [rawCompanies, setRawCompanies] = useKV<Company[]>('companies', []);
+  const [rawContacts, setRawContacts] = useKV<Contact[]>('contacts', []);
+  const [rawAllUsers, setRawAllUsers] = useKV<User[]>('all-users', []);
+  
+  // Ensure all data is always arrays with validation
+  const opportunities = Array.isArray(rawOpportunities) ? rawOpportunities : [];
+  const companies = Array.isArray(rawCompanies) ? rawCompanies : [];
+  const contacts = Array.isArray(rawContacts) ? rawContacts : [];
+  const allUsers = Array.isArray(rawAllUsers) ? rawAllUsers : [];
   
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStage, setSelectedStage] = useState<string>('all');
@@ -61,21 +67,21 @@ export function OpportunitiesListView({ user, onViewChange, onEdit, onCreateNew 
 
   // Initialize demo data
   useEffect(() => {
-    if (!Array.isArray(opportunities) || opportunities.length === 0) {
+    if (opportunities.length === 0) {
       const initializeData = async () => {
         try {
           setIsLoading(true);
           await OpportunityService.initializeSampleData();
           const stored = OpportunityService.getAllOpportunities();
           if (Array.isArray(stored)) {
-            setOpportunities(stored);
+            setRawOpportunities(stored);
           } else {
             console.error('OpportunityService returned non-array data:', stored);
-            setOpportunities([]);
+            setRawOpportunities([]);
           }
         } catch (error) {
           console.error('Failed to initialize opportunity data:', error);
-          setOpportunities([]);
+          setRawOpportunities([]);
         } finally {
           setIsLoading(false);
         }
@@ -83,16 +89,11 @@ export function OpportunitiesListView({ user, onViewChange, onEdit, onCreateNew 
       
       initializeData();
     }
-  }, [setOpportunities]);
+  }, [setRawOpportunities, opportunities.length]);
 
   // Filter and sort opportunities
   const filteredAndSortedOpportunities = useMemo(() => {
-    // Ensure opportunities is an array
-    if (!Array.isArray(opportunities)) {
-      console.warn('Opportunities data is not an array:', typeof opportunities, opportunities);
-      return [];
-    }
-    
+    // opportunities is already guaranteed to be an array due to validation above
     let filtered = opportunities.filter(opp => {
       // Role-based access control
       if (user.role === 'rep' && opp.ownerId !== user.id) return false;
@@ -193,7 +194,7 @@ export function OpportunitiesListView({ user, onViewChange, onEdit, onCreateNew 
     try {
       const success = await OpportunityService.deleteOpportunity(id);
       if (success) {
-        setOpportunities(opportunities.filter(opp => opp.id !== id));
+        setRawOpportunities(opportunities.filter(opp => opp.id !== id));
         toast.success('Opportunity deleted successfully');
       } else {
         toast.error('Failed to delete opportunity');

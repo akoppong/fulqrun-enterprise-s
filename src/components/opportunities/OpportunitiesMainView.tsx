@@ -50,9 +50,14 @@ interface OpportunitiesMainViewProps {
 }
 
 function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewProps) {
-  const [opportunities, setOpportunities] = useKV<Opportunity[]>('opportunities', []);
-  const [companies, setCompanies] = useKV<Company[]>('companies', []);
-  const [contacts, setContacts] = useKV<Contact[]>('contacts', []);
+  const [rawOpportunities, setRawOpportunities] = useKV<Opportunity[]>('opportunities', []);
+  const [rawCompanies, setRawCompanies] = useKV<Company[]>('companies', []);
+  const [rawContacts, setRawContacts] = useKV<Contact[]>('contacts', []);
+
+  // Ensure all data is always arrays with validation
+  const opportunities = Array.isArray(rawOpportunities) ? rawOpportunities : [];
+  const companies = Array.isArray(rawCompanies) ? rawCompanies : [];
+  const contacts = Array.isArray(rawContacts) ? rawContacts : [];
 
   // Initialize sample data if empty
   useEffect(() => {
@@ -87,7 +92,7 @@ function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewPro
           updatedAt: new Date().toISOString()
         }
       ];
-      setCompanies(sampleCompanies);
+      setRawCompanies(sampleCompanies);
     }
 
     if (contacts.length === 0) {
@@ -117,9 +122,9 @@ function OpportunitiesMainViewInner({ className = '' }: OpportunitiesMainViewPro
           updatedAt: new Date().toISOString()
         }
       ];
-      setContacts(sampleContacts);
+      setRawContacts(sampleContacts);
     }
-  }, [companies.length, contacts.length, setCompanies, setContacts]);
+  }, [companies.length, contacts.length, setRawCompanies, setRawContacts]);
   
   // View state
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
