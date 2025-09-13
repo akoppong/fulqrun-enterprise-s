@@ -9,8 +9,11 @@ export {
   OpportunitiesDashboard,
   OpportunitiesListView,
   OpportunityDetailView,
-  NewOpportunityForm
-} from './OpportunitiesModule';
+  NewOpportunityMainView
+} from './CleanOpportunitiesModule';
+
+// System status and testing
+export { OpportunitySystemStatus } from './OpportunitySystemStatus';
 
 // Testing and diagnostic exports
 export { OpportunitiesDashboardTest } from './OpportunitiesDashboardTest';

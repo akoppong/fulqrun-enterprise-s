@@ -37,19 +37,22 @@ interface OpportunitiesListProps {
   onViewChange?: (view: string, data?: any) => void;
   onEdit?: (opportunity: Opportunity) => void;
   onCreateNew?: () => void;
+  opportunities?: Opportunity[]; // Optional prop to pass in opportunities data
 }
 
 type SortField = 'title' | 'value' | 'probability' | 'expectedCloseDate' | 'stage' | 'meddpiccScore';
 type SortDirection = 'asc' | 'desc';
 
-export function OpportunitiesListView({ user, onViewChange, onEdit, onCreateNew }: OpportunitiesListProps) {
+export function OpportunitiesListView({ user, onViewChange, onEdit, onCreateNew, opportunities: propOpportunities }: OpportunitiesListProps) {
   const [rawOpportunities, setRawOpportunities] = useKV<Opportunity[]>('opportunities', []);
   const [rawCompanies, setRawCompanies] = useKV<Company[]>('companies', []);
   const [rawContacts, setRawContacts] = useKV<Contact[]>('contacts', []);
   const [rawAllUsers, setRawAllUsers] = useKV<User[]>('all-users', []);
   
-  // Ensure all data is always arrays with validation
-  const opportunities = Array.isArray(rawOpportunities) ? rawOpportunities : [];
+  // Use prop opportunities or fallback to KV store
+  const opportunities = propOpportunities && Array.isArray(propOpportunities) 
+    ? propOpportunities 
+    : Array.isArray(rawOpportunities) ? rawOpportunities : [];
   const companies = Array.isArray(rawCompanies) ? rawCompanies : [];
   const contacts = Array.isArray(rawContacts) ? rawContacts : [];
   const allUsers = Array.isArray(rawAllUsers) ? rawAllUsers : [];
@@ -65,9 +68,9 @@ export function OpportunitiesListView({ user, onViewChange, onEdit, onCreateNew 
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Initialize demo data
+  // Initialize demo data only if no prop opportunities provided
   useEffect(() => {
-    if (opportunities.length === 0) {
+    if (!propOpportunities && opportunities.length === 0) {
       const initializeData = async () => {
         try {
           setIsLoading(true);
@@ -89,7 +92,7 @@ export function OpportunitiesListView({ user, onViewChange, onEdit, onCreateNew 
       
       initializeData();
     }
-  }, [setRawOpportunities, opportunities.length]);
+  }, [propOpportunities, setRawOpportunities, opportunities.length]);
 
   // Filter and sort opportunities
   const filteredAndSortedOpportunities = useMemo(() => {

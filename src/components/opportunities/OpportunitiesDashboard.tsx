@@ -27,9 +27,10 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Toolti
 interface OpportunitiesDashboardProps {
   user: User;
   onViewChange?: (view: string, data?: any) => void;
+  opportunities?: Opportunity[]; // Optional prop to pass in opportunities data
 }
 
-export function OpportunitiesDashboard({ user, onViewChange }: OpportunitiesDashboardProps) {
+export function OpportunitiesDashboard({ user, onViewChange, opportunities: propOpportunities }: OpportunitiesDashboardProps) {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [rawCompanies, setRawCompanies] = useKV<Company[]>('companies', []);
   const [rawContacts, setRawContacts] = useKV<Contact[]>('contacts', []);
@@ -66,11 +67,19 @@ export function OpportunitiesDashboard({ user, onViewChange }: OpportunitiesDash
     }
   };
 
-  // Initialize demo data
+  // Initialize demo data or use prop data
   useEffect(() => {
     const initializeData = async () => {
       try {
         setIsLoading(true);
+        
+        // If opportunities are provided as props, use them
+        if (propOpportunities && Array.isArray(propOpportunities)) {
+          console.log('OpportunitiesDashboard: Using prop opportunities:', propOpportunities.length);
+          setOpportunities(propOpportunities);
+          setIsLoading(false);
+          return;
+        }
         
         console.log('OpportunitiesDashboard: Initializing opportunity data...');
         
@@ -117,7 +126,7 @@ export function OpportunitiesDashboard({ user, onViewChange }: OpportunitiesDash
     };
     
     initializeData();
-  }, []); // Remove dependency on opportunities to prevent infinite loops
+  }, [propOpportunities]); // Re-run when prop opportunities change
 
   // Ensure all data arrays are safe and handle any non-array values
   const safeOpportunities = (() => {
