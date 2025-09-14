@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { MEDDPICCService } from '@/services/meddpicc-service';
+import { MEDDPICCService } from '../../services/meddpicc-service';
 import { MEDDPICCAnalyticsDashboard } from './MEDDPICCAnalytics';
 import { 
   CheckCircle, 
@@ -36,23 +36,23 @@ export function MEDDPICCAnalyticsTest() {
     try {
       // Test 1: Data Initialization
       console.log('Testing MEDDPICC data initialization...');
-      MEDDPICCService.initializeSampleData();
+      await MEDDPICCService.initializeSampleData();
       results.dataInitialization = true;
 
       // Test 2: Analytics Generation
       console.log('Testing analytics generation...');
-      const analytics = MEDDPICCService.generateAnalytics();
+      const analytics = await MEDDPICCService.generateAnalytics();
       results.analyticsGeneration = true;
       results.analyticsData = analytics;
       
       // Test 3: Sample Data Count
-      const assessments = MEDDPICCService.getAllAssessments();
+      const assessments = await MEDDPICCService.getAllAssessments();
       results.sampleDataCount = assessments.length;
 
       console.log('All tests passed successfully!');
     } catch (error) {
       console.error('Test failed:', error);
-      results.errors.push(error.message);
+      results.errors.push(error instanceof Error ? error.message : String(error));
     }
 
     setTestResults(results);

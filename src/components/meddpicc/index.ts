@@ -17,7 +17,7 @@ export { MEDDPICCAdminConfig } from './MEDDPICCAdminConfig';
 export { MEDDPICCScoringService } from '../../services/meddpicc-scoring-service';
 
 // Configuration
-export { MEDDPICC_CONFIG, calculatePillarScore, calculateTotalScore, getScoreLevel, getCoachingPrompts } from '@/data/meddpicc-config';
+export { MEDDPICC_CONFIG, calculatePillarScore, calculateTotalScore, getScoreLevel, getCoachingPrompts } from '../../data/meddpicc-config';
 
 // Enhanced Types
 export type {

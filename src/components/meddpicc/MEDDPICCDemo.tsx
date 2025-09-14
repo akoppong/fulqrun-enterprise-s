@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { MEDDPICC_CONFIG, calculatePillarScore, calculateTotalScore, getScoreLevel, getCoachingPrompts } from '@/data/meddpicc-config';
+import { MEDDPICC_CONFIG, calculatePillarScore, calculateTotalScore, getScoreLevel, getCoachingPrompts } from '../../data/meddpicc-config';
 
 export function MEDDPICCDemo() {
   const [currentPillar, setCurrentPillar] = useState(0);

@@ -41,9 +41,8 @@ import {
   Activity
 } from 'lucide-react';
 
-import { MEDDPICCService } from '@/services/meddpicc-service';
-import { MEDDPICCAnalytics } from '@/types/meddpicc';
-import { MEDDPICC_CONFIG } from '@/data/meddpicc-config';
+import { MEDDPICCService, MEDDPICCPortfolioAnalytics } from '../../services/meddpicc-service';
+import { MEDDPICC_CONFIG } from '../../data/meddpicc-config';
 
 const SCORE_COLORS = {
   strong: '#10b981',
@@ -52,7 +51,7 @@ const SCORE_COLORS = {
 };
 
 export function MEDDPICCAnalyticsDashboard() {
-  const [analytics, setAnalytics] = useState<MEDDPICCAnalytics | null>(null);
+  const [analytics, setAnalytics] = useState<MEDDPICCPortfolioAnalytics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -60,10 +59,10 @@ export function MEDDPICCAnalyticsDashboard() {
       setIsLoading(true);
       try {
         // Initialize sample data if needed
-        MEDDPICCService.initializeSampleData();
+        await MEDDPICCService.initializeSampleData();
         
         // Load analytics data
-        const data = MEDDPICCService.generateAnalytics();
+        const data = await MEDDPICCService.generateAnalytics();
         setAnalytics(data);
       } catch (error) {
         console.error('Failed to load MEDDPICC analytics:', error);

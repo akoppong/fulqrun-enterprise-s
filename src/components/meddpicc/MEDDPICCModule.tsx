@@ -689,18 +689,6 @@ export function MEDDPICCModule() {
     });
   };
 
-  const togglePillar = (pillarId: string) => {
-    setExpandedPillars(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(pillarId)) {
-        newSet.delete(pillarId);
-      } else {
-        newSet.add(pillarId);
-      }
-      return newSet;
-    });
-  };
-
   const getScoreLevel = (score: number): { level: string; color: string } => {
     if (score >= meddpiccData.scoring.thresholds.strong.min) {
       return { level: 'Strong', color: 'text-green-600' };

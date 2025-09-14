@@ -41,7 +41,7 @@ import { format, differenceInDays } from 'date-fns';
 
 // MEDDPICC Integration
 import { MEDDPICCSummary } from '@/components/meddpicc';
-// import { MEDDPICCAssessment as MEDDPICCAssessmentType } from '@/types/meddpicc';
+
 
 interface ResponsiveOpportunityDetailProps {
   opportunity: Opportunity;

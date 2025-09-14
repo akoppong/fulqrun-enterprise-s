@@ -3,7 +3,7 @@
  * Complete question sets and scoring logic for B2B sales qualification
  */
 
-import { MEDDPICCConfiguration } from '../types/meddpicc';
+import { MEDDPICCConfiguration } from '../services/meddpicc-service';
 
 export const MEDDPICC_CONFIG: MEDDPICCConfiguration = {
   version: "1.0.0",

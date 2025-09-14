@@ -23,7 +23,15 @@ import {
   CheckCircle2
 } from 'lucide-react';
 
-import { MEDDPICCAssessment, MEDDPICCScore } from '@/types/meddpicc';
+import { MEDDPICCAssessment } from '../../services/meddpicc-service';
+
+// Type alias for compatibility  
+type MEDDPICCScore = {
+  pillar: string;
+  score: number;
+  max_score: number;
+  percentage: number;
+};
 
 interface MEDDPICCSummaryProps {
   assessment: MEDDPICCAssessment | null;

@@ -35,8 +35,24 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { MEDDPICC_CONFIG } from '@/data/meddpicc-config';
-import { MEDDPICCConfiguration, MEDDPICCPillar, MEDDPICCQuestion, MEDDPICCOption, CoachingPrompt } from '@/types/meddpicc';
+import { MEDDPICC_CONFIG } from '../../data/meddpicc-config';
+import { MEDDPICCConfiguration, MEDDPICCPillarData as MEDDPICCPillar, MEDDPICCQuestionData as MEDDPICCQuestion } from '../../services/meddpicc-service';
+
+// Type aliases for compatibility
+type MEDDPICCOption = {
+  label: string;
+  value: string;
+  score: number;
+};
+
+type CoachingPrompt = {
+  condition: {
+    pillar: string;
+    value: string;
+  };
+  prompt: string;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+};
 
 export function MEDDPICCAdminConfig() {
   const [config, setConfig] = useState<MEDDPICCConfiguration>(MEDDPICC_CONFIG);
