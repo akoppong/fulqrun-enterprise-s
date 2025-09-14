@@ -42,9 +42,7 @@ import {
   FileText,
   Crown,
   ArrowsOutCardinal,
-  Eye,
-  CheckCircle,
-  Network
+  Eye
 } from '@phosphor-icons/react';
 
 interface SidebarProps {
@@ -122,24 +120,8 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           id: 'opportunities',
           label: 'Opportunities',
           icon: Target,
-          description: 'Deal management with PEAK & MEDDPICC',
+          description: 'MEDDPICC qualification',
           permissionId: 'opportunities',
-          action: 'read'
-        },
-        {
-          id: 'meddpicc',
-          label: 'MEDDPICC Assessment',
-          icon: CheckCircle,
-          description: 'B2B qualification methodology',
-          permissionId: 'meddpicc',
-          action: 'read'
-        },
-        {
-          id: 'enhanced-meddpicc',
-          label: 'Enhanced MEDDPICC',
-          icon: Brain,
-          description: 'Advanced B2B qualification with AI insights',
-          permissionId: 'meddpicc',
           action: 'read'
         },
         {
@@ -159,29 +141,11 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           action: 'read'
         },
         {
-          id: 'smart-contact-demo',
-          label: 'Smart Relationship Manager',
-          icon: Users,
-          description: 'Intelligent company-contact relationships',
-          permissionId: 'contacts',
-          action: 'read',
-          isNew: true
-        },
-        {
           id: 'segments',
           label: 'Customer Segments',
           icon: Building2,
           description: 'Strategic segmentation',
           permissionId: 'segments',
-          action: 'read',
-          isNew: true
-        },
-        {
-          id: 'relationship-mapping',
-          label: 'Relationship Mapping',
-          icon: Network,
-          description: 'Company-contact network visualization',
-          permissionId: 'contacts',
           action: 'read',
           isNew: true
         },
@@ -207,6 +171,15 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           icon: Crown,
           description: 'Experience different user dashboards',
           permissionId: 'dashboard',
+          action: 'read',
+          isNew: true
+        },
+        {
+          id: 'opportunity-test',
+          label: 'Opportunity Detail Test',
+          icon: Eye,
+          description: 'Test full-screen opportunity views',
+          permissionId: 'opportunities',
           action: 'read',
           isNew: true
         }
@@ -317,7 +290,8 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           description: 'Industry-specific pharmaceutical B2B templates',
           permissionId: 'personal-kpis',
           action: 'read',
-          isNew: true
+          isNew: true,
+          badge: 'NEW'
         },
         {
           id: 'kpi-layout',
@@ -425,24 +399,6 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           permissionId: 'audit-logs',
           action: 'read',
           isNew: true
-        },
-        {
-          id: 'meddpicc-admin',
-          label: 'MEDDPICC Configuration',
-          icon: Target,
-          description: 'Configure MEDDPICC questions & scoring',
-          permissionId: 'system-config',
-          action: 'write',
-          isNew: true
-        },
-        {
-          id: 'enhanced-meddpicc-analytics',
-          label: 'MEDDPICC Analytics',
-          icon: ChartLine,
-          description: 'Advanced MEDDPICC sales analytics',
-          permissionId: 'analytics',
-          action: 'read',
-          isNew: true
         }
       ]
     },
@@ -453,31 +409,39 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
       defaultOpen: false,
       items: [
         {
+          id: 'full-screen-opportunity-test',
+          label: 'Full-Screen Detail Test',
+          icon: Eye,
+          description: 'Comprehensive full-screen opportunity detail view testing',
+          permissionId: 'opportunities',
+          action: 'read',
+          isNew: true
+        },
+        {
+          id: 'enhanced-opportunity-testing',
+          label: 'Enhanced Opportunity Testing',
+          icon: Target,
+          description: 'Advanced opportunity detail view testing with performance monitoring',
+          permissionId: 'opportunities',
+          action: 'read',
+          isNew: true
+        },
+        {
+          id: 'opportunity-test-suite',
+          label: 'Legacy Test Suite',
+          icon: ClipboardList,
+          description: 'Original comprehensive opportunity testing suite',
+          permissionId: 'opportunities',
+          action: 'read',
+          isNew: true
+        },
+        {
           id: 'role-testing',
           label: 'Role-Based Dashboards',
           icon: Crown,
           description: 'Test different user role dashboards',
           permissionId: 'dashboard',
           isNew: true
-        },
-        {
-          id: 'opportunities-dashboard-test',
-          label: 'Opportunities Dashboard Test',
-          icon: TestTube,
-          description: 'Test opportunities dashboard with sample data validation',
-          permissionId: 'opportunities',
-          action: 'read',
-          isNew: true
-        },
-        {
-          id: 'opportunity-creation-test',
-          label: 'Enhanced Creation Test',
-          icon: CheckCircle,
-          description: 'Test enhanced opportunity creation with comprehensive validation',
-          permissionId: 'opportunities',
-          action: 'create',
-          isNew: true,
-          isBeta: true
         },
         {
           id: 'autosave-interactive',
