@@ -304,7 +304,7 @@ export function EnhancedMEDDPICCScoring({
   const generateInsights = () => {
     const newInsights: string[] = [];
     const scoreValues = Object.values(scores).filter(v => typeof v === 'number') as number[];
-    const avgScore = scoreValues.reduce((sum, score) => sum + score, 0) / scoreValues.length;
+    const avgScore = scoreValues.length > 0 ? scoreValues.reduce((sum, score) => sum + score, 0) / scoreValues.length : 0;
     const weakCriteria = scoreValues.filter(score => score < 6).length;
     const strongCriteria = scoreValues.filter(score => score >= 8).length;
 
@@ -320,15 +320,15 @@ export function EnhancedMEDDPICCScoring({
       newInsights.push('⚠️ Multiple weak areas detected. Consider deal risk assessment.');
     }
 
-    if (scores.economicBuyer < 5) {
+    if (Number(scores.economicBuyer) < 5) {
       newInsights.push('💰 Limited Economic Buyer access is a critical risk factor.');
     }
 
-    if (scores.champion < 6) {
+    if (Number(scores.champion) < 6) {
       newInsights.push('🤝 Weak champion strength may slow deal progression.');
     }
 
-    if (scores.metrics < 6) {
+    if (Number(scores.metrics) < 6) {
       newInsights.push('📊 Unclear business metrics reduce deal predictability.');
     }
 
@@ -480,9 +480,9 @@ export function EnhancedMEDDPICCScoring({
                 <span className="sm:hidden">{criterion.label.slice(0, 3)}</span>
                 <Badge
                   variant="secondary"
-                  className={`text-xs ${getScoreColor(scores[criterion.key] as number)}`}
+                  className={`text-xs ${getScoreColor(Number(scores[criterion.key]) || 0)}`}
                 >
-                  {((scores[criterion.key] as number) || 0).toFixed(1)}
+                  {(Number(scores[criterion.key]) || 0).toFixed(1)}
                 </Badge>
               </div>
             </TabsTrigger>
@@ -501,8 +501,8 @@ export function EnhancedMEDDPICCScoring({
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <Label>Current Score</Label>
-                    <Badge className={getScoreColor(scores[criterion.key] as number)}>
-                      {((scores[criterion.key] as number) || 0).toFixed(1)}/10 - {getScoreLabel(scores[criterion.key] as number)}
+                    <Badge className={getScoreColor(Number(scores[criterion.key]) || 0)}>
+                      {(Number(scores[criterion.key]) || 0).toFixed(1)}/10 - {getScoreLabel(Number(scores[criterion.key]) || 0)}
                     </Badge>
                   </div>
                   {!readonly && (
@@ -512,11 +512,11 @@ export function EnhancedMEDDPICCScoring({
                         min="0"
                         max="10"
                         step="0.5"
-                        value={scores[criterion.key] as number || 0}
+                        value={Number(scores[criterion.key]) || 0}
                         onChange={(e) => handleScoreChange(criterion.key, Number(e.target.value))}
                         className="w-full"
                       />
-                      <Progress value={(scores[criterion.key] as number || 0) * 10} className="mt-2" />
+                      <Progress value={(Number(scores[criterion.key]) || 0) * 10} className="mt-2" />
                     </div>
                   )}
                 </div>
