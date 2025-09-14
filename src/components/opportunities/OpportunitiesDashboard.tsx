@@ -485,6 +485,15 @@ export function OpportunitiesDashboard({ user, onViewChange, opportunities: prop
           </Button>
           
           <Button 
+            onClick={() => onViewChange?.('tabs-validator')}
+            variant="outline"
+            className="w-fit"
+          >
+            <Target className="w-4 h-4 mr-2" />
+            Test Tabs
+          </Button>
+          
+          <Button 
             onClick={refreshOpportunities}
             variant="outline"
             className="w-fit"

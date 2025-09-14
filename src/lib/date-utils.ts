@@ -418,13 +418,13 @@ export function createDatePickerValue(
   timezone?: string
 ): DatePickerValue {
   const date = typeof value === 'string' ? parseDate(value) : value;
-  const isValid = date !== null && isValid(date);
+  const dateIsValid = date !== null && isValid(date);
 
   return {
     date,
-    formatted: isValid ? formatDate(date, DATE_FORMATS.DISPLAY, timezone) : '',
-    iso: isValid ? toISOStringWithTimezone(date!, timezone) : '',
-    isValid,
+    formatted: dateIsValid ? formatDate(date, DATE_FORMATS.DISPLAY, timezone) : '',
+    iso: dateIsValid ? toISOStringWithTimezone(date!, timezone) : '',
+    isValid: dateIsValid,
     timezone
   };
 }

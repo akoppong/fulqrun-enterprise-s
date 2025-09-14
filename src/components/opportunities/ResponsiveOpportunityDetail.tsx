@@ -106,7 +106,12 @@ const formatSafeDate = (dateValue: any, formatString: string = 'MMM dd, yyyy'): 
       return 'Not set';
     }
     
-    return format(date, formatString);
+    try {
+      return format(date, formatString);
+    } catch (formatError) {
+      console.warn('Date format error:', formatError, 'for date:', date, 'format:', formatString);
+      return 'Invalid date';
+    }
   } catch (error) {
     console.warn('Date formatting error:', error, 'for value:', dateValue, 'type:', typeof dateValue);
     return 'Not set';
