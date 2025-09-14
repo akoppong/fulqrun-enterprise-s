@@ -12,6 +12,7 @@ export { NewOpportunityMainView } from './NewOpportunityMainView';
 
 // System status and testing
 export { OpportunitySystemStatus } from './OpportunitySystemStatus';
+export { OpportunityDetailTestRunner } from './OpportunityDetailTestRunner';
 
 // Testing and diagnostic exports (disabled to reduce console noise)
 // export { OpportunitiesDashboardTest } from './OpportunitiesDashboardTest';

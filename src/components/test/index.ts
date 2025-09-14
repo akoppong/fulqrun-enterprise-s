@@ -1,5 +1,1 @@
-/**
- * Test Components Export
- */
-
-export { MEDDPICCScoringTest } from './MEDDPICCScoringTest';
+export { OpportunityDetailTest } from './OpportunityDetailTest';

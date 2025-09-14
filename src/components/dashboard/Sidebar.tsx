@@ -175,10 +175,10 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           isNew: true
         },
         {
-          id: 'opportunity-test',
+          id: 'opportunity-detail-test',
           label: 'Opportunity Detail Test',
           icon: Eye,
-          description: 'Test full-screen opportunity views',
+          description: 'Test MEDDPICC integration and error handling',
           permissionId: 'opportunities',
           action: 'read',
           isNew: true
@@ -409,10 +409,10 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
       defaultOpen: false,
       items: [
         {
-          id: 'full-screen-opportunity-test',
-          label: 'Full-Screen Detail Test',
+          id: 'opportunity-detail-test',
+          label: 'Opportunity Detail Test',
           icon: Eye,
-          description: 'Comprehensive full-screen opportunity detail view testing',
+          description: 'Test MEDDPICC integration and error handling',
           permissionId: 'opportunities',
           action: 'read',
           isNew: true
