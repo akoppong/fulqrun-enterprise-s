@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { formatCurrency, getMEDDPICCScore, getStageProgress } from '@/lib/crm-utils';
 import { OpportunityService } from '@/lib/opportunity-service';
+import { CompanyContactService } from '@/lib/company-contact-service';
 import { 
   Target, 
   TrendingUp, 
@@ -32,14 +33,12 @@ interface OpportunitiesDashboardProps {
 
 export function OpportunitiesDashboard({ user, onViewChange, opportunities: propOpportunities }: OpportunitiesDashboardProps) {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
-  const [rawCompanies, setRawCompanies] = useKV<Company[]>('companies', []);
-  const [rawContacts, setRawContacts] = useKV<Contact[]>('contacts', []);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
   const [rawAllUsers, setRawAllUsers] = useKV<User[]>('all-users', []);
   const [isLoading, setIsLoading] = useState(true);
   
   // Ensure all data is always arrays with validation
-  const companies = Array.isArray(rawCompanies) ? rawCompanies : [];
-  const contacts = Array.isArray(rawContacts) ? rawContacts : [];
   const allUsers = Array.isArray(rawAllUsers) ? rawAllUsers : [];
   
   const [selectedRegion, setSelectedRegion] = useState<string>('all');
@@ -77,6 +76,20 @@ export function OpportunitiesDashboard({ user, onViewChange, opportunities: prop
         if (propOpportunities && Array.isArray(propOpportunities)) {
           console.log('OpportunitiesDashboard: Using prop opportunities:', propOpportunities.length);
           setOpportunities(propOpportunities);
+          
+          // Still need to load companies and contacts from centralized service
+          try {
+            await CompanyContactService.initializeSampleData();
+            const [companiesData, contactsData] = await Promise.all([
+              CompanyContactService.getAllCompanies(),
+              CompanyContactService.getAllContacts()
+            ]);
+            setCompanies(companiesData);
+            setContacts(contactsData);
+          } catch (error) {
+            console.error('Failed to load companies/contacts:', error);
+          }
+          
           setIsLoading(false);
           return;
         }
@@ -98,8 +111,17 @@ export function OpportunitiesDashboard({ user, onViewChange, opportunities: prop
           localStorage.removeItem('opportunities');
         }
         
-        // Always get fresh data from service
-        const stored = await OpportunityService.getAllOpportunities();
+        // Load all data from centralized services
+        await CompanyContactService.initializeSampleData();
+        const [stored, companiesData, contactsData] = await Promise.all([
+          OpportunityService.getAllOpportunities(),
+          CompanyContactService.getAllCompanies(),
+          CompanyContactService.getAllContacts()
+        ]);
+        
+        // Set companies and contacts
+        setCompanies(companiesData);
+        setContacts(contactsData);
         
         console.log('OpportunitiesDashboard: Received data from service:', {
           type: typeof stored,

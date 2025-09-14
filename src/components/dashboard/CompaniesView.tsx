@@ -15,43 +15,50 @@ import { getCountryByCode, getRegionByCode } from '@/lib/geography-data';
 import { toast } from 'sonner';
 
 export function CompaniesView() {
-  const [companies, setCompanies] = useKV<Company[]>('companies', []);
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [segments] = useKV<CustomerSegment[]>('customer-segments', []);
   const [searchTerm, setSearchTerm] = useState('');
   const [segmentFilter, setSegmentFilter] = useState('all');
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Initialize company data
+  // Initialize company data from the centralized service
+  const loadCompanies = async () => {
+    setIsLoading(true);
+    try {
+      await CompanyContactService.initializeSampleData();
+      const serviceCompanies = await CompanyContactService.getAllCompanies();
+      setCompanies(serviceCompanies);
+      console.log('Loaded companies from service:', serviceCompanies.length);
+    } catch (error) {
+      console.error('Error loading companies:', error);
+      toast.error('Failed to load companies');
+      // Fallback to demo data
+      const demoCompanies = DemoDataGenerator.generateCompanies();
+      setCompanies(demoCompanies);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const initializeCompanies = async () => {
-      if (companies.length === 0 && !isInitializing) {
-        setIsInitializing(true);
-        try {
-          // First try to get data from CompanyContactService
-          await CompanyContactService.initializeSampleData();
-          const serviceCompanies = await CompanyContactService.getAllCompanies();
-          
-          if (serviceCompanies.length > 0) {
-            setCompanies(serviceCompanies);
-          } else {
-            // Fallback to demo data
-            const demoCompanies = DemoDataGenerator.generateCompanies();
-            setCompanies(demoCompanies);
-          }
-        } catch (error) {
-          console.error('Error initializing companies:', error);
-          // Fallback to demo data on error
-          const demoCompanies = DemoDataGenerator.generateCompanies();
-          setCompanies(demoCompanies);
-        } finally {
-          setIsInitializing(false);
-        }
-      }
-    };
+    loadCompanies();
+  }, []);
 
-    initializeCompanies();
-  }, [companies, setCompanies, isInitializing]);
+  // Handle company creation
+  const handleCompanyCreated = async (newCompany: Company) => {
+    try {
+      // Refresh the entire companies list from the service to ensure consistency
+      await loadCompanies();
+      toast.success(`Company "${newCompany.name}" created successfully`);
+    } catch (error) {
+      console.error('Error refreshing companies after creation:', error);
+      toast.error('Company created but failed to refresh list');
+      // Fallback: add to existing list if refresh fails
+      setCompanies(prev => [...prev, newCompany]);
+    }
+  };
 
   const filteredCompanies = companies.filter(company => {
     const matchesSearch = 
@@ -104,18 +111,6 @@ export function CompaniesView() {
 
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat('en-US').format(num);
-  };
-
-  const handleCompanyCreated = async (newCompany: Company) => {
-    // Refresh companies list
-    try {
-      const updatedCompanies = await CompanyContactService.getAllCompanies();
-      setCompanies(updatedCompanies);
-    } catch (error) {
-      console.error('Error refreshing companies:', error);
-      // Fallback: add to existing list
-      setCompanies(prev => [...prev, newCompany]);
-    }
   };
 
   const handleAssignSegment = (updatedCompany: Company) => {

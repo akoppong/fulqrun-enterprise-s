@@ -16,6 +16,7 @@ import { getMEDDPICCScore } from '@/lib/crm-utils';
 import { toMEDDPICCScore } from '@/lib/meddpicc-defaults';
 import { AIService } from '@/lib/ai-service';
 import { OpportunityService } from '@/lib/opportunity-service';
+import { CompanyContactService } from '@/lib/company-contact-service';
 import { AutoSaveIndicator } from '@/components/ui/auto-save-indicator';
 import { useAutoSave } from '@/hooks/use-auto-save';
 import { OpportunityCloseDateInput } from '@/components/ui/date-input';
@@ -44,8 +45,8 @@ export function UnifiedOpportunityForm({
   user,
   mode = 'dialog'
 }: UnifiedOpportunityFormProps) {
-  const [companies, setCompanies] = useKV<Company[]>('companies', []);
-  const [contacts, setContacts] = useKV<Contact[]>('contacts', []);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
   const [allUsers, setAllUsers] = useKV<User[]>('all-users', []);
   const [aiInsights, setAiInsights] = useState<any>(null);
   const [generatingInsights, setGeneratingInsights] = useState(false);
@@ -54,6 +55,7 @@ export function UnifiedOpportunityForm({
   const [showCreateContact, setShowCreateContact] = useState(false);
   const [currentTag, setCurrentTag] = useState('');
   const [activeTab, setActiveTab] = useState('basic');
+  const [loading, setLoading] = useState(false);
   
   // Date validation hook for close date
   const closeDateValidation = useDateValidation({
@@ -123,78 +125,44 @@ export function UnifiedOpportunityForm({
     }
   });
 
-  // Initialize demo data
+  // Initialize and load data from the centralized service
   useEffect(() => {
-    if (companies.length === 0) {
-      const demoCompanies: Company[] = [
-        {
-          id: 'comp-1',
-          name: 'TechCorp Solutions',
-          industry: 'Technology',
-          email: 'contact@techcorp.com',
-          phone: '+1 (555) 123-4567',
-          address: '123 Tech Street, San Francisco, CA',
-          website: 'https://techcorp.com',
-          size: 'Large',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        },
-        {
-          id: 'comp-2',
-          name: 'GrowthCo Inc',
-          industry: 'Marketing',
-          email: 'hello@growthco.com',
-          phone: '+1 (555) 987-6543',
-          address: '456 Growth Ave, Austin, TX',
-          website: 'https://growthco.com',
-          size: 'Medium',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        }
-      ];
-      setCompanies(demoCompanies);
-    }
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        // Initialize sample data if needed
+        await CompanyContactService.initializeSampleData();
+        
+        // Load companies and contacts from the centralized service
+        const [companiesData, contactsData] = await Promise.all([
+          CompanyContactService.getAllCompanies(),
+          CompanyContactService.getAllContacts()
+        ]);
+        
+        setCompanies(companiesData);
+        setContacts(contactsData);
+        
+        console.log('Loaded companies:', companiesData.length);
+        console.log('Loaded contacts:', contactsData.length);
+      } catch (error) {
+        console.error('Error loading company/contact data:', error);
+        toast.error('Failed to load company and contact data');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    if (contacts.length === 0) {
-      const demoContacts: Contact[] = [
-        {
-          id: 'cont-1',
-          name: 'John Smith',
-          title: 'CTO',
-          email: 'john.smith@techcorp.com',
-          phone: '+1 (555) 123-4567',
-          companyId: 'comp-1',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        },
-        {
-          id: 'cont-2',
-          name: 'Sarah Johnson',
-          title: 'Procurement Manager',
-          email: 'sarah.johnson@techcorp.com',
-          phone: '+1 (555) 123-4568',
-          companyId: 'comp-1',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        },
-        {
-          id: 'cont-3',
-          name: 'Mike Davis',
-          title: 'Marketing Director',
-          email: 'mike.davis@growthco.com',
-          phone: '+1 (555) 987-6543',
-          companyId: 'comp-2',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        }
-      ];
-      setContacts(demoContacts);
+    if (isOpen) {
+      loadData();
     }
+  }, [isOpen]);
 
+  // Initialize users if empty
+  useEffect(() => {
     if (allUsers.length === 0) {
       setAllUsers([user]);
     }
-  }, [companies.length, contacts.length, setCompanies, setContacts, setAllUsers, user]);
+  }, [allUsers.length, setAllUsers, user]);
 
   // Initialize form with editing data
   useEffect(() => {
@@ -384,24 +352,35 @@ export function UnifiedOpportunityForm({
       return;
     }
 
-    const company: Company = {
-      id: `comp-${Date.now()}`,
-      name: newCompany.name.trim(),
-      industry: newCompany.industry.trim() || 'Other',
-      email: newCompany.email.trim() || '',
-      phone: newCompany.phone.trim() || '',
-      address: newCompany.address.trim() || '',
-      website: '',
-      size: 'Unknown',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
+    try {
+      const companyData = {
+        name: newCompany.name.trim(),
+        industry: newCompany.industry.trim() || 'Other',
+        email: newCompany.email.trim() || '',
+        phone: newCompany.phone.trim() || '',
+        address: newCompany.address.trim() || '',
+        website: '',
+        size: 'Unknown' as const,
+        region: 'Unknown',
+        country: 'Unknown'
+      };
 
-    setCompanies([...companies, company]);
-    setFormData({ ...formData, companyId: company.id });
-    setNewCompany({ name: '', industry: '', email: '', phone: '', address: '' });
-    setShowCreateCompany(false);
-    toast.success('Company created successfully');
+      const createdCompany = await CompanyContactService.createCompany(companyData);
+      
+      // Refresh the companies list
+      const updatedCompanies = await CompanyContactService.getAllCompanies();
+      setCompanies(updatedCompanies);
+      
+      // Set the newly created company as selected
+      setFormData({ ...formData, companyId: createdCompany.id });
+      setNewCompany({ name: '', industry: '', email: '', phone: '', address: '' });
+      setShowCreateCompany(false);
+      
+      toast.success(`Company "${createdCompany.name}" created successfully`);
+    } catch (error) {
+      console.error('Error creating company:', error);
+      toast.error('Failed to create company. Please try again.');
+    }
   };
 
   const handleCreateContact = async () => {
@@ -410,22 +389,36 @@ export function UnifiedOpportunityForm({
       return;
     }
 
-    const contact: Contact = {
-      id: `cont-${Date.now()}`,
-      name: newContact.name.trim(),
-      title: newContact.title.trim() || '',
-      email: newContact.email.trim(),
-      phone: newContact.phone.trim() || '',
-      companyId: newContact.companyId || formData.companyId,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
+    try {
+      const contactData = {
+        firstName: newContact.name.trim().split(' ')[0] || newContact.name.trim(),
+        lastName: newContact.name.trim().split(' ').slice(1).join(' ') || '',
+        email: newContact.email.trim(),
+        phone: newContact.phone.trim() || '',
+        title: newContact.title.trim() || '',
+        role: 'contact' as const,
+        companyId: newContact.companyId || formData.companyId!,
+        region: 'Unknown',
+        country: 'Unknown',
+        address: ''
+      };
 
-    setContacts([...contacts, contact]);
-    setFormData({ ...formData, contactId: contact.id });
-    setNewContact({ name: '', title: '', email: '', phone: '', companyId: '' });
-    setShowCreateContact(false);
-    toast.success('Contact created successfully');
+      const createdContact = await CompanyContactService.createContact(contactData);
+      
+      // Refresh the contacts list
+      const updatedContacts = await CompanyContactService.getAllContacts();
+      setContacts(updatedContacts);
+      
+      // Set the newly created contact as selected
+      setFormData({ ...formData, contactId: createdContact.id });
+      setNewContact({ name: '', title: '', email: '', phone: '', companyId: '' });
+      setShowCreateContact(false);
+      
+      toast.success(`Contact "${createdContact.firstName} ${createdContact.lastName}" created successfully`);
+    } catch (error) {
+      console.error('Error creating contact:', error);
+      toast.error('Failed to create contact. Please try again.');
+    }
   };
 
   const availableContacts = contacts.filter(contact => 
@@ -629,11 +622,17 @@ export function UnifiedOpportunityForm({
                           <SelectValue placeholder="Select company" />
                         </SelectTrigger>
                         <SelectContent className="max-h-60">
-                          {companies.map((company) => (
-                            <SelectItem key={company.id} value={company.id}>
-                              {company.name} ({company.industry})
-                            </SelectItem>
-                          ))}
+                          {loading ? (
+                            <SelectItem value="" disabled>Loading companies...</SelectItem>
+                          ) : companies.length === 0 ? (
+                            <SelectItem value="" disabled>No companies available</SelectItem>
+                          ) : (
+                            companies.map((company) => (
+                              <SelectItem key={company.id} value={company.id}>
+                                {company.name} ({company.industry})
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
@@ -666,11 +665,19 @@ export function UnifiedOpportunityForm({
                           } />
                         </SelectTrigger>
                         <SelectContent className="max-h-60">
-                          {availableContacts.map((contact) => (
-                            <SelectItem key={contact.id} value={contact.id}>
-                              {contact.name} ({contact.title || 'No title'})
+                          {loading ? (
+                            <SelectItem value="" disabled>Loading contacts...</SelectItem>
+                          ) : availableContacts.length === 0 ? (
+                            <SelectItem value="" disabled>
+                              {!formData.companyId ? "Select company first" : "No contacts available"}
                             </SelectItem>
-                          ))}
+                          ) : (
+                            availableContacts.map((contact) => (
+                              <SelectItem key={contact.id} value={contact.id}>
+                                {contact.firstName} {contact.lastName} ({contact.title || 'No title'})
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
@@ -693,6 +700,22 @@ export function UnifiedOpportunityForm({
                         <div>
                           <h4 className="font-medium">{selectedCompany.name}</h4>
                           <p className="text-sm text-muted-foreground">{selectedCompany.industry}</p>
+                          {selectedCompany.website && (
+                            <p className="text-xs text-muted-foreground">{selectedCompany.website}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedContact && (
+                    <div className="p-3 bg-muted rounded-lg">
+                      <div className="flex items-start gap-3">
+                        <Users className="w-6 h-6 text-green-600 mt-1" />
+                        <div>
+                          <h4 className="font-medium">{selectedContact.firstName} {selectedContact.lastName}</h4>
+                          <p className="text-sm text-muted-foreground">{selectedContact.title}</p>
+                          <p className="text-xs text-muted-foreground">{selectedContact.email}</p>
                         </div>
                       </div>
                     </div>
