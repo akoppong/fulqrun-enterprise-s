@@ -125,6 +125,34 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           action: 'read'
         },
         {
+          id: 'qualification-hub',
+          label: 'Qualification Hub',
+          icon: ClipboardList,
+          description: 'Complete MEDDPICC assessments',
+          permissionId: 'opportunities',
+          action: 'read',
+          isNew: true
+        },
+        {
+          id: 'pipeline-tracker',
+          label: 'Pipeline Tracker',
+          icon: Activity,
+          description: 'Track qualification across pipeline',
+          permissionId: 'opportunities',
+          action: 'read',
+          isNew: true
+        },
+        {
+          id: 'qualification-demo',
+          label: 'Qualification Demo',
+          icon: Eye,
+          description: 'Interactive qualification system demo',
+          permissionId: 'opportunities',
+          action: 'read',
+          isNew: true,
+          isBeta: true
+        },
+        {
           id: 'contacts',
           label: 'Contacts',
           icon: AddressBook,

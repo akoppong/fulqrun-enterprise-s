@@ -41,6 +41,9 @@ import { MEDDPICCModule, EnhancedMEDDPICCModule, EnhancedMEDDPICCAnalytics, MEDD
 import { RelationshipMapper } from '../opportunities/RelationshipMapper';
 import { OpportunityDetailTest } from '../test/OpportunityDetailTest';
 import { OpportunityTabTestRunner } from '../opportunities/OpportunityTabTestRunner';
+import { QualificationAssessmentHub } from '../opportunities/QualificationAssessmentHub';
+import { PipelineQualificationTracker } from '../opportunities/PipelineQualificationTracker';
+import { QualificationDemo } from '../opportunities/QualificationDemo';
 
 
 interface DashboardProps {
@@ -51,7 +54,7 @@ interface DashboardProps {
   initialView?: string;
 }
 
-export type DashboardView = 'dashboard' | 'role-testing' | 'opportunities-dashboard-test' | 'opportunity-creation-test' | 'opportunity-detail-test' | 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'advanced-analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'kpi-gallery' | 'kpi-manager' | 'kpi-layout' | 'pharma-kpi-templates' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'relationship-mapping' | 'meddpicc' | 'enhanced-meddpicc' | 'meddpicc-analytics' | 'enhanced-meddpicc-analytics' | 'meddpicc-admin' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit' | 'administration' | 'smart-contact-demo' | 'smart-form';
+export type DashboardView = 'dashboard' | 'role-testing' | 'opportunities-dashboard-test' | 'opportunity-creation-test' | 'opportunity-detail-test' | 'pipeline' | 'opportunities' | 'qualification-hub' | 'pipeline-tracker' | 'qualification-demo' | 'contacts' | 'companies' | 'analytics' | 'advanced-analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'kpi-gallery' | 'kpi-manager' | 'kpi-layout' | 'pharma-kpi-templates' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'relationship-mapping' | 'meddpicc' | 'enhanced-meddpicc' | 'meddpicc-analytics' | 'enhanced-meddpicc-analytics' | 'meddpicc-admin' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit' | 'administration' | 'smart-contact-demo' | 'smart-form';
 
 export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialView }: DashboardProps) {
   // All hooks must be called before any early returns
@@ -177,6 +180,12 @@ export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialV
         return <PipelineView user={user} />;
       case 'opportunities':
         return <OpportunitiesModule user={user} />;
+      case 'qualification-hub':
+        return <QualificationAssessmentHub />;
+      case 'pipeline-tracker':
+        return <PipelineQualificationTracker />;
+      case 'qualification-demo':
+        return <QualificationDemo />;
       case 'opportunities-dashboard-test':
         return <OpportunitiesModule user={user} initialView="dashboard-test" />;
       case 'opportunity-creation-test':
