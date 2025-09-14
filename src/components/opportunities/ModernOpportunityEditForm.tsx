@@ -540,7 +540,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
   };
 
   // Get filtered contacts based on selected company - moved before handleSave
-  const availableContacts = formData.companyId 
+  const availableContacts = formData.companyId && Array.isArray(contacts)
     ? contacts.filter(contact => contact.companyId === formData.companyId)
     : [];
 
@@ -601,7 +601,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
       setIsLoading(false);
     }
   }, { context: 'OpportunityEditForm.handleSave' }), [
-    formData, selectedDate, opportunity, onSave, onSubmit, onClose, validateForm
+    formData, selectedDate, opportunity, onSave, onSubmit, onClose, validateForm, availableContacts
   ]);
 
   const selectedCompany = companies.find(company => company.id === formData.companyId);
@@ -769,6 +769,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                     >
                       <SelectTrigger 
                         id="company" 
+                        aria-label="Select company"
                         className={cn(
                           "h-12 text-base",
                           getFieldError('companyId') && "border-destructive focus-visible:ring-destructive"
@@ -781,7 +782,11 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                       <SelectContent className="max-h-[300px]">
                         {companies.length > 0 ? (
                           companies.map((company) => (
-                            <SelectItem key={company.id} value={company.id}>
+                            <SelectItem 
+                              key={company.id} 
+                              value={company.id}
+                              textValue={company.name}
+                            >
                               <div className="flex flex-col items-start">
                                 <span className="font-medium">{company.name}</span>
                                 {company.industry && (
@@ -815,6 +820,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                     >
                       <SelectTrigger 
                         id="contact" 
+                        aria-label="Select contact"
                         className={cn(
                           "h-12 text-base",
                           getFieldError('contactId') && "border-destructive focus-visible:ring-destructive",
@@ -834,7 +840,11 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                       <SelectContent>
                         {selectedCompany && availableContacts.length > 0 ? (
                           availableContacts.map((contact) => (
-                            <SelectItem key={contact.id} value={contact.id}>
+                            <SelectItem 
+                              key={contact.id} 
+                              value={contact.id}
+                              textValue={getContactDisplayName(contact)}
+                            >
                               <div className="flex flex-col items-start">
                                 <span className="font-medium">{getContactDisplayName(contact)}</span>
                                 {contact.title && (
@@ -981,6 +991,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                     >
                       <SelectTrigger 
                         id="stage" 
+                        aria-label="Select PEAK stage"
                         className={cn(
                           "h-12 text-base",
                           getFieldError('stage') && "border-destructive focus-visible:ring-destructive"
@@ -1022,6 +1033,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                     >
                       <SelectTrigger 
                         id="priority" 
+                        aria-label="Select priority level"
                         className={cn(
                           "h-12 text-base",
                           getFieldError('priority') && "border-destructive focus-visible:ring-destructive"
@@ -1093,7 +1105,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                       value={formData.ownerId || 'current-user'} 
                       onValueChange={(value) => handleInputChange('ownerId', value)}
                     >
-                      <SelectTrigger id="owner" className="h-12 text-base">
+                      <SelectTrigger id="owner" aria-label="Select owner" className="h-12 text-base">
                         <SelectValue placeholder="Select owner" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1136,7 +1148,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                       value={formData.industry || ''} 
                       onValueChange={(value) => handleInputChange('industry', value)}
                     >
-                      <SelectTrigger id="industry" className="h-12 text-base">
+                      <SelectTrigger id="industry" aria-label="Select industry" className="h-12 text-base">
                         <SelectValue placeholder="Select industry" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1158,7 +1170,7 @@ function OpportunityEditFormInner({ isOpen, onClose, onSave, onSubmit, opportuni
                       value={formData.leadSource || ''} 
                       onValueChange={(value) => handleInputChange('leadSource', value)}
                     >
-                      <SelectTrigger id="lead-source" className="h-12 text-base">
+                      <SelectTrigger id="lead-source" aria-label="Select lead source" className="h-12 text-base">
                         <SelectValue placeholder="Select lead source" />
                       </SelectTrigger>
                       <SelectContent>

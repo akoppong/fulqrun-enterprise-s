@@ -21,10 +21,10 @@ function App() {
     // Initialize performance monitoring
     console.log('Performance monitoring initialized');
     
-    // Optional: Set up performance monitoring callbacks
+    // Optional: Set up performance monitoring callbacks - less verbose
     performanceMonitor.onOptimizationOpportunity((opportunity) => {
-      if (opportunity.severity === 'high') {
-        console.warn('High priority optimization opportunity:', opportunity);
+      if (opportunity.severity === 'critical') {
+        console.warn('Critical optimization opportunity:', opportunity);
       }
     });
 

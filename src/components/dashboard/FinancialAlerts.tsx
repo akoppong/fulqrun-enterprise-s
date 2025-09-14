@@ -91,8 +91,8 @@ export function FinancialAlerts({ opportunities }: FinancialAlertsProps) {
     try {
       const now = Date.now();
       
-      // Only check for alerts every 5 minutes to avoid KV storage overload
-      if (now - lastAlertCheck < 300000) return;
+      // Only check for alerts every 15 minutes to avoid KV storage overload
+      if (now - lastAlertCheck < 900000) return;
       
       // Ensure opportunities is an array before filtering
       const safeOpportunities = Array.isArray(opportunities) ? opportunities : [];

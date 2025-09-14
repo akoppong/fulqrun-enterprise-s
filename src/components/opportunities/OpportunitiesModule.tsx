@@ -66,18 +66,6 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
         setEditingOpportunity(null);
         break;
       
-      case 'dashboard-test':
-        setCurrentView('dashboard-test');
-        setSelectedOpportunityId(null);
-        setEditingOpportunity(null);
-        break;
-      
-      case 'creation-test':
-        setCurrentView('creation-test');
-        setSelectedOpportunityId(null);
-        setEditingOpportunity(null);
-        break;
-      
       case 'opportunities-list':
       case 'list':
         setCurrentView('list');
