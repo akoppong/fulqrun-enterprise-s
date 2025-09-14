@@ -135,6 +135,14 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           action: 'read'
         },
         {
+          id: 'enhanced-meddpicc',
+          label: 'Enhanced MEDDPICC',
+          icon: Brain,
+          description: 'Advanced B2B qualification with AI insights',
+          permissionId: 'meddpicc',
+          action: 'read'
+        },
+        {
           id: 'contacts',
           label: 'Contacts',
           icon: AddressBook,
@@ -425,6 +433,15 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           description: 'Configure MEDDPICC questions & scoring',
           permissionId: 'system-config',
           action: 'write',
+          isNew: true
+        },
+        {
+          id: 'enhanced-meddpicc-analytics',
+          label: 'MEDDPICC Analytics',
+          icon: ChartLine,
+          description: 'Advanced MEDDPICC sales analytics',
+          permissionId: 'analytics',
+          action: 'read',
           isNew: true
         }
       ]

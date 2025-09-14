@@ -37,7 +37,7 @@ import { AdvancedKPIAnalytics } from './AdvancedKPIAnalytics';
 import { PharmaceuticalKPITemplates } from './PharmaceuticalKPITemplates';
 import { RoleTestingDashboard } from './RoleTestingDashboard';
 import { RoleShowcase } from './RoleShowcase';
-import { MEDDPICCModule, MEDDPICCAnalyticsDashboard, MEDDPICCAdminConfig, MEDDPICCLauncher, MEDDPICCAnalyticsTest } from '@/components/meddpicc';
+import { MEDDPICCModule, EnhancedMEDDPICCModule, EnhancedMEDDPICCAnalytics, MEDDPICCAnalyticsDashboard, MEDDPICCAdminConfig, MEDDPICCLauncher, MEDDPICCAnalyticsTest } from '@/components/meddpicc';
 import { RelationshipMapper } from '../relationships/RelationshipMapper';
 
 
@@ -49,7 +49,7 @@ interface DashboardProps {
   initialView?: string;
 }
 
-export type DashboardView = 'dashboard' | 'role-testing' | 'opportunities-dashboard-test' | 'opportunity-creation-test' | 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'advanced-analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'kpi-gallery' | 'kpi-manager' | 'kpi-layout' | 'pharma-kpi-templates' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'relationship-mapping' | 'meddpicc' | 'meddpicc-analytics' | 'meddpicc-admin' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit' | 'administration' | 'smart-contact-demo' | 'smart-form';
+export type DashboardView = 'dashboard' | 'role-testing' | 'opportunities-dashboard-test' | 'opportunity-creation-test' | 'pipeline' | 'opportunities' | 'contacts' | 'companies' | 'analytics' | 'advanced-analytics' | 'cstpv' | 'financial' | 'kpi-targets' | 'kpi-builder' | 'kpi-gallery' | 'kpi-manager' | 'kpi-layout' | 'pharma-kpi-templates' | 'learning' | 'integrations' | 'workflows' | 'ai-insights' | 'lead-scoring' | 'deal-risk' | 'segments' | 'relationship-mapping' | 'meddpicc' | 'enhanced-meddpicc' | 'meddpicc-analytics' | 'enhanced-meddpicc-analytics' | 'meddpicc-admin' | 'admin-users' | 'admin-system' | 'admin-security' | 'admin-monitoring' | 'admin-data' | 'admin-audit' | 'administration' | 'smart-contact-demo' | 'smart-form';
 
 export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialView }: DashboardProps) {
   // All hooks must be called before any early returns
@@ -291,8 +291,12 @@ export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialV
       // MEDDPICC Module
       case 'meddpicc':
         return <MEDDPICCModule />;
+      case 'enhanced-meddpicc':
+        return <EnhancedMEDDPICCModule />;
       case 'meddpicc-analytics':
         return <MEDDPICCAnalyticsDashboard />;
+      case 'enhanced-meddpicc-analytics':
+        return <EnhancedMEDDPICCAnalytics />;
       case 'meddpicc-analytics-test':
         return <MEDDPICCAnalyticsTest />;
       case 'meddpicc-admin':
