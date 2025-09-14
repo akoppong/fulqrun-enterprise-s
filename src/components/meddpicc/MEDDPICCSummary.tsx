@@ -253,6 +253,14 @@ function PillarScoreCard({ score }: { score: MEDDPICCScore }) {
   const Icon = PILLAR_ICONS[score.pillar as keyof typeof PILLAR_ICONS] || Target;
   const label = PILLAR_LABELS[score.pillar as keyof typeof PILLAR_LABELS] || score.pillar;
   
+  // Safe property access with fallbacks
+  const scoreValue = score.score || 0;
+  const maxScoreValue = score.max_score || score.maxScore || 40;
+  const percentageValue = score.percentage || (maxScoreValue > 0 ? (scoreValue / maxScoreValue) * 100 : 0);
+  
+  // Determine level based on percentage
+  const level = percentageValue >= 80 ? 'strong' : percentageValue >= 60 ? 'moderate' : 'weak';
+  
   return (
     <TooltipProvider>
       <Tooltip>
@@ -264,24 +272,24 @@ function PillarScoreCard({ score }: { score: MEDDPICCScore }) {
             </div>
             <div className="space-y-1">
               <div className="flex justify-between items-center">
-                <span className="text-xs font-bold">{score.score}/{score.maxScore}</span>
+                <span className="text-xs font-bold">{scoreValue}/{maxScoreValue}</span>
                 <Badge 
                   variant="secondary" 
-                  className={`${LEVEL_COLORS[score.level]} text-xs px-1`}
+                  className={`${LEVEL_COLORS[level]} text-xs px-1`}
                 >
-                  {score.level.charAt(0).toUpperCase()}
+                  {level.charAt(0).toUpperCase()}
                 </Badge>
               </div>
-              <Progress value={score.percentage} className="h-1" />
+              <Progress value={percentageValue} className="h-1" />
             </div>
           </div>
         </TooltipTrigger>
         <TooltipContent>
           <div className="space-y-1">
             <div className="font-medium">{label}</div>
-            <div className="text-sm">Score: {score.score}/{score.maxScore}</div>
-            <div className="text-sm">Percentage: {score.percentage.toFixed(1)}%</div>
-            <div className="text-sm">Level: {score.level.toUpperCase()}</div>
+            <div className="text-sm">Score: {scoreValue}/{maxScoreValue}</div>
+            <div className="text-sm">Percentage: {percentageValue.toFixed(1)}%</div>
+            <div className="text-sm">Level: {level.toUpperCase()}</div>
           </div>
         </TooltipContent>
       </Tooltip>

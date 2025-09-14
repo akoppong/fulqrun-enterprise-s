@@ -40,7 +40,7 @@ import { formatCurrency, getMEDDPICCScore, getStageProgress } from '@/lib/crm-ut
 import { format, differenceInDays, isValid, parseISO } from 'date-fns';
 
 // MEDDPICC Integration
-import { MEDDPICCSummary } from '@/components/meddpicc';
+import { MEDDPICCSummary, MEDDPICCModule } from '@/components/meddpicc';
 
 // Helper functions (defined outside component to avoid re-creation)
 const getPriorityBadge = (priority?: string) => {
@@ -80,15 +80,16 @@ const formatSafeDate = (dateValue: any, formatString: string = 'MMM dd, yyyy'): 
       date = new Date(String(dateValue));
     }
     
-    if (!isValid(date) || isNaN(date.getTime())) {
+    // Additional validation before formatting
+    if (!date || !isValid(date) || isNaN(date.getTime()) || date.getTime() === 0) {
       console.warn('Invalid date value:', dateValue, 'type:', typeof dateValue);
-      return 'Invalid date';
+      return 'Not set';
     }
     
     return format(date, formatString);
   } catch (error) {
     console.warn('Date formatting error:', error, 'for value:', dateValue, 'type:', typeof dateValue);
-    return 'Invalid date';
+    return 'Not set';
   }
 };
 
@@ -118,10 +119,42 @@ export function ResponsiveOpportunityDetail({
   // Load MEDDPICC assessment
   useEffect(() => {
     if (opportunity?.id) {
-      // TODO: Re-enable when MEDDPICCService is available
-      // const assessment = MEDDPICCService.getLatestAssessment(opportunity.id);
-      const assessment = null;
-      setMeddpiccAssessment(assessment);
+      // Create mock MEDDPICC assessment for demonstration
+      const mockAssessment = {
+        id: `assessment-${opportunity.id}`,
+        opportunity_id: opportunity.id,
+        pillar_scores: [
+          { pillar: 'metrics', score: 25, max_score: 40, percentage: 62.5 },
+          { pillar: 'economic_buyer', score: 30, max_score: 40, percentage: 75.0 },
+          { pillar: 'decision_criteria', score: 20, max_score: 40, percentage: 50.0 },
+          { pillar: 'decision_process', score: 15, max_score: 40, percentage: 37.5 },
+          { pillar: 'paper_process', score: 10, max_score: 40, percentage: 25.0 },
+          { pillar: 'implicate_the_pain', score: 35, max_score: 40, percentage: 87.5 },
+          { pillar: 'champion', score: 38, max_score: 40, percentage: 95.0 },
+          { pillar: 'competition', score: 28, max_score: 40, percentage: 70.0 }
+        ],
+        total_score: 201,
+        max_total_score: 320,
+        completion_percentage: 85.0,
+        overall_level: 'moderate' as const,
+        coaching_prompts: [
+          {
+            pillar: 'paper_process',
+            prompt: 'Understand the legal and procurement process to avoid last-minute delays',
+            priority: 'high' as const
+          },
+          {
+            pillar: 'decision_process',
+            prompt: 'Map out the complete decision-making timeline and key stakeholders',
+            priority: 'medium' as const
+          }
+        ],
+        last_updated: new Date(),
+        created_date: new Date(),
+        updated_by: 'current-user'
+      };
+      
+      setMeddpiccAssessment(mockAssessment);
     }
   }, [opportunity?.id]);
 
@@ -155,6 +188,12 @@ export function ResponsiveOpportunityDetail({
       setActiveTab('overview');
     }
   }, [opportunity?.id, isOpen]);
+
+  // Priority badge configuration
+  const priorityBadgeConfig = useMemo(() => 
+    getPriorityBadge(opportunity?.priority), 
+    [opportunity?.priority]
+  );
 
   // Get related data with memoization
   const company = useMemo(() => 
@@ -270,6 +309,13 @@ export function ResponsiveOpportunityDetail({
               >
                 <Users size={14} className="mr-1" />
                 Contact
+              </TabsTrigger>
+              <TabsTrigger 
+                value="activities" 
+                className="h-10 px-3 text-sm whitespace-nowrap shrink-0 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent border-0"
+              >
+                <ClockCounterClockwise size={14} className="mr-1" />
+                Activities
               </TabsTrigger>
             </div>
           </TabsList>
@@ -481,6 +527,64 @@ export function ResponsiveOpportunityDetail({
               showActions={true}
             />
             
+            {/* MEDDPICC Quick Insights */}
+            {meddpiccAssessment && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <ChartLineUp size={16} className="text-blue-600" />
+                      Deal Health Snapshot
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Overall Score</span>
+                      <Badge className={`${
+                        meddpiccAssessment.overall_level === 'strong' ? 'bg-green-500' :
+                        meddpiccAssessment.overall_level === 'moderate' ? 'bg-yellow-500' : 'bg-red-500'
+                      } text-white`}>
+                        {meddpiccAssessment.total_score}/{meddpiccAssessment.max_total_score}
+                      </Badge>
+                    </div>
+                    <Progress 
+                      value={(meddpiccAssessment.total_score / meddpiccAssessment.max_total_score) * 100} 
+                      className="h-2"
+                    />
+                    <div className="text-xs text-muted-foreground">
+                      {meddpiccAssessment.completion_percentage.toFixed(1)}% assessment complete
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Trophy size={16} className="text-yellow-600" />
+                      Strongest Areas
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {meddpiccAssessment.pillar_scores
+                        .sort((a, b) => b.percentage - a.percentage)
+                        .slice(0, 3)
+                        .map((pillar, index) => (
+                          <div key={pillar.pillar} className="flex items-center justify-between">
+                            <span className="text-sm capitalize">
+                              {pillar.pillar.replace('_', ' ')}
+                            </span>
+                            <span className="text-sm font-medium text-green-600">
+                              {pillar.percentage.toFixed(0)}%
+                            </span>
+                          </div>
+                        ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+            
             {/* MEDDPICC Assessment Modal */}
             <Dialog open={showMEDDPICCModal} onOpenChange={setShowMEDDPICCModal}>
               <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
@@ -490,10 +594,10 @@ export function ResponsiveOpportunityDetail({
                     Complete B2B sales qualification for {opportunity.name}
                   </DialogDescription>
                 </DialogHeader>
-                {/* Assessment component would go here */}
-                <div className="text-center py-8">
-                  <ChartLineUp size={48} className="text-blue-600 mx-auto mb-4" />
-                  <p className="text-muted-foreground">MEDDPICC Assessment component coming soon</p>
+                
+                {/* Embedded MEDDPICC Module */}
+                <div className="max-h-[70vh] overflow-y-auto">
+                  <MEDDPICCModule />
                 </div>
               </DialogContent>
             </Dialog>
@@ -557,6 +661,80 @@ export function ResponsiveOpportunityDetail({
                     <Button variant="outline" size="sm" className="mt-3" disabled>
                       <Plus size={14} className="mr-1" />
                       Add Contact
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="activities" className="mt-0 space-y-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base font-semibold flex items-center gap-2">
+                    <ClockCounterClockwise size={16} className="text-purple-600" />
+                    Recent Activities
+                  </CardTitle>
+                  <Button size="sm" disabled>
+                    <Plus size={14} className="mr-1" />
+                    Add Activity
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {opportunity.activities && opportunity.activities.length > 0 ? (
+                  <div className="space-y-4">
+                    {opportunity.activities.slice(0, 5).map((activity, index) => (
+                      <div key={activity.id || index} className="flex items-start gap-3 pb-4 border-b border-border last:border-0 last:pb-0">
+                        <div className={`w-2 h-2 rounded-full mt-2 ${
+                          activity.outcome === 'positive' ? 'bg-green-500' :
+                          activity.outcome === 'negative' ? 'bg-red-500' : 'bg-yellow-500'
+                        }`} />
+                        <div className="flex-1 space-y-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <Badge variant="outline" className="text-xs capitalize">
+                              {activity.type}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">
+                              {formatSafeDate(activity.date, 'MMM dd')}
+                            </span>
+                          </div>
+                          <p className="text-sm font-medium">{activity.notes}</p>
+                          <div className="flex items-center gap-2">
+                            <Badge 
+                              variant="secondary" 
+                              className={`text-xs ${
+                                activity.outcome === 'positive' ? 'bg-green-100 text-green-700' :
+                                activity.outcome === 'negative' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
+                              }`}
+                            >
+                              {activity.outcome}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {opportunity.activities.length > 5 && (
+                      <div className="text-center pt-2">
+                        <Button variant="ghost" size="sm" disabled>
+                          View All Activities ({opportunity.activities.length})
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 space-y-3">
+                    <ClockCounterClockwise size={32} className="text-muted-foreground mx-auto" />
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium">No Activities Recorded</p>
+                      <p className="text-xs text-muted-foreground">
+                        Track meetings, calls, and interactions to build opportunity context
+                      </p>
+                    </div>
+                    <Button variant="outline" size="sm" className="mt-3" disabled>
+                      <Plus size={14} className="mr-1" />
+                      Add First Activity
                     </Button>
                   </div>
                 )}
