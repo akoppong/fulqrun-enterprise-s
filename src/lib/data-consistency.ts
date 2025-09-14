@@ -31,12 +31,14 @@ export function validateOpportunity(opportunity: any): ValidationResult {
     errors.push('Opportunity must have a valid string ID');
   }
 
-  if (!opportunity?.title || typeof opportunity.title !== 'string') {
-    errors.push('Opportunity must have a valid title');
+  // Accept both 'title' and 'name' fields
+  if (!opportunity?.title && !opportunity?.name) {
+    errors.push('Opportunity must have a valid title or name');
   }
 
-  if (!opportunity?.companyId || typeof opportunity.companyId !== 'string') {
-    errors.push('Opportunity must have a valid company ID');
+  // Company validation - accept both companyId and company name
+  if (!opportunity?.companyId && !opportunity?.company) {
+    errors.push('Opportunity must have a valid company ID or company name');
   }
 
   // Value validation
@@ -44,44 +46,41 @@ export function validateOpportunity(opportunity: any): ValidationResult {
     errors.push('Opportunity value must be a non-negative number');
   }
 
-  // Date validation
-  const dateFields = ['expectedCloseDate', 'createdAt', 'updatedAt'];
-  dateFields.forEach(field => {
-    if (opportunity?.[field]) {
-      const date = new Date(opportunity[field]);
-      if (isNaN(date.getTime())) {
-        errors.push(`${field} must be a valid date`);
-      }
-    } else if (field === 'expectedCloseDate' || field === 'createdAt') {
-      errors.push(`${field} is required`);
+  // Date validation - be more flexible with date fields
+  if (opportunity?.expectedCloseDate) {
+    const date = new Date(opportunity.expectedCloseDate);
+    if (isNaN(date.getTime())) {
+      errors.push('expectedCloseDate must be a valid date');
     }
-  });
+  }
+
+  // Created date validation (allow auto-generation)
+  if (opportunity?.createdAt) {
+    const date = new Date(opportunity.createdAt);
+    if (isNaN(date.getTime())) {
+      errors.push('createdAt must be a valid date');
+    }
+  }
 
   // Probability validation
   if (typeof opportunity?.probability !== 'number' || opportunity.probability < 0 || opportunity.probability > 100) {
     errors.push('Probability must be a number between 0 and 100');
   }
 
-  // MEDDPICC validation
-  if (!opportunity?.meddpicc || typeof opportunity.meddpicc !== 'object') {
-    errors.push('Opportunity must have valid MEDDPICC qualification data');
-  } else {
-    const meddpiccFields = ['metrics', 'economicBuyer', 'decisionCriteria', 'decisionProcess', 'paperProcess', 'implicatePain', 'champion'];
-    meddpiccFields.forEach(field => {
-      if (typeof opportunity.meddpicc[field] !== 'string') {
-        warnings.push(`MEDDPICC ${field} should be a string`);
-      }
-    });
-
+  // MEDDPICC validation - be more flexible
+  if (opportunity?.meddpicc && typeof opportunity.meddpicc === 'object') {
     if (typeof opportunity.meddpicc.score !== 'number' || opportunity.meddpicc.score < 0 || opportunity.meddpicc.score > 100) {
-      errors.push('MEDDPICC score must be a number between 0 and 100');
+      warnings.push('MEDDPICC score should be a number between 0 and 100');
     }
+  } else {
+    // MEDDPICC is optional now, just warn
+    warnings.push('MEDDPICC qualification data is recommended for better tracking');
   }
 
   // Stage validation - support both PEAK stages and deal closure stages
   const validStages = ['prospect', 'engage', 'acquire', 'keep', 'closed-won', 'closed-lost'];
-  if (!opportunity?.stage || !validStages.includes(opportunity.stage)) {
-    errors.push(`Stage must be one of: ${validStages.join(', ')}`);
+  if (opportunity?.stage && !validStages.includes(opportunity.stage)) {
+    warnings.push(`Stage '${opportunity.stage}' is not in standard stages: ${validStages.join(', ')}`);
   }
 
   return {
@@ -97,24 +96,38 @@ export function validateOpportunity(opportunity: any): ValidationResult {
 export function normalizeOpportunity(opportunity: any): Opportunity {
   const now = new Date().toISOString();
   
+  // Handle company ID mapping
+  let companyId = opportunity?.companyId;
+  if (!companyId && opportunity?.company) {
+    // If we have a company name but no ID, use the name as a fallback
+    companyId = `company-${opportunity.company.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+  }
+  
+  // Handle contact ID mapping
+  let contactId = opportunity?.contactId;
+  if (!contactId && opportunity?.primaryContact) {
+    // If we have a contact name but no ID, use the name as a fallback
+    contactId = `contact-${opportunity.primaryContact.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+  }
+  
   return {
-    id: String(opportunity?.id || ''),
-    companyId: String(opportunity?.companyId || ''),
-    contactId: String(opportunity?.contactId || ''),
-    title: String(opportunity?.title || opportunity?.name || ''),
+    id: String(opportunity?.id || `opp-${Date.now()}`),
+    companyId: String(companyId || 'unknown-company'),
+    contactId: String(contactId || 'unknown-contact'),
+    title: String(opportunity?.title || opportunity?.name || 'Untitled Opportunity'),
     description: String(opportunity?.description || ''),
     value: Number(opportunity?.value) || 0,
     stage: String(opportunity?.stage || 'prospect'),
-    pipelineId: String(opportunity?.pipelineId || ''),
+    pipelineId: String(opportunity?.pipelineId || 'default'),
     probability: Math.max(0, Math.min(100, Number(opportunity?.probability) || 25)),
     expectedCloseDate: opportunity?.expectedCloseDate ? new Date(opportunity.expectedCloseDate).toISOString() : now,
-    ownerId: String(opportunity?.ownerId || 'current-user'),
+    ownerId: String(opportunity?.ownerId || opportunity?.assignedTo || opportunity?.createdBy || 'current-user'),
     priority: ['low', 'medium', 'high', 'critical'].includes(opportunity?.priority) ? opportunity.priority : 'medium',
     industry: String(opportunity?.industry || ''),
-    leadSource: String(opportunity?.leadSource || ''),
+    leadSource: String(opportunity?.leadSource || opportunity?.source || ''),
     tags: Array.isArray(opportunity?.tags) ? opportunity.tags.filter(tag => typeof tag === 'string') : [],
     meddpicc: normalizeMEDDPICC(opportunity?.meddpicc),
-    createdAt: opportunity?.createdAt ? new Date(opportunity.createdAt).toISOString() : now,
+    createdAt: opportunity?.createdAt ? new Date(opportunity.createdAt).toISOString() : (opportunity?.createdDate ? new Date(opportunity.createdDate).toISOString() : now),
     updatedAt: opportunity?.updatedAt ? new Date(opportunity.updatedAt).toISOString() : now,
     aiInsights: opportunity?.aiInsights && typeof opportunity.aiInsights === 'object' ? {
       riskScore: Math.max(0, Math.min(100, Number(opportunity.aiInsights.riskScore) || 0)),

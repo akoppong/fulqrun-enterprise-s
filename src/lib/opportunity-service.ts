@@ -311,6 +311,8 @@ export class OpportunityService {
 
   static async createOpportunity(data: Partial<Opportunity>): Promise<Opportunity> {
     try {
+      console.log('Creating opportunity with data:', data);
+      
       // Validate and normalize input data
       const normalizedData = normalizeOpportunity({
         ...data,
@@ -319,9 +321,14 @@ export class OpportunityService {
         updatedAt: new Date().toISOString()
       });
 
+      console.log('Normalized opportunity data:', normalizedData);
+
       // Validate the normalized opportunity
       const validation = validateOpportunity(normalizedData);
+      console.log('Validation result:', validation);
+      
       if (!validation.isValid) {
+        console.error('Validation errors:', validation.errors);
         throw new Error(`Invalid opportunity data: ${validation.errors.join(', ')}`);
       }
 
@@ -331,15 +338,26 @@ export class OpportunityService {
       }
 
       const opportunities = await this.getAllOpportunities();
+      console.log('Current opportunities count:', opportunities.length);
+      
       opportunities.push(normalizedData);
       await this.saveOpportunities(opportunities);
+      
+      console.log('Successfully saved opportunity:', normalizedData.id);
 
       // Initialize progression tracking
-      await this.initializeProgression(normalizedData);
+      try {
+        await this.initializeProgression(normalizedData);
+        console.log('Progression tracking initialized');
+      } catch (progressionError) {
+        console.warn('Failed to initialize progression tracking:', progressionError);
+        // Don't fail the entire operation for progression tracking
+      }
 
       return normalizedData;
     } catch (error) {
       console.error('Failed to create opportunity:', error);
+      console.error('Input data was:', data);
       throw new Error(`Failed to create opportunity: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }

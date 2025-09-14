@@ -107,19 +107,75 @@ export function NewOpportunityFormPage({
   useEffect(() => {
     if (companies.length === 0) {
       const demoCompanies: Company[] = [
-        { id: '1', name: 'TechCorp Solutions', industry: 'Technology', size: 'large' },
-        { id: '2', name: 'GrowthCo Inc', industry: 'Marketing', size: 'medium' },
-        { id: '3', name: 'InnovateLab', industry: 'Research', size: 'small' }
+        { 
+          id: 'company-1', 
+          name: 'TechCorp Solutions', 
+          industry: 'Technology', 
+          size: 'large',
+          address: '123 Tech Street, San Francisco, CA',
+          phone: '+1 (555) 123-0000',
+          website: 'https://techcorp.com'
+        },
+        { 
+          id: 'company-2', 
+          name: 'GrowthCo Inc', 
+          industry: 'Marketing', 
+          size: 'medium',
+          address: '456 Growth Ave, Austin, TX',
+          phone: '+1 (555) 456-0000',
+          website: 'https://growthco.com'
+        },
+        { 
+          id: 'company-3', 
+          name: 'InnovateLab', 
+          industry: 'Research', 
+          size: 'small',
+          address: '789 Innovation Blvd, Boston, MA',
+          phone: '+1 (555) 789-0000',
+          website: 'https://innovatelab.com'
+        }
       ];
       setCompanies(demoCompanies);
     }
 
     if (contacts.length === 0) {
       const demoContacts: Contact[] = [
-        { id: '1', name: 'John Smith', role: 'CTO', company: 'TechCorp Solutions', email: 'john.smith@techcorp.com', phone: '+1 (555) 123-4567' },
-        { id: '2', name: 'Sarah Johnson', role: 'Procurement Manager', company: 'TechCorp Solutions', email: 'sarah.johnson@techcorp.com', phone: '+1 (555) 123-4568' },
-        { id: '3', name: 'Mike Davis', role: 'Marketing Director', company: 'GrowthCo Inc', email: 'mike.davis@growthco.com', phone: '+1 (555) 987-6543' },
-        { id: '4', name: 'Emily Chen', role: 'CEO', company: 'InnovateLab', email: 'emily.chen@innovatelab.com', phone: '+1 (555) 456-7890' }
+        { 
+          id: 'contact-1', 
+          name: 'John Smith', 
+          role: 'CTO', 
+          company: 'TechCorp Solutions',
+          companyId: 'company-1',
+          email: 'john.smith@techcorp.com', 
+          phone: '+1 (555) 123-4567' 
+        },
+        { 
+          id: 'contact-2', 
+          name: 'Sarah Johnson', 
+          role: 'Procurement Manager', 
+          company: 'TechCorp Solutions',
+          companyId: 'company-1',
+          email: 'sarah.johnson@techcorp.com', 
+          phone: '+1 (555) 123-4568' 
+        },
+        { 
+          id: 'contact-3', 
+          name: 'Mike Davis', 
+          role: 'Marketing Director', 
+          company: 'GrowthCo Inc',
+          companyId: 'company-2',
+          email: 'mike.davis@growthco.com', 
+          phone: '+1 (555) 987-6543' 
+        },
+        { 
+          id: 'contact-4', 
+          name: 'Emily Chen', 
+          role: 'CEO', 
+          company: 'InnovateLab',
+          companyId: 'company-3',
+          email: 'emily.chen@innovatelab.com', 
+          phone: '+1 (555) 456-7890' 
+        }
       ];
       setContacts(demoContacts);
     }
@@ -228,33 +284,54 @@ export function NewOpportunityFormPage({
     setIsSubmitting(true);
 
     try {
+      // Find the company to get the ID
+      const selectedCompany = companies.find(c => c.name === formData.company);
+      const selectedContact = availableContacts.find(c => c.name === formData.primaryContact);
+
       const opportunityData: Partial<Opportunity> = {
         id: editingOpportunity?.id || `opp-${Date.now()}`,
+        title: formData.name.trim(),
+        companyId: selectedCompany?.id || `company-${formData.company.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
+        contactId: selectedContact?.id || `contact-${formData.primaryContact.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
+        description: formData.description.trim(),
+        value: parseFloat(formData.value),
+        stage: formData.stage,
+        probability: parseInt(formData.probability),
+        expectedCloseDate: formData.expectedCloseDate,
+        ownerId: formData.assignedTo,
+        priority: formData.priority,
+        industry: formData.industry.trim(),
+        leadSource: formData.source,
+        tags: formData.tags,
+        // Initialize MEDDPICC object as expected by validation
+        meddpicc: {
+          metrics: '',
+          economicBuyer: '',
+          decisionCriteria: '',
+          decisionProcess: '',
+          paperProcess: '',
+          implicatePain: '',
+          champion: '',
+          score: 0
+        },
+        createdAt: editingOpportunity?.createdAt,
+        updatedAt: new Date().toISOString(),
+        // Legacy fields for compatibility
         name: formData.name.trim(),
         company: formData.company.trim(),
         primaryContact: formData.primaryContact.trim(),
         contactEmail: formData.contactEmail.trim(),
         contactPhone: formData.contactPhone.trim(),
-        value: parseFloat(formData.value),
-        stage: formData.stage,
-        probability: parseInt(formData.probability),
-        expectedCloseDate: new Date(formData.expectedCloseDate),
-        description: formData.description.trim(),
-        industry: formData.industry.trim(),
-        source: formData.source,
-        tags: formData.tags,
-        priority: formData.priority,
         assignedTo: formData.assignedTo,
         createdBy: user.id,
-        updatedAt: new Date(),
-        // Initialize PEAK scores
+        // Initialize PEAK scores (legacy compatibility)
         peakScores: {
           prospect: formData.peakStage === 'prospect' ? 50 : 0,
           engage: formData.peakStage === 'engage' ? 50 : 0,
           acquire: formData.peakStage === 'acquire' ? 50 : 0,
           keep: formData.peakStage === 'keep' ? 50 : 0
         },
-        // Initialize MEDDPICC scores
+        // Initialize MEDDPICC scores (legacy compatibility)
         meddpiccScores: {
           metrics: 0,
           economicBuyer: 0,
@@ -265,7 +342,7 @@ export function NewOpportunityFormPage({
           champion: 0,
           competition: 0
         },
-        // Initialize activity tracking
+        // Initialize activity tracking (legacy compatibility)
         activities: [],
         contacts: [],
         lastActivity: new Date(),
@@ -275,6 +352,8 @@ export function NewOpportunityFormPage({
         createdDate: editingOpportunity?.createdDate || new Date()
       };
 
+      console.log('Submitting opportunity data:', opportunityData);
+
       let savedOpportunity: Opportunity;
 
       if (editingOpportunity) {
@@ -283,10 +362,16 @@ export function NewOpportunityFormPage({
         savedOpportunity = await OpportunityService.createOpportunity(opportunityData);
       }
 
-      onSave(savedOpportunity);
+      if (savedOpportunity) {
+        toast.success(isEditing ? 'Opportunity updated successfully!' : 'Opportunity created successfully!');
+        onSave(savedOpportunity);
+      } else {
+        throw new Error('Failed to save opportunity - no data returned');
+      }
     } catch (error) {
       console.error('Error saving opportunity:', error);
-      toast.error('Failed to save opportunity. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      toast.error(`Failed to save opportunity: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }
