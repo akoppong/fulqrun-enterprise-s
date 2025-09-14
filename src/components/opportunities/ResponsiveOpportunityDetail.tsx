@@ -37,7 +37,7 @@ import {
   Trophy
 } from '@phosphor-icons/react';
 import { formatCurrency, getMEDDPICCScore, getStageProgress } from '@/lib/crm-utils';
-import { format, differenceInDays } from 'date-fns';
+import { format, differenceInDays, isValid, parseISO } from 'date-fns';
 
 // MEDDPICC Integration
 import { MEDDPICCSummary } from '@/components/meddpicc';
@@ -55,6 +55,31 @@ const getPriorityBadge = (priority?: string) => {
       return { variant: 'destructive' as const, className: 'bg-red-100 text-red-800 border-red-300' };
     default:
       return { variant: 'secondary' as const, className: 'bg-gray-100 text-gray-800 border-gray-300' };
+  }
+};
+
+// Safe date formatting helper
+const formatSafeDate = (dateValue: any, formatString: string = 'MMM dd, yyyy'): string => {
+  try {
+    if (!dateValue) return 'Not set';
+    
+    let date: Date;
+    if (typeof dateValue === 'string') {
+      date = parseISO(dateValue);
+    } else if (dateValue instanceof Date) {
+      date = dateValue;
+    } else {
+      date = new Date(dateValue);
+    }
+    
+    if (!isValid(date)) {
+      return 'Invalid date';
+    }
+    
+    return format(date, formatString);
+  } catch (error) {
+    console.warn('Date formatting error:', error, 'for value:', dateValue);
+    return 'Invalid date';
   }
 };
 
@@ -122,14 +147,14 @@ export function ResponsiveOpportunityDetail({
     }
   }, [opportunity?.id, isOpen]);
 
-  // Get related data with memoization (move before validation)
+  // Get related data with memoization
   const company = useMemo(() => 
-    opportunity ? companies.find(c => c.id === opportunity.companyId) : null, 
+    opportunity ? companies.find(c => c.id === opportunity.companyId) || null : null, 
     [companies, opportunity?.companyId]
   );
   
   const contact = useMemo(() => 
-    opportunity ? contacts.find(c => c.id === opportunity.contactId) : null, 
+    opportunity ? contacts.find(c => c.id === opportunity.contactId) || null : null, 
     [contacts, opportunity?.contactId]
   );
   
@@ -139,12 +164,12 @@ export function ResponsiveOpportunityDetail({
   );
   
   const meddpicScore = useMemo(() => 
-    opportunity ? getMEDDPICCScore(opportunity.meddpicc) : 0, 
+    opportunity ? getMEDDPICCScore(opportunity.meddpicc) || 0 : 0, 
     [opportunity?.meddpicc]
   );
   
   const stageProgress = useMemo(() => 
-    opportunity ? getStageProgress(opportunity.stage) : 0, 
+    opportunity ? getStageProgress(opportunity.stage) || 0 : 0, 
     [opportunity?.stage]
   );
   
@@ -153,9 +178,28 @@ export function ResponsiveOpportunityDetail({
     if (!opportunity) return { daysInStage: 0, daysInPipeline: 0, daysToClose: 0 };
     
     const now = new Date();
-    const createdAt = new Date(opportunity.createdAt);
-    const updatedAt = new Date(opportunity.updatedAt);
-    const expectedCloseDate = new Date(opportunity.expectedCloseDate);
+    
+    // Safe date parsing
+    const parseDate = (dateValue: any): Date => {
+      try {
+        if (!dateValue) return now;
+        let date: Date;
+        if (typeof dateValue === 'string') {
+          date = parseISO(dateValue);
+        } else if (dateValue instanceof Date) {
+          date = dateValue;
+        } else {
+          date = new Date(dateValue);
+        }
+        return isValid(date) ? date : now;
+      } catch {
+        return now;
+      }
+    };
+    
+    const createdAt = parseDate(opportunity.createdAt);
+    const updatedAt = parseDate(opportunity.updatedAt);
+    const expectedCloseDate = parseDate(opportunity.expectedCloseDate);
     
     return {
       daysInStage: differenceInDays(now, updatedAt),
@@ -293,7 +337,7 @@ export function ResponsiveOpportunityDetail({
                     <div>
                       <Label className="text-xs text-muted-foreground">Expected Close</Label>
                       <div className="font-medium">
-                        {format(new Date(opportunity.expectedCloseDate), 'MMM dd, yyyy')}
+                        {formatSafeDate(opportunity.expectedCloseDate)}
                       </div>
                     </div>
                     <div>
@@ -761,7 +805,7 @@ export function ResponsiveOpportunityDetail({
                               <Label className="text-sm font-medium">Created</Label>
                               <div className="p-3 bg-muted/50 rounded-lg">
                                 <div className="text-sm font-medium">
-                                  {format(new Date(opportunity.createdAt), 'MMM dd, yyyy')}
+                                  {formatSafeDate(opportunity.createdAt)}
                                 </div>
                                 <div className="text-xs text-muted-foreground">
                                   {daysInPipeline} days in pipeline
@@ -773,7 +817,7 @@ export function ResponsiveOpportunityDetail({
                                 <Label className="text-sm font-medium">Expected Close</Label>
                                 <div className="p-3 bg-muted/50 rounded-lg">
                                   <div className="text-sm font-medium">
-                                    {format(new Date(opportunity.expectedCloseDate), 'MMM dd, yyyy')}
+                                    {formatSafeDate(opportunity.expectedCloseDate)}
                                   </div>
                                   <div className={`text-xs font-medium ${daysToClose < 0 ? 'text-red-600' : daysToClose < 7 ? 'text-amber-600' : 'text-green-600'}`}>
                                     {daysToClose < 0 ? `${Math.abs(daysToClose)} days overdue` : 
