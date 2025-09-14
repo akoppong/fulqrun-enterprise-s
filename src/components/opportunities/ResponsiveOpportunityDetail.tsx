@@ -961,6 +961,13 @@ export function ResponsiveOpportunityDetail({
                       <Users size={14} className="mr-1" />
                       Contact
                     </TabsTrigger>
+                    <TabsTrigger 
+                      value="activities" 
+                      className="h-10 px-3 text-sm whitespace-nowrap shrink-0 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent border-0"
+                    >
+                      <ClockCounterClockwise size={14} className="mr-1" />
+                      Activities
+                    </TabsTrigger>
                   </div>
                 </TabsList>
               </div>
@@ -1024,17 +1031,33 @@ export function ResponsiveOpportunityDetail({
                             </CardTitle>
                           </CardHeader>
                           <CardContent className="space-y-4">
-                            {/* Stage and Progress */}
-                            <div className="space-y-3">
-                              <div className="flex items-center justify-between">
+                            {/* Priority and Stage */}
+                            <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <div className="space-y-1">
+                                  <Label className="text-sm font-medium">Priority</Label>
+                                  <Badge {...getPriorityBadge(safeOpportunity.priority)} className="text-xs px-2 py-1">
+                                    {(safeOpportunity.priority || 'medium').charAt(0).toUpperCase() + (safeOpportunity.priority || 'medium').slice(1)}
+                                  </Badge>
+                                </div>
+                              </div>
+                              <div className="text-right space-y-1">
                                 <Label className="text-sm font-medium">Current Stage</Label>
                                 <Badge className={`${stageConfig.color} text-xs px-2 py-1`}>
                                   {stageConfig.label}
                                 </Badge>
                               </div>
+                            </div>
+
+                            {/* Stage and Progress */}
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-sm font-medium">Stage Progress</Label>
+                                <span className="text-sm font-semibold text-primary">{Math.round(stageProgress)}%</span>
+                              </div>
                               <Progress value={stageProgress} className="h-2" />
                               <div className="flex justify-between text-xs text-muted-foreground">
-                                <span>{stageProgress}% complete</span>
+                                <span>{Math.round(stageProgress)}% complete</span>
                                 <span>{daysInStage} days in stage</span>
                               </div>
                             </div>
@@ -1043,17 +1066,17 @@ export function ResponsiveOpportunityDetail({
 
                             {/* Timeline Info */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div className="space-y-2">
-                              <Label className="text-sm font-medium">Created</Label>
-                              <div className="p-3 bg-muted/50 rounded-lg">
-                                <div className="text-sm font-medium">
-                                  {formatSafeDate(safeOpportunity.createdAt)}
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                  {daysInPipeline} days in pipeline
+                              <div className="space-y-2">
+                                <Label className="text-sm font-medium">Created</Label>
+                                <div className="p-3 bg-muted/50 rounded-lg">
+                                  <div className="text-sm font-medium">
+                                    {formatSafeDate(safeOpportunity.createdAt)}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {daysInPipeline} days in pipeline
+                                  </div>
                                 </div>
                               </div>
-                            </div>
                               
                               <div className="space-y-2">
                                 <Label className="text-sm font-medium">Expected Close</Label>
@@ -1103,6 +1126,26 @@ export function ResponsiveOpportunityDetail({
                                 </div>
                               </>
                             )}
+
+                            {/* Quick Actions */}
+                            <Separator />
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium">Quick Actions</Label>
+                              <div className="flex flex-wrap gap-2">
+                                <Button variant="outline" size="sm" disabled>
+                                  <Envelope size={14} className="mr-1" />
+                                  Send Update
+                                </Button>
+                                <Button variant="outline" size="sm" disabled>
+                                  <Calendar size={14} className="mr-1" />
+                                  Schedule Meeting
+                                </Button>
+                                <Button variant="outline" size="sm" disabled>
+                                  <FileText size={14} className="mr-1" />
+                                  Generate Report
+                                </Button>
+                              </div>
+                            </div>
                           </CardContent>
                         </Card>
                       </div>
@@ -1187,19 +1230,155 @@ export function ResponsiveOpportunityDetail({
                     </div>
                   </TabsContent>
 
-                  <TabsContent value="metrics" className="mt-0">
-                    <div className="text-center py-12 space-y-4">
-                      <ChartBar size={48} className="text-purple-600 mx-auto" />
-                      <div className="space-y-2">
-                        <h3 className="text-xl font-semibold">Advanced Metrics Dashboard</h3>
-                        <p className="text-muted-foreground text-sm">
-                          Detailed performance analytics and predictive insights will be available here.
-                        </p>
-                      </div>
-                      <Button variant="outline" size="sm" disabled>
-                        <ChartLineUp size={16} className="mr-2" />
-                        Coming Soon
-                      </Button>
+                  <TabsContent value="metrics" className="mt-0 space-y-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {/* Deal Performance Metrics */}
+                      <Card>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-base font-semibold flex items-center gap-2">
+                            <TrendingUp size={16} className="text-green-600" />
+                            Deal Performance
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-sm font-medium">Deal Value</Label>
+                              <span className="text-lg font-bold text-green-600">
+                                {formatCurrency(safeOpportunity.value)}
+                              </span>
+                            </div>
+                            <Progress value={(safeOpportunity.value / 1000000) * 100} className="h-2" />
+                            
+                            <div className="flex items-center justify-between">
+                              <Label className="text-sm font-medium">Win Probability</Label>
+                              <span className="text-lg font-bold text-blue-600">
+                                {safeOpportunity.probability}%
+                              </span>
+                            </div>
+                            <Progress value={safeOpportunity.probability} className="h-2" />
+                            
+                            <div className="flex items-center justify-between">
+                              <Label className="text-sm font-medium">Stage Progress</Label>
+                              <span className="text-lg font-bold text-purple-600">
+                                {Math.round(stageProgress)}%
+                              </span>
+                            </div>
+                            <Progress value={stageProgress} className="h-2" />
+                          </div>
+                          
+                          <Separator />
+                          
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="text-center p-3 bg-muted/30 rounded-lg">
+                              <div className="text-lg font-bold text-blue-600">
+                                {daysInPipeline}
+                              </div>
+                              <div className="text-xs text-muted-foreground">Days in Pipeline</div>
+                            </div>
+                            <div className="text-center p-3 bg-muted/30 rounded-lg">
+                              <div className="text-lg font-bold text-orange-600">
+                                {daysInStage}
+                              </div>
+                              <div className="text-xs text-muted-foreground">Days in Stage</div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      
+                      {/* Methodology Scores */}
+                      <Card>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-base font-semibold flex items-center gap-2">
+                            <Trophy size={16} className="text-amber-600" />
+                            Methodology Scores
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-sm font-medium">PEAK Score</Label>
+                              <span className="text-lg font-bold text-blue-600">
+                                {Math.round(stageProgress)}%
+                              </span>
+                            </div>
+                            <Progress value={stageProgress} className="h-2" />
+                            
+                            <div className="flex items-center justify-between">
+                              <Label className="text-sm font-medium">MEDDPICC Score</Label>
+                              <span className={`text-lg font-bold ${meddpicScore < 50 ? 'text-red-600' : meddpicScore < 80 ? 'text-yellow-600' : 'text-green-600'}`}>
+                                {Math.round(meddpicScore)}%
+                              </span>
+                            </div>
+                            <Progress value={meddpicScore} className="h-2" />
+                          </div>
+                          
+                          <Separator />
+                          
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium">Risk Assessment</Label>
+                            <div className={`p-3 rounded-lg border ${
+                              meddpicScore < 50 ? 'bg-red-50 border-red-200' :
+                              meddpicScore < 80 ? 'bg-yellow-50 border-yellow-200' :
+                              'bg-green-50 border-green-200'
+                            }`}>
+                              <div className={`flex items-center gap-2 text-sm font-medium ${
+                                meddpicScore < 50 ? 'text-red-700' :
+                                meddpicScore < 80 ? 'text-yellow-700' :
+                                'text-green-700'
+                              }`}>
+                                {meddpicScore < 50 ? <Warning size={14} /> : <CheckCircle size={14} />}
+                                {meddpicScore < 50 ? 'High Risk' :
+                                 meddpicScore < 80 ? 'Medium Risk' :
+                                 'Low Risk'}
+                              </div>
+                              <div className="text-xs text-muted-foreground mt-1">
+                                {meddpicScore < 50 ? 'Requires attention on multiple criteria' :
+                                 meddpicScore < 80 ? 'Some areas need improvement' :
+                                 'Deal is well qualified and positioned'}
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      
+                      {/* Activity Metrics */}
+                      <Card className="lg:col-span-2">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-base font-semibold flex items-center gap-2">
+                            <ChartBar size={16} className="text-purple-600" />
+                            Activity Metrics
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="text-center p-3 bg-muted/30 rounded-lg">
+                              <div className="text-lg font-bold text-blue-600">
+                                {safeOpportunity.activities?.length || 0}
+                              </div>
+                              <div className="text-xs text-muted-foreground">Total Activities</div>
+                            </div>
+                            <div className="text-center p-3 bg-muted/30 rounded-lg">
+                              <div className="text-lg font-bold text-green-600">
+                                {safeOpportunity.activities?.filter(a => a.type === 'meeting').length || 0}
+                              </div>
+                              <div className="text-xs text-muted-foreground">Meetings</div>
+                            </div>
+                            <div className="text-center p-3 bg-muted/30 rounded-lg">
+                              <div className="text-lg font-bold text-purple-600">
+                                {safeOpportunity.activities?.filter(a => a.type === 'call').length || 0}
+                              </div>
+                              <div className="text-xs text-muted-foreground">Calls</div>
+                            </div>
+                            <div className="text-center p-3 bg-muted/30 rounded-lg">
+                              <div className="text-lg font-bold text-orange-600">
+                                {safeOpportunity.activities?.filter(a => a.outcome === 'positive').length || 0}
+                              </div>
+                              <div className="text-xs text-muted-foreground">Positive Outcomes</div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
                     </div>
                   </TabsContent>
 
@@ -1313,6 +1492,7 @@ export function ResponsiveOpportunityDetail({
                   </TabsContent>
 
                   <TabsContent value="contact" className="mt-0 space-y-4">
+                    {/* Primary Contact */}
                     <Card>
                       <CardHeader className="pb-3">
                         <CardTitle className="text-base font-semibold flex items-center gap-2">
@@ -1396,6 +1576,204 @@ export function ResponsiveOpportunityDetail({
                             <Button variant="outline" size="sm" className="mt-3" disabled>
                               <Plus size={14} className="mr-1" />
                               Add Contact
+                            </Button>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    {/* All Opportunity Contacts */}
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-base font-semibold flex items-center gap-2">
+                            <Users size={16} className="text-purple-600" />
+                            All Contacts
+                          </CardTitle>
+                          <Button variant="outline" size="sm" disabled>
+                            <Plus size={14} className="mr-1" />
+                            Add Contact
+                          </Button>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        {safeOpportunity.contacts && Array.isArray(safeOpportunity.contacts) && safeOpportunity.contacts.length > 0 ? (
+                          <div className="space-y-3">
+                            {safeOpportunity.contacts.map((contact, index) => (
+                              <div key={contact.id || index} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border">
+                                <Avatar className="h-10 w-10 border border-gray-200 shrink-0">
+                                  <AvatarImage src={contact.avatarUrl} />
+                                  <AvatarFallback className="bg-gray-100 text-gray-600 font-medium text-xs">
+                                    {contact.name ? contact.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'UN'}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 space-y-1 min-w-0">
+                                  <div className="flex items-center justify-between">
+                                    <div className="font-medium text-sm truncate">
+                                      {contact.name || 'Unknown Contact'}
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <Badge variant={
+                                        contact.influence === 'high' ? 'default' :
+                                        contact.influence === 'medium' ? 'secondary' :
+                                        'outline'
+                                      } className="text-xs px-2 py-0">
+                                        {contact.influence || 'low'} influence
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center justify-between">
+                                    <div className="text-sm text-muted-foreground truncate">
+                                      {contact.role || 'No role specified'}
+                                    </div>
+                                    <Badge variant={
+                                      contact.sentiment === 'champion' ? 'default' :
+                                      contact.sentiment === 'neutral' ? 'secondary' :
+                                      'destructive'
+                                    } className="text-xs px-2 py-0">
+                                      {contact.sentiment || 'neutral'}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8">
+                            <Users size={24} className="text-purple-600 mx-auto mb-2" />
+                            <div className="space-y-1">
+                              <div className="font-medium text-sm">No Contacts Added</div>
+                              <div className="text-xs text-muted-foreground">
+                                Add stakeholders to track decision makers and influencers
+                              </div>
+                            </div>
+                            <Button variant="outline" size="sm" className="mt-3" disabled>
+                              <Plus size={14} className="mr-1" />
+                              Add First Contact
+                            </Button>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    {/* Contact Analytics */}
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-base font-semibold flex items-center gap-2">
+                          <ChartBar size={16} className="text-green-600" />
+                          Contact Analytics
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div className="text-center p-3 bg-muted/30 rounded-lg">
+                            <div className="text-lg font-bold text-blue-600">
+                              {safeOpportunity.contacts?.length || 0}
+                            </div>
+                            <div className="text-xs text-muted-foreground">Total Contacts</div>
+                          </div>
+                          <div className="text-center p-3 bg-muted/30 rounded-lg">
+                            <div className="text-lg font-bold text-green-600">
+                              {safeOpportunity.contacts?.filter(c => c.sentiment === 'champion').length || 0}
+                            </div>
+                            <div className="text-xs text-muted-foreground">Champions</div>
+                          </div>
+                          <div className="text-center p-3 bg-muted/30 rounded-lg">
+                            <div className="text-lg font-bold text-orange-600">
+                              {safeOpportunity.contacts?.filter(c => c.influence === 'high').length || 0}
+                            </div>
+                            <div className="text-xs text-muted-foreground">High Influence</div>
+                          </div>
+                          <div className="text-center p-3 bg-muted/30 rounded-lg">
+                            <div className="text-lg font-bold text-red-600">
+                              {safeOpportunity.contacts?.filter(c => c.sentiment === 'detractor').length || 0}
+                            </div>
+                            <div className="text-xs text-muted-foreground">Detractors</div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="activities" className="mt-0 space-y-4">
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-base font-semibold flex items-center gap-2">
+                            <ClockCounterClockwise size={16} className="text-purple-600" />
+                            Activity Timeline
+                          </CardTitle>
+                          <Button variant="outline" size="sm" disabled>
+                            <Plus size={14} className="mr-1" />
+                            Add Activity
+                          </Button>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        {safeOpportunity.activities && Array.isArray(safeOpportunity.activities) && safeOpportunity.activities.length > 0 ? (
+                          <div className="space-y-4">
+                            {safeOpportunity.activities.map((activity, index) => (
+                              <div key={activity.id || index} className="flex gap-3 p-3 rounded-lg bg-muted/30 border">
+                                <div className={`p-2 rounded-full shrink-0 ${
+                                  activity.type === 'meeting' ? 'bg-blue-100 text-blue-600' :
+                                  activity.type === 'call' ? 'bg-green-100 text-green-600' :
+                                  activity.type === 'email' ? 'bg-purple-100 text-purple-600' :
+                                  activity.type === 'demo' ? 'bg-orange-100 text-orange-600' :
+                                  activity.type === 'proposal' ? 'bg-red-100 text-red-600' :
+                                  'bg-gray-100 text-gray-600'
+                                }`}>
+                                  {activity.type === 'meeting' ? <Users size={14} /> :
+                                   activity.type === 'call' ? <Phone size={14} /> :
+                                   activity.type === 'email' ? <Envelope size={14} /> :
+                                   activity.type === 'demo' ? <ChartBar size={14} /> :
+                                   activity.type === 'proposal' ? <FileText size={14} /> :
+                                   <ClockCounterClockwise size={14} />}
+                                </div>
+                                <div className="flex-1 space-y-1">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-medium text-sm capitalize">
+                                        {activity.type || 'Activity'}
+                                      </span>
+                                      <Badge variant={
+                                        activity.outcome === 'positive' ? 'default' :
+                                        activity.outcome === 'negative' ? 'destructive' :
+                                        'secondary'
+                                      } className="text-xs px-2 py-0">
+                                        {activity.outcome || 'neutral'}
+                                      </Badge>
+                                    </div>
+                                    <span className="text-xs text-muted-foreground">
+                                      {formatSafeDate(activity.date, 'MMM dd, yyyy')}
+                                    </span>
+                                  </div>
+                                  {activity.notes && (
+                                    <p className="text-sm text-muted-foreground leading-relaxed">
+                                      {activity.notes}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                            
+                            <div className="text-center py-4 border-t">
+                              <Button variant="ghost" size="sm" disabled>
+                                Load More Activities
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-center py-8">
+                            <ClockCounterClockwise size={24} className="text-purple-600 mx-auto mb-2" />
+                            <div className="space-y-1">
+                              <div className="font-medium text-sm">No Activities Yet</div>
+                              <div className="text-xs text-muted-foreground">
+                                Track meetings, calls, and interactions with your prospect
+                              </div>
+                            </div>
+                            <Button variant="outline" size="sm" className="mt-3" disabled>
+                              <Plus size={14} className="mr-1" />
+                              Add First Activity
                             </Button>
                           </div>
                         )}

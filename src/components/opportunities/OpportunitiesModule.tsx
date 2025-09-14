@@ -7,6 +7,7 @@ import { OpportunitiesListView } from './OpportunitiesListView';
 import { OpportunityDetailView } from './OpportunityDetailView';
 import { NewOpportunityMainView } from './NewOpportunityMainView';
 import { MEDDPICCScenarioTester } from './MEDDPICCScenarioTester';
+import { OpportunityTabsTest } from './OpportunityTabsTest';
 import { EnhancedErrorBoundary } from '@/components/ui/enhanced-error-boundary';
 import { toast } from 'sonner';
 
@@ -16,7 +17,7 @@ interface OpportunitiesModuleProps {
   initialData?: any;
 }
 
-type OpportunityView = 'dashboard' | 'list' | 'detail' | 'create' | 'edit' | 'meddpicc-test';
+type OpportunityView = 'dashboard' | 'list' | 'detail' | 'create' | 'edit' | 'meddpicc-test' | 'tabs-test';
 
 export function OpportunitiesModule({ user, initialView = 'dashboard', initialData }: OpportunitiesModuleProps) {
   const [opportunities, setOpportunities] = useKV<Opportunity[]>('opportunities', []);
@@ -99,6 +100,12 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
       
       case 'meddpicc-test':
         setCurrentView('meddpicc-test');
+        setSelectedOpportunityId(null);
+        setEditingOpportunity(null);
+        break;
+      
+      case 'tabs-test':
+        setCurrentView('tabs-test');
         setSelectedOpportunityId(null);
         setEditingOpportunity(null);
         break;
@@ -247,6 +254,13 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
           </EnhancedErrorBoundary>
         );
       
+      case 'tabs-test':
+        return (
+          <EnhancedErrorBoundary context="OpportunityTabsTest">
+            <OpportunityTabsTest />
+          </EnhancedErrorBoundary>
+        );
+      
       default:
         return (
           <EnhancedErrorBoundary context="OpportunitiesDashboard">
@@ -272,5 +286,6 @@ export {
   OpportunitiesListView,
   OpportunityDetailView,
   NewOpportunityMainView,
-  MEDDPICCScenarioTester
+  MEDDPICCScenarioTester,
+  OpportunityTabsTest
 };
