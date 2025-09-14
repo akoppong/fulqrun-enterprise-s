@@ -53,7 +53,7 @@ import {
   User,
   BarChart
 } from '@phosphor-icons/react';
-import { OpportunityDialog } from '@/components/dashboard/OpportunityDialog';
+import { UnifiedOpportunityForm } from '@/components/unified/UnifiedOpportunityForm';
 import { toast } from 'sonner';
 
 export function EnhancedPipelineView() {
@@ -340,11 +340,14 @@ export function EnhancedPipelineView() {
         </DragOverlay>
       </DndContext>
 
-      <OpportunityDialog
+      <UnifiedOpportunityForm
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
         onSave={handleSaveOpportunity}
-        opportunity={selectedOpportunity}
+        editingOpportunity={selectedOpportunity}
+        user={{ id: 'user-1', name: 'Default User', email: 'user@example.com', role: 'rep' }}
+        mode="dialog"
+        source="pipeline"
       />
     </div>
   );

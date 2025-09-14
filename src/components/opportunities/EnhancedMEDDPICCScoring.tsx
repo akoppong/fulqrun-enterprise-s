@@ -500,7 +500,7 @@ export function EnhancedMEDDPICCScoring({
                   variant="secondary"
                   className={`text-xs ${getScoreColor(toMEDDPICCScore(scores[criterion.key]))}`}
                 >
-                  {(toMEDDPICCScore(scores[criterion.key]) || 0).toFixed(1)}
+                  {Number(toMEDDPICCScore(scores[criterion.key]) || 0).toFixed(1)}
                 </Badge>
               </div>
             </TabsTrigger>
@@ -520,7 +520,7 @@ export function EnhancedMEDDPICCScoring({
                   <div className="flex items-center justify-between">
                     <Label>Current Score</Label>
                     <Badge className={getScoreColor(toMEDDPICCScore(scores[criterion.key]))}>
-                      {(toMEDDPICCScore(scores[criterion.key]) || 0).toFixed(1)}/10 - {getScoreLabel(toMEDDPICCScore(scores[criterion.key]))}
+                      {Number(toMEDDPICCScore(scores[criterion.key]) || 0).toFixed(1)}/10 - {getScoreLabel(toMEDDPICCScore(scores[criterion.key]))}
                     </Badge>
                   </div>
                   {!readonly && (

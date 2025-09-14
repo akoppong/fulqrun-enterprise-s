@@ -4,6 +4,8 @@ import { Opportunity, User } from '@/lib/types';
 import { OpportunityService } from '@/lib/opportunity-service';
 import { OpportunitiesDashboard } from './OpportunitiesDashboard';
 import { OpportunitiesListView } from './OpportunitiesListView';
+import { OpportunityDetailView } from './OpportunityDetailView';
+import { UnifiedOpportunityPage } from './UnifiedOpportunityPage';
 import { UnifiedOpportunityForm } from '../unified/UnifiedOpportunityForm';
 import { UnifiedOpportunityDetail } from '../unified/UnifiedOpportunityDetail';
 import { MEDDPICCScenarioTester } from './MEDDPICCScenarioTester';
@@ -335,7 +337,7 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
   );
 }
 
-// Clean up the export section - only export used components
+// Export available components
 export {
   OpportunitiesDashboard,
   OpportunitiesListView,

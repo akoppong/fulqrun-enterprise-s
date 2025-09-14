@@ -28,7 +28,7 @@ import {
   List
 } from '@phosphor-icons/react';
 import { useState } from 'react';
-import { OpportunityDialog } from './OpportunityDialog';
+import { UnifiedOpportunityForm } from '../unified/UnifiedOpportunityForm';
 import { OpportunityDetailFullView } from './OpportunityDetailFullView';
 import { toast } from 'sonner';
 
@@ -672,7 +672,7 @@ export function OpportunityList() {
       )}
 
       {/* Dialog for Create/Edit */}
-      <OpportunityDialog
+      <UnifiedOpportunityForm
         isOpen={isCreateDialogOpen || isEditDialogOpen}
         onClose={() => {
           setIsCreateDialogOpen(false);
@@ -680,7 +680,10 @@ export function OpportunityList() {
           setSelectedOpportunity(null);
         }}
         onSave={handleSaveOpportunity}
-        opportunity={selectedOpportunity}
+        editingOpportunity={selectedOpportunity}
+        user={{ id: 'user-1', name: 'Default User', email: 'user@example.com', role: 'rep' }}
+        mode="dialog"
+        source="opportunities"
       />
     </div>
   );

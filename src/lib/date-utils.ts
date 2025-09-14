@@ -1,8 +1,24 @@
-import { format, parse, isValid, parseISO, startOfDay, endOfDay, addDays, subDays, differenceInDays, differenceInHours, differenceInMinutes, formatDistanceToNow, isAfter, isBefore, isSameDay } from 'date-fns';
+import { 
+  format, 
+  parse, 
+  isValid as isValidDate, 
+  parseISO, 
+  startOfDay, 
+  endOfDay, 
+  addDays, 
+  subDays, 
+  differenceInDays, 
+  differenceInHours, 
+  differenceInMinutes, 
+  formatDistanceToNow, 
+  isAfter, 
+  isBefore, 
+  isSameDay 
+} from 'date-fns';
 import { toZonedTime, fromZonedTime, format as formatTz } from 'date-fns-tz';
 
 // Re-export commonly used date-fns functions
-export { addDays, subDays, isValid, parseISO, startOfDay, endOfDay, differenceInDays, differenceInHours, differenceInMinutes, formatDistanceToNow, isAfter, isBefore, isSameDay, format, parse };
+export { addDays, subDays, isValidDate as isValid, parseISO, startOfDay, endOfDay, differenceInDays, differenceInHours, differenceInMinutes, formatDistanceToNow, isAfter, isBefore, isSameDay, format, parse };
 
 /**
  * Supported date formats for parsing and validation
@@ -54,7 +70,7 @@ export function parseDate(dateStr: string | null | undefined): Date | null {
 
   // Try ISO format first
   let parsed = parseISO(trimmed);
-  if (isValid(parsed)) return parsed;
+  if (isValidDate(parsed)) return parsed;
 
   // Try common formats
   const formats = [
@@ -72,7 +88,7 @@ export function parseDate(dateStr: string | null | undefined): Date | null {
   for (const formatStr of formats) {
     try {
       parsed = parse(trimmed, formatStr, new Date());
-      if (isValid(parsed)) return parsed;
+      if (isValidDate(parsed)) return parsed;
     } catch {
       continue;
     }
@@ -90,7 +106,7 @@ export function formatDate(
   timezone?: string
 ): string {
   const parsedDate = typeof date === 'string' ? parseDate(date) : date;
-  if (!parsedDate || !isValid(parsedDate)) return '';
+  if (!parsedDate || !isValidDate(parsedDate)) return '';
 
   if (timezone) {
     const zonedDate = toZonedTime(parsedDate, timezone);
@@ -105,7 +121,7 @@ export function formatDate(
  */
 export function toUTC(date: Date | string, timezone?: string): Date | null {
   const parsedDate = typeof date === 'string' ? parseDate(date) : date;
-  if (!parsedDate || !isValid(parsedDate)) return null;
+  if (!parsedDate || !isValidDate(parsedDate)) return null;
 
   const tz = timezone || getLocalTimezone();
   return fromZonedTime(parsedDate, tz);
@@ -116,7 +132,7 @@ export function toUTC(date: Date | string, timezone?: string): Date | null {
  */
 export function fromUTC(date: Date | string, timezone?: string): Date | null {
   const parsedDate = typeof date === 'string' ? parseDate(date) : date;
-  if (!parsedDate || !isValid(parsedDate)) return null;
+  if (!parsedDate || !isValidDate(parsedDate)) return null;
 
   const tz = timezone || getLocalTimezone();
   return toZonedTime(parsedDate, tz);
@@ -127,7 +143,7 @@ export function fromUTC(date: Date | string, timezone?: string): Date | null {
  */
 export function getStartOfDay(date: Date | string, timezone?: string): Date | null {
   const parsedDate = typeof date === 'string' ? parseDate(date) : date;
-  if (!parsedDate || !isValid(parsedDate)) return null;
+  if (!parsedDate || !isValidDate(parsedDate)) return null;
 
   if (timezone) {
     const zonedDate = toZonedTime(parsedDate, timezone);
@@ -143,7 +159,7 @@ export function getStartOfDay(date: Date | string, timezone?: string): Date | nu
  */
 export function getEndOfDay(date: Date | string, timezone?: string): Date | null {
   const parsedDate = typeof date === 'string' ? parseDate(date) : date;
-  if (!parsedDate || !isValid(parsedDate)) return null;
+  if (!parsedDate || !isValidDate(parsedDate)) return null;
 
   if (timezone) {
     const zonedDate = toZonedTime(parsedDate, timezone);
@@ -161,7 +177,7 @@ export function getBusinessDaysBetween(startDate: Date | string, endDate: Date |
   const start = typeof startDate === 'string' ? parseDate(startDate) : startDate;
   const end = typeof endDate === 'string' ? parseDate(endDate) : endDate;
   
-  if (!start || !end || !isValid(start) || !isValid(end)) return 0;
+  if (!start || !end || !isValidDate(start) || !isValidDate(end)) return 0;
 
   let businessDays = 0;
   let currentDate = new Date(start);
@@ -184,7 +200,7 @@ export function calculateAge(birthDate: Date | string, referenceDate?: Date | st
   const birth = typeof birthDate === 'string' ? parseDate(birthDate) : birthDate;
   const reference = typeof referenceDate === 'string' ? parseDate(referenceDate) : referenceDate || new Date();
   
-  if (!birth || !reference || !isValid(birth) || !isValid(reference)) return 0;
+  if (!birth || !reference || !isValidDate(birth) || !isValidDate(reference)) return 0;
 
   const daysDiff = differenceInDays(reference, birth);
   return Math.floor(daysDiff / 365.25);
@@ -195,7 +211,7 @@ export function calculateAge(birthDate: Date | string, referenceDate?: Date | st
  */
 export function getRelativeTime(date: Date | string, baseDate?: Date): string {
   const parsedDate = typeof date === 'string' ? parseDate(date) : date;
-  if (!parsedDate || !isValid(parsedDate)) return '';
+  if (!parsedDate || !isValidDate(parsedDate)) return '';
 
   return formatDistanceToNow(parsedDate, { 
     addSuffix: true,
@@ -215,7 +231,7 @@ export function isDateInRange(
   const start = typeof startDate === 'string' ? parseDate(startDate) : startDate;
   const end = typeof endDate === 'string' ? parseDate(endDate) : endDate;
 
-  if (!checkDate || !start || !end || !isValid(checkDate) || !isValid(start) || !isValid(end)) {
+  if (!checkDate || !start || !end || !isValidDate(checkDate) || !isValidDate(start) || !isValidDate(end)) {
     return false;
   }
 
@@ -233,7 +249,7 @@ export function generateDateRange(
   const start = typeof startDate === 'string' ? parseDate(startDate) : startDate;
   const end = typeof endDate === 'string' ? parseDate(endDate) : endDate;
 
-  if (!start || !end || !isValid(start) || !isValid(end)) return [];
+  if (!start || !end || !isValidDate(start) || !isValidDate(end)) return [];
 
   const dates: Date[] = [];
   let currentDate = new Date(start);
@@ -251,7 +267,7 @@ export function generateDateRange(
  */
 export function getFiscalYear(date: Date | string, fiscalYearStartMonth: number = 4): number {
   const parsedDate = typeof date === 'string' ? parseDate(date) : date;
-  if (!parsedDate || !isValid(parsedDate)) return new Date().getFullYear();
+  if (!parsedDate || !isValidDate(parsedDate)) return new Date().getFullYear();
 
   const year = parsedDate.getFullYear();
   const month = parsedDate.getMonth() + 1; // JavaScript months are 0-indexed
@@ -264,7 +280,7 @@ export function getFiscalYear(date: Date | string, fiscalYearStartMonth: number 
  */
 export function getQuarter(date: Date | string): number {
   const parsedDate = typeof date === 'string' ? parseDate(date) : date;
-  if (!parsedDate || !isValid(parsedDate)) return 1;
+  if (!parsedDate || !isValidDate(parsedDate)) return 1;
 
   return Math.floor(parsedDate.getMonth() / 3) + 1;
 }
@@ -274,7 +290,7 @@ export function getQuarter(date: Date | string): number {
  */
 export function getWeekNumber(date: Date | string): number {
   const parsedDate = typeof date === 'string' ? parseDate(date) : date;
-  if (!parsedDate || !isValid(parsedDate)) return 1;
+  if (!parsedDate || !isValidDate(parsedDate)) return 1;
 
   const firstDayOfYear = new Date(parsedDate.getFullYear(), 0, 1);
   const pastDaysOfYear = differenceInDays(parsedDate, firstDayOfYear);
@@ -300,7 +316,7 @@ export function validateDateConstraints(
   const parsedDate = typeof date === 'string' ? parseDate(date) : date;
   const errors: string[] = [];
 
-  if (!parsedDate || !isValid(parsedDate)) {
+  if (!parsedDate || !isValidDate(parsedDate)) {
     return { isValid: false, errors: ['Invalid date format'] };
   }
 
@@ -352,7 +368,7 @@ export function formatDuration(startDate: Date | string, endDate: Date | string)
   const start = typeof startDate === 'string' ? parseDate(startDate) : startDate;
   const end = typeof endDate === 'string' ? parseDate(endDate) : endDate;
 
-  if (!start || !end || !isValid(start) || !isValid(end)) return '';
+  if (!start || !end || !isValidDate(start) || !isValidDate(end)) return '';
 
   const days = differenceInDays(end, start);
   const hours = differenceInHours(end, start);
@@ -391,7 +407,7 @@ export function getTimezoneOffset(timezone: string, date?: Date): number {
  */
 export function toISOStringWithTimezone(date: Date | string, timezone?: string): string {
   const parsedDate = typeof date === 'string' ? parseDate(date) : date;
-  if (!parsedDate || !isValid(parsedDate)) return '';
+  if (!parsedDate || !isValidDate(parsedDate)) return '';
 
   if (timezone) {
     const zonedDate = toZonedTime(parsedDate, timezone);
@@ -418,7 +434,7 @@ export function createDatePickerValue(
   timezone?: string
 ): DatePickerValue {
   const date = typeof value === 'string' ? parseDate(value) : value;
-  const dateIsValid = date !== null && isValid(date);
+  const dateIsValid = date !== null && isValidDate(date);
 
   return {
     date,

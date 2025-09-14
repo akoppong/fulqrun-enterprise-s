@@ -800,7 +800,7 @@ export function MEDDPICCModule() {
       assessment,
       timestamp: new Date(),
       score_level: getScoreLevel(assessment.total_score),
-      coaching_prompts: generateCoachingPrompts()
+      coaching_prompts: typeof generateCoachingPrompts === 'function' ? generateCoachingPrompts() : []
     };
 
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
@@ -824,7 +824,7 @@ ${meddpiccData.pillars.map(pillar =>
 ).join('\n')}
 
 Coaching Recommendations:
-${generateCoachingPrompts().join('\n')}
+${typeof generateCoachingPrompts === 'function' ? generateCoachingPrompts().join('\n') : 'No coaching prompts available'}
 `;
 
     navigator.clipboard.writeText(summary).then(() => {
@@ -840,7 +840,7 @@ ${generateCoachingPrompts().join('\n')}
   };
 
   const overallScoreLevel = getScoreLevel(assessment.total_score);
-  const coachingPrompts = generateCoachingPrompts();
+  const coachingPrompts = typeof generateCoachingPrompts === 'function' ? generateCoachingPrompts() : [];
 
   return (
     <div className="space-y-6 p-6">
