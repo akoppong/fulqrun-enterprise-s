@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useKV } from '@github/spark/hooks';
 import { CustomerSegment, Company, SegmentAssignment } from '@/lib/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -8,8 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Building2, Target, DollarSign } from '@phosphor-icons/react';
+import { Building2, Target, DollarSign, Users } from '@phosphor-icons/react';
 import { toast } from 'sonner';
+import { CustomerSegmentsService } from '@/lib/customer-segments-service';
 
 interface SegmentAssignmentDialogProps {
   company: Company;
@@ -19,13 +20,26 @@ interface SegmentAssignmentDialogProps {
 }
 
 export function SegmentAssignmentDialog({ company, isOpen, onClose, onAssign }: SegmentAssignmentDialogProps) {
-  const [segments] = useKV<CustomerSegment[]>('customer-segments', []);
+  const [segments, setSegments] = useKV<CustomerSegment[]>('customer-segments', []);
   const [selectedSegmentId, setSelectedSegmentId] = useState(company.segmentId || '');
   const [reason, setReason] = useState('');
   const [confidence, setConfidence] = useState(85);
+  const [isInitializing, setIsInitializing] = useState(false);
 
-  const activeSegments = segments.filter(s => s.isActive);
-  const selectedSegment = segments.find(s => s.id === selectedSegmentId);
+  // Auto-initialize segments if none exist
+  useEffect(() => {
+    if (isOpen && segments.length === 0) {
+      setIsInitializing(true);
+      const initializedSegments = CustomerSegmentsService.initializeDefaultSegments();
+      setSegments(initializedSegments);
+      
+      toast.success('Customer segments initialized with default templates');
+      setIsInitializing(false);
+    }
+  }, [isOpen, segments.length, setSegments]);
+
+  const activeSegments = CustomerSegmentsService.getActiveSegments(segments);
+  const selectedSegment = CustomerSegmentsService.findSegmentById(segments, selectedSegmentId);
 
   const handleAssign = () => {
     if (!selectedSegmentId) {
@@ -53,7 +67,7 @@ export function SegmentAssignmentDialog({ company, isOpen, onClose, onAssign }: 
 
     onAssign(updatedCompany);
     
-    const segmentName = selectedSegment?.name || 'Unknown Segment';
+    const segmentName = CustomerSegmentsService.getSegmentDisplayName(segments, selectedSegmentId);
     toast.success(`${company.name} assigned to ${segmentName} segment`);
     onClose();
   };
@@ -125,7 +139,7 @@ export function SegmentAssignmentDialog({ company, isOpen, onClose, onAssign }: 
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-blue-900">Current Assignment</span>
                 <Badge variant="secondary">
-                  {segments.find(s => s.id === company.segmentId)?.name || 'Unknown'}
+                  {CustomerSegmentsService.getSegmentDisplayName(segments, company.segmentId)}
                 </Badge>
               </div>
               <p className="text-sm text-blue-700">
@@ -139,29 +153,76 @@ export function SegmentAssignmentDialog({ company, isOpen, onClose, onAssign }: 
             </div>
           )}
 
+          {segments.length > 0 && !isInitializing && activeSegments.length === 0 && (
+            <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+              <div className="flex items-center gap-2 text-sm text-yellow-800">
+                <Users className="h-4 w-4" />
+                <span className="font-medium">No Active Segments</span>
+              </div>
+              <p className="text-sm text-yellow-700 mt-1">
+                All customer segments are currently inactive. Please activate segments in the Customer Segments module.
+              </p>
+            </div>
+          )}
+
+          {!isInitializing && segments.length > 0 && activeSegments.length > 0 && (
+            <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+              <div className="flex items-center gap-2 text-sm text-green-800">
+                <Users className="h-4 w-4" />
+                <span>
+                  {activeSegments.length} customer segment{activeSegments.length !== 1 ? 's' : ''} available for assignment
+                </span>
+              </div>
+            </div>
+          )}
+
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Customer Segment</Label>
-              <Select value={selectedSegmentId} onValueChange={setSelectedSegmentId}>
+              <Select 
+                value={selectedSegmentId} 
+                onValueChange={setSelectedSegmentId}
+                disabled={isInitializing}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a customer segment" />
+                  <SelectValue 
+                    placeholder={
+                      isInitializing 
+                        ? "Initializing customer segments..." 
+                        : activeSegments.length === 0
+                        ? "No segments available"
+                        : "Select a customer segment"
+                    } 
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  {activeSegments.map((segment) => (
-                    <SelectItem key={segment.id} value={segment.id}>
-                      <div className="flex items-center gap-2">
-                        <div style={{ color: segment.color }}>
-                          {getIconComponent(segment.icon)}
-                        </div>
-                        <div>
-                          <div className="font-medium">{segment.name}</div>
-                          <div className="text-xs text-muted-foreground line-clamp-1">
-                            {segment.description}
+                  {isInitializing ? (
+                    <div className="p-4 text-center text-sm text-muted-foreground">
+                      <Users className="h-4 w-4 mx-auto mb-2 animate-spin" />
+                      Initializing customer segments...
+                    </div>
+                  ) : activeSegments.length === 0 ? (
+                    <div className="p-4 text-center text-sm text-muted-foreground">
+                      <Users className="h-4 w-4 mx-auto mb-2" />
+                      No active segments available
+                    </div>
+                  ) : (
+                    activeSegments.map((segment) => (
+                      <SelectItem key={segment.id} value={segment.id}>
+                        <div className="flex items-center gap-2">
+                          <div style={{ color: segment.color }}>
+                            {getIconComponent(segment.icon)}
+                          </div>
+                          <div>
+                            <div className="font-medium">{segment.name}</div>
+                            <div className="text-xs text-muted-foreground line-clamp-1">
+                              {segment.description}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </SelectItem>
-                  ))}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -229,8 +290,16 @@ export function SegmentAssignmentDialog({ company, isOpen, onClose, onAssign }: 
               <Button variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <Button onClick={handleAssign} disabled={!selectedSegmentId}>
-                {company.segmentId ? 'Update Assignment' : 'Assign Segment'}
+              <Button 
+                onClick={handleAssign} 
+                disabled={!selectedSegmentId || isInitializing}
+              >
+                {isInitializing 
+                  ? 'Initializing...' 
+                  : company.segmentId 
+                  ? 'Update Assignment' 
+                  : 'Assign Segment'
+                }
               </Button>
             </div>
           </div>
