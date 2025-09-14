@@ -721,7 +721,7 @@ export class MEDDPICCService {
   }
 }
 
-// Export types (service is already imported above)
+// Export types (service is already imported above, class exported from meddpicc-scoring-service.ts)
 export type {
   MEDDPICCAssessment,
   MEDDPICCTrend,
