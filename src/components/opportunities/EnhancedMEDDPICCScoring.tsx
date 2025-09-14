@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Lightbulb, Target, TrendingUp, AlertTriangle, CheckCircle2, Brain } from '@phosphor-icons/react';
 import { MEDDPICC } from '@/lib/types';
+import { ensureMEDDPICCComplete, toMEDDPICCScore } from '@/lib/meddpicc-defaults';
 import { toast } from 'sonner';
 
 interface EnhancedMEDDPICCScoringProps {
@@ -293,17 +294,24 @@ export function EnhancedMEDDPICCScoring({
   readonly = false
 }: EnhancedMEDDPICCScoringProps) {
   const [activeTab, setActiveTab] = useState<keyof MEDDPICC>('metrics');
-  const [scores, setScores] = useState<MEDDPICC>(meddpicc);
+  
+  // Ensure we always have a complete MEDDPICC object
+  const [scores, setScores] = useState<MEDDPICC>(() => ensureMEDDPICCComplete(meddpicc || {}));
   const [insights, setInsights] = useState<string[]>([]);
 
   useEffect(() => {
-    setScores(meddpicc);
+    const normalizedMeddpicc = ensureMEDDPICCComplete(meddpicc || {});
+    setScores(normalizedMeddpicc);
     generateInsights();
   }, [meddpicc]);
 
   const generateInsights = () => {
     const newInsights: string[] = [];
-    const scoreValues = Object.values(scores).filter(v => typeof v === 'number') as number[];
+    
+    // Get score values safely
+    const scoreKeys = ['metrics', 'economicBuyer', 'decisionCriteria', 'decisionProcess', 'paperProcess', 'identifyPain', 'champion', 'competition'] as const;
+    const scoreValues = scoreKeys.map(key => toMEDDPICCScore(scores[key]));
+    
     const avgScore = scoreValues.length > 0 ? scoreValues.reduce((sum, score) => sum + score, 0) / scoreValues.length : 0;
     const weakCriteria = scoreValues.filter(score => score < 6).length;
     const strongCriteria = scoreValues.filter(score => score >= 8).length;
@@ -320,15 +328,15 @@ export function EnhancedMEDDPICCScoring({
       newInsights.push('⚠️ Multiple weak areas detected. Consider deal risk assessment.');
     }
 
-    if (Number(scores.economicBuyer) < 5) {
+    if (toMEDDPICCScore(scores.economicBuyer) < 5) {
       newInsights.push('💰 Limited Economic Buyer access is a critical risk factor.');
     }
 
-    if (Number(scores.champion) < 6) {
+    if (toMEDDPICCScore(scores.champion) < 6) {
       newInsights.push('🤝 Weak champion strength may slow deal progression.');
     }
 
-    if (Number(scores.metrics) < 6) {
+    if (toMEDDPICCScore(scores.metrics) < 6) {
       newInsights.push('📊 Unclear business metrics reduce deal predictability.');
     }
 
@@ -340,23 +348,15 @@ export function EnhancedMEDDPICCScoring({
   };
 
   const handleScoreChange = (criterion: keyof MEDDPICC, value: number) => {
-    const updatedScores = { ...scores, [criterion]: value };
-    setScores(updatedScores);
+    const safeValue = toMEDDPICCScore(value);
+    const updatedScores = { ...scores, [criterion]: safeValue };
     
-    // Calculate overall score
-    const scoreValues = Object.entries(updatedScores)
-      .filter(([key, value]) => typeof value === 'number' && key !== 'score')
-      .map(([, value]) => value as number);
+    // Ensure the updated scores are complete and valid
+    const normalizedScores = ensureMEDDPICCComplete(updatedScores);
+    setScores(normalizedScores);
     
-    const overallScore = scoreValues.reduce((sum, score) => sum + score, 0) / scoreValues.length;
-    
-    const finalScores = {
-      ...updatedScores,
-      score: overallScore,
-      lastUpdated: new Date()
-    };
-
-    onChange(finalScores);
+    // Update the parent with the normalized scores
+    onChange(normalizedScores);
   };
 
   const getScoreColor = (score: number) => {
@@ -373,10 +373,9 @@ export function EnhancedMEDDPICCScoring({
     return 'Poor';
   };
 
-  const overallScore = typeof scores.score === 'number' ? scores.score : 0;
-  const completionRate = Object.entries(scores)
-    .filter(([key, value]) => typeof value === 'number' && key !== 'score')
-    .filter(([, value]) => (value as number) > 0).length / 8 * 100;
+  const overallScore = toMEDDPICCScore(scores.score);
+  const scoreKeys = ['metrics', 'economicBuyer', 'decisionCriteria', 'decisionProcess', 'paperProcess', 'identifyPain', 'champion', 'competition'] as const;
+  const completionRate = scoreKeys.filter(key => toMEDDPICCScore(scores[key]) > 0).length / scoreKeys.length * 100;
 
   return (
     <div className="space-y-6">
@@ -420,7 +419,7 @@ export function EnhancedMEDDPICCScoring({
               <p className="text-sm text-muted-foreground">Completion Rate</p>
               <Progress value={completionRate} className="mt-2" />
               <Badge variant="secondary" className="mt-2">
-                {Math.round(completionRate / 12.5)}/8 Criteria
+                {scoreKeys.filter(key => toMEDDPICCScore(scores[key]) > 0).length}/8 Criteria
               </Badge>
             </div>
 
@@ -480,9 +479,9 @@ export function EnhancedMEDDPICCScoring({
                 <span className="sm:hidden">{criterion.label.slice(0, 3)}</span>
                 <Badge
                   variant="secondary"
-                  className={`text-xs ${getScoreColor(Number(scores[criterion.key]) || 0)}`}
+                  className={`text-xs ${getScoreColor(toMEDDPICCScore(scores[criterion.key]))}`}
                 >
-                  {(Number(scores[criterion.key]) || 0).toFixed(1)}
+                  {toMEDDPICCScore(scores[criterion.key]).toFixed(1)}
                 </Badge>
               </div>
             </TabsTrigger>
@@ -501,8 +500,8 @@ export function EnhancedMEDDPICCScoring({
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <Label>Current Score</Label>
-                    <Badge className={getScoreColor(Number(scores[criterion.key]) || 0)}>
-                      {(Number(scores[criterion.key]) || 0).toFixed(1)}/10 - {getScoreLabel(Number(scores[criterion.key]) || 0)}
+                    <Badge className={getScoreColor(toMEDDPICCScore(scores[criterion.key]))}>
+                      {toMEDDPICCScore(scores[criterion.key]).toFixed(1)}/10 - {getScoreLabel(toMEDDPICCScore(scores[criterion.key]))}
                     </Badge>
                   </div>
                   {!readonly && (
@@ -512,11 +511,11 @@ export function EnhancedMEDDPICCScoring({
                         min="0"
                         max="10"
                         step="0.5"
-                        value={Number(scores[criterion.key]) || 0}
+                        value={toMEDDPICCScore(scores[criterion.key])}
                         onChange={(e) => handleScoreChange(criterion.key, Number(e.target.value))}
                         className="w-full"
                       />
-                      <Progress value={(Number(scores[criterion.key]) || 0) * 10} className="mt-2" />
+                      <Progress value={toMEDDPICCScore(scores[criterion.key]) * 10} className="mt-2" />
                     </div>
                   )}
                 </div>

@@ -6,6 +6,7 @@
  */
 
 import { Opportunity, Company, Contact, MEDDPICC } from './types';
+import { ensureMEDDPICCComplete } from './meddpicc-defaults';
 
 export interface ValidationResult {
   isValid: boolean;
@@ -69,9 +70,18 @@ export function validateOpportunity(opportunity: any): ValidationResult {
 
   // MEDDPICC validation - be more flexible
   if (opportunity?.meddpicc && typeof opportunity.meddpicc === 'object') {
-    if (typeof opportunity.meddpicc.score !== 'number' || opportunity.meddpicc.score < 0 || opportunity.meddpicc.score > 100) {
-      warnings.push('MEDDPICC score should be a number between 0 and 100');
+    if (typeof opportunity.meddpicc.score !== 'number' || opportunity.meddpicc.score < 0 || opportunity.meddpicc.score > 10) {
+      warnings.push('MEDDPICC score should be a number between 0 and 10');
     }
+    
+    // Validate individual criteria scores
+    const criteriaKeys = ['metrics', 'economicBuyer', 'decisionCriteria', 'decisionProcess', 'paperProcess', 'identifyPain', 'champion', 'competition'];
+    criteriaKeys.forEach(key => {
+      const value = opportunity.meddpicc[key];
+      if (value !== undefined && (typeof value !== 'number' || value < 0 || value > 10)) {
+        warnings.push(`MEDDPICC ${key} should be a number between 0 and 10`);
+      }
+    });
   } else {
     // MEDDPICC is optional now, just warn
     warnings.push('MEDDPICC qualification data is recommended for better tracking');
@@ -150,22 +160,7 @@ export function normalizeOpportunity(opportunity: any): Opportunity {
  * Normalizes MEDDPICC data to ensure consistent format
  */
 export function normalizeMEDDPICC(meddpicc: any): MEDDPICC {
-  return {
-    metrics: String(meddpicc?.metrics || ''),
-    economicBuyer: String(meddpicc?.economicBuyer || ''),
-    decisionCriteria: String(meddpicc?.decisionCriteria || ''),
-    decisionProcess: String(meddpicc?.decisionProcess || ''),
-    paperProcess: String(meddpicc?.paperProcess || ''),
-    implicatePain: String(meddpicc?.implicatePain || ''),
-    champion: String(meddpicc?.champion || ''),
-    score: Math.max(0, Math.min(100, Number(meddpicc?.score) || 0)),
-    aiHints: meddpicc?.aiHints && typeof meddpicc.aiHints === 'object' ? {
-      metricsHints: Array.isArray(meddpicc.aiHints.metricsHints) ? meddpicc.aiHints.metricsHints : [],
-      championHints: Array.isArray(meddpicc.aiHints.championHints) ? meddpicc.aiHints.championHints : [],
-      riskFactors: Array.isArray(meddpicc.aiHints.riskFactors) ? meddpicc.aiHints.riskFactors : []
-    } : undefined,
-    lastAiAnalysis: meddpicc?.lastAiAnalysis ? new Date(meddpicc.lastAiAnalysis).toISOString() : undefined
-  };
+  return ensureMEDDPICCComplete(meddpicc || {});
 }
 
 /**

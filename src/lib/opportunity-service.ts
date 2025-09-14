@@ -9,6 +9,7 @@ import {
   safeJsonParse, 
   safeDateConvert 
 } from './data-consistency';
+import { createDefaultMEDDPICC, ensureMEDDPICCComplete } from './meddpicc-defaults';
 
 /**
  * Extended analytics interface for opportunities that includes progression analysis

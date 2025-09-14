@@ -3,20 +3,36 @@
  */
 
 export interface MEDDPICC {
-  metrics: string; // What economic impact can we measure?
-  economicBuyer: string; // Who has the economic authority?
-  decisionCriteria: string; // What criteria will they use to decide?
-  decisionProcess: string; // How will they make the decision?
-  paperProcess: string; // What's the approval/procurement process?
-  implicatePain: string; // What pain are we addressing?
-  champion: string; // Who is actively selling for us?
-  score: number; // 0-100 qualification score
+  // Scoring fields (0-10 scale)
+  metrics: number; // What economic impact can we measure?
+  economicBuyer: number; // Who has the economic authority?
+  decisionCriteria: number; // What criteria will they use to decide?
+  decisionProcess: number; // How will they make the decision?
+  paperProcess: number; // What's the approval/procurement process?
+  identifyPain: number; // What pain are we addressing?
+  champion: number; // Who is actively selling for us?
+  competition: number; // Competitive landscape understanding
+  score: number; // Overall MEDDPICC score (average of all criteria)
+  
+  // Text fields for detailed notes
+  metricsNotes?: string;
+  economicBuyerNotes?: string;
+  decisionCriteriaNotes?: string;
+  decisionProcessNotes?: string;
+  paperProcessNotes?: string;
+  identifyPainNotes?: string;
+  championNotes?: string;
+  competitionNotes?: string;
+  notes?: string; // General notes
+  
+  // AI and metadata
   aiHints?: {
     metricsHints: string[];
     championHints: string[];
     riskFactors: string[];
   };
   lastAiAnalysis?: string; // ISO date string for reliable serialization
+  lastUpdated?: Date; // When this scoring was last updated
 }
 
 export interface Opportunity {
