@@ -9,6 +9,7 @@ import { UnifiedOpportunityPage } from './UnifiedOpportunityPage';
 import { MEDDPICCScenarioTester } from './MEDDPICCScenarioTester';
 import { OpportunityTabsTest } from './OpportunityTabsTest';
 import { OpportunityDetailTabsValidator } from './OpportunityDetailTabsValidator';
+import { EnhancedOpportunityCreatorDemo } from './EnhancedOpportunityCreatorDemo';
 import { EnhancedErrorBoundary } from '@/components/ui/enhanced-error-boundary';
 import { toast } from 'sonner';
 
@@ -18,7 +19,7 @@ interface OpportunitiesModuleProps {
   initialData?: any;
 }
 
-type OpportunityView = 'dashboard' | 'list' | 'detail' | 'create' | 'edit' | 'meddpicc-test' | 'tabs-test' | 'tabs-validator';
+type OpportunityView = 'dashboard' | 'list' | 'detail' | 'create' | 'edit' | 'meddpicc-test' | 'tabs-test' | 'tabs-validator' | 'enhanced-demo';
 
 export function OpportunitiesModule({ user, initialView = 'dashboard', initialData }: OpportunitiesModuleProps) {
   const [opportunities, setOpportunities] = useKV<Opportunity[]>('opportunities', []);
@@ -113,6 +114,12 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
       
       case 'tabs-validator':
         setCurrentView('tabs-validator');
+        setSelectedOpportunityId(null);
+        setEditingOpportunity(null);
+        break;
+      
+      case 'enhanced-demo':
+        setCurrentView('enhanced-demo');
         setSelectedOpportunityId(null);
         setEditingOpportunity(null);
         break;
@@ -275,6 +282,13 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
           </EnhancedErrorBoundary>
         );
       
+      case 'enhanced-demo':
+        return (
+          <EnhancedErrorBoundary context="EnhancedOpportunityCreatorDemo">
+            <EnhancedOpportunityCreatorDemo user={user} />
+          </EnhancedErrorBoundary>
+        );
+      
       default:
         return (
           <EnhancedErrorBoundary context="OpportunitiesDashboard">
@@ -301,5 +315,6 @@ export {
   OpportunityDetailView,
   UnifiedOpportunityPage,
   MEDDPICCScenarioTester,
-  OpportunityTabsTest
+  OpportunityTabsTest,
+  EnhancedOpportunityCreatorDemo
 };

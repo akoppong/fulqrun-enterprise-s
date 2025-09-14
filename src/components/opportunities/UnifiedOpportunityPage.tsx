@@ -1,4 +1,4 @@
-import { UnifiedOpportunityForm } from './UnifiedOpportunityForm';
+import { EnhancedOpportunityCreator } from './EnhancedOpportunityCreator';
 import { Opportunity, User } from '@/lib/types';
 
 interface UnifiedOpportunityPageProps {
@@ -17,13 +17,11 @@ export function UnifiedOpportunityPage({
   isEditing = false 
 }: UnifiedOpportunityPageProps) {
   return (
-    <UnifiedOpportunityForm
-      isOpen={true} // Always open in page mode
-      onClose={onCancel}
-      onSave={onSave}
-      editingOpportunity={editingOpportunity}
+    <EnhancedOpportunityCreator
       user={user}
-      mode="page"
+      onSave={onSave}
+      onCancel={onCancel}
+      editingOpportunity={editingOpportunity}
     />
   );
 }

@@ -1,434 +1,624 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Brain, 
-  TrendUp, 
-  Lightbulb, 
-  AlertTriangle, 
-  CheckCircle, 
-  Target,
-  Users,
-  DollarSign,
-  Clock,
-  Shield,
-  ArrowRight
-} from '@phosphor-icons/react';
-import { MEDDPICC, Opportunity, Company, Contact } from '@/lib/types';
-import { AIService } from '@/lib/ai-service';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Lightbulb, Target, TrendingUp, AlertTriangle, CheckCircle2, Brain } from '@phosphor-icons/react';
+import { MEDDPICC } from '@/lib/types';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
 
 interface EnhancedMEDDPICCScoringProps {
   meddpicc: MEDDPICC;
-  onMEDDPICCChange: (field: string, value: string) => void;
-  opportunity: Partial<Opportunity>;
-  company?: Company;
-  contact?: Contact;
-  className?: string;
+  onChange: (meddpicc: MEDDPICC) => void;
+  opportunityValue?: number;
+  companyName?: string;
+  readonly?: boolean;
 }
 
-interface MEDDPICCHints {
-  metricsHints: string[];
-  championHints: string[];
-  riskFactors: string[];
+interface CriterionData {
+  key: keyof MEDDPICC;
+  label: string;
+  description: string;
+  questions: string[];
+  tips: string[];
+  redFlags: string[];
+  greenFlags: string[];
+  examples: {
+    poor: string;
+    good: string;
+    excellent: string;
+  };
 }
 
-interface ScoringBreakdown {
-  metrics: number;
-  economicBuyer: number;
-  decisionCriteria: number;
-  decisionProcess: number;
-  paperProcess: number;
-  implicatePain: number;
-  champion: number;
-  competition: number;
-}
-
-const MEDDPICC_FIELDS = [
+const MEDDPICC_CRITERIA: CriterionData[] = [
   {
     key: 'metrics',
     label: 'Metrics',
-    description: 'What economic impact can we measure?',
-    placeholder: 'Quantify ROI, cost savings, revenue impact, efficiency gains...',
-    icon: DollarSign,
-    weight: 0.15,
-    hints: [
-      'What ROI metrics matter most to your organization?',
-      'How do you currently measure success in this area?',
-      'What are the costs of not solving this problem?'
-    ]
+    description: 'Quantifiable business impact and success criteria',
+    questions: [
+      'What specific metrics will improve with this solution?',
+      'How will success be measured?',
+      'What is the current baseline?',
+      'What is the target improvement?'
+    ],
+    tips: [
+      'Focus on quantifiable business outcomes',
+      'Understand how metrics tie to business goals',
+      'Get specific numbers, not generalities'
+    ],
+    redFlags: [
+      'No specific metrics identified',
+      'Vague benefits like "efficiency gains"',
+      'Customer can\'t quantify current state'
+    ],
+    greenFlags: [
+      'Specific ROI calculations available',
+      'Clear before/after scenarios',
+      'Metrics tied to business strategy'
+    ],
+    examples: {
+      poor: 'Customer wants to "improve efficiency"',
+      good: 'Customer needs to reduce processing time by 30%',
+      excellent: 'Customer must achieve 25% cost reduction ($2M annually) to meet board mandate'
+    }
   },
   {
     key: 'economicBuyer',
     label: 'Economic Buyer',
-    description: 'Who has the economic authority to buy?',
-    placeholder: 'Identify the person with budget authority and final approval...',
-    icon: Users,
-    weight: 0.15,
-    hints: [
-      'Who controls the budget for this initiative?',
-      'Who would ultimately approve this purchase?',
-      'Who would be held accountable for the results?'
-    ]
+    description: 'Person with budget authority who can approve the purchase',
+    questions: [
+      'Who has the budget for this project?',
+      'Who can say "yes" to the full investment?',
+      'What is their approval process?',
+      'Have we met or presented to them?'
+    ],
+    tips: [
+      'Economic buyer may not be the end user',
+      'Understand their priorities and concerns',
+      'Ensure they understand the value proposition'
+    ],
+    redFlags: [
+      'Economic buyer not identified',
+      'No access to economic buyer',
+      'Budget ownership unclear'
+    ],
+    greenFlags: [
+      'Direct access to economic buyer',
+      'Economic buyer actively engaged',
+      'Budget confirmed and allocated'
+    ],
+    examples: {
+      poor: 'IT manager says they have budget',
+      good: 'CFO has allocated budget for this initiative',
+      excellent: 'CEO personally championing the project with dedicated budget'
+    }
   },
   {
     key: 'decisionCriteria',
     label: 'Decision Criteria',
-    description: 'What criteria will they use to decide?',
-    placeholder: 'List the technical, business, and vendor criteria...',
-    icon: Target,
-    weight: 0.15,
-    hints: [
-      'What are their must-have requirements?',
-      'How do they evaluate different solutions?',
-      'What are their selection criteria priorities?'
-    ]
+    description: 'Specific requirements and evaluation factors for vendor selection',
+    questions: [
+      'What criteria will be used to evaluate solutions?',
+      'How will vendors be compared?',
+      'What are the must-have vs. nice-to-have features?',
+      'Who defines the criteria?'
+    ],
+    tips: [
+      'Influence criteria definition where possible',
+      'Understand weighted importance of criteria',
+      'Map your strengths to their criteria'
+    ],
+    redFlags: [
+      'Criteria not defined or unclear',
+      'Criteria heavily favor competitors',
+      'No input into criteria definition'
+    ],
+    greenFlags: [
+      'Criteria align with your strengths',
+      'You helped define the criteria',
+      'Clear scoring methodology exists'
+    ],
+    examples: {
+      poor: 'Customer will "know it when they see it"',
+      good: 'Customer has defined technical and business requirements',
+      excellent: 'Detailed RFP criteria that favor your solution capabilities'
+    }
   },
   {
     key: 'decisionProcess',
     label: 'Decision Process',
-    description: 'How will they make the decision?',
-    placeholder: 'Map out steps, stakeholders, timeline, approval gates...',
-    icon: ArrowRight,
-    weight: 0.15,
-    hints: [
-      'What steps are involved in their decision process?',
-      'Who needs to be involved at each stage?',
-      'What is their typical timeline for decisions?'
-    ]
+    description: 'How the organization will make the buying decision',
+    questions: [
+      'What steps are involved in the decision process?',
+      'Who is involved at each stage?',
+      'What are the timeline and milestones?',
+      'What could cause delays or changes?'
+    ],
+    tips: [
+      'Map out the complete process',
+      'Identify potential bottlenecks',
+      'Understand approval workflows'
+    ],
+    redFlags: [
+      'Process is undefined or unclear',
+      'Decision makers keep changing',
+      'Timeline is unrealistic'
+    ],
+    greenFlags: [
+      'Clear, documented process',
+      'Realistic timeline with milestones',
+      'You have visibility into each step'
+    ],
+    examples: {
+      poor: 'Customer will decide when they\'re ready',
+      good: 'Customer has outlined evaluation phases and timeline',
+      excellent: 'Detailed project plan with defined roles and approval gates'
+    }
   },
   {
     key: 'paperProcess',
     label: 'Paper Process',
-    description: 'What\'s the approval/procurement process?',
-    placeholder: 'Document legal, compliance, procurement requirements...',
-    icon: Shield,
-    weight: 0.10,
-    hints: [
-      'What legal/compliance requirements exist?',
-      'Who handles procurement and contracts?',
-      'What approval workflows are required?'
-    ]
+    description: 'Legal, procurement, and contracting requirements',
+    questions: [
+      'What is the procurement process?',
+      'Who handles legal and contracting?',
+      'Are there standard terms and conditions?',
+      'What documentation is required?'
+    ],
+    tips: [
+      'Understand procurement workflows',
+      'Identify potential legal hurdles early',
+      'Know their standard terms'
+    ],
+    redFlags: [
+      'Procurement process unknown',
+      'Legal requirements unclear',
+      'No understanding of terms'
+    ],
+    greenFlags: [
+      'Clear procurement workflow',
+      'Legal requirements understood',
+      'Terms and conditions reviewed'
+    ],
+    examples: {
+      poor: 'Customer will handle paperwork when ready',
+      good: 'Customer has outlined procurement steps and requirements',
+      excellent: 'Master agreement in place with clear SOW process'
+    }
   },
   {
-    key: 'implicatePain',
-    label: 'Implicate Pain',
-    description: 'What pain are we addressing?',
-    placeholder: 'Identify the business pain and consequences of inaction...',
-    icon: AlertTriangle,
-    weight: 0.15,
-    hints: [
-      'What problems are they trying to solve?',
-      'What happens if they don\'t solve this?',
-      'How urgent is this pain point?'
-    ]
+    key: 'identifyPain',
+    label: 'Identify Pain',
+    description: 'Specific business problems and pain points driving the purchase',
+    questions: [
+      'What specific problems need to be solved?',
+      'What is the impact of doing nothing?',
+      'How urgent is the pain?',
+      'Who is most affected by the pain?'
+    ],
+    tips: [
+      'Quantify the cost of the pain',
+      'Understand urgency and timeline',
+      'Connect pain to business impact'
+    ],
+    redFlags: [
+      'Pain is not clearly defined',
+      'No urgency to solve',
+      'Cost of inaction unclear'
+    ],
+    greenFlags: [
+      'Specific, quantified pain points',
+      'Urgency to solve identified',
+      'Clear cost of inaction'
+    ],
+    examples: {
+      poor: 'Customer thinks current system could be better',
+      good: 'Customer has specific operational challenges to address',
+      excellent: 'Business-critical pain with quantified impact and deadline'
+    }
   },
   {
     key: 'champion',
     label: 'Champion',
-    description: 'Who is actively selling for us internally?',
-    placeholder: 'Identify who advocates for your solution inside the organization...',
-    icon: CheckCircle,
-    weight: 0.15,
-    hints: [
-      'Who benefits most from solving this problem?',
-      'Who has advocated for similar solutions before?',
-      'Who would champion this initiative internally?'
-    ]
+    description: 'Internal advocate who will sell on your behalf',
+    questions: [
+      'Who is advocating for your solution?',
+      'What is their influence and credibility?',
+      'Are they willing to introduce you to others?',
+      'Do they understand your value proposition?'
+    ],
+    tips: [
+      'Develop multiple champions',
+      'Ensure they can articulate your value',
+      'Provide them with tools to sell internally'
+    ],
+    redFlags: [
+      'No clear champion identified',
+      'Champion has limited influence',
+      'Champion is not engaged'
+    ],
+    greenFlags: [
+      'Strong, influential champion',
+      'Champion actively selling internally',
+      'Multiple champions across organization'
+    ],
+    examples: {
+      poor: 'End user likes your solution',
+      good: 'Department head is advocating for your solution',
+      excellent: 'Senior executive personally driving the initiative'
+    }
+  },
+  {
+    key: 'competition',
+    label: 'Competition',
+    description: 'Competitive landscape and positioning',
+    questions: [
+      'Who else is being considered?',
+      'What are their strengths and weaknesses?',
+      'Why might the customer choose them?',
+      'What is your competitive advantage?'
+    ],
+    tips: [
+      'Understand the complete competitive set',
+      'Know competitors\' likely strategies',
+      'Position your unique value clearly'
+    ],
+    redFlags: [
+      'Competitive landscape unknown',
+      'Competitors have advantages',
+      'Customer prefers competitor'
+    ],
+    greenFlags: [
+      'Clear competitive positioning',
+      'Unique advantages identified',
+      'Competitor weaknesses known'
+    ],
+    examples: {
+      poor: 'Customer is only looking at your solution',
+      good: 'Customer is evaluating 3 vendors with clear differentiation',
+      excellent: 'You have clear competitive advantages that matter to the customer'
+    }
   }
 ];
 
-export function EnhancedMEDDPICCScoring({ 
-  meddpicc, 
-  onMEDDPICCChange, 
-  opportunity, 
-  company, 
-  contact,
-  className 
+export function EnhancedMEDDPICCScoring({
+  meddpicc,
+  onChange,
+  opportunityValue,
+  companyName,
+  readonly = false
 }: EnhancedMEDDPICCScoringProps) {
-  const [hints, setHints] = useState<MEDDPICCHints | null>(null);
-  const [generatingHints, setGeneratingHints] = useState(false);
-  const [scoringBreakdown, setScoringBreakdown] = useState<ScoringBreakdown>({
-    metrics: 0,
-    economicBuyer: 0,
-    decisionCriteria: 0,
-    decisionProcess: 0,
-    paperProcess: 0,
-    implicatePain: 0,
-    champion: 0,
-    competition: 0
-  });
-  const [activeField, setActiveField] = useState<string>('metrics');
+  const [activeTab, setActiveTab] = useState<keyof MEDDPICC>('metrics');
+  const [scores, setScores] = useState<MEDDPICC>(meddpicc);
+  const [insights, setInsights] = useState<string[]>([]);
 
-  // Calculate field scores
-  const calculateFieldScore = (field: string, value: string): number => {
-    if (!value || value.trim().length === 0) return 0;
-    
-    const length = value.trim().length;
-    if (length < 10) return 20;
-    if (length < 30) return 40;
-    if (length < 80) return 60;
-    if (length < 150) return 80;
-    return 100;
-  };
-
-  // Calculate total MEDDPICC score
-  const calculateTotalScore = (): number => {
-    let totalScore = 0;
-    MEDDPICC_FIELDS.forEach(field => {
-      const fieldValue = meddpicc[field.key as keyof MEDDPICC] as string || '';
-      const fieldScore = calculateFieldScore(field.key, fieldValue);
-      totalScore += fieldScore * field.weight;
-    });
-    return Math.round(totalScore);
-  };
-
-  // Update scoring breakdown when MEDDPICC changes
   useEffect(() => {
-    const breakdown: ScoringBreakdown = {
-      metrics: calculateFieldScore('metrics', meddpicc.metrics || ''),
-      economicBuyer: calculateFieldScore('economicBuyer', meddpicc.economicBuyer || ''),
-      decisionCriteria: calculateFieldScore('decisionCriteria', meddpicc.decisionCriteria || ''),
-      decisionProcess: calculateFieldScore('decisionProcess', meddpicc.decisionProcess || ''),
-      paperProcess: calculateFieldScore('paperProcess', meddpicc.paperProcess || ''),
-      implicatePain: calculateFieldScore('implicatePain', meddpicc.implicatePain || ''),
-      champion: calculateFieldScore('champion', meddpicc.champion || ''),
-      competition: 0 // Placeholder for competition analysis
-    };
-    setScoringBreakdown(breakdown);
+    setScores(meddpicc);
+    generateInsights();
   }, [meddpicc]);
 
-  const generateAIHints = async () => {
-    if (!company || !opportunity) {
-      toast.error('Company and opportunity information needed for AI hints');
-      return;
+  const generateInsights = () => {
+    const newInsights: string[] = [];
+    const scoreValues = Object.values(scores).filter(v => typeof v === 'number') as number[];
+    const avgScore = scoreValues.reduce((sum, score) => sum + score, 0) / scoreValues.length;
+    const weakCriteria = scoreValues.filter(score => score < 6).length;
+    const strongCriteria = scoreValues.filter(score => score >= 8).length;
+
+    if (avgScore < 5) {
+      newInsights.push('🔴 Overall qualification is weak. Focus on strengthening multiple areas.');
+    } else if (avgScore >= 7) {
+      newInsights.push('🟢 Strong qualification foundation. Focus on maintaining momentum.');
+    } else {
+      newInsights.push('🟡 Moderate qualification. Identify key areas for improvement.');
     }
 
-    setGeneratingHints(true);
-    try {
-      const aiHints = await AIService.generateMEDDPICCHints(opportunity as Opportunity, company);
-      setHints(aiHints);
-      toast.success('AI hints generated successfully');
-    } catch (error) {
-      console.error('Failed to generate AI hints:', error);
-      toast.error('Failed to generate AI hints');
-    } finally {
-      setGeneratingHints(false);
+    if (weakCriteria > 3) {
+      newInsights.push('⚠️ Multiple weak areas detected. Consider deal risk assessment.');
     }
+
+    if (scores.economicBuyer < 5) {
+      newInsights.push('💰 Limited Economic Buyer access is a critical risk factor.');
+    }
+
+    if (scores.champion < 6) {
+      newInsights.push('🤝 Weak champion strength may slow deal progression.');
+    }
+
+    if (scores.metrics < 6) {
+      newInsights.push('📊 Unclear business metrics reduce deal predictability.');
+    }
+
+    if (strongCriteria >= 6) {
+      newInsights.push('⭐ Excellent qualification in most areas. High-confidence opportunity.');
+    }
+
+    setInsights(newInsights);
   };
 
-  const currentScore = calculateTotalScore();
+  const handleScoreChange = (criterion: keyof MEDDPICC, value: number) => {
+    const updatedScores = { ...scores, [criterion]: value };
+    setScores(updatedScores);
+    
+    // Calculate overall score
+    const scoreValues = Object.entries(updatedScores)
+      .filter(([key, value]) => typeof value === 'number' && key !== 'score')
+      .map(([, value]) => value as number);
+    
+    const overallScore = scoreValues.reduce((sum, score) => sum + score, 0) / scoreValues.length;
+    
+    const finalScores = {
+      ...updatedScores,
+      score: overallScore,
+      lastUpdated: new Date()
+    };
+
+    onChange(finalScores);
+  };
+
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600';
-    if (score >= 60) return 'text-blue-600';
-    if (score >= 40) return 'text-yellow-600';
-    return 'text-red-600';
+    if (score >= 8) return 'text-green-600 bg-green-50';
+    if (score >= 6) return 'text-yellow-600 bg-yellow-50';
+    if (score >= 4) return 'text-orange-600 bg-orange-50';
+    return 'text-red-600 bg-red-50';
   };
 
-  const getScoreBadgeVariant = (score: number) => {
-    if (score >= 80) return 'default';
-    if (score >= 60) return 'secondary';
-    if (score >= 40) return 'outline';
-    return 'destructive';
+  const getScoreLabel = (score: number) => {
+    if (score >= 8) return 'Excellent';
+    if (score >= 6) return 'Good';
+    if (score >= 4) return 'Fair';
+    return 'Poor';
   };
 
-  const getCompletionLevel = (score: number) => {
-    if (score >= 80) return 'Strong';
-    if (score >= 60) return 'Good';
-    if (score >= 40) return 'Partial';
-    return 'Weak';
-  };
+  const overallScore = typeof scores.score === 'number' ? scores.score : 0;
+  const completionRate = Object.entries(scores)
+    .filter(([key, value]) => typeof value === 'number' && key !== 'score')
+    .filter(([, value]) => (value as number) > 0).length / 8 * 100;
 
   return (
-    <div className={cn("space-y-6", className)}>
-      {/* Score Overview */}
+    <div className="space-y-6">
+      {/* Header Summary */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <TrendUp size={20} className="text-primary" />
-              <CardTitle>MEDDPICC Qualification Score</CardTitle>
-            </div>
-            <Button 
-              onClick={generateAIHints}
-              disabled={generatingHints}
-              size="sm"
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <Brain size={16} />
-              {generatingHints ? 'Generating...' : 'AI Hints'}
-            </Button>
-          </div>
+          <CardTitle className="flex items-center gap-2">
+            <Target className="w-5 h-5" />
+            MEDDPICC Qualification Scoring
+            {companyName && (
+              <Badge variant="outline">{companyName}</Badge>
+            )}
+          </CardTitle>
           <CardDescription>
-            Complete each section to improve your qualification confidence
+            Comprehensive sales methodology scoring for deal qualification
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <div className="flex items-center gap-3">
-                  <span className={cn("text-3xl font-bold", getScoreColor(currentScore))}>
-                    {currentScore}%
-                  </span>
-                  <Badge variant={getScoreBadgeVariant(currentScore)}>
-                    {getCompletionLevel(currentScore)}
-                  </Badge>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Qualification Confidence Level
-                </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Overall Score */}
+            <div className="text-center">
+              <div className="text-3xl font-bold">
+                <span className={getScoreColor(overallScore).split(' ')[0]}>
+                  {overallScore.toFixed(1)}
+                </span>
+                <span className="text-muted-foreground text-lg">/10</span>
               </div>
-              <div className="text-right">
-                <div className="text-sm text-muted-foreground">
-                  Target: 80%+ for high confidence
-                </div>
-                <Progress value={currentScore} className="w-32 mt-1" />
-              </div>
+              <p className="text-sm text-muted-foreground">Overall Score</p>
+              <Progress value={overallScore * 10} className="mt-2" />
+              <Badge className={`mt-2 ${getScoreColor(overallScore)}`}>
+                {getScoreLabel(overallScore)}
+              </Badge>
             </div>
 
-            {currentScore < 60 && (
-              <Alert>
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>
-                  Qualification needs strengthening. Focus on completing {
-                    MEDDPICC_FIELDS
-                      .filter(field => calculateFieldScore(field.key, meddpicc[field.key as keyof MEDDPICC] as string || '') < 60)
-                      .map(field => field.label)
-                      .slice(0, 2)
-                      .join(' and ')
-                  } sections.
-                </AlertDescription>
-              </Alert>
-            )}
+            {/* Completion Rate */}
+            <div className="text-center">
+              <div className="text-3xl font-bold text-blue-600">
+                {Math.round(completionRate)}
+                <span className="text-muted-foreground text-lg">%</span>
+              </div>
+              <p className="text-sm text-muted-foreground">Completion Rate</p>
+              <Progress value={completionRate} className="mt-2" />
+              <Badge variant="secondary" className="mt-2">
+                {Math.round(completionRate / 12.5)}/8 Criteria
+              </Badge>
+            </div>
+
+            {/* Risk Level */}
+            <div className="text-center">
+              <div className="text-3xl font-bold">
+                {overallScore >= 7 ? (
+                  <span className="text-green-600">Low</span>
+                ) : overallScore >= 5 ? (
+                  <span className="text-yellow-600">Medium</span>
+                ) : (
+                  <span className="text-red-600">High</span>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground">Risk Level</p>
+              <div className="mt-2">
+                {overallScore >= 7 ? (
+                  <CheckCircle2 className="w-6 h-6 text-green-600 mx-auto" />
+                ) : overallScore >= 5 ? (
+                  <AlertTriangle className="w-6 h-6 text-yellow-600 mx-auto" />
+                ) : (
+                  <AlertTriangle className="w-6 h-6 text-red-600 mx-auto" />
+                )}
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* MEDDPICC Tabs */}
-      <Tabs value={activeField} onValueChange={setActiveField} className="w-full">
-        <TabsList className="grid w-full grid-cols-7">
-          {MEDDPICC_FIELDS.map((field) => {
-            const fieldScore = scoringBreakdown[field.key as keyof ScoringBreakdown];
-            const Icon = field.icon;
-            return (
-              <TabsTrigger 
-                key={field.key} 
-                value={field.key}
-                className="flex flex-col items-center gap-1 h-auto py-2"
-              >
-                <Icon size={16} />
-                <span className="text-xs hidden sm:inline">{field.label}</span>
-                <div className="flex items-center gap-1">
-                  <div className={cn(
-                    "w-2 h-2 rounded-full",
-                    fieldScore >= 80 ? "bg-green-500" :
-                    fieldScore >= 60 ? "bg-blue-500" :
-                    fieldScore >= 40 ? "bg-yellow-500" : "bg-red-500"
-                  )} />
-                  <span className="text-xs">{fieldScore}%</span>
+      {/* AI Insights */}
+      {insights.length > 0 && (
+        <Alert>
+          <Brain className="w-4 h-4" />
+          <AlertDescription>
+            <div className="space-y-1">
+              {insights.map((insight, index) => (
+                <div key={index} className="text-sm">
+                  {insight}
                 </div>
-              </TabsTrigger>
-            );
-          })}
+              ))}
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Detailed Scoring */}
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as keyof MEDDPICC)}>
+        <TabsList className="grid grid-cols-4 lg:grid-cols-8 w-full">
+          {MEDDPICC_CRITERIA.map((criterion) => (
+            <TabsTrigger
+              key={criterion.key}
+              value={criterion.key}
+              className="text-xs"
+            >
+              <div className="flex flex-col items-center">
+                <span className="hidden sm:block">{criterion.label}</span>
+                <span className="sm:hidden">{criterion.label.slice(0, 3)}</span>
+                <Badge
+                  variant="secondary"
+                  className={`text-xs ${getScoreColor(scores[criterion.key] as number)}`}
+                >
+                  {((scores[criterion.key] as number) || 0).toFixed(1)}
+                </Badge>
+              </div>
+            </TabsTrigger>
+          ))}
         </TabsList>
 
-        {MEDDPICC_FIELDS.map((field) => (
-          <TabsContent key={field.key} value={field.key} className="mt-6">
+        {MEDDPICC_CRITERIA.map((criterion) => (
+          <TabsContent key={criterion.key} value={criterion.key} className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <field.icon size={20} />
-                  {field.label}
-                  <Badge variant={getScoreBadgeVariant(scoringBreakdown[field.key as keyof ScoringBreakdown])}>
-                    {scoringBreakdown[field.key as keyof ScoringBreakdown]}%
-                  </Badge>
-                </CardTitle>
-                <CardDescription>{field.description}</CardDescription>
+                <CardTitle>{criterion.label}</CardTitle>
+                <CardDescription>{criterion.description}</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor={field.key} className="text-sm font-medium">
-                    Response
-                  </Label>
-                  <Textarea
-                    id={field.key}
-                    placeholder={field.placeholder}
-                    value={meddpicc[field.key as keyof MEDDPICC] as string || ''}
-                    onChange={(e) => onMEDDPICCChange(field.key, e.target.value)}
-                    rows={4}
-                    className="mt-1 resize-none"
-                  />
-                  <div className="mt-1 text-xs text-muted-foreground">
-                    {(meddpicc[field.key as keyof MEDDPICC] as string || '').length} characters
+              <CardContent className="space-y-6">
+                {/* Current Score */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label>Current Score</Label>
+                    <Badge className={getScoreColor(scores[criterion.key] as number)}>
+                      {((scores[criterion.key] as number) || 0).toFixed(1)}/10 - {getScoreLabel(scores[criterion.key] as number)}
+                    </Badge>
+                  </div>
+                  {!readonly && (
+                    <div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="10"
+                        step="0.5"
+                        value={scores[criterion.key] as number || 0}
+                        onChange={(e) => handleScoreChange(criterion.key, Number(e.target.value))}
+                        className="w-full"
+                      />
+                      <Progress value={(scores[criterion.key] as number || 0) * 10} className="mt-2" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Guidance */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Questions */}
+                  <div className="space-y-3">
+                    <h4 className="font-semibold flex items-center gap-2">
+                      <Lightbulb className="w-4 h-4" />
+                      Key Questions
+                    </h4>
+                    <ul className="space-y-2">
+                      {criterion.questions.map((question, index) => (
+                        <li key={index} className="text-sm flex items-start gap-2">
+                          <span className="text-muted-foreground">•</span>
+                          {question}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Tips */}
+                  <div className="space-y-3">
+                    <h4 className="font-semibold flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4" />
+                      Best Practices
+                    </h4>
+                    <ul className="space-y-2">
+                      {criterion.tips.map((tip, index) => (
+                        <li key={index} className="text-sm flex items-start gap-2">
+                          <span className="text-green-600">✓</span>
+                          {tip}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
 
-                {/* Field-specific hints */}
-                <div>
-                  <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-                    <Lightbulb size={16} />
-                    Discovery Questions
-                  </h4>
+                {/* Red Flags & Green Flags */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <h4 className="font-semibold text-red-600 flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4" />
+                      Red Flags
+                    </h4>
+                    <ul className="space-y-2">
+                      {criterion.redFlags.map((flag, index) => (
+                        <li key={index} className="text-sm flex items-start gap-2">
+                          <span className="text-red-600">⚠</span>
+                          {flag}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h4 className="font-semibold text-green-600 flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4" />
+                      Green Flags
+                    </h4>
+                    <ul className="space-y-2">
+                      {criterion.greenFlags.map((flag, index) => (
+                        <li key={index} className="text-sm flex items-start gap-2">
+                          <span className="text-green-600">✓</span>
+                          {flag}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Examples */}
+                <div className="space-y-3">
+                  <h4 className="font-semibold">Examples by Score Range</h4>
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div className="p-3 border border-red-200 bg-red-50 rounded-lg">
+                      <div className="font-medium text-red-800 mb-2">Poor (0-3)</div>
+                      <div className="text-sm text-red-700">{criterion.examples.poor}</div>
+                    </div>
+                    <div className="p-3 border border-yellow-200 bg-yellow-50 rounded-lg">
+                      <div className="font-medium text-yellow-800 mb-2">Good (4-7)</div>
+                      <div className="text-sm text-yellow-700">{criterion.examples.good}</div>
+                    </div>
+                    <div className="p-3 border border-green-200 bg-green-50 rounded-lg">
+                      <div className="font-medium text-green-800 mb-2">Excellent (8-10)</div>
+                      <div className="text-sm text-green-700">{criterion.examples.excellent}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Notes */}
+                {!readonly && (
                   <div className="space-y-2">
-                    {field.hints.map((hint, index) => (
-                      <div key={index} className="flex items-start gap-2 p-2 bg-muted/50 rounded-lg">
-                        <div className="w-5 h-5 bg-primary/10 text-primary rounded-full flex items-center justify-center text-xs flex-shrink-0 mt-0.5">
-                          {index + 1}
-                        </div>
-                        <span className="text-sm">{hint}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* AI-generated hints */}
-                {hints && (
-                  <div>
-                    <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-                      <Brain size={16} />
-                      AI-Generated Insights
-                    </h4>
-                    <div className="space-y-2">
-                      {field.key === 'metrics' && hints.metricsHints.map((hint, index) => (
-                        <div key={index} className="flex items-start gap-2 p-2 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
-                          <Brain size={16} className="text-blue-600 flex-shrink-0 mt-0.5" />
-                          <span className="text-sm">{hint}</span>
-                        </div>
-                      ))}
-                      {field.key === 'champion' && hints.championHints.map((hint, index) => (
-                        <div key={index} className="flex items-start gap-2 p-2 bg-green-50 dark:bg-green-950/20 rounded-lg">
-                          <Brain size={16} className="text-green-600 flex-shrink-0 mt-0.5" />
-                          <span className="text-sm">{hint}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Risk factors for relevant fields */}
-                {(field.key === 'champion' || field.key === 'decisionProcess') && hints?.riskFactors && (
-                  <div>
-                    <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-                      <AlertTriangle size={16} />
-                      Risk Factors to Investigate
-                    </h4>
-                    <div className="space-y-2">
-                      {hints.riskFactors.map((risk, index) => (
-                        <div key={index} className="flex items-start gap-2 p-2 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg">
-                          <AlertTriangle size={16} className="text-yellow-600 flex-shrink-0 mt-0.5" />
-                          <span className="text-sm">{risk}</span>
-                        </div>
-                      ))}
-                    </div>
+                    <Label htmlFor={`notes-${criterion.key}`}>Notes & Observations</Label>
+                    <Textarea
+                      id={`notes-${criterion.key}`}
+                      placeholder={`Add specific notes about ${criterion.label.toLowerCase()}...`}
+                      value={scores.notes || ''}
+                      onChange={(e) => onChange({ ...scores, notes: e.target.value })}
+                      rows={3}
+                    />
                   </div>
                 )}
               </CardContent>
@@ -436,96 +626,6 @@ export function EnhancedMEDDPICCScoring({
           </TabsContent>
         ))}
       </Tabs>
-
-      {/* Score Breakdown */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Target size={20} />
-            Scoring Breakdown
-          </CardTitle>
-          <CardDescription>
-            Individual component scores and weights
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {MEDDPICC_FIELDS.map((field) => {
-              const fieldScore = scoringBreakdown[field.key as keyof ScoringBreakdown];
-              const weightedScore = fieldScore * field.weight;
-              const Icon = field.icon;
-              
-              return (
-                <div key={field.key} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Icon size={18} className="text-muted-foreground" />
-                    <div>
-                      <div className="font-medium">{field.label}</div>
-                      <div className="text-xs text-muted-foreground">
-                        Weight: {(field.weight * 100).toFixed(0)}%
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Progress value={fieldScore} className="w-20" />
-                    <div className="text-right min-w-[60px]">
-                      <div className={cn("font-medium", getScoreColor(fieldScore))}>
-                        {fieldScore}%
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        +{weightedScore.toFixed(1)}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Action Items */}
-      {currentScore < 80 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock size={20} />
-              Next Actions
-            </CardTitle>
-            <CardDescription>
-              Recommended steps to improve qualification score
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {MEDDPICC_FIELDS
-                .filter(field => calculateFieldScore(field.key, meddpicc[field.key as keyof MEDDPICC] as string || '') < 60)
-                .slice(0, 3)
-                .map((field, index) => (
-                  <div key={field.key} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-                    <div className="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm flex-shrink-0 mt-0.5">
-                      {index + 1}
-                    </div>
-                    <div>
-                      <div className="font-medium">Complete {field.label} qualification</div>
-                      <div className="text-sm text-muted-foreground mt-1">
-                        {field.description}
-                      </div>
-                      <Button 
-                        variant="link" 
-                        size="sm" 
-                        className="p-0 h-auto mt-1"
-                        onClick={() => setActiveField(field.key)}
-                      >
-                        Work on this section →
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }
