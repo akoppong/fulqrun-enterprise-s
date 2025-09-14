@@ -40,6 +40,7 @@ import { RoleShowcase } from './RoleShowcase';
 import { MEDDPICCModule, EnhancedMEDDPICCModule, EnhancedMEDDPICCAnalytics, MEDDPICCAnalyticsDashboard, MEDDPICCAdminConfig, MEDDPICCLauncher, MEDDPICCAnalyticsTest } from '@/components/meddpicc';
 import { RelationshipMapper } from '../opportunities/RelationshipMapper';
 import { OpportunityDetailTest } from '../test/OpportunityDetailTest';
+import { OpportunityTabTestRunner } from '../opportunities/OpportunityTabTestRunner';
 
 
 interface DashboardProps {
@@ -182,6 +183,8 @@ export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialV
         return <OpportunitiesModule user={user} initialView="creation-test" />;
       case 'opportunity-detail-test':
         return <OpportunityDetailTest onBack={() => setCurrentView('dashboard')} />;
+      case 'opportunity-tabs-test':
+        return <OpportunityTabTestRunner user={user} />;
       case 'contacts':
         return <ContactsView />;
       case 'companies':

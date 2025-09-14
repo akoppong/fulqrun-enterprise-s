@@ -182,6 +182,15 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           permissionId: 'opportunities',
           action: 'read',
           isNew: true
+        },
+        {
+          id: 'opportunity-tabs-test',
+          label: 'Opportunity Tabs Test',
+          icon: Target,
+          description: 'Test all six opportunity detail tabs for consistency',
+          permissionId: 'opportunities',
+          action: 'read',
+          isNew: true
         }
       ]
     },

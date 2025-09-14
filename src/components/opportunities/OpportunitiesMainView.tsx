@@ -23,7 +23,7 @@ import {
   ArrowRight
 } from '@phosphor-icons/react';
 import { EnhancedNewOpportunityForm } from './EnhancedNewOpportunityForm';
-import { ResponsiveOpportunityDetail } from './OpportunitiesView';
+import { ResponsiveOpportunityDetail } from './ResponsiveOpportunityDetail';
 import { toast } from 'sonner';
 import { format, differenceInDays } from 'date-fns';
 import { ErrorBoundary } from 'react-error-boundary';
