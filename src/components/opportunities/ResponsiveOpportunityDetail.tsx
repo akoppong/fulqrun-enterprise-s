@@ -58,7 +58,7 @@ const getPriorityBadge = (priority?: string) => {
   }
 };
 
-// Safe date formatting helper
+// Safe date formatting helper with enhanced error handling
 const formatSafeDate = (dateValue: any, formatString: string = 'MMM dd, yyyy'): string => {
   try {
     if (!dateValue) return 'Not set';
@@ -68,7 +68,9 @@ const formatSafeDate = (dateValue: any, formatString: string = 'MMM dd, yyyy'): 
     // Handle different input types safely
     if (typeof dateValue === 'string') {
       // Handle empty strings
-      if (dateValue.trim() === '') return 'Not set';
+      if (dateValue.trim() === '' || dateValue === 'null' || dateValue === 'undefined') {
+        return 'Not set';
+      }
       
       // Handle ISO strings and other common date formats
       if (dateValue.includes('T') || dateValue.includes('-')) {
@@ -80,7 +82,7 @@ const formatSafeDate = (dateValue: any, formatString: string = 'MMM dd, yyyy'): 
       date = dateValue;
     } else if (typeof dateValue === 'number') {
       // Handle timestamp values - reject invalid timestamps
-      if (dateValue === 0 || !isFinite(dateValue)) {
+      if (dateValue === 0 || !isFinite(dateValue) || dateValue < 0) {
         return 'Not set';
       }
       date = new Date(dateValue);
@@ -1248,7 +1250,7 @@ export function ResponsiveOpportunityDetail({
                                 {formatCurrency(safeOpportunity.value)}
                               </span>
                             </div>
-                            <Progress value={(safeOpportunity.value / 1000000) * 100} className="h-2" />
+                            <Progress value={Math.min((safeOpportunity.value / 1000000) * 100, 100)} className="h-2" />
                             
                             <div className="flex items-center justify-between">
                               <Label className="text-sm font-medium">Win Probability</Label>
@@ -1392,7 +1394,7 @@ export function ResponsiveOpportunityDetail({
                           </CardTitle>
                           <div className="flex items-center gap-2">
                             <span className="text-sm text-muted-foreground">Progress:</span>
-                            <span className="text-lg font-bold text-primary">{stageProgress}%</span>
+                            <span className="text-lg font-bold text-primary">{Math.round(stageProgress)}%</span>
                           </div>
                         </div>
                         <Progress value={stageProgress} className="h-2 mt-3" />
@@ -1401,6 +1403,7 @@ export function ResponsiveOpportunityDetail({
                         {PEAK_STAGES.map((stage, index) => {
                           const isCurrentStage = stage.value === safeOpportunity.stage;
                           const isPastStage = PEAK_STAGES.findIndex(s => s.value === safeOpportunity.stage) > index;
+                          const stageScore = safeOpportunity.peakScores?.[stage.value] || 0;
                           
                           return (
                             <Card key={stage.value} className={`border transition-all ${
@@ -1408,18 +1411,18 @@ export function ResponsiveOpportunityDetail({
                               isPastStage ? 'border-green-200 bg-green-50/50' : 
                               'border-border bg-muted/20'
                             }`}>
-                              <CardContent className="p-3">
+                              <CardContent className="p-4">
                                 <div className="flex items-start gap-3">
-                                  <div className={`p-1.5 rounded-full shrink-0 ${
+                                  <div className={`p-2 rounded-full shrink-0 ${
                                     isCurrentStage ? 'bg-primary text-primary-foreground' :
                                     isPastStage ? 'bg-green-500 text-white' :
                                     'bg-muted text-muted-foreground'
                                   }`}>
-                                    {isPastStage ? <CheckCircle size={14} /> :
-                                     isCurrentStage ? <ClockCounterClockwise size={14} /> :
-                                     <Circle size={14} />}
+                                    {isPastStage ? <CheckCircle size={16} /> :
+                                     isCurrentStage ? <ClockCounterClockwise size={16} /> :
+                                     <Circle size={16} />}
                                   </div>
-                                  <div className="flex-1 space-y-1 min-w-0">
+                                  <div className="flex-1 space-y-2 min-w-0">
                                     <div className="flex items-center justify-between">
                                       <h3 className={`text-sm font-semibold ${
                                         isCurrentStage ? 'text-primary' :
@@ -1442,12 +1445,50 @@ export function ResponsiveOpportunityDetail({
                                     <p className="text-xs text-muted-foreground leading-relaxed">
                                       {stage.description}
                                     </p>
+                                    
+                                    <div className="space-y-1">
+                                      <div className="flex justify-between text-xs">
+                                        <span>Stage Score</span>
+                                        <span className="font-medium">{stageScore}%</span>
+                                      </div>
+                                      <Progress value={stageScore} className="h-1" />
+                                    </div>
                                   </div>
                                 </div>
                               </CardContent>
                             </Card>
                           );
                         })}
+                      </CardContent>
+                    </Card>
+                    
+                    {/* PEAK Score Breakdown */}
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-base font-semibold flex items-center gap-2">
+                          <ChartBar size={16} className="text-blue-600" />
+                          PEAK Score Breakdown
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                          {PEAK_STAGES.map((stage) => {
+                            const score = safeOpportunity.peakScores?.[stage.value] || 0;
+                            return (
+                              <div key={stage.value} className="text-center p-3 bg-muted/30 rounded-lg">
+                                <div className={`text-lg font-bold ${
+                                  score >= 80 ? 'text-green-600' :
+                                  score >= 60 ? 'text-blue-600' :
+                                  score >= 40 ? 'text-orange-600' :
+                                  'text-red-600'
+                                }`}>
+                                  {score}%
+                                </div>
+                                <div className="text-xs text-muted-foreground font-medium">{stage.label}</div>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </CardContent>
                     </Card>
                   </TabsContent>
@@ -1588,7 +1629,7 @@ export function ResponsiveOpportunityDetail({
                         <div className="flex items-center justify-between">
                           <CardTitle className="text-base font-semibold flex items-center gap-2">
                             <Users size={16} className="text-purple-600" />
-                            All Contacts
+                            All Contacts ({safeOpportunity.contacts?.length || 0})
                           </CardTitle>
                           <Button variant="outline" size="sm" disabled>
                             <Plus size={14} className="mr-1" />
@@ -1701,7 +1742,7 @@ export function ResponsiveOpportunityDetail({
                         <div className="flex items-center justify-between">
                           <CardTitle className="text-base font-semibold flex items-center gap-2">
                             <ClockCounterClockwise size={16} className="text-purple-600" />
-                            Activity Timeline
+                            Activity Timeline ({safeOpportunity.activities?.length || 0})
                           </CardTitle>
                           <Button variant="outline" size="sm" disabled>
                             <Plus size={14} className="mr-1" />
@@ -1729,7 +1770,7 @@ export function ResponsiveOpportunityDetail({
                                    activity.type === 'proposal' ? <FileText size={14} /> :
                                    <ClockCounterClockwise size={14} />}
                                 </div>
-                                <div className="flex-1 space-y-1">
+                                <div className="flex-1 space-y-2">
                                   <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
                                       <span className="font-medium text-sm capitalize">
@@ -1779,6 +1820,101 @@ export function ResponsiveOpportunityDetail({
                         )}
                       </CardContent>
                     </Card>
+                    
+                    {/* Activity Summary */}
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-base font-semibold flex items-center gap-2">
+                          <ChartBar size={16} className="text-green-600" />
+                          Activity Summary
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div className="text-center p-3 bg-muted/30 rounded-lg">
+                            <div className="text-lg font-bold text-blue-600">
+                              {safeOpportunity.activities?.filter(a => a.type === 'meeting').length || 0}
+                            </div>
+                            <div className="text-xs text-muted-foreground">Meetings</div>
+                          </div>
+                          <div className="text-center p-3 bg-muted/30 rounded-lg">
+                            <div className="text-lg font-bold text-green-600">
+                              {safeOpportunity.activities?.filter(a => a.type === 'call').length || 0}
+                            </div>
+                            <div className="text-xs text-muted-foreground">Calls</div>
+                          </div>
+                          <div className="text-center p-3 bg-muted/30 rounded-lg">
+                            <div className="text-lg font-bold text-purple-600">
+                              {safeOpportunity.activities?.filter(a => a.type === 'email').length || 0}
+                            </div>
+                            <div className="text-xs text-muted-foreground">Emails</div>
+                          </div>
+                          <div className="text-center p-3 bg-muted/30 rounded-lg">
+                            <div className="text-lg font-bold text-orange-600">
+                              {safeOpportunity.activities?.filter(a => a.outcome === 'positive').length || 0}
+                            </div>
+                            <div className="text-xs text-muted-foreground">Positive Outcomes</div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    {/* Last Activity */}
+                    {safeOpportunity.activities && safeOpportunity.activities.length > 0 && (
+                      <Card>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-base font-semibold flex items-center gap-2">
+                            <ClockCounterClockwise size={16} className="text-amber-600" />
+                            Last Activity
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {(() => {
+                            const lastActivity = safeOpportunity.activities[safeOpportunity.activities.length - 1];
+                            return (
+                              <div className="flex items-start gap-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                                <div className={`p-2 rounded-full shrink-0 ${
+                                  lastActivity.type === 'meeting' ? 'bg-blue-100 text-blue-600' :
+                                  lastActivity.type === 'call' ? 'bg-green-100 text-green-600' :
+                                  lastActivity.type === 'email' ? 'bg-purple-100 text-purple-600' :
+                                  'bg-gray-100 text-gray-600'
+                                }`}>
+                                  {lastActivity.type === 'meeting' ? <Users size={14} /> :
+                                   lastActivity.type === 'call' ? <Phone size={14} /> :
+                                   lastActivity.type === 'email' ? <Envelope size={14} /> :
+                                   <ClockCounterClockwise size={14} />}
+                                </div>
+                                <div className="flex-1">
+                                  <div className="flex items-center justify-between mb-1">
+                                    <span className="font-medium text-sm capitalize text-amber-900">
+                                      {lastActivity.type || 'Activity'}
+                                    </span>
+                                    <span className="text-xs text-amber-700">
+                                      {formatSafeDate(lastActivity.date, 'MMM dd, yyyy')}
+                                    </span>
+                                  </div>
+                                  {lastActivity.notes && (
+                                    <p className="text-sm text-amber-800 leading-relaxed">
+                                      {lastActivity.notes}
+                                    </p>
+                                  )}
+                                  <Badge 
+                                    variant="secondary" 
+                                    className={`mt-2 text-xs ${
+                                      lastActivity.outcome === 'positive' ? 'bg-green-100 text-green-700' :
+                                      lastActivity.outcome === 'negative' ? 'bg-red-100 text-red-700' :
+                                      'bg-yellow-100 text-yellow-700'
+                                    }`}
+                                  >
+                                    {lastActivity.outcome || 'neutral'} outcome
+                                  </Badge>
+                                </div>
+                              </div>
+                            );
+                          })()}
+                        </CardContent>
+                      </Card>
+                    )}
                   </TabsContent>
                 </div>
               </div>
