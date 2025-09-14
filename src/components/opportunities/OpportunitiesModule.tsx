@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useKV } from '@github/spark/hooks';
 import { Opportunity, User } from '@/lib/types';
 import { OpportunityService } from '@/lib/opportunity-service';
@@ -12,7 +12,9 @@ import { MEDDPICCScenarioTester } from './MEDDPICCScenarioTester';
 import { OpportunityTabsTest } from './OpportunityTabsTest';
 import { OpportunityDetailTabsValidator } from './OpportunityDetailTabsValidator';
 import { EnhancedOpportunityCreatorDemo } from './EnhancedOpportunityCreatorDemo';
+import { OpportunitiesModuleTest } from './OpportunitiesModuleTest';
 import { EnhancedErrorBoundary } from '@/components/ui/enhanced-error-boundary';
+import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
 interface OpportunitiesModuleProps {
@@ -21,7 +23,7 @@ interface OpportunitiesModuleProps {
   initialData?: any;
 }
 
-type OpportunityView = 'dashboard' | 'list' | 'detail' | 'create' | 'edit' | 'meddpicc-test' | 'tabs-test' | 'tabs-validator' | 'enhanced-demo';
+type OpportunityView = 'dashboard' | 'list' | 'detail' | 'create' | 'edit' | 'meddpicc-test' | 'tabs-test' | 'tabs-validator' | 'enhanced-demo' | 'diagnostics';
 
 export function OpportunitiesModule({ user, initialView = 'dashboard', initialData }: OpportunitiesModuleProps) {
   const [opportunities, setOpportunities] = useKV<Opportunity[]>('opportunities', []);
@@ -33,20 +35,38 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
   );
   const [editingOpportunity, setEditingOpportunity] = useState<Opportunity | null>(null);
 
+  // Ensure opportunities is always an array with more robust checking
+  const safeOpportunities = useMemo(() => {
+    if (Array.isArray(opportunities)) {
+      return opportunities;
+    }
+    
+    // Handle case where opportunities might be an object with data property
+    if (opportunities && typeof opportunities === 'object' && 'data' in opportunities) {
+      const data = (opportunities as any).data;
+      if (Array.isArray(data)) {
+        return data;
+      }
+    }
+    
+    // Default to empty array
+    return [];
+  }, [opportunities]);
+
   // Initialize demo data
   useEffect(() => {
     const initializeData = async () => {
       try {
-        if (opportunities.length === 0) {
+        if (safeOpportunities.length === 0) {
           console.log('OpportunitiesModule: Initializing sample data...');
           await OpportunityService.initializeSampleData();
-          const stored = await OpportunityService.getAllOpportunities();
+          const stored = OpportunityService.getAllOpportunities(); // Remove await since it's synchronous
           console.log('OpportunitiesModule: Setting opportunities:', {
             type: typeof stored,
             isArray: Array.isArray(stored),
             length: Array.isArray(stored) ? stored.length : 'N/A'
           });
-          if (Array.isArray(stored)) {
+          if (Array.isArray(stored) && stored.length > 0) {
             setOpportunities(stored);
           } else {
             console.error('OpportunitiesModule: Invalid data from service');
@@ -61,7 +81,7 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
     };
 
     initializeData();
-  }, [opportunities.length, setOpportunities]);
+  }, [safeOpportunities.length, setOpportunities]);
 
   const handleViewChange = (view: string, data?: any) => {
     switch (view) {
@@ -126,6 +146,12 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
         setEditingOpportunity(null);
         break;
       
+      case 'diagnostics':
+        setCurrentView('diagnostics');
+        setSelectedOpportunityId(null);
+        setEditingOpportunity(null);
+        break;
+      
       default:
         console.warn('Unknown view:', view);
     }
@@ -145,7 +171,9 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
     try {
       // Refresh opportunities from storage
       const updatedOpportunities = OpportunityService.getAllOpportunities();
-      setOpportunities(updatedOpportunities);
+      if (Array.isArray(updatedOpportunities)) {
+        setOpportunities(updatedOpportunities);
+      }
       
       // Navigate to detail view for the saved opportunity
       setSelectedOpportunityId(opportunity.id);
@@ -186,6 +214,9 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
   };
 
   const renderCurrentView = () => {
+    // Ensure we always have valid opportunities data
+    const validOpportunities = Array.isArray(opportunities) ? opportunities : [];
+    
     switch (currentView) {
       case 'dashboard':
         return (
@@ -226,7 +257,8 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
           );
         }
         
-        const selectedOpportunity = opportunities.find(opp => opp.id === selectedOpportunityId);
+        // Safe array find operation
+        const selectedOpportunity = validOpportunities.find(opp => opp && opp.id === selectedOpportunityId);
         
         if (!selectedOpportunity) {
           return (
@@ -249,9 +281,11 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
             <UnifiedOpportunityDetail 
               opportunity={selectedOpportunity}
               onUpdate={(updatedOpportunity) => {
-                setOpportunities(prev => 
-                  prev.map(opp => opp.id === updatedOpportunity.id ? updatedOpportunity : opp)
-                );
+                const currentOpportunities = Array.isArray(opportunities) ? opportunities : [];
+                setOpportunities(prev => {
+                  const safePrev = Array.isArray(prev) ? prev : [];
+                  return safePrev.map(opp => opp.id === updatedOpportunity.id ? updatedOpportunity : opp);
+                });
               }}
               onClose={handleBack}
               mode="page"
@@ -318,6 +352,13 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
           </EnhancedErrorBoundary>
         );
       
+      case 'diagnostics':
+        return (
+          <EnhancedErrorBoundary context="OpportunitiesModuleTest">
+            <OpportunitiesModuleTest user={user} />
+          </EnhancedErrorBoundary>
+        );
+      
       default:
         return (
           <EnhancedErrorBoundary context="OpportunitiesDashboard">
@@ -332,7 +373,28 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
 
   return (
     <div className="h-full">
-      {renderCurrentView()}
+      <EnhancedErrorBoundary 
+        context="OpportunitiesModule" 
+        fallback={
+          <div className="flex flex-col items-center justify-center h-96 space-y-4">
+            <h3 className="text-lg font-semibold">Module Error Detected</h3>
+            <p className="text-muted-foreground text-center max-w-md">
+              There was an error loading the opportunities module. This might be due to data corruption or initialization issues.
+            </p>
+            <Button 
+              onClick={() => {
+                // Clear potentially corrupted data and reload
+                localStorage.removeItem('opportunities');
+                window.location.reload();
+              }}
+            >
+              Reset and Reload
+            </Button>
+          </div>
+        }
+      >
+        {renderCurrentView()}
+      </EnhancedErrorBoundary>
     </div>
   );
 }

@@ -61,6 +61,9 @@ export function EnhancedMEDDPICCAnalytics() {
   const [selectedMetric, setSelectedMetric] = useState<string>('score-distribution');
   const [isLoading, setIsLoading] = useState(false);
 
+  // Ensure we have safe arrays
+  const safeOpportunities = Array.isArray(opportunities) ? opportunities : [];
+
   // Initialize sample data
   useEffect(() => {
     if (assessments.length === 0) {
@@ -142,7 +145,7 @@ export function EnhancedMEDDPICCAnalytics() {
 
     return {
       assessments: assessments.filter(assessment => {
-        const opportunity = opportunities.find(o => o.id === assessment.opportunity_id);
+        const opportunity = safeOpportunities.find(o => o.id === assessment.opportunity_id);
         if (!opportunity || opportunity.created_date < cutoffDate) return false;
         
         if (filter.stage && opportunity.stage !== filter.stage) return false;

@@ -75,9 +75,12 @@ export function QualificationAssessmentHub() {
   const [searchTerm, setSearchTerm] = useState('');
   const [insights, setInsights] = useState<MEDDPICCInsight[]>([]);
 
+  // Create safe opportunities array
+  const safeOpportunities = Array.isArray(opportunities) ? opportunities : [];
+
   // Initialize sample data
   useEffect(() => {
-    if (opportunities.length === 0) {
+    if (safeOpportunities.length === 0) {
       const sampleOpportunities: Opportunity[] = [
         {
           id: '1',
@@ -156,7 +159,7 @@ export function QualificationAssessmentHub() {
     }
   }, []);
 
-  const filteredOpportunities = opportunities.filter(opp => {
+  const filteredOpportunities = safeOpportunities.filter(opp => {
     const matchesSearch = opp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          opp.company.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStage = filterStage === 'all' || opp.stage === filterStage;
@@ -195,7 +198,7 @@ export function QualificationAssessmentHub() {
   };
 
   const calculatePipelineHealth = () => {
-    const totalValue = opportunities.reduce((sum, opp) => sum + opp.value, 0);
+    const totalValue = safeOpportunities.reduce((sum, opp) => sum + opp.value, 0);
     const qualifiedValue = opportunities
       .filter(opp => {
         const summary = getOpportunitySummary(opp.id);
@@ -574,7 +577,8 @@ export function QualificationAssessmentHub() {
   );
 
   if (currentView === 'assessment' && selectedOpportunity) {
-    const opportunity = opportunities.find(opp => opp.id === selectedOpportunity);
+    const safeOpportunities = Array.isArray(opportunities) ? opportunities : [];
+    const opportunity = safeOpportunities.find(opp => opp.id === selectedOpportunity);
     
     return (
       <div className="space-y-6">

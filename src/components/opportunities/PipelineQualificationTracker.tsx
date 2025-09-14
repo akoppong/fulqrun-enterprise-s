@@ -83,9 +83,12 @@ export function PipelineQualificationTracker() {
   const [selectedOpportunity, setSelectedOpportunity] = useState<string | null>(null);
   const [showQuickAssessment, setShowQuickAssessment] = useState(false);
 
+  // Create safe opportunities array
+  const safeOpportunities = Array.isArray(opportunities) ? opportunities : [];
+
   // Initialize sample data
   useEffect(() => {
-    if (opportunities.length === 0) {
+    if (safeOpportunities.length === 0) {
       const sampleOpportunities: Opportunity[] = [
         {
           id: 'opp-1',
@@ -239,8 +242,8 @@ export function PipelineQualificationTracker() {
   }, []);
 
   const calculatePipelineMetrics = (): PipelineMetrics => {
-    const totalValue = opportunities.reduce((sum, opp) => sum + opp.value, 0);
-    const qualifiedOpportunities = opportunities.filter(opp => {
+    const totalValue = safeOpportunities.reduce((sum, opp) => sum + opp.value, 0);
+    const qualifiedOpportunities = safeOpportunities.filter(opp => {
       const status = qualificationStatuses.find(s => s.opportunity_id === opp.id);
       return status && status.assessment_score >= 160; // Moderate qualification threshold
     });
@@ -257,7 +260,7 @@ export function PipelineQualificationTracker() {
     const overdueAssessments = qualificationStatuses.filter(s => s.last_assessment_date < thirtyDaysAgo).length;
 
     return {
-      total_opportunities: opportunities.length,
+      total_opportunities: safeOpportunities.length,
       total_value: totalValue,
       qualified_value: qualifiedValue,
       qualification_rate: totalValue > 0 ? Math.round((qualifiedValue / totalValue) * 100) : 0,
@@ -268,7 +271,7 @@ export function PipelineQualificationTracker() {
   };
 
   const getFilteredAndSortedOpportunities = () => {
-    let filtered = opportunities.filter(opp => {
+    let filtered = safeOpportunities.filter(opp => {
       const status = qualificationStatuses.find(s => s.opportunity_id === opp.id);
       
       const matchesSearch = opp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -356,7 +359,8 @@ export function PipelineQualificationTracker() {
   const filteredOpportunities = getFilteredAndSortedOpportunities();
 
   if (showQuickAssessment && selectedOpportunity) {
-    const opportunity = opportunities.find(opp => opp.id === selectedOpportunity);
+    const safeOpportunities = Array.isArray(opportunities) ? opportunities : [];
+    const opportunity = safeOpportunities.find(opp => opp.id === selectedOpportunity);
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">

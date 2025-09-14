@@ -65,6 +65,9 @@ export function EnhancedPipelineView() {
   const [stageMetrics, setStageMetrics] = useState<Record<string, StageMetrics>>({});
   const [activeId, setActiveId] = useState<string | null>(null);
 
+  // Ensure we have safe arrays
+  const safeOpportunities = Array.isArray(opportunities) ? opportunities : [];
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -100,7 +103,7 @@ export function EnhancedPipelineView() {
     
     // If dropped on a stage container, move the deal
     if (overId.startsWith('stage-')) {
-      const opportunity = opportunities.find(opp => opp.id === activeId);
+      const opportunity = safeOpportunities.find(opp => opp.id === activeId);
       if (!opportunity) return;
 
       const targetStageValue = getStageValue(overId);
@@ -330,7 +333,7 @@ export function EnhancedPipelineView() {
         <DragOverlay>
           {activeId ? (
             <DealCard 
-              opportunity={opportunities.find(opp => opp.id === activeId)!}
+              opportunity={safeOpportunities.find(opp => opp.id === activeId)!}
               onEdit={() => {}}
               getDaysUntilClose={getDaysUntilClose}
               getDealRiskColor={getDealRiskColor}

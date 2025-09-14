@@ -28,10 +28,15 @@ export function DealRiskDashboard({ opportunities, contacts, companies, onOpport
   const [riskFilter, setRiskFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('risk');
 
+  // Ensure we have safe arrays
+  const safeOpportunities = Array.isArray(opportunities) ? opportunities : [];
+  const safeContacts = Array.isArray(contacts) ? contacts : [];
+  const safeCompanies = Array.isArray(companies) ? companies : [];
+
   // Filter and sort deals
   const filteredDeals = riskAssessments
     .filter(assessment => {
-      const opp = opportunities.find(o => o.id === assessment.opportunityId);
+      const opp = safeOpportunities.find(o => o.id === assessment.opportunityId);
       const company = companies.find(c => c.id === opp?.companyId);
       const matchesSearch = !searchTerm || 
         opp?.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -40,8 +45,8 @@ export function DealRiskDashboard({ opportunities, contacts, companies, onOpport
       return matchesSearch && matchesRisk;
     })
     .sort((a, b) => {
-      const oppA = opportunities.find(o => o.id === a.opportunityId);
-      const oppB = opportunities.find(o => o.id === b.opportunityId);
+      const oppA = safeOpportunities.find(o => o.id === a.opportunityId);
+      const oppB = safeOpportunities.find(o => o.id === b.opportunityId);
       
       switch (sortBy) {
         case 'risk': return b.riskScore - a.riskScore;
@@ -159,7 +164,7 @@ export function DealRiskDashboard({ opportunities, contacts, companies, onOpport
 
   const criticalDeals = riskAssessments.filter(r => r.overallRisk === 'critical' || r.overallRisk === 'high');
   const totalAtRiskValue = criticalDeals.reduce((sum, assessment) => {
-    const opp = opportunities.find(o => o.id === assessment.opportunityId);
+    const opp = safeOpportunities.find(o => o.id === assessment.opportunityId);
     return sum + (opp?.value || 0);
   }, 0);
 
@@ -301,7 +306,7 @@ export function DealRiskDashboard({ opportunities, contacts, companies, onOpport
       {filteredDeals.length > 0 ? (
         <div className="space-y-4">
           {filteredDeals.map((assessment) => {
-            const opp = opportunities.find(o => o.id === assessment.opportunityId);
+            const opp = safeOpportunities.find(o => o.id === assessment.opportunityId);
             const contact = contacts.find(c => c.id === opp?.contactId);
             const company = companies.find(c => c.id === opp?.companyId);
             

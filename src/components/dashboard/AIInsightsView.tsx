@@ -25,8 +25,13 @@ export function AIInsightsView({ opportunities, contacts, companies, onRefresh }
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [activeTab, setActiveTab] = useState('lead-scoring');
 
+  // Ensure we have safe arrays
+  const safeOpportunities = Array.isArray(opportunities) ? opportunities : [];
+  const safeContacts = Array.isArray(contacts) ? contacts : [];
+  const safeCompanies = Array.isArray(companies) ? companies : [];
+
   useEffect(() => {
-    if (opportunities.length > 0 && !pipelineForecast) {
+    if (safeOpportunities.length > 0 && !pipelineForecast) {
       analyzePipeline();
     }
   }, [opportunities]);
@@ -68,7 +73,7 @@ export function AIInsightsView({ opportunities, contacts, companies, onRefresh }
   };
 
   const handleRiskAssessment = async () => {
-    if (opportunities.length === 0) {
+    if (safeOpportunities.length === 0) {
       toast.error('No opportunities available for assessment');
       return;
     }
@@ -77,7 +82,7 @@ export function AIInsightsView({ opportunities, contacts, companies, onRefresh }
     try {
       const assessments: DealRiskAssessment[] = [];
       
-      for (const opp of opportunities.slice(0, 5)) { // Limit for demo
+      for (const opp of safeOpportunities.slice(0, 5)) { // Limit for demo
         const contact = contacts.find(c => c.id === opp.contactId);
         const company = companies.find(c => c.id === opp.companyId);
         
@@ -387,7 +392,7 @@ export function AIInsightsView({ opportunities, contacts, companies, onRefresh }
               {/* Risk Assessments */}
               <div className="grid gap-6">
                 {riskAssessments.map((assessment) => {
-                  const opp = opportunities.find(o => o.id === assessment.opportunityId);
+                  const opp = safeOpportunities.find(o => o.id === assessment.opportunityId);
                   const contact = contacts.find(c => c.id === opp?.contactId);
                   const company = companies.find(c => c.id === opp?.companyId);
 

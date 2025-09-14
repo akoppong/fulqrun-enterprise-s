@@ -76,6 +76,10 @@ export function FinancialManagement({ opportunities, currentUserId }: FinancialM
   const [financialData, setFinancialData] = useKV<FinancialData[]>('financial-data', []);
   const [rawInventory, setRawInventory] = useKV<InventoryItem[]>('inventory-items', []);
   const [rawPosTransactions, setRawPosTransactions] = useKV<POSTransaction[]>('pos-transactions', []);
+  
+  // Ensure we have safe arrays
+  const safeOpportunities = Array.isArray(opportunities) ? opportunities : [];
+  
   const [realtimeMetrics, setRealtimeMetrics] = useKV<RealtimeMetrics>('realtime-metrics', {
     currentRevenue: 0,
     dailyGrowth: 0,
@@ -577,7 +581,7 @@ export function FinancialManagement({ opportunities, currentUserId }: FinancialM
                 </TableHeader>
                 <TableBody>
                   {financialData.map((fd) => {
-                    const opp = opportunities.find(o => o.id === fd.opportunityId);
+                    const opp = safeOpportunities.find(o => o.id === fd.opportunityId);
                     const growthRate = calculateRevenueGrowth();
                     return (
                       <TableRow key={fd.id}>
@@ -765,7 +769,7 @@ export function FinancialManagement({ opportunities, currentUserId }: FinancialM
                 </TableHeader>
                 <TableBody>
                   {financialData.map((fd) => {
-                    const opp = opportunities.find(o => o.id === fd.opportunityId);
+                    const opp = safeOpportunities.find(o => o.id === fd.opportunityId);
                     return (
                       <TableRow key={fd.id}>
                         <TableCell className="font-medium">

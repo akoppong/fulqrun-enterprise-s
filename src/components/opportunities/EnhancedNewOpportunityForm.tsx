@@ -251,7 +251,8 @@ export function EnhancedNewOpportunityForm({
     }
 
     // Duplicate opportunity check
-    const duplicateOpportunity = opportunities.find(opp => 
+    const safeOpportunities = Array.isArray(opportunities) ? opportunities : [];
+    const duplicateOpportunity = safeOpportunities.find(opp => 
       opp.id !== editingOpportunity?.id &&
       opp.title.toLowerCase() === formData.title.toLowerCase() &&
       opp.companyId === formData.companyId
