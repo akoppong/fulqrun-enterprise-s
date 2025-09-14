@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -301,11 +301,22 @@ export function EnhancedMEDDPICCScoring({
 
   useEffect(() => {
     const normalizedMeddpicc = ensureMEDDPICCComplete(meddpicc || {});
-    setScores(normalizedMeddpicc);
+    
+    // Only update if the scores have actually changed
+    const hasChanged = Object.keys(normalizedMeddpicc).some(key => {
+      const currentValue = toMEDDPICCScore(scores[key as keyof MEDDPICC]);
+      const newValue = toMEDDPICCScore(normalizedMeddpicc[key as keyof MEDDPICC]);
+      return currentValue !== newValue;
+    });
+    
+    if (hasChanged) {
+      setScores(normalizedMeddpicc);
+    }
+    
     generateInsights();
   }, [meddpicc]);
 
-  const generateInsights = () => {
+  const generateInsights = useCallback(() => {
     const newInsights: string[] = [];
     
     // Get score values safely
@@ -345,10 +356,16 @@ export function EnhancedMEDDPICCScoring({
     }
 
     setInsights(newInsights);
-  };
+  }, [scores, opportunityValue]);
 
-  const handleScoreChange = (criterion: keyof MEDDPICC, value: number) => {
+  const handleScoreChange = useCallback((criterion: keyof MEDDPICC, value: number) => {
     const safeValue = toMEDDPICCScore(value);
+    
+    // Only update if the value actually changed
+    if (toMEDDPICCScore(scores[criterion]) === safeValue) {
+      return;
+    }
+    
     const updatedScores = { ...scores, [criterion]: safeValue };
     
     // Ensure the updated scores are complete and valid
@@ -356,8 +373,10 @@ export function EnhancedMEDDPICCScoring({
     setScores(normalizedScores);
     
     // Update the parent with the normalized scores
-    onChange(normalizedScores);
-  };
+    if (onChange) {
+      onChange(normalizedScores);
+    }
+  }, [scores, onChange]);
 
   const getScoreColor = (score: number) => {
     if (score >= 8) return 'text-green-600 bg-green-50';
@@ -481,7 +500,7 @@ export function EnhancedMEDDPICCScoring({
                   variant="secondary"
                   className={`text-xs ${getScoreColor(toMEDDPICCScore(scores[criterion.key]))}`}
                 >
-                  {toMEDDPICCScore(scores[criterion.key]).toFixed(1)}
+                  {(toMEDDPICCScore(scores[criterion.key]) || 0).toFixed(1)}
                 </Badge>
               </div>
             </TabsTrigger>
@@ -501,7 +520,7 @@ export function EnhancedMEDDPICCScoring({
                   <div className="flex items-center justify-between">
                     <Label>Current Score</Label>
                     <Badge className={getScoreColor(toMEDDPICCScore(scores[criterion.key]))}>
-                      {toMEDDPICCScore(scores[criterion.key]).toFixed(1)}/10 - {getScoreLabel(toMEDDPICCScore(scores[criterion.key]))}
+                      {(toMEDDPICCScore(scores[criterion.key]) || 0).toFixed(1)}/10 - {getScoreLabel(toMEDDPICCScore(scores[criterion.key]))}
                     </Badge>
                   </div>
                   {!readonly && (

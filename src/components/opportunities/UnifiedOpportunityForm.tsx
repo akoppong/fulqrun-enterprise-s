@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Opportunity, PEAK_STAGES, Company, Contact, MEDDPICC, User } from '@/lib/types';
 import { getMEDDPICCScore } from '@/lib/crm-utils';
+import { toMEDDPICCScore } from '@/lib/meddpicc-defaults';
 import { AIService } from '@/lib/ai-service';
 import { OpportunityService } from '@/lib/opportunity-service';
 import { AutoSaveIndicator } from '@/components/ui/auto-save-indicator';
@@ -76,14 +77,16 @@ export function UnifiedOpportunityForm({
     leadSource: '',
     tags: [],
     meddpicc: {
-      metrics: '',
-      economicBuyer: '',
-      decisionCriteria: '',
-      decisionProcess: '',
-      paperProcess: '',
-      implicatePain: '',
-      champion: '',
-      score: 0
+      metrics: 0,
+      economicBuyer: 0,
+      decisionCriteria: 0,
+      decisionProcess: 0,
+      paperProcess: 0,
+      identifyPain: 0,
+      champion: 0,
+      competition: 0,
+      score: 0,
+      lastUpdated: new Date()
     }
   });
 
@@ -199,7 +202,31 @@ export function UnifiedOpportunityForm({
       setFormData({
         ...editingOpportunity,
         expectedCloseDate: new Date(editingOpportunity.expectedCloseDate),
-        tags: editingOpportunity.tags || []
+        tags: editingOpportunity.tags || [],
+        meddpicc: editingOpportunity.meddpicc ? {
+          metrics: toMEDDPICCScore(editingOpportunity.meddpicc.metrics),
+          economicBuyer: toMEDDPICCScore(editingOpportunity.meddpicc.economicBuyer),
+          decisionCriteria: toMEDDPICCScore(editingOpportunity.meddpicc.decisionCriteria),
+          decisionProcess: toMEDDPICCScore(editingOpportunity.meddpicc.decisionProcess),
+          paperProcess: toMEDDPICCScore(editingOpportunity.meddpicc.paperProcess),
+          identifyPain: toMEDDPICCScore(editingOpportunity.meddpicc.identifyPain),
+          champion: toMEDDPICCScore(editingOpportunity.meddpicc.champion),
+          competition: toMEDDPICCScore(editingOpportunity.meddpicc.competition),
+          score: toMEDDPICCScore(editingOpportunity.meddpicc.score),
+          ...editingOpportunity.meddpicc,
+          lastUpdated: new Date()
+        } : {
+          metrics: 0,
+          economicBuyer: 0,
+          decisionCriteria: 0,
+          decisionProcess: 0,
+          paperProcess: 0,
+          identifyPain: 0,
+          champion: 0,
+          competition: 0,
+          score: 0,
+          lastUpdated: new Date()
+        }
       });
       setHasUnsavedChanges(false);
     } else {
@@ -332,16 +359,6 @@ export function UnifiedOpportunityForm({
       if (!shouldDiscard) return;
     }
     onClose();
-  };
-
-  const updateMEDDPICCField = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      meddpicc: {
-        ...prev.meddpicc!,
-        [field]: value
-      }
-    }));
   };
 
   const addTag = () => {
@@ -780,10 +797,9 @@ export function UnifiedOpportunityForm({
           <TabsContent value="meddpicc" className="space-y-6 mt-0">
             <EnhancedMEDDPICCScoring
               meddpicc={formData.meddpicc!}
-              onMEDDPICCChange={updateMEDDPICCField}
-              opportunity={formData}
-              company={selectedCompany}
-              contact={selectedContact}
+              onChange={(meddpicc) => setFormData(prev => ({ ...prev, meddpicc }))}
+              opportunityValue={formData.value}
+              companyName={selectedCompany?.name}
             />
           </TabsContent>
 

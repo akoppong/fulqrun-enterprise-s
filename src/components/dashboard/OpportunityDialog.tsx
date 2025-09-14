@@ -55,14 +55,16 @@ export function OpportunityDialog({ isOpen, onClose, onSave, opportunity }: Oppo
     companyId: '',
     contactId: '',
     meddpicc: {
-      metrics: '',
-      economicBuyer: '',
-      decisionCriteria: '',
-      decisionProcess: '',
-      paperProcess: '',
-      implicatePain: '',
-      champion: '',
-      score: 0
+      metrics: 0,
+      economicBuyer: 0,
+      decisionCriteria: 0,
+      decisionProcess: 0,
+      paperProcess: 0,
+      identifyPain: 0,
+      champion: 0,
+      competition: 0,
+      score: 0,
+      lastUpdated: new Date()
     }
   });
 
