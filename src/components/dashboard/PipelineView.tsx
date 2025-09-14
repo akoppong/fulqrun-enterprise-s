@@ -5,19 +5,50 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/crm-utils';
 import { Plus, TrendUp } from '@phosphor-icons/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { UnifiedOpportunityForm } from '../opportunities/UnifiedOpportunityForm';
 import { RealtimeFinancialWidget } from './RealtimeFinancialWidget';
 import { FinancialSummary } from './FinancialSummary';
+import { OpportunityService } from '@/lib/opportunity-service';
 
 interface PipelineViewProps {
   user?: User;
 }
 
 export function PipelineView({ user }: PipelineViewProps) {
-  const [opportunities, setOpportunities] = useKV<Opportunity[]>('opportunities', []);
+  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load opportunities from OpportunityService
+  useEffect(() => {
+    const loadOpportunities = async () => {
+      try {
+        setIsLoading(true);
+        console.log('PipelineView: Loading opportunities from service...');
+        
+        // Initialize sample data if needed
+        await OpportunityService.initializeSampleData();
+        
+        // Load opportunities
+        const allOpportunities = await OpportunityService.getAllOpportunities();
+        console.log('PipelineView: Loaded opportunities:', {
+          count: allOpportunities.length,
+          opportunities: allOpportunities.map(o => ({ id: o.id, title: o.title, stage: o.stage }))
+        });
+        
+        setOpportunities(allOpportunities);
+      } catch (error) {
+        console.error('PipelineView: Failed to load opportunities:', error);
+        setOpportunities([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadOpportunities();
+  }, []);
 
   const getOpportunitiesByStage = (stage: string) => {
     return opportunities.filter(opp => opp.stage === stage);
@@ -37,49 +68,73 @@ export function PipelineView({ user }: PipelineViewProps) {
     setIsDialogOpen(true);
   };
 
-  const handleSaveOpportunity = (savedOpportunity: Opportunity) => {
-    if (selectedOpportunity) {
-      // Update existing
-      setOpportunities(current => 
-        current.map(opp => 
-          opp.id === selectedOpportunity.id 
-            ? savedOpportunity
-            : opp
-        )
-      );
-    } else {
-      // Create new
-      setOpportunities(current => [...current, savedOpportunity]);
+  const handleSaveOpportunity = async (savedOpportunity: Opportunity) => {
+    try {
+      if (selectedOpportunity) {
+        // Update existing
+        console.log('PipelineView: Updating opportunity:', savedOpportunity.id);
+        await OpportunityService.updateOpportunity(selectedOpportunity.id, savedOpportunity);
+      } else {
+        // Create new
+        console.log('PipelineView: Creating new opportunity');
+        await OpportunityService.createOpportunity(savedOpportunity);
+      }
+      
+      // Reload opportunities from service
+      const allOpportunities = await OpportunityService.getAllOpportunities();
+      setOpportunities(allOpportunities);
+      
+      setIsDialogOpen(false);
+      console.log('PipelineView: Successfully saved opportunity');
+    } catch (error) {
+      console.error('PipelineView: Failed to save opportunity:', error);
+      // Show error to user but keep dialog open
     }
-    setIsDialogOpen(false);
   };
 
   const totalPipelineValue = opportunities.reduce((sum, opp) => sum + opp.value, 0);
 
   return (
     <div className="w-full h-full space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold">Sales Pipeline</h2>
-          <p className="text-muted-foreground">PEAK methodology-driven opportunity management</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-            <p className="text-sm text-muted-foreground">Total Pipeline Value</p>
-            <p className="text-2xl font-bold text-primary">{formatCurrency(totalPipelineValue)}</p>
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center space-y-4">
+            <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full mx-auto"></div>
+            <p className="text-muted-foreground">Loading pipeline data...</p>
           </div>
-          <Button onClick={handleCreateOpportunity}>
-            <Plus size={20} className="mr-2" />
-            New Opportunity
-          </Button>
         </div>
-      </div>
+      ) : (
+        <>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-3xl font-bold">Sales Pipeline</h2>
+              <p className="text-muted-foreground">PEAK methodology-driven opportunity management</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <p className="text-sm text-muted-foreground">Total Pipeline Value</p>
+                <p className="text-2xl font-bold text-primary">{formatCurrency(totalPipelineValue)}</p>
+              </div>
+              <Button onClick={handleCreateOpportunity}>
+                <Plus size={20} className="mr-2" />
+                New Opportunity
+              </Button>
+            </div>
+          </div>
 
-      {/* Financial Dashboard Integration */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <RealtimeFinancialWidget opportunities={opportunities} />
-        <FinancialSummary opportunities={opportunities} />
-      </div>
+          {/* Debug info - remove in production */}
+          <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
+            Debug: {opportunities.length} opportunities loaded
+            {opportunities.length > 0 && (
+              <div>Stages: {opportunities.map(o => `${o.title || o.name}: ${o.stage}`).join(', ')}</div>
+            )}
+          </div>
+
+          {/* Financial Dashboard Integration */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <RealtimeFinancialWidget opportunities={opportunities} />
+            <FinancialSummary opportunities={opportunities} />
+          </div>
 
       {/* Pipeline Stage Overview */}
       <Card>
@@ -131,7 +186,7 @@ export function PipelineView({ user }: PipelineViewProps) {
                   >
                     <div className="space-y-2">
                       <div className="flex items-start justify-between">
-                        <h4 className="font-medium text-sm">{opportunity.title}</h4>
+                        <h4 className="font-medium text-sm">{opportunity.title || opportunity.name}</h4>
                         <Badge variant="outline" className="text-xs">
                           {opportunity.probability}%
                         </Badge>
@@ -166,6 +221,8 @@ export function PipelineView({ user }: PipelineViewProps) {
         user={user || { id: 'user-1', name: 'Default User', email: 'user@example.com', role: 'rep' }}
         mode="dialog"
       />
+        </>
+      )}
     </div>
   );
 }
