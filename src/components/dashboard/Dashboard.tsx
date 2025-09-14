@@ -38,7 +38,7 @@ import { PharmaceuticalKPITemplates } from './PharmaceuticalKPITemplates';
 import { RoleTestingDashboard } from './RoleTestingDashboard';
 import { RoleShowcase } from './RoleShowcase';
 import { MEDDPICCModule, EnhancedMEDDPICCModule, EnhancedMEDDPICCAnalytics, MEDDPICCAnalyticsDashboard, MEDDPICCAdminConfig, MEDDPICCLauncher, MEDDPICCAnalyticsTest } from '@/components/meddpicc';
-import { RelationshipMapper } from '../relationships/RelationshipMapper';
+import { RelationshipMapper } from '../opportunities/RelationshipMapper';
 
 
 interface DashboardProps {
