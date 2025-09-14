@@ -40,8 +40,8 @@ import { formatCurrency, getMEDDPICCScore, getStageProgress } from '@/lib/crm-ut
 import { format, differenceInDays } from 'date-fns';
 
 // MEDDPICC Integration
-import { MEDDPICCAssessment, MEDDPICCSummary, MEDDPICCService } from '@/components/meddpicc';
-import { MEDDPICCAssessment as MEDDPICCAssessmentType } from '@/types/meddpicc';
+import { MEDDPICCSummary } from '@/components/meddpicc';
+// import { MEDDPICCAssessment as MEDDPICCAssessmentType } from '@/types/meddpicc';
 
 interface ResponsiveOpportunityDetailProps {
   opportunity: Opportunity;
@@ -49,6 +49,7 @@ interface ResponsiveOpportunityDetailProps {
   onClose: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  showInMainContent?: boolean;
 }
 
 export function ResponsiveOpportunityDetail({ 
@@ -56,18 +57,21 @@ export function ResponsiveOpportunityDetail({
   isOpen, 
   onClose,
   onEdit,
-  onDelete
+  onDelete,
+  showInMainContent = false
 }: ResponsiveOpportunityDetailProps) {
   const [companies] = useKV<Company[]>('companies', []);
   const [contacts] = useKV<Contact[]>('contacts', []);
   const [activeTab, setActiveTab] = useState('overview');
-  const [meddpiccAssessment, setMeddpiccAssessment] = useState<MEDDPICCAssessmentType | null>(null);
+  const [meddpiccAssessment, setMeddpiccAssessment] = useState<any | null>(null);
   const [showMEDDPICCModal, setShowMEDDPICCModal] = useState(false);
 
   // Load MEDDPICC assessment
   useEffect(() => {
     if (opportunity?.id) {
-      const assessment = MEDDPICCService.getLatestAssessment(opportunity.id);
+      // TODO: Re-enable when MEDDPICCService is available
+      // const assessment = MEDDPICCService.getLatestAssessment(opportunity.id);
+      const assessment = null;
       setMeddpiccAssessment(assessment);
     }
   }, [opportunity?.id]);
@@ -173,15 +177,411 @@ export function ResponsiveOpportunityDetail({
     }
   };
 
+  const renderOpportunityContent = () => {
+    return (
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <div className="border-b border-border bg-background mb-6">
+          <TabsList className="h-10 bg-transparent p-0 w-full justify-start">
+            <div className="flex overflow-x-auto scrollbar-hide w-full">
+              <TabsTrigger 
+                value="overview" 
+                className="h-10 px-3 text-sm whitespace-nowrap shrink-0 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent border-0"
+              >
+                <FileText size={14} className="mr-1" />
+                Overview
+              </TabsTrigger>
+              <TabsTrigger 
+                value="metrics" 
+                className="h-10 px-3 text-sm whitespace-nowrap shrink-0 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent border-0"
+              >
+                <ChartBar size={14} className="mr-1" />
+                Metrics
+              </TabsTrigger>
+              <TabsTrigger 
+                value="peak" 
+                className="h-10 px-3 text-sm whitespace-nowrap shrink-0 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent border-0"
+              >
+                <Target size={14} className="mr-1" />
+                PEAK
+              </TabsTrigger>
+              <TabsTrigger 
+                value="meddpicc" 
+                className="h-10 px-3 text-sm whitespace-nowrap shrink-0 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent border-0"
+              >
+                <ChartLineUp size={14} className="mr-1" />
+                MEDDPICC
+              </TabsTrigger>
+              <TabsTrigger 
+                value="contact" 
+                className="h-10 px-3 text-sm whitespace-nowrap shrink-0 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent border-0"
+              >
+                <Users size={14} className="mr-1" />
+                Contact
+              </TabsTrigger>
+            </div>
+          </TabsList>
+        </div>
+        
+        <div className="space-y-6">
+          <TabsContent value="overview" className="mt-0 space-y-4">
+            {/* Key Metrics Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <Card className="border-0 bg-gradient-to-br from-emerald-50 to-emerald-100/50">
+                <CardContent className="p-3 text-center">
+                  <DollarSign size={16} className="text-emerald-600 mx-auto mb-2" />
+                  <div className="text-sm font-bold text-emerald-900">
+                    {formatCurrency(opportunity.value)}
+                  </div>
+                  <div className="text-xs font-medium text-emerald-700">Deal Value</div>
+                </CardContent>
+              </Card>
+              
+              <Card className="border-0 bg-gradient-to-br from-blue-50 to-blue-100/50">
+                <CardContent className="p-3 text-center">
+                  <Trophy size={16} className="text-blue-600 mx-auto mb-2" />
+                  <div className="text-sm font-bold text-blue-900">
+                    {opportunity.probability}%
+                  </div>
+                  <div className="text-xs font-medium text-blue-700">Win Probability</div>
+                </CardContent>
+              </Card>
+              
+              <Card className="border-0 bg-gradient-to-br from-amber-50 to-amber-100/50">
+                <CardContent className="p-3 text-center">
+                  <Calendar size={16} className="text-amber-600 mx-auto mb-2" />
+                  <div className="text-sm font-bold text-amber-900">
+                    {daysToClose > 0 ? `${daysToClose}` : 'Overdue'}
+                  </div>
+                  <div className="text-xs font-medium text-amber-700">Days to Close</div>
+                </CardContent>
+              </Card>
+              
+              <Card className="border-0 bg-gradient-to-br from-purple-50 to-purple-100/50">
+                <CardContent className="p-3 text-center">
+                  <ClockCounterClockwise size={16} className="text-purple-600 mx-auto mb-2" />
+                  <div className="text-sm font-bold text-purple-900">
+                    {daysInPipeline}
+                  </div>
+                  <div className="text-xs font-medium text-purple-700">Days Active</div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            {/* Progress and Summary */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base font-semibold">Deal Progress</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="font-medium">Current Stage</span>
+                      <Badge variant="secondary" className={stageConfig.color}>
+                        {stageConfig.label}
+                      </Badge>
+                    </div>
+                    <Progress value={stageProgress} className="h-2" />
+                    <div className="text-xs text-muted-foreground">
+                      {stageProgress}% through {stageConfig.label} stage
+                    </div>
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Expected Close</Label>
+                      <div className="font-medium">
+                        {format(new Date(opportunity.expectedCloseDate), 'MMM dd, yyyy')}
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Priority</Label>
+                      <div className="font-medium capitalize">{opportunity.priority}</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base font-semibold">Quick Info</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <Building size={14} className="text-blue-600 mt-0.5 shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium truncate">
+                        {company?.name || 'Unknown Company'}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {company?.industry || opportunity.industry || 'Technology'}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <User size={14} className="text-green-600 mt-0.5 shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium truncate">
+                        {contact ? `${contact.firstName} ${contact.lastName}` : opportunity.primaryContact}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {contact?.title || 'Primary Contact'}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {opportunity.tags && opportunity.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {opportunity.tags.slice(0, 3).map((tag, index) => (
+                        <Badge key={index} variant="outline" className="text-xs px-1.5 py-0.5">
+                          {tag}
+                        </Badge>
+                      ))}
+                      {opportunity.tags.length > 3 && (
+                        <Badge variant="outline" className="text-xs px-1.5 py-0.5">
+                          +{opportunity.tags.length - 3}
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="metrics" className="mt-0">
+            <div className="text-center py-12 space-y-4">
+              <ChartBar size={48} className="text-purple-600 mx-auto" />
+              <div className="space-y-2">
+                <h3 className="text-xl font-semibold">Advanced Metrics Dashboard</h3>
+                <p className="text-muted-foreground text-sm">
+                  Detailed performance analytics and predictive insights will be available here.
+                </p>
+              </div>
+              <Button variant="outline" size="sm" disabled>
+                <ChartLineUp size={16} className="mr-2" />
+                Coming Soon
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="peak" className="mt-0 space-y-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base font-semibold flex items-center gap-2">
+                    <Target size={16} className="text-primary" />
+                    PEAK Methodology Progress
+                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">Progress:</span>
+                    <span className="text-lg font-bold text-primary">{stageProgress}%</span>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {PEAK_STAGES.map((stage, index) => {
+                    const score = opportunity.peakScores?.[stage.id] || 0;
+                    const isActive = opportunity.stage === stage.id;
+                    
+                    return (
+                      <Card 
+                        key={stage.id} 
+                        className={`relative transition-all duration-200 border ${
+                          isActive ? 'border-primary bg-primary/5 shadow-md' : 'border-border hover:border-primary/50'
+                        }`}
+                      >
+                        <CardContent className="p-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-primary' : 'bg-muted'}`} />
+                            <span className="text-sm font-medium">{stage.name}</span>
+                          </div>
+                          <div className="space-y-2">
+                            <Progress value={score} className="h-1.5" />
+                            <div className="text-xs text-muted-foreground text-center">
+                              {score}% Complete
+                            </div>
+                          </div>
+                        </CardContent>
+                        {isActive && (
+                          <div className="absolute -top-1 -right-1">
+                            <CheckCircle size={16} className="text-primary bg-background rounded-full" />
+                          </div>
+                        )}
+                      </Card>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="meddpicc" className="mt-0 space-y-4">
+            {/* MEDDPICC Summary */}
+            <MEDDPICCSummary 
+              assessment={meddpiccAssessment}
+              onOpenAssessment={() => setShowMEDDPICCModal(true)}
+              showActions={true}
+            />
+            
+            {/* MEDDPICC Assessment Modal */}
+            <Dialog open={showMEDDPICCModal} onOpenChange={setShowMEDDPICCModal}>
+              <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>MEDDPICC Assessment</DialogTitle>
+                  <DialogDescription>
+                    Complete B2B sales qualification for {opportunity.name}
+                  </DialogDescription>
+                </DialogHeader>
+                {/* Assessment component would go here */}
+                <div className="text-center py-8">
+                  <ChartLineUp size={48} className="text-blue-600 mx-auto mb-4" />
+                  <p className="text-muted-foreground">MEDDPICC Assessment component coming soon</p>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </TabsContent>
+
+          <TabsContent value="contact" className="mt-0 space-y-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <User size={16} className="text-blue-600" />
+                  Primary Contact
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {contact ? (
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-3">
+                      <Avatar className="h-12 w-12 border-2 border-blue-100 shrink-0">
+                        <AvatarImage src={contact.avatarUrl} />
+                        <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold">
+                          {(contact.firstName || 'U')[0]}{(contact.lastName || 'U')[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 space-y-1 min-w-0">
+                        <div className="font-semibold text-sm">
+                          {contact.firstName} {contact.lastName}
+                        </div>
+                        <div className="text-sm text-blue-600 font-medium">
+                          {contact.title || 'Contact'}
+                        </div>
+                        <div className="space-y-1">
+                          {contact.email && (
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <Envelope size={12} />
+                              <span className="truncate">{contact.email}</span>
+                            </div>
+                          )}
+                          {contact.phone && (
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <Phone size={12} />
+                              <span>{contact.phone}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <Button variant="outline" size="sm" className="mt-3" disabled>
+                      <Plus size={14} className="mr-1" />
+                      Add Contact
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 space-y-3">
+                    <User size={32} className="text-muted-foreground mx-auto" />
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium">No Primary Contact</p>
+                      <p className="text-xs text-muted-foreground">
+                        Add a primary contact to track stakeholder relationships
+                      </p>
+                    </div>
+                    <Button variant="outline" size="sm" className="mt-3" disabled>
+                      <Plus size={14} className="mr-1" />
+                      Add Contact
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </div>
+      </Tabs>
+    );
+  };
+
+  if (showInMainContent) {
+    // Render directly in main content without dialog wrapper
+    return (
+      <div className="h-full flex flex-col bg-background">
+        {/* Header */}
+        <div className="flex-none bg-white border-b shadow-sm">
+          <div className="px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={onClose}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <ArrowLeft size={16} className="mr-2" />
+                  Back
+                </Button>
+                <div>
+                  <h1 className="text-xl font-semibold text-gray-900">
+                    {opportunity.name}
+                  </h1>
+                  <p className="text-sm text-muted-foreground">
+                    {opportunity.company} • {formatCurrency(opportunity.value)}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                {onEdit && (
+                  <Button variant="outline" size="sm" onClick={onEdit}>
+                    <PencilSimple size={16} className="mr-2" />
+                    Edit
+                  </Button>
+                )}
+                {onDelete && (
+                  <Button variant="destructive" size="sm" onClick={onDelete}>
+                    <Trash size={16} className="mr-2" />
+                    Delete
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-hidden">
+          <ScrollArea className="h-full">
+            <div className="p-6 space-y-6">
+              {renderOpportunityContent()}
+            </div>
+          </ScrollArea>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-screen h-screen max-w-none max-h-none m-0 p-0 rounded-none border-0 bg-background">
         <DialogHeader className="sr-only">
           <DialogTitle>
-            Opportunity Details - {opportunity.title}
+            Opportunity Details - {opportunity.name}
           </DialogTitle>
           <DialogDescription>
-            Detailed view of opportunity {opportunity.title} including PEAK methodology progress, MEDDPICC qualification, and contact information.
+            Detailed view of opportunity {opportunity.name} including PEAK methodology progress, MEDDPICC qualification, and contact information.
           </DialogDescription>
         </DialogHeader>
 
@@ -202,7 +602,7 @@ export function ResponsiveOpportunityDetail({
                 <div className="hidden md:block w-px h-6 bg-border" />
                 <div className="min-w-0">
                   <h1 className="text-lg md:text-xl font-bold text-foreground truncate">
-                    {opportunity.title}
+                    {opportunity.name}
                   </h1>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Building size={12} className="text-blue-600 shrink-0" />
@@ -604,19 +1004,24 @@ export function ResponsiveOpportunityDetail({
                             Complete B2B sales qualification for {opportunity.name}
                           </DialogDescription>
                         </DialogHeader>
+                        {/* TODO: Re-enable when MEDDPICCAssessment component is available */}
+                        <div className="text-center py-8">
+                          <ChartLineUp size={48} className="text-blue-600 mx-auto mb-4" />
+                          <p className="text-muted-foreground">MEDDPICC Assessment component coming soon</p>
+                        </div>
+                        {/* 
                         <MEDDPICCAssessment
                           opportunityId={opportunity.id}
-                          userId="current-user" // TODO: Get from auth context
+                          userId="current-user"
                           onAssessmentComplete={(assessment) => {
                             setMeddpiccAssessment(assessment);
                             setShowMEDDPICCModal(false);
                           }}
                           onSave={() => {
                             // Refresh assessment data
-                            const latestAssessment = MEDDPICCService.getLatestAssessment(opportunity.id);
-                            setMeddpiccAssessment(latestAssessment);
                           }}
                         />
+                        */}
                       </DialogContent>
                     </Dialog>
                   </TabsContent>
