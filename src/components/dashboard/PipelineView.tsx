@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/crm-utils';
 import { Plus, TrendUp } from '@phosphor-icons/react';
 import { useState, useEffect } from 'react';
-import { UnifiedOpportunityForm } from '../opportunities/UnifiedOpportunityForm';
+import { UnifiedOpportunityForm } from '../unified/UnifiedOpportunityForm';
 import { RealtimeFinancialWidget } from './RealtimeFinancialWidget';
 import { FinancialSummary } from './FinancialSummary';
 import { OpportunityService } from '@/lib/opportunity-service';
@@ -255,6 +255,7 @@ export function PipelineView({ user }: PipelineViewProps) {
         editingOpportunity={selectedOpportunity}
         user={user || { id: 'user-1', name: 'Default User', email: 'user@example.com', role: 'rep' }}
         mode="dialog"
+        source="pipeline"
       />
         </>
       )}

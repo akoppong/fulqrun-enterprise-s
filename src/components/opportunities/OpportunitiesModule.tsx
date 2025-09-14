@@ -4,8 +4,8 @@ import { Opportunity, User } from '@/lib/types';
 import { OpportunityService } from '@/lib/opportunity-service';
 import { OpportunitiesDashboard } from './OpportunitiesDashboard';
 import { OpportunitiesListView } from './OpportunitiesListView';
-import { OpportunityDetailView } from './OpportunityDetailView';
-import { UnifiedOpportunityPage } from './UnifiedOpportunityPage';
+import { UnifiedOpportunityForm } from '../unified/UnifiedOpportunityForm';
+import { UnifiedOpportunityDetail } from '../unified/UnifiedOpportunityDetail';
 import { MEDDPICCScenarioTester } from './MEDDPICCScenarioTester';
 import { OpportunityTabsTest } from './OpportunityTabsTest';
 import { OpportunityDetailTabsValidator } from './OpportunityDetailTabsValidator';
@@ -224,39 +224,66 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
           );
         }
         
+        const selectedOpportunity = opportunities.find(opp => opp.id === selectedOpportunityId);
+        
+        if (!selectedOpportunity) {
+          return (
+            <div className="flex items-center justify-center h-96">
+              <div className="text-center">
+                <h3 className="text-lg font-semibold mb-2">Opportunity not found</h3>
+                <p className="text-muted-foreground mb-4">
+                  The selected opportunity could not be found.
+                </p>
+                <button onClick={() => setCurrentView('list')} className="text-primary hover:underline">
+                  Browse opportunities
+                </button>
+              </div>
+            </div>
+          );
+        }
+        
         return (
-          <EnhancedErrorBoundary context="OpportunityDetailView">
-            <OpportunityDetailView 
-              opportunityId={selectedOpportunityId}
-              user={user}
-              onBack={handleBack}
-              onEdit={handleEdit}
+          <EnhancedErrorBoundary context="UnifiedOpportunityDetail">
+            <UnifiedOpportunityDetail 
+              opportunity={selectedOpportunity}
+              onUpdate={(updatedOpportunity) => {
+                setOpportunities(prev => 
+                  prev.map(opp => opp.id === updatedOpportunity.id ? updatedOpportunity : opp)
+                );
+              }}
+              onClose={handleBack}
+              mode="page"
+              source="opportunities"
             />
           </EnhancedErrorBoundary>
         );
       
       case 'create':
         return (
-          <EnhancedErrorBoundary context="UnifiedOpportunityPage">
-            <UnifiedOpportunityPage
-              user={user}
+          <EnhancedErrorBoundary context="UnifiedOpportunityForm">
+            <UnifiedOpportunityForm
+              isOpen={false}
+              onClose={handleFormCancel}
               onSave={handleSave}
-              onCancel={handleFormCancel}
               editingOpportunity={null}
-              isEditing={false}
+              user={user}
+              mode="page"
+              source="opportunities"
             />
           </EnhancedErrorBoundary>
         );
       
       case 'edit':
         return (
-          <EnhancedErrorBoundary context="EditUnifiedOpportunityPage">
-            <UnifiedOpportunityPage
-              user={user}
+          <EnhancedErrorBoundary context="EditUnifiedOpportunityForm">
+            <UnifiedOpportunityForm
+              isOpen={false}
+              onClose={handleFormCancel}
               onSave={handleSave}
-              onCancel={handleFormCancel}
               editingOpportunity={editingOpportunity}
-              isEditing={true}
+              user={user}
+              mode="page"
+              source="opportunities"
             />
           </EnhancedErrorBoundary>
         );
