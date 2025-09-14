@@ -42,6 +42,21 @@ import { format, differenceInDays } from 'date-fns';
 // MEDDPICC Integration
 import { MEDDPICCSummary } from '@/components/meddpicc';
 
+// Helper functions (defined outside component to avoid re-creation)
+const getPriorityBadge = (priority?: string) => {
+  switch (priority?.toLowerCase()) {
+    case 'low':
+      return { variant: 'secondary' as const, className: 'bg-gray-100 text-gray-800 border-gray-300' };
+    case 'medium':
+      return { variant: 'secondary' as const, className: 'bg-blue-100 text-blue-800 border-blue-300' };
+    case 'high':
+      return { variant: 'secondary' as const, className: 'bg-orange-100 text-orange-800 border-orange-300' };
+    case 'critical':
+      return { variant: 'destructive' as const, className: 'bg-red-100 text-red-800 border-red-300' };
+    default:
+      return { variant: 'secondary' as const, className: 'bg-gray-100 text-gray-800 border-gray-300' };
+  }
+};
 
 interface ResponsiveOpportunityDetailProps {
   opportunity: Opportunity;
@@ -161,21 +176,6 @@ export function ResponsiveOpportunityDetail({
   }
   
   const { daysInStage, daysInPipeline, daysToClose } = timeCalculations;
-
-  const getPriorityBadge = (priority?: string) => {
-    switch (priority?.toLowerCase()) {
-      case 'low':
-        return { variant: 'secondary' as const, className: 'bg-gray-100 text-gray-800 border-gray-300' };
-      case 'medium':
-        return { variant: 'secondary' as const, className: 'bg-blue-100 text-blue-800 border-blue-300' };
-      case 'high':
-        return { variant: 'secondary' as const, className: 'bg-orange-100 text-orange-800 border-orange-300' };
-      case 'critical':
-        return { variant: 'destructive' as const, className: 'bg-red-100 text-red-800 border-red-300' };
-      default:
-        return { variant: 'secondary' as const, className: 'bg-gray-100 text-gray-800 border-gray-300' };
-    }
-  };
 
   const renderOpportunityContent = () => {
     return (
