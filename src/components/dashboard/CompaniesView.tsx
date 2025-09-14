@@ -10,10 +10,9 @@ import { Building2, Search, Plus, Users, MapPin, Globe, Target } from '@phosphor
 import { SegmentAssignmentDialog } from '../segments/SegmentAssignmentDialog';
 import { CompanyContactService } from '@/lib/company-contact-service';
 import { DemoDataGenerator } from '@/lib/demo-data';
+import { CreateCompanyButton } from '@/components/forms/CompanyForm';
+import { getCountryByCode, getRegionByCode } from '@/lib/geography-data';
 import { toast } from 'sonner';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 
 export function CompaniesView() {
   const [companies, setCompanies] = useKV<Company[]>('companies', []);
@@ -21,7 +20,6 @@ export function CompaniesView() {
   const [searchTerm, setSearchTerm] = useState('');
   const [segmentFilter, setSegmentFilter] = useState('all');
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
-  const [showAddCompany, setShowAddCompany] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
 
   // Initialize company data
@@ -67,6 +65,29 @@ export function CompaniesView() {
     return matchesSearch && matchesSegment;
   });
 
+  const getLocationDisplay = (company: Company) => {
+    if (!company.region && !company.country && !company.geography) return null;
+    
+    // Use new region/country fields if available
+    if (company.region || company.country) {
+      const region = company.region ? getRegionByCode(company.region) : null;
+      const country = company.country ? getCountryByCode(company.country) : null;
+      
+      if (country) {
+        return country.name;
+      } else if (region) {
+        return region.name;
+      }
+    }
+    
+    // Fallback to legacy geography field
+    if (company.geography) {
+      return company.geography;
+    }
+    
+    return null;
+  };
+
   const getSegmentInfo = (segmentId?: string) => {
     if (!segmentId) return null;
     return segments.find(s => s.id === segmentId);
@@ -85,6 +106,18 @@ export function CompaniesView() {
     return new Intl.NumberFormat('en-US').format(num);
   };
 
+  const handleCompanyCreated = async (newCompany: Company) => {
+    // Refresh companies list
+    try {
+      const updatedCompanies = await CompanyContactService.getAllCompanies();
+      setCompanies(updatedCompanies);
+    } catch (error) {
+      console.error('Error refreshing companies:', error);
+      // Fallback: add to existing list
+      setCompanies(prev => [...prev, newCompany]);
+    }
+  };
+
   const handleAssignSegment = (updatedCompany: Company) => {
     setCompanies(current => 
       current.map(company => 
@@ -92,29 +125,6 @@ export function CompaniesView() {
       )
     );
     setSelectedCompany(null);
-  };
-
-  const handleAddCompany = async (companyData: Partial<Company>) => {
-    try {
-      const newCompany = await CompanyContactService.createCompany({
-        name: companyData.name || '',
-        industry: companyData.industry || '',
-        size: companyData.size || '',
-        website: companyData.website,
-        address: companyData.address,
-        revenue: companyData.revenue,
-        employees: companyData.employees,
-        geography: companyData.geography,
-        customFields: companyData.customFields
-      });
-
-      setCompanies(current => [...current, newCompany]);
-      setShowAddCompany(false);
-      toast.success('Company added successfully!');
-    } catch (error) {
-      console.error('Error adding company:', error);
-      toast.error('Failed to add company. Please try again.');
-    }
   };
 
   const segmentStats = segments.reduce((acc, segment) => {
@@ -145,13 +155,9 @@ export function CompaniesView() {
           <Badge variant="outline" className="text-sm">
             {filteredCompanies.length} companies
           </Badge>
-          <Button 
-            onClick={() => setShowAddCompany(true)}
-            className="flex items-center gap-2"
-          >
-            <Plus size={16} />
-            Add Company
-          </Button>
+          <CreateCompanyButton
+            onCompanyCreated={handleCompanyCreated}
+          />
         </div>
       </div>
 
@@ -271,6 +277,13 @@ export function CompaniesView() {
                               <span>{company.address}</span>
                             </div>
                           )}
+                          
+                          {getLocationDisplay(company) && (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Globe className="h-3 w-3" />
+                              <span>{getLocationDisplay(company)}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -376,210 +389,6 @@ export function CompaniesView() {
           onAssign={handleAssignSegment}
         />
       )}
-
-      {/* Add Company Dialog */}
-      <AddCompanyDialog 
-        isOpen={showAddCompany}
-        onClose={() => setShowAddCompany(false)}
-        onSubmit={handleAddCompany}
-      />
     </div>
-  );
-}
-
-function AddCompanyDialog({ 
-  isOpen, 
-  onClose, 
-  onSubmit 
-}: { 
-  isOpen: boolean; 
-  onClose: () => void; 
-  onSubmit: (data: Partial<Company>) => void; 
-}) {
-  const [formData, setFormData] = useState({
-    name: '',
-    industry: '',
-    size: '',
-    website: '',
-    address: '',
-    revenue: '',
-    employees: '',
-    geography: ''
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.name.trim() || !formData.industry.trim()) {
-      toast.error('Please fill in required fields (Company Name and Industry)');
-      return;
-    }
-
-    onSubmit({
-      name: formData.name.trim(),
-      industry: formData.industry.trim(),
-      size: formData.size.trim() || 'Unknown',
-      website: formData.website.trim() || undefined,
-      address: formData.address.trim() || undefined,
-      revenue: formData.revenue ? parseInt(formData.revenue) : undefined,
-      employees: formData.employees ? parseInt(formData.employees) : undefined,
-      geography: formData.geography.trim() || undefined,
-    });
-
-    // Reset form
-    setFormData({
-      name: '',
-      industry: '',
-      size: '',
-      website: '',
-      address: '',
-      revenue: '',
-      employees: '',
-      geography: ''
-    });
-  };
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Building2 className="h-5 w-5" />
-            Add New Company
-          </DialogTitle>
-        </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name" className="required">Company Name *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
-                placeholder="Enter company name"
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="industry" className="required">Industry *</Label>
-              <Select 
-                value={formData.industry} 
-                onValueChange={(value) => handleInputChange('industry', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select industry" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Technology">Technology</SelectItem>
-                  <SelectItem value="Healthcare">Healthcare</SelectItem>
-                  <SelectItem value="Financial Services">Financial Services</SelectItem>
-                  <SelectItem value="Manufacturing">Manufacturing</SelectItem>
-                  <SelectItem value="Retail">Retail</SelectItem>
-                  <SelectItem value="Energy">Energy</SelectItem>
-                  <SelectItem value="Education">Education</SelectItem>
-                  <SelectItem value="Government">Government</SelectItem>
-                  <SelectItem value="Non-Profit">Non-Profit</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="size">Company Size</Label>
-              <Select 
-                value={formData.size} 
-                onValueChange={(value) => handleInputChange('size', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select company size" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1-10">1-10 employees</SelectItem>
-                  <SelectItem value="11-50">11-50 employees</SelectItem>
-                  <SelectItem value="51-200">51-200 employees</SelectItem>
-                  <SelectItem value="201-500">201-500 employees</SelectItem>
-                  <SelectItem value="501-1000">501-1000 employees</SelectItem>
-                  <SelectItem value="1001-5000">1001-5000 employees</SelectItem>
-                  <SelectItem value="5000+">5000+ employees</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="website">Website</Label>
-              <Input
-                id="website"
-                type="url"
-                value={formData.website}
-                onChange={(e) => handleInputChange('website', e.target.value)}
-                placeholder="https://company.com"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="revenue">Annual Revenue ($)</Label>
-              <Input
-                id="revenue"
-                type="number"
-                value={formData.revenue}
-                onChange={(e) => handleInputChange('revenue', e.target.value)}
-                placeholder="1000000"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="employees">Number of Employees</Label>
-              <Input
-                id="employees"
-                type="number"
-                value={formData.employees}
-                onChange={(e) => handleInputChange('employees', e.target.value)}
-                placeholder="100"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="geography">Geography</Label>
-            <Input
-              id="geography"
-              value={formData.geography}
-              onChange={(e) => handleInputChange('geography', e.target.value)}
-              placeholder="North America, Europe, Asia Pacific, etc."
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="address">Address</Label>
-            <Textarea
-              id="address"
-              value={formData.address}
-              onChange={(e) => handleInputChange('address', e.target.value)}
-              placeholder="Company address"
-              rows={3}
-            />
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={onClose}
-            >
-              Cancel
-            </Button>
-            <Button type="submit">
-              Add Company
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
   );
 }

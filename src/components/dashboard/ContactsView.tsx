@@ -5,13 +5,46 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { AddressBook, Plus, Search, Building2, Phone, Envelope } from '@phosphor-icons/react';
-import { useState } from 'react';
+import { AddressBook, Plus, Search, Building2, Phone, Envelope, MapPin } from '@phosphor-icons/react';
+import { useState, useEffect } from 'react';
+import { CreateContactButton } from '@/components/forms/ContactForm';
+import { CompanyContactService } from '@/lib/company-contact-service';
+import { getCountryByCode, getRegionByCode } from '@/lib/geography-data';
+import { toast } from 'sonner';
 
 export function ContactsView() {
-  const [contacts] = useKV<Contact[]>('contacts', []);
-  const [companies] = useKV<Company[]>('companies', []);
+  const [contacts, setContacts] = useKV<Contact[]>('contacts', []);
+  const [companies, setCompanies] = useKV<Company[]>('companies', []);
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  // Initialize data on component mount
+  useEffect(() => {
+    const initializeData = async () => {
+      try {
+        setLoading(true);
+        
+        // Initialize sample data if needed
+        await CompanyContactService.initializeSampleData();
+        
+        // Load data from service
+        const [contactsData, companiesData] = await Promise.all([
+          CompanyContactService.getAllContacts(),
+          CompanyContactService.getAllCompanies()
+        ]);
+        
+        setContacts(contactsData);
+        setCompanies(companiesData);
+      } catch (error) {
+        console.error('Error loading contact data:', error);
+        toast.error('Failed to load contacts and companies');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeData();
+  }, [setContacts, setCompanies]);
 
   const filteredContacts = contacts.filter(contact => 
     contact.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -25,6 +58,21 @@ export function ContactsView() {
     return company?.name || 'Unknown Company';
   };
 
+  const getLocationDisplay = (contact: Contact) => {
+    if (!contact.region && !contact.country) return null;
+    
+    const region = contact.region ? getRegionByCode(contact.region) : null;
+    const country = contact.country ? getCountryByCode(contact.country) : null;
+    
+    if (country) {
+      return country.name;
+    } else if (region) {
+      return region.name;
+    }
+    
+    return null;
+  };
+
   const getRoleBadge = (role: string) => {
     const roleConfig = {
       champion: { variant: 'default' as const, color: 'bg-green-100 text-green-800' },
@@ -35,6 +83,63 @@ export function ContactsView() {
     };
     return roleConfig[role as keyof typeof roleConfig] || roleConfig.user;
   };
+
+  const handleContactCreated = async (newContact: Contact) => {
+    // Refresh contacts list
+    try {
+      const updatedContacts = await CompanyContactService.getAllContacts();
+      setContacts(updatedContacts);
+    } catch (error) {
+      console.error('Error refreshing contacts:', error);
+      // Fallback: add to existing list
+      setContacts(prev => [...prev, newContact]);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="h-8 bg-muted animate-pulse rounded-md w-48 mb-2" />
+            <div className="h-4 bg-muted animate-pulse rounded-md w-96" />
+          </div>
+          <div className="h-10 bg-muted animate-pulse rounded-md w-32" />
+        </div>
+        <Card>
+          <CardHeader>
+            <div className="h-6 bg-muted animate-pulse rounded-md w-40 mb-4" />
+            <div className="h-10 bg-muted animate-pulse rounded-md w-80" />
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[...Array(6)].map((_, i) => (
+                <Card key={i}>
+                  <CardContent className="p-4">
+                    <div className="animate-pulse">
+                      <div className="flex items-start gap-3 mb-3">
+                        <div className="w-10 h-10 bg-muted rounded-full" />
+                        <div className="flex-1">
+                          <div className="h-4 bg-muted rounded-md w-32 mb-1" />
+                          <div className="h-3 bg-muted rounded-md w-24 mb-2" />
+                          <div className="h-3 bg-muted rounded-md w-28" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="h-6 bg-muted rounded-md w-20" />
+                        <div className="h-3 bg-muted rounded-md w-36" />
+                        <div className="h-3 bg-muted rounded-md w-28" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -47,10 +152,10 @@ export function ContactsView() {
           <Badge variant="outline" className="text-sm">
             {filteredContacts.length} contacts
           </Badge>
-          <Button>
-            <Plus size={20} className="mr-2" />
-            Add Contact
-          </Button>
+          <CreateContactButton
+            onContactCreated={handleContactCreated}
+            companies={companies}
+          />
         </div>
       </div>
 
@@ -94,6 +199,15 @@ export function ContactsView() {
                           {getCompanyName(contact.companyId)}
                         </span>
                       </div>
+                      
+                      {getLocationDisplay(contact) && (
+                        <div className="flex items-center gap-1 mt-1">
+                          <MapPin size={12} className="text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground truncate">
+                            {getLocationDisplay(contact)}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                   

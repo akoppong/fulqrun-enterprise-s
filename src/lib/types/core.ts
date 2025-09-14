@@ -40,7 +40,9 @@ export interface Company {
   address?: string;
   revenue?: number;
   employees?: number;
-  geography?: string;
+  geography?: string; // Legacy field - will be migrated to region/country
+  region?: string; // Region code (e.g., 'NA', 'EU', 'AS')
+  country?: string; // Country code (e.g., 'US', 'GB', 'DE')
   segmentId?: string;
   segmentAssignment?: import('./segments').SegmentAssignment;
   customFields?: Record<string, any>;
@@ -57,6 +59,9 @@ export interface Contact {
   phone?: string;
   title: string;
   role: 'champion' | 'decision-maker' | 'influencer' | 'user' | 'blocker';
+  region?: string; // Region code (e.g., 'NA', 'EU', 'AS')
+  country?: string; // Country code (e.g., 'US', 'GB', 'DE')
+  address?: string;
   createdAt: string; // ISO date string for reliable serialization
   updatedAt: string; // ISO date string for reliable serialization
 }

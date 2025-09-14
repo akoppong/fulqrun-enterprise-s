@@ -35,10 +35,12 @@ export class CompanyContactService {
         industry: 'Technology',
         size: 'Large',
         website: 'https://techcorp.com',
-        address: '123 Tech Street, San Francisco, CA',
+        address: '123 Tech Street, San Francisco, CA 94105',
         revenue: 50000000,
         employees: 500,
-        geography: 'North America',
+        geography: 'North America', // Legacy field
+        region: 'NA',
+        country: 'US',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       },
@@ -48,10 +50,12 @@ export class CompanyContactService {
         industry: 'Marketing',
         size: 'Medium',
         website: 'https://growthco.com',
-        address: '456 Growth Ave, Austin, TX',
+        address: '456 Growth Ave, Austin, TX 78701',
         revenue: 15000000,
         employees: 150,
-        geography: 'North America',
+        geography: 'North America', // Legacy field
+        region: 'NA',
+        country: 'US',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       },
@@ -61,10 +65,12 @@ export class CompanyContactService {
         industry: 'Healthcare',
         size: 'Large',
         website: 'https://meddevice.com',
-        address: '789 Medical Dr, Boston, MA',
+        address: '789 Medical Dr, Boston, MA 02101',
         revenue: 75000000,
         employees: 800,
-        geography: 'North America',
+        geography: 'North America', // Legacy field
+        region: 'NA',
+        country: 'US',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       },
@@ -74,10 +80,12 @@ export class CompanyContactService {
         industry: 'Energy',
         size: 'Medium',
         website: 'https://ecoenergy.com',
-        address: '321 Green Way, Denver, CO',
+        address: '321 Green Way, Denver, CO 80202',
         revenue: 25000000,
         employees: 250,
-        geography: 'North America',
+        geography: 'North America', // Legacy field
+        region: 'NA',
+        country: 'US',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       },
@@ -87,10 +95,12 @@ export class CompanyContactService {
         industry: 'Retail',
         size: 'Large',
         website: 'https://retailmax.com',
-        address: '654 Commerce St, Chicago, IL',
+        address: '654 Commerce St, Chicago, IL 60601',
         revenue: 100000000,
         employees: 1200,
-        geography: 'North America',
+        geography: 'North America', // Legacy field
+        region: 'NA',
+        country: 'US',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       }
@@ -114,6 +124,9 @@ export class CompanyContactService {
         phone: '+1-555-0101',
         title: 'CTO',
         role: 'decision-maker',
+        region: 'NA',
+        country: 'US',
+        address: '123 Tech Street, San Francisco, CA 94105',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       },
@@ -126,6 +139,9 @@ export class CompanyContactService {
         phone: '+1-555-0102',
         title: 'Procurement Manager',
         role: 'influencer',
+        region: 'NA',
+        country: 'US',
+        address: '123 Tech Street, San Francisco, CA 94105',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       },
@@ -138,6 +154,9 @@ export class CompanyContactService {
         phone: '+1-555-0103',
         title: 'VP Engineering',
         role: 'champion',
+        region: 'NA',
+        country: 'US',
+        address: '123 Tech Street, San Francisco, CA 94105',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       },
@@ -152,6 +171,9 @@ export class CompanyContactService {
         phone: '+1-555-0201',
         title: 'Marketing Director',
         role: 'champion',
+        region: 'NA',
+        country: 'US',
+        address: '456 Growth Ave, Austin, TX 78701',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       },
@@ -164,6 +186,9 @@ export class CompanyContactService {
         phone: '+1-555-0202',
         title: 'COO',
         role: 'decision-maker',
+        region: 'NA',
+        country: 'US',
+        address: '456 Growth Ave, Austin, TX 78701',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       },
@@ -178,6 +203,9 @@ export class CompanyContactService {
         phone: '+1-555-0301',
         title: 'Chief Medical Officer',
         role: 'decision-maker',
+        region: 'NA',
+        country: 'US',
+        address: '789 Medical Dr, Boston, MA 02101',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       },
@@ -190,6 +218,9 @@ export class CompanyContactService {
         phone: '+1-555-0302',
         title: 'VP Regulatory Affairs',
         role: 'influencer',
+        region: 'NA',
+        country: 'US',
+        address: '789 Medical Dr, Boston, MA 02101',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       },
@@ -204,6 +235,9 @@ export class CompanyContactService {
         phone: '+1-555-0401',
         title: 'CEO',
         role: 'decision-maker',
+        region: 'NA',
+        country: 'US',
+        address: '321 Green Way, Denver, CO 80202',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       },
@@ -216,6 +250,9 @@ export class CompanyContactService {
         phone: '+1-555-0402',
         title: 'CFO',
         role: 'decision-maker',
+        region: 'NA',
+        country: 'US',
+        address: '321 Green Way, Denver, CO 80202',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       },
@@ -230,6 +267,9 @@ export class CompanyContactService {
         phone: '+1-555-0501',
         title: 'CIO',
         role: 'champion',
+        region: 'NA',
+        country: 'US',
+        address: '654 Commerce St, Chicago, IL 60601',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       },
@@ -242,6 +282,9 @@ export class CompanyContactService {
         phone: '+1-555-0502',
         title: 'VP Operations',
         role: 'influencer',
+        region: 'NA',
+        country: 'US',
+        address: '654 Commerce St, Chicago, IL 60601',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       }
@@ -415,8 +458,9 @@ export class CompanyContactService {
     const lowercaseQuery = query.toLowerCase();
 
     return contacts.filter(contact =>
-      contact.name.toLowerCase().includes(lowercaseQuery) ||
+      `${contact.firstName} ${contact.lastName}`.toLowerCase().includes(lowercaseQuery) ||
       contact.email.toLowerCase().includes(lowercaseQuery) ||
+      contact.title.toLowerCase().includes(lowercaseQuery) ||
       contact.role.toLowerCase().includes(lowercaseQuery)
     );
   }
