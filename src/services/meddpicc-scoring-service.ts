@@ -462,5 +462,5 @@ export class MEDDPICCScoringService {
   }
 }
 
-// Re-export all types and classes explicitly
-export { MEDDPICCAnswer, MEDDPICCAssessment, MEDDPICCTrend, MEDDPICCBenchmark, MEDDPICCInsight, MEDDPICCScoringService };
+// Re-export all types explicitly (class is already exported above)
+export type { MEDDPICCAnswer, MEDDPICCAssessment, MEDDPICCTrend, MEDDPICCBenchmark, MEDDPICCInsight };

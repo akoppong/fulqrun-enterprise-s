@@ -721,11 +721,10 @@ export class MEDDPICCService {
   }
 }
 
-// Export types and service
-export {
+// Export types (service is already imported above)
+export type {
   MEDDPICCAssessment,
   MEDDPICCTrend,
   MEDDPICCBenchmark,
-  MEDDPICCInsight,
-  MEDDPICCScoringService
+  MEDDPICCInsight
 };
