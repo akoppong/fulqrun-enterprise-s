@@ -65,20 +65,29 @@ const formatSafeDate = (dateValue: any, formatString: string = 'MMM dd, yyyy'): 
     
     let date: Date;
     if (typeof dateValue === 'string') {
-      date = parseISO(dateValue);
+      // Handle ISO strings and other common date formats
+      if (dateValue.includes('T') || dateValue.includes('-')) {
+        date = parseISO(dateValue);
+      } else {
+        date = new Date(dateValue);
+      }
     } else if (dateValue instanceof Date) {
       date = dateValue;
-    } else {
+    } else if (typeof dateValue === 'number') {
       date = new Date(dateValue);
+    } else {
+      // Try to convert to string first, then parse
+      date = new Date(String(dateValue));
     }
     
-    if (!isValid(date)) {
+    if (!isValid(date) || isNaN(date.getTime())) {
+      console.warn('Invalid date value:', dateValue, 'type:', typeof dateValue);
       return 'Invalid date';
     }
     
     return format(date, formatString);
   } catch (error) {
-    console.warn('Date formatting error:', error, 'for value:', dateValue);
+    console.warn('Date formatting error:', error, 'for value:', dateValue, 'type:', typeof dateValue);
     return 'Invalid date';
   }
 };

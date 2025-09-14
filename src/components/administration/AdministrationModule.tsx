@@ -48,6 +48,9 @@ import { AutomationWorkflows } from '@/components/integrations/AutomationWorkflo
 
 // Import administration sub-components
 import { SystemSettings } from './SystemSettings';
+
+// Import testing components
+import { MEDDPICCScoringTest } from '@/components/test/MEDDPICCScoringTest';
 import { UserManagement } from './UserManagement';
 import { SecuritySettings } from './SecuritySettings';
 import { DataManagement } from './DataManagement';
@@ -447,6 +450,7 @@ export function AdministrationModule({ userRole, isOwner = false, initialView = 
               <TabsTrigger value="responsive-recommendations">Design Guide</TabsTrigger>
               <TabsTrigger value="responsive-analyzer">AI Analyzer</TabsTrigger>
               <TabsTrigger value="validation-demo">Validation Demo</TabsTrigger>
+              <TabsTrigger value="meddpicc-test">MEDDPICC Test</TabsTrigger>
               <TabsTrigger value="autosave-test">AutoSave Tests</TabsTrigger>
               <TabsTrigger value="validation-suite">Validation Suite</TabsTrigger>
               <TabsTrigger value="field-testing">Field Testing</TabsTrigger>
@@ -486,6 +490,10 @@ export function AdministrationModule({ userRole, isOwner = false, initialView = 
 
             <TabsContent value="validation-demo">
               <ValidationTestingDemo />
+            </TabsContent>
+
+            <TabsContent value="meddpicc-test">
+              <MEDDPICCScoringTest />
             </TabsContent>
 
             <TabsContent value="autosave-test">
