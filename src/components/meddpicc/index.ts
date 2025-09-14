@@ -21,8 +21,8 @@ export { MEDDPICC_CONFIG, calculatePillarScore, calculateTotalScore, getScoreLev
 
 // Enhanced Types
 export type {
-  MEDDPICCAssessment as EnhancedMEDDPICCAssessment,
-  MEDDPICCAnswer as EnhancedMEDDPICCAnswer,
+  MEDDPICCAssessment,
+  MEDDPICCAnswer,
   MEDDPICCInsight,
   MEDDPICCTrend,
   MEDDPICCBenchmark

@@ -1,5 +1,3 @@
-import { useKV } from '@github/spark/hooks';
-
 export interface MEDDPICCAnswer {
   pillar: string;
   question_id: string;
@@ -463,3 +461,6 @@ export class MEDDPICCScoringService {
     }, null, 2);
   }
 }
+
+// Re-export all types and classes explicitly
+export { MEDDPICCAnswer, MEDDPICCAssessment, MEDDPICCTrend, MEDDPICCBenchmark, MEDDPICCInsight, MEDDPICCScoringService };
