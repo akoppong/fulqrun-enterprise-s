@@ -297,13 +297,36 @@ export function withSyncErrorHandling<T extends any[], R>(
 }
 
 /**
- * Global error boundary setup
+ * Global error boundary setup with improved filtering
  */
 export function setupGlobalErrorHandling(): void {
   if (typeof window === 'undefined') return;
 
+  // Error suppression patterns for common non-critical errors
+  const suppressedErrorPatterns = [
+    /Failed to load resource.*429/i, // Rate limiting errors
+    /Failed to fetch KV key/i, // KV storage errors
+    /Failed to set key/i, // KV storage errors
+    /allow-scripts.*allow-same-origin.*sandbox/i, // Iframe sandbox warnings
+    /ResizeObserver loop limit exceeded/i, // Common browser warning
+    /Non-passive event listener/i, // Performance warning
+    /Script error/i, // Generic script errors from extensions
+  ];
+
+  const shouldSuppressError = (message: string): boolean => {
+    return suppressedErrorPatterns.some(pattern => pattern.test(message));
+  };
+
   // Handle unhandled promise rejections
   window.addEventListener('unhandledrejection', (event) => {
+    const errorMessage = event.reason instanceof Error ? event.reason.message : String(event.reason);
+    
+    // Suppress common non-critical errors
+    if (shouldSuppressError(errorMessage)) {
+      event.preventDefault(); // Prevent console logging
+      return;
+    }
+
     errorHandler.handleError(
       event.reason instanceof Error ? event.reason : new Error(String(event.reason)),
       { type: 'unhandledrejection' },
@@ -313,6 +336,14 @@ export function setupGlobalErrorHandling(): void {
 
   // Handle global errors
   window.addEventListener('error', (event) => {
+    const errorMessage = event.message || '';
+    
+    // Suppress common non-critical errors
+    if (shouldSuppressError(errorMessage)) {
+      event.preventDefault(); // Prevent console logging
+      return;
+    }
+
     errorHandler.handleError(
       event.error || new Error(event.message),
       { 
@@ -324,4 +355,57 @@ export function setupGlobalErrorHandling(): void {
       'high'
     );
   });
+
+  // Override console methods to filter repeated errors
+  const originalConsoleWarn = console.warn;
+  const originalConsoleError = console.error;
+  const recentMessages = new Map<string, number>();
+  const MESSAGE_SUPPRESSION_TIME = 5000; // 5 seconds
+  
+  const filterRepeatedMessage = (level: 'warn' | 'error', message: string, ...args: any[]) => {
+    const messageKey = `${level}:${message}`;
+    const now = Date.now();
+    const lastShown = recentMessages.get(messageKey) || 0;
+    
+    // Suppress if message was shown recently
+    if (now - lastShown < MESSAGE_SUPPRESSION_TIME) {
+      return;
+    }
+    
+    // Check if this is a known non-critical error
+    if (shouldSuppressError(message)) {
+      return;
+    }
+    
+    recentMessages.set(messageKey, now);
+    
+    // Call original console method
+    if (level === 'warn') {
+      originalConsoleWarn(message, ...args);
+    } else {
+      originalConsoleError(message, ...args);
+    }
+  };
+
+  console.warn = (...args) => {
+    if (args.length > 0) {
+      filterRepeatedMessage('warn', String(args[0]), ...args.slice(1));
+    }
+  };
+
+  console.error = (...args) => {
+    if (args.length > 0) {
+      filterRepeatedMessage('error', String(args[0]), ...args.slice(1));
+    }
+  };
+
+  // Cleanup old message timestamps periodically
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, timestamp] of recentMessages.entries()) {
+      if (now - timestamp > MESSAGE_SUPPRESSION_TIME * 2) {
+        recentMessages.delete(key);
+      }
+    }
+  }, MESSAGE_SUPPRESSION_TIME);
 }

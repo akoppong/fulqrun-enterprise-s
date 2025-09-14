@@ -102,14 +102,14 @@ const formatSafeDate = (dateValue: any, formatString: string = 'MMM dd, yyyy'): 
         date.getTime() === 0 ||
         date.getFullYear() < 1900 || 
         date.getFullYear() > 2100) {
-      console.warn('Invalid date value:', dateValue, 'type:', typeof dateValue, 'parsed:', date);
+      // Silently return fallback for invalid dates to reduce console noise
       return 'Not set';
     }
     
     try {
       return format(date, formatString);
     } catch (formatError) {
-      console.warn('Date format error:', formatError, 'for date:', date, 'format:', formatString);
+      // Silently return fallback for format errors to reduce console noise
       return 'Invalid date';
     }
   } catch (error) {

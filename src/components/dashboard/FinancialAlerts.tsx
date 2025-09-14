@@ -1,6 +1,6 @@
 import React, { useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { useKV } from '@github/spark/hooks';
+import { useKVCached } from '@/hooks/useKVWithRateLimit';
 import { Opportunity } from '@/lib/types';
 import { safeKVGet, safeKVSet } from '@/lib/kv-storage-manager';
 
@@ -19,12 +19,12 @@ interface FinancialAlert {
 }
 
 export function FinancialAlerts({ opportunities }: FinancialAlertsProps) {
-  // Use safe KV storage instead of direct useKV to prevent errors
-  const [alerts, setAlertsKV] = useKV<FinancialAlert[]>('financial-alerts', []);
-  const [lastAlertCheck, setLastAlertCheckKV] = useKV<number>('last-alert-check', 0);
+  // Use cached KV storage with longer intervals for alerts
+  const [alerts, setAlerts] = useKVCached<FinancialAlert[]>('financial-alerts', []);
+  const [lastAlertCheck, setLastAlertCheck] = useKVCached<number>('last-alert-check', 0);
 
-  // Wrapper functions for safer operations
-  const setAlerts = useCallback(async (newAlerts: FinancialAlert[]) => {
+  // Wrapper function for adding new alerts
+  const addNewAlerts = useCallback(async (newAlerts: FinancialAlert[]) => {
     try {
       // Validate and clean alerts to prevent storage bloat
       const validAlerts = newAlerts
@@ -43,49 +43,20 @@ export function FinancialAlerts({ opportunities }: FinancialAlertsProps) {
 
       // Only proceed if we have valid alerts and they're different from current
       if (validAlerts.length > 0 && JSON.stringify(validAlerts) !== JSON.stringify(alerts)) {
-        const success = await safeKVSet('financial-alerts', validAlerts, {
-          maxRetries: 1, // Reduced retries to prevent flooding
-          validateData: true,
-          errorHandler: {
-            onError: (key, error) => {
-              console.warn(`Failed to save alerts (will retry later): ${error.message}`);
-            },
-            onFallback: () => {
-              console.info('Using local state for alerts');
-              setAlertsKV(validAlerts);
-            }
-          }
-        });
-        
-        if (success) {
-          setAlertsKV(validAlerts);
-        }
+        setAlerts(validAlerts);
       }
     } catch (error) {
       console.warn('Error updating alerts:', error);
-      // Fallback to local state only
-      try {
-        setAlertsKV(newAlerts.slice(0, 15));
-      } catch (localError) {
-        console.warn('Failed to update local alert state:', localError);
-      }
     }
-  }, [setAlertsKV, alerts]);
+  }, [setAlerts, alerts]);
 
-  const setLastAlertCheck = useCallback(async (timestamp: number) => {
+  const updateLastAlertCheck = useCallback(async (timestamp: number) => {
     try {
-      const success = await safeKVSet('last-alert-check', timestamp, {
-        maxRetries: 1,
-        validateData: true
-      });
-      
-      if (success) {
-        setLastAlertCheckKV(timestamp);
-      }
+      setLastAlertCheck(timestamp);
     } catch (error) {
       console.warn('Error updating last alert check:', error);
     }
-  }, [setLastAlertCheckKV]);
+  }, [setLastAlertCheck]);
 
   const checkForAlerts = useCallback(async () => {
     try {
@@ -104,7 +75,7 @@ export function FinancialAlerts({ opportunities }: FinancialAlertsProps) {
       
       if (validOpportunities.length === 0) {
         try {
-          await setLastAlertCheck(now);
+          await updateLastAlertCheck(now);
         } catch (error) {
           // Silently handle KV storage errors - don't spam console
           return;
@@ -184,7 +155,7 @@ export function FinancialAlerts({ opportunities }: FinancialAlertsProps) {
         
         // Update using safe setter
         try {
-          await setAlerts(limitedAlerts);
+          await addNewAlerts(limitedAlerts);
           
           // Show toast notifications for new alerts only
           newAlerts.slice(0, 2).forEach(alert => { // Limit toast notifications
@@ -208,7 +179,7 @@ export function FinancialAlerts({ opportunities }: FinancialAlertsProps) {
       
       // Always update last check time using safe setter
       try {
-        await setLastAlertCheck(now);
+        await updateLastAlertCheck(now);
       } catch (error) {
         // Silently handle KV storage errors for lastAlertCheck
       }
@@ -217,12 +188,12 @@ export function FinancialAlerts({ opportunities }: FinancialAlertsProps) {
       console.error('Error in financial alerts check:', error);
       // Still update last check time to prevent infinite retry loops
       try {
-        await setLastAlertCheck(Date.now());
+        await updateLastAlertCheck(Date.now());
       } catch (updateError) {
         // Silently handle KV storage errors
       }
     }
-  }, [opportunities, alerts, lastAlertCheck, setAlerts, setLastAlertCheck]);
+  }, [opportunities, alerts, lastAlertCheck, addNewAlerts, updateLastAlertCheck]);
 
   useEffect(() => {
     // Only run if we have opportunities

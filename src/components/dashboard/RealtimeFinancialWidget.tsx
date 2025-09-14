@@ -10,7 +10,7 @@ import {
   Target,
   Zap
 } from '@phosphor-icons/react';
-import { useKV } from '@github/spark/hooks';
+import { useKVRealtime } from '@/hooks/useKVWithRateLimit';
 import { Opportunity } from '@/lib/types';
 
 interface RealtimeFinancialWidgetProps {
@@ -26,12 +26,12 @@ interface QuickMetrics {
 }
 
 export function RealtimeFinancialWidget({ opportunities, className }: RealtimeFinancialWidgetProps) {
-  const [quickMetrics, setQuickMetrics] = useKV<QuickMetrics>('quick-financial-metrics', {
+  const [quickMetrics, setQuickMetrics] = useKVRealtime<QuickMetrics>('quick-financial-metrics', {
     todayRevenue: 0,
     weeklyGrowth: 0,
     pipelineVelocity: 0,
     lastUpdated: new Date().toISOString()
-  });
+  }, 10000); // Update every 10 seconds max
   const [isLive, setIsLive] = useState(true);
 
   useEffect(() => {
@@ -53,7 +53,7 @@ export function RealtimeFinancialWidget({ opportunities, className }: RealtimeFi
     };
 
     updateMetrics();
-    const interval = setInterval(updateMetrics, 3000); // Update every 3 seconds
+    const interval = setInterval(updateMetrics, 30000); // Update every 30 seconds instead of 3
 
     return () => clearInterval(interval);
   }, [opportunities, isLive, setQuickMetrics]);

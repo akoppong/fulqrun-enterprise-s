@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
-import { useKV } from '@github/spark/hooks';
+import { useKVCached } from '@/hooks/useKVWithRateLimit';
 import { User } from '@/lib/types';
 import { getRolePermissions, getPermissionSummary } from '@/lib/rolePermissions';
 import {
@@ -42,7 +42,7 @@ interface UserFormData {
 }
 
 export function UserManagement({ currentUser }: UserManagementProps) {
-  const [allUsers, setAllUsers] = useKV<User[]>('all-users', []);
+  const [allUsers, setAllUsers] = useKVCached<User[]>('all-users', []);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
