@@ -23,6 +23,8 @@ import { Target, TrendUp, Brain, Lightbulb, CalendarCheck, AlertTriangle, Plus, 
 import { useKV } from '@github/spark/hooks';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { EnhancedMEDDPICCScoring } from './EnhancedMEDDPICCScoring';
+import { EnhancedAIInsights } from './EnhancedAIInsights';
 
 interface UnifiedOpportunityFormProps {
   isOpen: boolean;
@@ -241,28 +243,8 @@ export function UnifiedOpportunityForm({
   }, [formData]);
 
   const generateAIInsights = async () => {
-    if (!formData.companyId || !formData.contactId) {
-      toast.error('Please select a company and contact first');
-      return;
-    }
-
-    setGeneratingInsights(true);
-    try {
-      const company = companies.find(c => c.id === formData.companyId);
-      const contact = contacts.find(c => c.id === formData.contactId);
-      
-      if (company && contact && formData.meddpicc) {
-        const fullOpportunity = formData as Opportunity;
-        const insights = await AIService.analyzeOpportunity(fullOpportunity, contact, company);
-        setAiInsights(insights);
-        toast.success('AI insights generated successfully');
-      }
-    } catch (error) {
-      console.error('Failed to generate AI insights:', error);
-      toast.error('Failed to generate AI insights');
-    } finally {
-      setGeneratingInsights(false);
-    }
+    // This functionality is now handled by the EnhancedAIInsights component
+    toast.info('Use the AI Insights tab for comprehensive analysis');
   };
 
   const validateForm = () => {
@@ -796,211 +778,22 @@ export function UnifiedOpportunityForm({
           </TabsContent>
           
           <TabsContent value="meddpicc" className="space-y-6 mt-0">
-            <Card>
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <TrendUp size={20} />
-                    MEDDPICC Qualification Score
-                  </div>
-                </CardTitle>
-                <CardDescription>
-                  Complete each section to improve your qualification score
-                </CardDescription>
-                <div className="flex items-center gap-4 mt-4">
-                  <Progress value={currentScore} className="flex-1" />
-                  <Badge variant={currentScore >= 70 ? 'default' : currentScore >= 40 ? 'secondary' : 'destructive'}>
-                    {currentScore}%
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="metrics">Metrics</Label>
-                  <Textarea
-                    id="metrics"
-                    placeholder="What economic impact can we measure?"
-                    value={formData.meddpicc?.metrics || ''}
-                    onChange={(e) => updateMEDDPICCField('metrics', e.target.value)}
-                    rows={3}
-                    className="resize-none"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="economicBuyer">Economic Buyer</Label>
-                  <Textarea
-                    id="economicBuyer"
-                    placeholder="Who has the economic authority to buy?"
-                    value={formData.meddpicc?.economicBuyer || ''}
-                    onChange={(e) => updateMEDDPICCField('economicBuyer', e.target.value)}
-                    rows={3}
-                    className="resize-none"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="decisionCriteria">Decision Criteria</Label>
-                  <Textarea
-                    id="decisionCriteria"
-                    placeholder="What criteria will they use to decide?"
-                    value={formData.meddpicc?.decisionCriteria || ''}
-                    onChange={(e) => updateMEDDPICCField('decisionCriteria', e.target.value)}
-                    rows={3}
-                    className="resize-none"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="decisionProcess">Decision Process</Label>
-                  <Textarea
-                    id="decisionProcess"
-                    placeholder="How will they make the decision?"
-                    value={formData.meddpicc?.decisionProcess || ''}
-                    onChange={(e) => updateMEDDPICCField('decisionProcess', e.target.value)}
-                    rows={3}
-                    className="resize-none"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="paperProcess">Paper Process</Label>
-                  <Textarea
-                    id="paperProcess"
-                    placeholder="What's the approval/procurement process?"
-                    value={formData.meddpicc?.paperProcess || ''}
-                    onChange={(e) => updateMEDDPICCField('paperProcess', e.target.value)}
-                    rows={3}
-                    className="resize-none"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="implicatePain">Implicate Pain</Label>
-                  <Textarea
-                    id="implicatePain"
-                    placeholder="What pain are we addressing?"
-                    value={formData.meddpicc?.implicatePain || ''}
-                    onChange={(e) => updateMEDDPICCField('implicatePain', e.target.value)}
-                    rows={3}
-                    className="resize-none"
-                  />
-                </div>
-                
-                <div className="space-y-2 lg:col-span-2">
-                  <Label htmlFor="champion">Champion</Label>
-                  <Textarea
-                    id="champion"
-                    placeholder="Who is actively selling for us internally?"
-                    value={formData.meddpicc?.champion || ''}
-                    onChange={(e) => updateMEDDPICCField('champion', e.target.value)}
-                    rows={3}
-                    className="resize-none"
-                  />
-                </div>
-              </CardContent>
-            </Card>
+            <EnhancedMEDDPICCScoring
+              meddpicc={formData.meddpicc!}
+              onMEDDPICCChange={updateMEDDPICCField}
+              opportunity={formData}
+              company={selectedCompany}
+              contact={selectedContact}
+            />
           </TabsContent>
 
           <TabsContent value="ai-insights" className="space-y-6 mt-0">
-            <Card>
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Brain size={20} />
-                    AI-Powered Insights
-                  </div>
-                  <Button 
-                    type="button" 
-                    onClick={generateAIInsights}
-                    disabled={generatingInsights}
-                    size="sm"
-                  >
-                    <Lightbulb className="mr-2 h-4 w-4" />
-                    {generatingInsights ? 'Generating...' : 'Generate Insights'}
-                  </Button>
-                </CardTitle>
-                <CardDescription>
-                  Get AI recommendations and risk analysis
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {aiInsights ? (
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm">Risk Score</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className={`text-2xl font-bold ${
-                            aiInsights.riskScore > 70 ? 'text-red-600' : 
-                            aiInsights.riskScore > 40 ? 'text-yellow-600' : 'text-green-600'
-                          }`}>
-                            {aiInsights.riskScore}%
-                          </div>
-                        </CardContent>
-                      </Card>
-                      
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm">Confidence Level</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <Badge 
-                            variant={
-                              aiInsights.confidenceLevel === 'high' ? 'default' :
-                              aiInsights.confidenceLevel === 'medium' ? 'secondary' : 'outline'
-                            }
-                          >
-                            {aiInsights.confidenceLevel}
-                          </Badge>
-                        </CardContent>
-                      </Card>
-                      
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm">Last Updated</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-sm text-muted-foreground">
-                            {aiInsights.lastAiUpdate ? new Date(aiInsights.lastAiUpdate).toLocaleDateString() : 'Never'}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-                    
-                    <div>
-                      <h4 className="font-semibold mb-3">Next Best Actions</h4>
-                      <div className="space-y-3">
-                        {Array.isArray(aiInsights.nextBestActions) ? aiInsights.nextBestActions.map((action: string, index: number) => (
-                          <div key={index} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-                            <div className="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm flex-shrink-0 mt-0.5">
-                              {index + 1}
-                            </div>
-                            <span className="text-sm leading-relaxed">{action}</span>
-                          </div>
-                        )) : aiInsights.nextBestActions ? (
-                          <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-                            <div className="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm flex-shrink-0 mt-0.5">
-                              1
-                            </div>
-                            <span className="text-sm leading-relaxed">{aiInsights.nextBestActions}</span>
-                          </div>
-                        ) : (
-                          <div className="text-sm text-muted-foreground">No actions available</div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <Brain className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p>Generate AI insights to get recommendations and risk analysis</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <EnhancedAIInsights
+              opportunity={formData}
+              company={selectedCompany}
+              contact={selectedContact}
+              onInsightsGenerated={(insights) => setAiInsights(insights)}
+            />
           </TabsContent>
         </Tabs>
       </div>
