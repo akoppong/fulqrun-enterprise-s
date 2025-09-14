@@ -63,6 +63,29 @@ export function PipelineView({ user }: PipelineViewProps) {
     setIsDialogOpen(true);
   };
 
+  const handleClearAndReinitialize = async () => {
+    try {
+      // Clear localStorage
+      localStorage.removeItem('opportunities');
+      localStorage.removeItem('companies');
+      localStorage.removeItem('contacts');
+      localStorage.removeItem('all-users');
+      
+      console.log('PipelineView: Cleared localStorage, reinitializing...');
+      
+      // Force reinitialize
+      await OpportunityService.initializeSampleData();
+      
+      // Reload opportunities
+      const allOpportunities = await OpportunityService.getAllOpportunities();
+      console.log('PipelineView: Reinitialized with opportunities:', allOpportunities.length);
+      
+      setOpportunities(allOpportunities);
+    } catch (error) {
+      console.error('PipelineView: Failed to reinitialize:', error);
+    }
+  };
+
   const handleEditOpportunity = (opportunity: Opportunity) => {
     setSelectedOpportunity(opportunity);
     setIsDialogOpen(true);
@@ -115,6 +138,9 @@ export function PipelineView({ user }: PipelineViewProps) {
                 <p className="text-sm text-muted-foreground">Total Pipeline Value</p>
                 <p className="text-2xl font-bold text-primary">{formatCurrency(totalPipelineValue)}</p>
               </div>
+              <Button variant="outline" size="sm" onClick={handleClearAndReinitialize}>
+                Reset Data
+              </Button>
               <Button onClick={handleCreateOpportunity}>
                 <Plus size={20} className="mr-2" />
                 New Opportunity
@@ -123,10 +149,19 @@ export function PipelineView({ user }: PipelineViewProps) {
           </div>
 
           {/* Debug info - remove in production */}
-          <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
-            Debug: {opportunities.length} opportunities loaded
+          <div className="text-xs text-muted-foreground bg-muted p-2 rounded space-y-2">
+            <div>Debug: {opportunities.length} opportunities loaded</div>
             {opportunities.length > 0 && (
-              <div>Stages: {opportunities.map(o => `${o.title || o.name}: ${o.stage}`).join(', ')}</div>
+              <div>
+                <div>Stages: {opportunities.map(o => `${o.title || o.name}: ${o.stage}`).join(', ')}</div>
+                <div>PEAK Stages Available: {PEAK_STAGES.map(s => s.value).join(', ')}</div>
+                <div>Stage Counts: {PEAK_STAGES.map(stage => 
+                  `${stage.label}: ${getOpportunitiesByStage(stage.value).length}`
+                ).join(', ')}</div>
+              </div>
+            )}
+            {opportunities.length === 0 && (
+              <div className="text-red-600">No opportunities found - check localStorage for 'opportunities' key</div>
             )}
           </div>
 

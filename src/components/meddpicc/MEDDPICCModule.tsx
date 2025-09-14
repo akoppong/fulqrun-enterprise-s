@@ -709,6 +709,86 @@ export function MEDDPICCModule() {
     }
   };
 
+  const generateCoachingPrompts = (): string[] => {
+    const prompts: string[] = [];
+    
+    // Check each pillar's completion status
+    meddpiccData.pillars.forEach(pillar => {
+      const pillarScore = assessment.pillar_scores[pillar.id] || 0;
+      const pillarQuestions = pillar.questions.length;
+      const pillarAnswers = assessment.answers.filter(a => a.pillar === pillar.id);
+      
+      // If pillar has low score or no answers, generate coaching prompts
+      if (pillarScore === 0 || pillarAnswers.length === 0) {
+        // Find relevant coaching prompts for this pillar
+        const relevantPrompts = meddpiccData.coaching_prompts.filter(cp => 
+          cp.condition.pillar === pillar.id && cp.condition.value === 'no'
+        );
+        
+        relevantPrompts.forEach(cp => {
+          prompts.push(`${pillar.title}: ${cp.prompt}`);
+        });
+      }
+      
+      // Add pillar-specific coaching based on score level
+      const maxPossibleScore = pillar.questions.reduce((sum, q) => {
+        const maxQuestionScore = Math.max(...q.options.map(o => o.score));
+        return sum + maxQuestionScore;
+      }, 0);
+      
+      const completionPercentage = maxPossibleScore > 0 ? (pillarScore / maxPossibleScore) * 100 : 0;
+      
+      if (completionPercentage < 50) {
+        switch (pillar.id) {
+          case 'metrics':
+            prompts.push(`Metrics: Schedule a metrics discovery session to understand quantifiable business impact`);
+            break;
+          case 'economic_buyer':
+            prompts.push(`Economic Buyer: Identify and secure access to the person with budget authority`);
+            break;
+          case 'decision_criteria':
+            prompts.push(`Decision Criteria: Understand the formal evaluation process and requirements`);
+            break;
+          case 'decision_process':
+            prompts.push(`Decision Process: Map out the complete decision-making timeline and stakeholders`);
+            break;
+          case 'paper_process':
+            prompts.push(`Paper Process: Engage with procurement early to understand contracting requirements`);
+            break;
+          case 'champion':
+            prompts.push(`Champion: Identify and develop a strong internal advocate for your solution`);
+            break;
+          case 'competition':
+            prompts.push(`Competition: Research competitive landscape and develop differentiation strategy`);
+            break;
+          case 'implicate_the_pain':
+            prompts.push(`Implicate Pain: Conduct discovery to uncover compelling business pain points`);
+            break;
+        }
+      }
+    });
+    
+    // Overall assessment coaching
+    const overallScore = assessment.total_score;
+    const maxScore = meddpiccData.scoring.max_score;
+    const completionPercentage = (overallScore / maxScore) * 100;
+    
+    if (completionPercentage < 30) {
+      prompts.push('Priority: Focus on completing basic discovery across all MEDDPICC pillars');
+    } else if (completionPercentage < 60) {
+      prompts.push('Priority: Strengthen weak pillars and gather supporting evidence');
+    } else if (completionPercentage < 80) {
+      prompts.push('Priority: Validate assumptions and fill remaining gaps before advancing');
+    }
+    
+    // If no specific prompts, provide general guidance
+    if (prompts.length === 0) {
+      prompts.push('Continue to validate and strengthen your MEDDPICC assessment throughout the sales cycle');
+    }
+    
+    return prompts;
+  };
+
   const exportAssessment = () => {
     const exportData = {
       assessment,
