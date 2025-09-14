@@ -174,7 +174,7 @@ export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialV
           />
         );
       case 'pipeline':
-        return <PipelineView />;
+        return <PipelineView user={user} />;
       case 'opportunities':
         return <OpportunitiesModule user={user} />;
       case 'opportunities-dashboard-test':
@@ -361,7 +361,7 @@ export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialV
         );
       
       default:
-        return <PipelineView />;
+        return <PipelineView user={user} />;
     }
   };
 

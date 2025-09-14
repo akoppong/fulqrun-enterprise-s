@@ -1,16 +1,20 @@
 import { useKV } from '@github/spark/hooks';
-import { Opportunity, PEAK_STAGES } from '@/lib/types';
+import { Opportunity, PEAK_STAGES, User } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/crm-utils';
 import { Plus, TrendUp } from '@phosphor-icons/react';
 import { useState } from 'react';
-import { OpportunityDialog } from './OpportunityDialog';
+import { UnifiedOpportunityForm } from '../opportunities/UnifiedOpportunityForm';
 import { RealtimeFinancialWidget } from './RealtimeFinancialWidget';
 import { FinancialSummary } from './FinancialSummary';
 
-export function PipelineView() {
+interface PipelineViewProps {
+  user?: User;
+}
+
+export function PipelineView({ user }: PipelineViewProps) {
   const [opportunities, setOpportunities] = useKV<Opportunity[]>('opportunities', []);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
@@ -33,43 +37,19 @@ export function PipelineView() {
     setIsDialogOpen(true);
   };
 
-  const handleSaveOpportunity = (opportunityData: Partial<Opportunity>) => {
+  const handleSaveOpportunity = (savedOpportunity: Opportunity) => {
     if (selectedOpportunity) {
       // Update existing
       setOpportunities(current => 
         current.map(opp => 
           opp.id === selectedOpportunity.id 
-            ? { ...opp, ...opportunityData, updatedAt: new Date() }
+            ? savedOpportunity
             : opp
         )
       );
     } else {
       // Create new
-      const newOpportunity: Opportunity = {
-        id: `opp-${Date.now()}`,
-        companyId: 'company-1',
-        contactId: 'contact-1',
-        title: opportunityData.title || 'New Opportunity',
-        description: opportunityData.description || '',
-        value: opportunityData.value || 0,
-        stage: opportunityData.stage || 'prospect',
-        probability: opportunityData.probability || 25,
-        expectedCloseDate: opportunityData.expectedCloseDate || new Date(),
-        ownerId: 'user-1',
-        meddpicc: opportunityData.meddpicc || {
-          metrics: '',
-          economicBuyer: '',
-          decisionCriteria: '',
-          decisionProcess: '',
-          paperProcess: '',
-          'implicate Pain': '',
-          champion: '',
-          score: 0
-        },
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-      setOpportunities(current => [...current, newOpportunity]);
+      setOpportunities(current => [...current, savedOpportunity]);
     }
     setIsDialogOpen(false);
   };
@@ -178,11 +158,13 @@ export function PipelineView() {
         })}
       </div>
 
-      <OpportunityDialog
+      <UnifiedOpportunityForm
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
         onSave={handleSaveOpportunity}
-        opportunity={selectedOpportunity}
+        editingOpportunity={selectedOpportunity}
+        user={user || { id: 'user-1', name: 'Default User', email: 'user@example.com', role: 'rep' }}
+        mode="dialog"
       />
     </div>
   );

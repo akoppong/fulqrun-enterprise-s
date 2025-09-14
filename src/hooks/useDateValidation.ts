@@ -52,22 +52,22 @@ export function useDateValidation(options: UseDateValidationOptions = {}): DateV
   const validationResult = useMemo(() => {
     const parsedDate = parseDate(rawValue);
     let error: string | null = null;
-    let isValid = true;
+    let dateIsValid = true;
 
     // Required validation
     if (required && !parsedDate) {
       error = 'This field is required';
-      isValid = false;
+      dateIsValid = false;
     }
 
     // Date format validation
     if (rawValue.trim() && !parsedDate) {
       error = 'Please enter a valid date';
-      isValid = false;
+      dateIsValid = false;
     }
 
     // Constraint validation
-    if (parsedDate && isValid) {
+    if (parsedDate && dateIsValid) {
       const constraintResult = validateDateConstraints(parsedDate, {
         ...constraints,
         timezone
@@ -75,13 +75,13 @@ export function useDateValidation(options: UseDateValidationOptions = {}): DateV
       
       if (!constraintResult.isValid) {
         error = constraintResult.errors[0] || 'Invalid date';
-        isValid = false;
+        dateIsValid = false;
       }
     }
 
     const value = createDatePickerValue(parsedDate, timezone);
 
-    return { value, error, isValid };
+    return { value, error, isValid: dateIsValid };
   }, [rawValue, required, constraints, timezone, format]);
 
   const setValue = useCallback((newValue: string | Date | null) => {

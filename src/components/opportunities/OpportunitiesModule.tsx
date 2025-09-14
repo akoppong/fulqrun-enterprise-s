@@ -5,7 +5,7 @@ import { OpportunityService } from '@/lib/opportunity-service';
 import { OpportunitiesDashboard } from './OpportunitiesDashboard';
 import { OpportunitiesListView } from './OpportunitiesListView';
 import { OpportunityDetailView } from './OpportunityDetailView';
-import { NewOpportunityMainView } from './NewOpportunityMainView';
+import { UnifiedOpportunityPage } from './UnifiedOpportunityPage';
 import { MEDDPICCScenarioTester } from './MEDDPICCScenarioTester';
 import { OpportunityTabsTest } from './OpportunityTabsTest';
 import { OpportunityDetailTabsValidator } from './OpportunityDetailTabsValidator';
@@ -230,8 +230,8 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
       
       case 'create':
         return (
-          <EnhancedErrorBoundary context="NewOpportunityMainView">
-            <NewOpportunityMainView
+          <EnhancedErrorBoundary context="UnifiedOpportunityPage">
+            <UnifiedOpportunityPage
               user={user}
               onSave={handleSave}
               onCancel={handleFormCancel}
@@ -243,8 +243,8 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
       
       case 'edit':
         return (
-          <EnhancedErrorBoundary context="EditOpportunityMainView">
-            <NewOpportunityMainView
+          <EnhancedErrorBoundary context="EditUnifiedOpportunityPage">
+            <UnifiedOpportunityPage
               user={user}
               onSave={handleSave}
               onCancel={handleFormCancel}
@@ -299,7 +299,7 @@ export {
   OpportunitiesDashboard,
   OpportunitiesListView,
   OpportunityDetailView,
-  NewOpportunityMainView,
+  UnifiedOpportunityPage,
   MEDDPICCScenarioTester,
   OpportunityTabsTest
 };

@@ -10,6 +10,10 @@ export { OpportunitiesListView } from './OpportunitiesListView';
 export { OpportunityDetailView } from './OpportunityDetailView';
 export { NewOpportunityMainView } from './NewOpportunityMainView';
 
+// Unified opportunity form exports
+export { UnifiedOpportunityForm } from './UnifiedOpportunityForm';
+export { UnifiedOpportunityPage } from './UnifiedOpportunityPage';
+
 // System status and testing
 export { OpportunitySystemStatus } from './OpportunitySystemStatus';
 export { OpportunityDetailTestRunner } from './OpportunityDetailTestRunner';
