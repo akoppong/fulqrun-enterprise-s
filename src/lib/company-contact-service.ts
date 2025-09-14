@@ -35,10 +35,12 @@ export class CompanyContactService {
         industry: 'Technology',
         size: 'Large',
         website: 'https://techcorp.com',
-        description: 'Leading software development company',
-        location: 'San Francisco, CA',
-        createdAt: new Date(),
-        updatedAt: new Date()
+        address: '123 Tech Street, San Francisco, CA',
+        revenue: 50000000,
+        employees: 500,
+        geography: 'North America',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       },
       {
         id: 'comp-2',
@@ -46,10 +48,12 @@ export class CompanyContactService {
         industry: 'Marketing',
         size: 'Medium',
         website: 'https://growthco.com',
-        description: 'Digital marketing and growth consultancy',
-        location: 'Austin, TX',
-        createdAt: new Date(),
-        updatedAt: new Date()
+        address: '456 Growth Ave, Austin, TX',
+        revenue: 15000000,
+        employees: 150,
+        geography: 'North America',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       },
       {
         id: 'comp-3',
@@ -57,10 +61,12 @@ export class CompanyContactService {
         industry: 'Healthcare',
         size: 'Large',
         website: 'https://meddevice.com',
-        description: 'Medical device manufacturer',
-        location: 'Boston, MA',
-        createdAt: new Date(),
-        updatedAt: new Date()
+        address: '789 Medical Dr, Boston, MA',
+        revenue: 75000000,
+        employees: 800,
+        geography: 'North America',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       },
       {
         id: 'comp-4',
@@ -68,10 +74,12 @@ export class CompanyContactService {
         industry: 'Energy',
         size: 'Medium',
         website: 'https://ecoenergy.com',
-        description: 'Renewable energy solutions provider',
-        location: 'Denver, CO',
-        createdAt: new Date(),
-        updatedAt: new Date()
+        address: '321 Green Way, Denver, CO',
+        revenue: 25000000,
+        employees: 250,
+        geography: 'North America',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       },
       {
         id: 'comp-5',
@@ -79,10 +87,12 @@ export class CompanyContactService {
         industry: 'Retail',
         size: 'Large',
         website: 'https://retailmax.com',
-        description: 'Retail management software and services',
-        location: 'Chicago, IL',
-        createdAt: new Date(),
-        updatedAt: new Date()
+        address: '654 Commerce St, Chicago, IL',
+        revenue: 100000000,
+        employees: 1200,
+        geography: 'North America',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       }
     ];
 
@@ -97,143 +107,143 @@ export class CompanyContactService {
       // TechCorp Solutions contacts
       {
         id: 'contact-1',
-        name: 'John Smith',
+        companyId: 'comp-1',
+        firstName: 'John',
+        lastName: 'Smith',
         email: 'john.smith@techcorp.com',
         phone: '+1-555-0101',
-        role: 'CTO',
-        companyId: 'comp-1',
-        department: 'Technology',
-        influence: 'high',
-        createdAt: new Date(),
-        updatedAt: new Date()
+        title: 'CTO',
+        role: 'decision-maker',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       },
       {
         id: 'contact-2',
-        name: 'Sarah Johnson',
+        companyId: 'comp-1',
+        firstName: 'Sarah',
+        lastName: 'Johnson',
         email: 'sarah.johnson@techcorp.com',
         phone: '+1-555-0102',
-        role: 'Procurement Manager',
-        companyId: 'comp-1',
-        department: 'Operations',
-        influence: 'medium',
-        createdAt: new Date(),
-        updatedAt: new Date()
+        title: 'Procurement Manager',
+        role: 'influencer',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       },
       {
         id: 'contact-3',
-        name: 'David Chen',
+        companyId: 'comp-1',
+        firstName: 'David',
+        lastName: 'Chen',
         email: 'david.chen@techcorp.com',
         phone: '+1-555-0103',
-        role: 'VP Engineering',
-        companyId: 'comp-1',
-        department: 'Technology',
-        influence: 'high',
-        createdAt: new Date(),
-        updatedAt: new Date()
+        title: 'VP Engineering',
+        role: 'champion',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       },
 
       // GrowthCo Inc contacts
       {
         id: 'contact-4',
-        name: 'Mike Davis',
+        companyId: 'comp-2',
+        firstName: 'Mike',
+        lastName: 'Davis',
         email: 'mike.davis@growthco.com',
         phone: '+1-555-0201',
-        role: 'Marketing Director',
-        companyId: 'comp-2',
-        department: 'Marketing',
-        influence: 'high',
-        createdAt: new Date(),
-        updatedAt: new Date()
+        title: 'Marketing Director',
+        role: 'champion',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       },
       {
         id: 'contact-5',
-        name: 'Lisa Wilson',
+        companyId: 'comp-2',
+        firstName: 'Lisa',
+        lastName: 'Wilson',
         email: 'lisa.wilson@growthco.com',
         phone: '+1-555-0202',
-        role: 'COO',
-        companyId: 'comp-2',
-        department: 'Operations',
-        influence: 'high',
-        createdAt: new Date(),
-        updatedAt: new Date()
+        title: 'COO',
+        role: 'decision-maker',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       },
 
       // MedDevice Corp contacts
       {
         id: 'contact-6',
-        name: 'Dr. Robert Taylor',
+        companyId: 'comp-3',
+        firstName: 'Robert',
+        lastName: 'Taylor',
         email: 'robert.taylor@meddevice.com',
         phone: '+1-555-0301',
-        role: 'Chief Medical Officer',
-        companyId: 'comp-3',
-        department: 'Medical Affairs',
-        influence: 'high',
-        createdAt: new Date(),
-        updatedAt: new Date()
+        title: 'Chief Medical Officer',
+        role: 'decision-maker',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       },
       {
         id: 'contact-7',
-        name: 'Jennifer Lee',
+        companyId: 'comp-3',
+        firstName: 'Jennifer',
+        lastName: 'Lee',
         email: 'jennifer.lee@meddevice.com',
         phone: '+1-555-0302',
-        role: 'VP Regulatory Affairs',
-        companyId: 'comp-3',
-        department: 'Regulatory',
-        influence: 'medium',
-        createdAt: new Date(),
-        updatedAt: new Date()
+        title: 'VP Regulatory Affairs',
+        role: 'influencer',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       },
 
       // EcoEnergy Ltd contacts
       {
         id: 'contact-8',
-        name: 'Mark Rodriguez',
+        companyId: 'comp-4',
+        firstName: 'Mark',
+        lastName: 'Rodriguez',
         email: 'mark.rodriguez@ecoenergy.com',
         phone: '+1-555-0401',
-        role: 'CEO',
-        companyId: 'comp-4',
-        department: 'Executive',
-        influence: 'high',
-        createdAt: new Date(),
-        updatedAt: new Date()
+        title: 'CEO',
+        role: 'decision-maker',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       },
       {
         id: 'contact-9',
-        name: 'Emily Brown',
+        companyId: 'comp-4',
+        firstName: 'Emily',
+        lastName: 'Brown',
         email: 'emily.brown@ecoenergy.com',
         phone: '+1-555-0402',
-        role: 'CFO',
-        companyId: 'comp-4',
-        department: 'Finance',
-        influence: 'high',
-        createdAt: new Date(),
-        updatedAt: new Date()
+        title: 'CFO',
+        role: 'decision-maker',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       },
 
       // RetailMax Systems contacts
       {
         id: 'contact-10',
-        name: 'Alex Thompson',
+        companyId: 'comp-5',
+        firstName: 'Alex',
+        lastName: 'Thompson',
         email: 'alex.thompson@retailmax.com',
         phone: '+1-555-0501',
-        role: 'CIO',
-        companyId: 'comp-5',
-        department: 'IT',
-        influence: 'high',
-        createdAt: new Date(),
-        updatedAt: new Date()
+        title: 'CIO',
+        role: 'champion',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       },
       {
         id: 'contact-11',
-        name: 'Rachel Green',
+        companyId: 'comp-5',
+        firstName: 'Rachel',
+        lastName: 'Green',
         email: 'rachel.green@retailmax.com',
         phone: '+1-555-0502',
-        role: 'VP Operations',
-        companyId: 'comp-5',
-        department: 'Operations',
-        influence: 'medium',
-        createdAt: new Date(),
-        updatedAt: new Date()
+        title: 'VP Operations',
+        role: 'influencer',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       }
     ];
 
@@ -262,8 +272,8 @@ export class CompanyContactService {
     const company: Company = {
       ...companyData,
       id: `comp-${Date.now()}`,
-      createdAt: new Date(),
-      updatedAt: new Date()
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
 
     const companies = await this.getAllCompanies();
@@ -282,7 +292,7 @@ export class CompanyContactService {
     const updated = {
       ...companies[index],
       ...updates,
-      updatedAt: new Date()
+      updatedAt: new Date().toISOString()
     };
 
     companies[index] = updated;
@@ -328,8 +338,8 @@ export class CompanyContactService {
     const contact: Contact = {
       ...contactData,
       id: `contact-${Date.now()}`,
-      createdAt: new Date(),
-      updatedAt: new Date()
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
 
     const contacts = await this.getAllContacts();
@@ -348,7 +358,7 @@ export class CompanyContactService {
     const updated = {
       ...contacts[index],
       ...updates,
-      updatedAt: new Date()
+      updatedAt: new Date().toISOString()
     };
 
     contacts[index] = updated;
