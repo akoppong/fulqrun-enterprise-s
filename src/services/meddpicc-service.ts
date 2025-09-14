@@ -724,7 +724,6 @@ export class MEDDPICCService {
 // Export types and service
 export {
   MEDDPICCAssessment,
-  MEDDPICCAnswer,
   MEDDPICCTrend,
   MEDDPICCBenchmark,
   MEDDPICCInsight,
