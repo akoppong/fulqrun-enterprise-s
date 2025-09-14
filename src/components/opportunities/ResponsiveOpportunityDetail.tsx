@@ -39,8 +39,8 @@ import {
 import { formatCurrency, getMEDDPICCScore, getStageProgress } from '@/lib/crm-utils';
 import { format, differenceInDays, isValid, parseISO } from 'date-fns';
 
-// MEDDPICC Integration
 import { MEDDPICCSummary, MEDDPICCModule } from '@/components/meddpicc';
+import { MEDDPICCAssessment } from '@/services/meddpicc-service';
 
 // Helper functions (defined outside component to avoid re-creation)
 const getPriorityBadge = (priority?: string) => {
@@ -64,7 +64,12 @@ const formatSafeDate = (dateValue: any, formatString: string = 'MMM dd, yyyy'): 
     if (!dateValue) return 'Not set';
     
     let date: Date;
+    
+    // Handle different input types safely
     if (typeof dateValue === 'string') {
+      // Handle empty strings
+      if (dateValue.trim() === '') return 'Not set';
+      
       // Handle ISO strings and other common date formats
       if (dateValue.includes('T') || dateValue.includes('-')) {
         date = parseISO(dateValue);
@@ -74,15 +79,28 @@ const formatSafeDate = (dateValue: any, formatString: string = 'MMM dd, yyyy'): 
     } else if (dateValue instanceof Date) {
       date = dateValue;
     } else if (typeof dateValue === 'number') {
+      // Handle timestamp values - reject invalid timestamps
+      if (dateValue === 0 || !isFinite(dateValue)) {
+        return 'Not set';
+      }
       date = new Date(dateValue);
     } else {
       // Try to convert to string first, then parse
-      date = new Date(String(dateValue));
+      const stringValue = String(dateValue);
+      if (stringValue === 'null' || stringValue === 'undefined' || stringValue === '') {
+        return 'Not set';
+      }
+      date = new Date(stringValue);
     }
     
-    // Additional validation before formatting
-    if (!date || !isValid(date) || isNaN(date.getTime()) || date.getTime() === 0) {
-      console.warn('Invalid date value:', dateValue, 'type:', typeof dateValue);
+    // Comprehensive validation before formatting
+    if (!date || 
+        !isValid(date) || 
+        isNaN(date.getTime()) || 
+        date.getTime() === 0 ||
+        date.getFullYear() < 1900 || 
+        date.getFullYear() > 2100) {
+      console.warn('Invalid date value:', dateValue, 'type:', typeof dateValue, 'parsed:', date);
       return 'Not set';
     }
     
@@ -113,16 +131,35 @@ export function ResponsiveOpportunityDetail({
   const [companies] = useKV<Company[]>('companies', []);
   const [contacts] = useKV<Contact[]>('contacts', []);
   const [activeTab, setActiveTab] = useState('overview');
-  const [meddpiccAssessment, setMeddpiccAssessment] = useState<any | null>(null);
+  const [meddpiccAssessment, setMeddpiccAssessment] = useState<MEDDPICCAssessment | null>(null);
   const [showMEDDPICCModal, setShowMEDDPICCModal] = useState(false);
+
+  // Ensure opportunity has default values to prevent undefined errors
+  const safeOpportunity = useMemo(() => {
+    if (!opportunity) return null;
+    
+    return {
+      ...opportunity,
+      name: opportunity.name || opportunity.title || 'Untitled Opportunity',
+      tags: Array.isArray(opportunity.tags) ? opportunity.tags : [],
+      activities: Array.isArray(opportunity.activities) ? opportunity.activities : [],
+      contacts: Array.isArray(opportunity.contacts) ? opportunity.contacts : [],
+      peakScores: opportunity.peakScores || {},
+      meddpiccScores: opportunity.meddpiccScores || {},
+      priority: opportunity.priority || 'medium',
+      stage: opportunity.stage || 'prospect',
+      value: opportunity.value || 0,
+      probability: opportunity.probability || 0
+    };
+  }, [opportunity]);
 
   // Load MEDDPICC assessment
   useEffect(() => {
-    if (opportunity?.id) {
+    if (safeOpportunity?.id) {
       // Create mock MEDDPICC assessment for demonstration
-      const mockAssessment = {
-        id: `assessment-${opportunity.id}`,
-        opportunity_id: opportunity.id,
+      const mockAssessment: MEDDPICCAssessment = {
+        id: `assessment-${safeOpportunity.id}`,
+        opportunity_id: safeOpportunity.id,
         pillar_scores: [
           { pillar: 'metrics', score: 25, max_score: 40, percentage: 62.5 },
           { pillar: 'economic_buyer', score: 30, max_score: 40, percentage: 75.0 },
@@ -149,14 +186,14 @@ export function ResponsiveOpportunityDetail({
             priority: 'medium' as const
           }
         ],
-        last_updated: new Date(),
-        created_date: new Date(),
+        last_updated: new Date().toISOString(),
+        created_date: new Date().toISOString(),
         updated_by: 'current-user'
       };
       
       setMeddpiccAssessment(mockAssessment);
     }
-  }, [opportunity?.id]);
+  }, [safeOpportunity?.id]);
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -187,82 +224,100 @@ export function ResponsiveOpportunityDetail({
     if (isOpen) {
       setActiveTab('overview');
     }
-  }, [opportunity?.id, isOpen]);
+  }, [safeOpportunity?.id, isOpen]);
 
-  // Priority badge configuration
-  const priorityBadgeConfig = useMemo(() => 
-    getPriorityBadge(opportunity?.priority), 
-    [opportunity?.priority]
-  );
+  // Memoized priority badge configuration
+  const priorityBadgeConfig = useMemo(() => {
+    if (!safeOpportunity?.priority) {
+      return { variant: 'secondary' as const, className: 'bg-gray-100 text-gray-800 border-gray-300' };
+    }
+    return getPriorityBadge(safeOpportunity.priority);
+  }, [safeOpportunity?.priority]);
 
   // Get related data with memoization
   const company = useMemo(() => 
-    opportunity ? companies.find(c => c.id === opportunity.companyId) || null : null, 
-    [companies, opportunity?.companyId]
+    safeOpportunity ? companies.find(c => c.id === safeOpportunity.companyId) || null : null, 
+    [companies, safeOpportunity?.companyId]
   );
   
   const contact = useMemo(() => 
-    opportunity ? contacts.find(c => c.id === opportunity.contactId) || null : null, 
-    [contacts, opportunity?.contactId]
+    safeOpportunity ? contacts.find(c => c.id === safeOpportunity.contactId) || null : null, 
+    [contacts, safeOpportunity?.contactId]
   );
   
   const stageConfig = useMemo(() => 
-    opportunity ? PEAK_STAGES.find(s => s.value === opportunity.stage) || PEAK_STAGES[0] : PEAK_STAGES[0], 
-    [opportunity?.stage]
+    safeOpportunity ? PEAK_STAGES.find(s => s.value === safeOpportunity.stage) || PEAK_STAGES[0] : PEAK_STAGES[0], 
+    [safeOpportunity?.stage]
   );
   
   const meddpicScore = useMemo(() => 
-    opportunity ? getMEDDPICCScore(opportunity.meddpicc) || 0 : 0, 
-    [opportunity?.meddpicc]
+    safeOpportunity ? getMEDDPICCScore(safeOpportunity.meddpicc) || 0 : 0, 
+    [safeOpportunity?.meddpicc]
   );
   
   const stageProgress = useMemo(() => 
-    opportunity ? getStageProgress(opportunity.stage) || 0 : 0, 
-    [opportunity?.stage]
+    safeOpportunity ? getStageProgress(safeOpportunity.stage) || 0 : 0, 
+    [safeOpportunity?.stage]
   );
   
   // Calculate days in various states with memoization
   const timeCalculations = useMemo(() => {
-    if (!opportunity) return { daysInStage: 0, daysInPipeline: 0, daysToClose: 0 };
+    if (!safeOpportunity) return { daysInStage: 0, daysInPipeline: 0, daysToClose: 0 };
     
     const now = new Date();
     
-    // Safe date parsing
-    const parseDate = (dateValue: any): Date => {
+    // Safe date parsing with comprehensive validation
+    const parseDate = (dateValue: any, fallback: Date = now): Date => {
       try {
-        if (!dateValue) return now;
+        if (!dateValue) return fallback;
+        
         let date: Date;
         if (typeof dateValue === 'string') {
-          date = parseISO(dateValue);
+          if (dateValue.trim() === '' || dateValue === 'null' || dateValue === 'undefined') {
+            return fallback;
+          }
+          if (dateValue.includes('T') || dateValue.includes('-')) {
+            date = parseISO(dateValue);
+          } else {
+            date = new Date(dateValue);
+          }
         } else if (dateValue instanceof Date) {
           date = dateValue;
-        } else {
+        } else if (typeof dateValue === 'number') {
+          if (dateValue === 0 || !isFinite(dateValue)) {
+            return fallback;
+          }
           date = new Date(dateValue);
+        } else {
+          date = new Date(String(dateValue));
         }
-        return isValid(date) ? date : now;
+        
+        // Validate the parsed date
+        if (!date || !isValid(date) || isNaN(date.getTime()) || date.getTime() === 0) {
+          return fallback;
+        }
+        
+        return date;
       } catch {
-        return now;
+        return fallback;
       }
     };
     
-    const createdAt = parseDate(opportunity.createdAt);
-    const updatedAt = parseDate(opportunity.updatedAt);
-    const expectedCloseDate = parseDate(opportunity.expectedCloseDate);
+    const createdAt = parseDate(safeOpportunity.createdAt);
+    const updatedAt = parseDate(safeOpportunity.updatedAt);
+    const expectedCloseDate = parseDate(safeOpportunity.expectedCloseDate);
     
     return {
       daysInStage: differenceInDays(now, updatedAt),
       daysInPipeline: differenceInDays(now, createdAt),
       daysToClose: differenceInDays(expectedCloseDate, now)
     };
-  }, [opportunity?.createdAt, opportunity?.updatedAt, opportunity?.expectedCloseDate]);
+  }, [safeOpportunity?.createdAt, safeOpportunity?.updatedAt, safeOpportunity?.expectedCloseDate]);
 
-  const priorityBadge = useMemo(() => 
-    opportunity ? getPriorityBadge(opportunity.priority) : { variant: 'secondary' as const, className: 'bg-gray-100 text-gray-800 border-gray-300' }, 
-    [opportunity?.priority]
-  );
+
 
   // Validate opportunity data after all hooks
-  if (!opportunity) {
+  if (!safeOpportunity) {
     console.error('ResponsiveOpportunityDetail: No opportunity provided');
     return null;
   }
@@ -329,7 +384,7 @@ export function ResponsiveOpportunityDetail({
                 <CardContent className="p-3 text-center">
                   <DollarSign size={16} className="text-emerald-600 mx-auto mb-2" />
                   <div className="text-sm font-bold text-emerald-900">
-                    {formatCurrency(opportunity.value)}
+                    {formatCurrency(safeOpportunity.value)}
                   </div>
                   <div className="text-xs font-medium text-emerald-700">Deal Value</div>
                 </CardContent>
@@ -339,7 +394,7 @@ export function ResponsiveOpportunityDetail({
                 <CardContent className="p-3 text-center">
                   <Trophy size={16} className="text-blue-600 mx-auto mb-2" />
                   <div className="text-sm font-bold text-blue-900">
-                    {opportunity.probability}%
+                    {safeOpportunity.probability}%
                   </div>
                   <div className="text-xs font-medium text-blue-700">Win Probability</div>
                 </CardContent>
@@ -392,12 +447,12 @@ export function ResponsiveOpportunityDetail({
                     <div>
                       <Label className="text-xs text-muted-foreground">Expected Close</Label>
                       <div className="font-medium">
-                        {formatSafeDate(opportunity.expectedCloseDate)}
+                        {formatSafeDate(safeOpportunity.expectedCloseDate)}
                       </div>
                     </div>
                     <div>
                       <Label className="text-xs text-muted-foreground">Priority</Label>
-                      <div className="font-medium capitalize">{opportunity.priority}</div>
+                      <div className="font-medium capitalize">{safeOpportunity.priority}</div>
                     </div>
                   </div>
                 </CardContent>
@@ -415,7 +470,7 @@ export function ResponsiveOpportunityDetail({
                         {company?.name || 'Unknown Company'}
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        {company?.industry || opportunity.industry || 'Technology'}
+                        {company?.industry || safeOpportunity.industry || 'Technology'}
                       </div>
                     </div>
                   </div>
@@ -424,7 +479,7 @@ export function ResponsiveOpportunityDetail({
                     <User size={14} className="text-green-600 mt-0.5 shrink-0" />
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-medium truncate">
-                        {contact ? `${contact.firstName} ${contact.lastName}` : opportunity.primaryContact}
+                        {contact ? `${contact.firstName} ${contact.lastName}` : safeOpportunity.primaryContact}
                       </div>
                       <div className="text-xs text-muted-foreground">
                         {contact?.title || 'Primary Contact'}
@@ -432,16 +487,16 @@ export function ResponsiveOpportunityDetail({
                     </div>
                   </div>
                   
-                  {opportunity.tags && opportunity.tags.length > 0 && (
+                  {safeOpportunity.tags && Array.isArray(safeOpportunity.tags) && safeOpportunity.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1">
-                      {opportunity.tags.slice(0, 3).map((tag, index) => (
+                      {safeOpportunity.tags.slice(0, 3).map((tag, index) => (
                         <Badge key={index} variant="outline" className="text-xs px-1.5 py-0.5">
                           {tag}
                         </Badge>
                       ))}
-                      {opportunity.tags.length > 3 && (
+                      {safeOpportunity.tags.length > 3 && (
                         <Badge variant="outline" className="text-xs px-1.5 py-0.5">
-                          +{opportunity.tags.length - 3}
+                          +{safeOpportunity.tags.length - 3}
                         </Badge>
                       )}
                     </div>
@@ -484,8 +539,8 @@ export function ResponsiveOpportunityDetail({
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {PEAK_STAGES.map((stage, index) => {
-                    const score = opportunity.peakScores?.[stage.id] || 0;
-                    const isActive = opportunity.stage === stage.id;
+                    const score = safeOpportunity.peakScores?.[stage.id] || 0;
+                    const isActive = safeOpportunity.stage === stage.id;
                     
                     return (
                       <Card 
@@ -591,7 +646,7 @@ export function ResponsiveOpportunityDetail({
                 <DialogHeader>
                   <DialogTitle>MEDDPICC Assessment</DialogTitle>
                   <DialogDescription>
-                    Complete B2B sales qualification for {opportunity.name}
+                    Complete B2B sales qualification for {safeOpportunity.name}
                   </DialogDescription>
                 </DialogHeader>
                 
@@ -683,9 +738,9 @@ export function ResponsiveOpportunityDetail({
                 </div>
               </CardHeader>
               <CardContent>
-                {opportunity.activities && opportunity.activities.length > 0 ? (
+                {safeOpportunity.activities && Array.isArray(safeOpportunity.activities) && safeOpportunity.activities.length > 0 ? (
                   <div className="space-y-4">
-                    {opportunity.activities.slice(0, 5).map((activity, index) => (
+                    {safeOpportunity.activities.slice(0, 5).map((activity, index) => (
                       <div key={activity.id || index} className="flex items-start gap-3 pb-4 border-b border-border last:border-0 last:pb-0">
                         <div className={`w-2 h-2 rounded-full mt-2 ${
                           activity.outcome === 'positive' ? 'bg-green-500' :
@@ -715,10 +770,10 @@ export function ResponsiveOpportunityDetail({
                         </div>
                       </div>
                     ))}
-                    {opportunity.activities.length > 5 && (
+                    {Array.isArray(safeOpportunity.activities) && safeOpportunity.activities.length > 5 && (
                       <div className="text-center pt-2">
                         <Button variant="ghost" size="sm" disabled>
-                          View All Activities ({opportunity.activities.length})
+                          View All Activities ({Array.isArray(safeOpportunity.activities) ? safeOpportunity.activities.length : 0})
                         </Button>
                       </div>
                     )}
@@ -766,10 +821,10 @@ export function ResponsiveOpportunityDetail({
                 </Button>
                 <div>
                   <h1 className="text-xl font-semibold text-gray-900">
-                    {opportunity.name}
+                    {safeOpportunity.name}
                   </h1>
                   <p className="text-sm text-muted-foreground">
-                    {opportunity.company} • {formatCurrency(opportunity.value)}
+                    {safeOpportunity.company} • {formatCurrency(safeOpportunity.value)}
                   </p>
                 </div>
               </div>
@@ -809,10 +864,10 @@ export function ResponsiveOpportunityDetail({
       <DialogContent className="w-screen h-screen max-w-none max-h-none m-0 p-0 rounded-none border-0 bg-background">
         <DialogHeader className="sr-only">
           <DialogTitle>
-            Opportunity Details - {opportunity.name}
+            Opportunity Details - {safeOpportunity.name}
           </DialogTitle>
           <DialogDescription>
-            Detailed view of opportunity {opportunity.name} including PEAK methodology progress, MEDDPICC qualification, and contact information.
+            Detailed view of opportunity {safeOpportunity.name} including PEAK methodology progress, MEDDPICC qualification, and contact information.
           </DialogDescription>
         </DialogHeader>
 
@@ -833,7 +888,7 @@ export function ResponsiveOpportunityDetail({
                 <div className="hidden md:block w-px h-6 bg-border" />
                 <div className="min-w-0">
                   <h1 className="text-lg md:text-xl font-bold text-foreground truncate">
-                    {opportunity.name}
+                    {safeOpportunity.name}
                   </h1>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Building size={12} className="text-blue-600 shrink-0" />
@@ -920,7 +975,7 @@ export function ResponsiveOpportunityDetail({
                         <CardContent className="p-3 text-center">
                           <DollarSign size={16} className="text-emerald-600 mx-auto mb-2" />
                           <div className="text-sm font-bold text-emerald-900">
-                            {formatCurrency(opportunity.value)}
+                            {formatCurrency(safeOpportunity.value)}
                           </div>
                           <div className="text-xs font-medium text-emerald-700">Deal Value</div>
                         </CardContent>
@@ -930,7 +985,7 @@ export function ResponsiveOpportunityDetail({
                         <CardContent className="p-3 text-center">
                           <Target size={16} className="text-blue-600 mx-auto mb-2" />
                           <div className="text-sm font-bold text-blue-900">
-                            {opportunity.probability}%
+                            {safeOpportunity.probability}%
                           </div>
                           <div className="text-xs font-medium text-blue-700">Win Rate</div>
                         </CardContent>
@@ -992,7 +1047,7 @@ export function ResponsiveOpportunityDetail({
                               <Label className="text-sm font-medium">Created</Label>
                               <div className="p-3 bg-muted/50 rounded-lg">
                                 <div className="text-sm font-medium">
-                                  {formatSafeDate(opportunity.createdAt)}
+                                  {formatSafeDate(safeOpportunity.createdAt)}
                                 </div>
                                 <div className="text-xs text-muted-foreground">
                                   {daysInPipeline} days in pipeline
@@ -1004,7 +1059,7 @@ export function ResponsiveOpportunityDetail({
                                 <Label className="text-sm font-medium">Expected Close</Label>
                                 <div className="p-3 bg-muted/50 rounded-lg">
                                   <div className="text-sm font-medium">
-                                    {formatSafeDate(opportunity.expectedCloseDate)}
+                                    {formatSafeDate(safeOpportunity.expectedCloseDate)}
                                   </div>
                                   <div className={`text-xs font-medium ${daysToClose < 0 ? 'text-red-600' : daysToClose < 7 ? 'text-amber-600' : 'text-green-600'}`}>
                                     {daysToClose < 0 ? `${Math.abs(daysToClose)} days overdue` : 
@@ -1015,27 +1070,27 @@ export function ResponsiveOpportunityDetail({
                               </div>
                             </div>
 
-                            {opportunity.description && (
+                            {safeOpportunity.description && (
                               <>
                                 <Separator />
                                 <div className="space-y-2">
                                   <Label className="text-sm font-medium">Description</Label>
                                   <div className="p-3 bg-muted/50 rounded-lg">
                                     <p className="text-sm leading-relaxed">
-                                      {opportunity.description}
+                                      {safeOpportunity.description}
                                     </p>
                                   </div>
                                 </div>
                               </>
                             )}
 
-                            {opportunity.tags && opportunity.tags.length > 0 && (
+                            {safeOpportunity.tags && Array.isArray(safeOpportunity.tags) && safeOpportunity.tags.length > 0 && (
                               <>
                                 <Separator />
                                 <div className="space-y-2">
                                   <Label className="text-sm font-medium">Tags</Label>
                                   <div className="flex flex-wrap gap-1">
-                                    {opportunity.tags.map((tag, index) => (
+                                    {safeOpportunity.tags.map((tag, index) => (
                                       <Badge 
                                         key={index} 
                                         variant="secondary" 
@@ -1165,8 +1220,8 @@ export function ResponsiveOpportunityDetail({
                       </CardHeader>
                       <CardContent className="space-y-3">
                         {PEAK_STAGES.map((stage, index) => {
-                          const isCurrentStage = stage.value === opportunity.stage;
-                          const isPastStage = PEAK_STAGES.findIndex(s => s.value === opportunity.stage) > index;
+                          const isCurrentStage = stage.value === safeOpportunity.stage;
+                          const isPastStage = PEAK_STAGES.findIndex(s => s.value === safeOpportunity.stage) > index;
                           
                           return (
                             <Card key={stage.value} className={`border transition-all ${
@@ -1232,7 +1287,7 @@ export function ResponsiveOpportunityDetail({
                         <DialogHeader>
                           <DialogTitle>MEDDPICC Assessment</DialogTitle>
                           <DialogDescription>
-                            Complete B2B sales qualification for {opportunity.name}
+                            Complete B2B sales qualification for {safeOpportunity.name}
                           </DialogDescription>
                         </DialogHeader>
                         {/* TODO: Re-enable when MEDDPICCAssessment component is available */}
@@ -1242,7 +1297,7 @@ export function ResponsiveOpportunityDetail({
                         </div>
                         {/* 
                         <MEDDPICCAssessment
-                          opportunityId={opportunity.id}
+                          opportunityId={safeOpportunity.id}
                           userId="current-user"
                           onAssessmentComplete={(assessment) => {
                             setMeddpiccAssessment(assessment);

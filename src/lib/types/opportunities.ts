@@ -24,6 +24,7 @@ export interface Opportunity {
   companyId: string;
   contactId: string;
   title: string;
+  name: string; // Opportunity name for display
   description: string;
   value: number;
   stage: string; // Changed to string to support custom pipeline stages
@@ -34,8 +35,44 @@ export interface Opportunity {
   priority?: 'low' | 'medium' | 'high' | 'critical';
   industry?: string;
   leadSource?: string;
+  source?: string; // Lead source alternative field
   tags?: string[];
   meddpicc: MEDDPICC;
+  // Additional fields for enhanced opportunity management
+  company?: string; // Company name for display
+  primaryContact?: string; // Primary contact name
+  contactEmail?: string;
+  contactPhone?: string;
+  competitor?: string;
+  // Activity tracking
+  activities?: Array<{
+    id: string;
+    type: 'call' | 'email' | 'meeting' | 'demo' | 'proposal';
+    outcome: 'positive' | 'neutral' | 'negative';
+    notes: string;
+    date: string | Date; // Support both formats for date handling
+  }>;
+  // Contact relationships  
+  contacts?: Array<{
+    id: string;
+    name: string;
+    role: string;
+    influence: 'high' | 'medium' | 'low';
+    sentiment: 'champion' | 'neutral' | 'detractor';
+  }>;
+  // PEAK methodology scores
+  peakScores?: Record<string, number>;
+  // MEDDPICC detailed scores
+  meddpiccScores?: Record<string, number>;
+  // Additional date fields
+  closeDate?: string | Date; // Support both formats
+  createdDate?: string | Date; // Support both formats  
+  createdBy?: string;
+  assignedTo?: string;
+  // Timing fields
+  daysInStage?: number;
+  totalDaysInPipeline?: number;
+  lastActivity?: string | Date; // Support both formats
   createdAt: string; // ISO date string for reliable serialization
   updatedAt: string; // ISO date string for reliable serialization
   aiInsights?: {
