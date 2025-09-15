@@ -7,6 +7,8 @@ import { ErrorFallback } from './ErrorFallback.tsx'
 
 import "./main.css"
 import "./index.css"
+import "react-grid-layout/css/styles.css"
+import "react-resizable/css/styles.css"
 
 createRoot(document.getElementById('root')!).render(
   <ErrorBoundary FallbackComponent={ErrorFallback}>
