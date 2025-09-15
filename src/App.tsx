@@ -9,6 +9,7 @@ import './lib/error-handlers'; // Initialize global error handlers
 import { setupGlobalErrorHandling } from './lib/error-handling'; // Initialize comprehensive error handling
 import { performanceMonitor } from './lib/performance-monitor';
 import { dataRecovery } from './lib/data-recovery';
+import { ensureDatabaseInitialized } from './lib/database';
 
 function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -20,6 +21,19 @@ function App() {
     
     // Initialize performance monitoring
     console.log('Performance monitoring initialized');
+    
+    // Initialize database
+    const initDatabase = async () => {
+      try {
+        console.log('🔧 Initializing FulQrun database...');
+        await ensureDatabaseInitialized();
+        console.log('✅ Database initialization completed');
+      } catch (error) {
+        console.error('❌ Database initialization failed:', error);
+      }
+    };
+    
+    initDatabase();
     
     // Optional: Set up performance monitoring callbacks - less verbose
     performanceMonitor.onOptimizationOpportunity((opportunity) => {
