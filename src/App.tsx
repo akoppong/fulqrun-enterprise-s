@@ -10,6 +10,7 @@ import { setupGlobalErrorHandling } from './lib/error-handling'; // Initialize c
 import { performanceMonitor } from './lib/performance-monitor';
 import { dataRecovery } from './lib/data-recovery';
 import { ensureDatabaseInitialized } from './lib/database';
+import { dataIntegration } from './lib/data-integration';
 
 function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -22,12 +23,13 @@ function App() {
     // Initialize performance monitoring
     console.log('Performance monitoring initialized');
     
-    // Initialize database
+    // Initialize database and data integration
     const initDatabase = async () => {
       try {
-        console.log('🔧 Initializing FulQrun database...');
+        console.log('🔧 Initializing FulQrun enterprise database...');
         await ensureDatabaseInitialized();
-        console.log('✅ Database initialization completed');
+        await dataIntegration.initialize();
+        console.log('✅ Enterprise database and data integration initialized');
       } catch (error) {
         console.error('❌ Database initialization failed:', error);
       }

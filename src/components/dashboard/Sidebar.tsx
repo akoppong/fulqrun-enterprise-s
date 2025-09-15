@@ -184,6 +184,24 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           description: 'Performance insights',
           permissionId: 'team-analytics',
           action: 'read'
+        },
+        {
+          id: 'enterprise-analytics',
+          label: 'Enterprise Analytics',
+          icon: Database,
+          description: 'Real-time insights & predictive analytics',
+          permissionId: 'team-analytics',
+          action: 'read',
+          isNew: true
+        },
+        {
+          id: 'data-persistence',
+          label: 'Data Persistence',
+          icon: Shield,
+          description: 'Normalized database with real-time sync',
+          permissionId: 'team-analytics',
+          action: 'read',
+          isNew: true
         }
       ]
     },

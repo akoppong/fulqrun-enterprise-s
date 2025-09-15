@@ -184,3 +184,119 @@ export function isValidDate(date: string | Date | number | null | undefined): bo
 export function normalizeDateForStorage(date: string | Date | number | null | undefined): string | null {
   return DateValidator.normalizeForStorage(date);
 }
+
+/**
+ * Format currency values
+ */
+export function formatCurrency(value: number, currency: string = 'USD'): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+/**
+ * Format numbers with thousand separators
+ */
+export function formatNumber(value: number): string {
+  return new Intl.NumberFormat('en-US').format(value);
+}
+
+/**
+ * Format percentage values
+ */
+export function formatPercentage(value: number, decimals: number = 1): string {
+  return `${value.toFixed(decimals)}%`;
+}
+
+/**
+ * Format distance to now (e.g., "2 hours ago", "in 3 days")
+ */
+export function formatDistanceToNow(date: Date | string | number): string {
+  const now = new Date();
+  const targetDate = new Date(date);
+  
+  if (!isValidDateObject(targetDate)) {
+    return 'unknown time';
+  }
+  
+  const diffInMs = now.getTime() - targetDate.getTime();
+  const diffInMinutes = Math.floor(Math.abs(diffInMs) / (1000 * 60));
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  const diffInDays = Math.floor(diffInHours / 24);
+  
+  const isPast = diffInMs > 0;
+  const suffix = isPast ? 'ago' : 'from now';
+  const prefix = isPast ? '' : 'in ';
+  
+  if (diffInMinutes < 1) {
+    return 'just now';
+  } else if (diffInMinutes < 60) {
+    return `${prefix}${diffInMinutes} minute${diffInMinutes !== 1 ? 's' : ''} ${suffix}`.trim();
+  } else if (diffInHours < 24) {
+    return `${prefix}${diffInHours} hour${diffInHours !== 1 ? 's' : ''} ${suffix}`.trim();
+  } else if (diffInDays < 30) {
+    return `${prefix}${diffInDays} day${diffInDays !== 1 ? 's' : ''} ${suffix}`.trim();
+  } else {
+    return targetDate.toLocaleDateString();
+  }
+}
+
+/**
+ * Truncate text to a specified length
+ */
+export function truncateText(text: string, maxLength: number, suffix: string = '...'): string {
+  if (text.length <= maxLength) return text;
+  return text.slice(0, maxLength - suffix.length) + suffix;
+}
+
+/**
+ * Capitalize first letter of each word
+ */
+export function capitalizeWords(text: string): string {
+  return text.replace(/\w\S*/g, (txt) => 
+    txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+  );
+}
+
+/**
+ * Generate a random ID
+ */
+export function generateId(prefix: string = ''): string {
+  const timestamp = Date.now().toString(36);
+  const random = Math.random().toString(36).substr(2, 5);
+  return prefix ? `${prefix}-${timestamp}-${random}` : `${timestamp}-${random}`;
+}
+
+/**
+ * Debounce function
+ */
+export function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout;
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(null, args), wait);
+  };
+}
+
+/**
+ * Throttle function
+ */
+export function throttle<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let inThrottle: boolean;
+  return (...args: Parameters<T>) => {
+    if (!inThrottle) {
+      func.apply(null, args);
+      inThrottle = true;
+      setTimeout(() => inThrottle = false, wait);
+    }
+  };
+}
