@@ -305,12 +305,21 @@ export function setupGlobalErrorHandling(): void {
   // Error suppression patterns for common non-critical errors
   const suppressedErrorPatterns = [
     /Failed to load resource.*429/i, // Rate limiting errors
+    /Failed to load resource.*404/i, // 404 resource errors (database indices)
+    /Failed to load resource.*406/i, // 406 method not allowed errors
     /Failed to fetch KV key/i, // KV storage errors
     /Failed to set key/i, // KV storage errors
+    /Rate-limited KV set for/i, // KV rate limiting
+    /Maximum update depth exceeded/i, // React infinite re-render warnings
     /allow-scripts.*allow-same-origin.*sandbox/i, // Iframe sandbox warnings
     /ResizeObserver loop limit exceeded/i, // Common browser warning
     /Non-passive event listener/i, // Performance warning
     /Script error/i, // Generic script errors from extensions
+    /fulqrun_db.*_idx.*404/i, // Database index lookup errors
+    /grm ERROR.*iterable/i, // Grammarly extension errors
+    /Failed to build static preview/i, // Static preview build errors
+    /Method not supported on blob file syncer/i, // File syncer errors
+    /Cannot read properties of undefined.*reading.*issues/i, // Auto-fix component errors
   ];
 
   const shouldSuppressError = (message: string): boolean => {

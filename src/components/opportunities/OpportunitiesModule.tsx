@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useKV } from '@github/spark/hooks';
 import { Opportunity, User } from '@/lib/types';
 import { OpportunityService } from '@/lib/opportunity-service';
@@ -53,8 +53,16 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
     return [];
   }, [opportunities]);
 
+  // Add ref to track initialization
+  const initializationRef = useRef(false);
+
   // Initialize demo data
   useEffect(() => {
+    // Prevent multiple initializations
+    if (initializationRef.current) {
+      return;
+    }
+
     const initializeData = async () => {
       try {
         if (safeOpportunities.length === 0) {
@@ -68,6 +76,7 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
           });
           if (Array.isArray(stored) && stored.length > 0) {
             setOpportunities(stored);
+            initializationRef.current = true;
           } else {
             console.error('OpportunitiesModule: Invalid data from service');
             setOpportunities([]);
@@ -81,7 +90,7 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
     };
 
     initializeData();
-  }, [safeOpportunities.length, setOpportunities]);
+  }, []); // Empty dependency array to run only once
 
   const handleViewChange = (view: string, data?: any) => {
     switch (view) {

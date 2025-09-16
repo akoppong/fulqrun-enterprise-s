@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useKV } from '@github/spark/hooks';
+import { debounce } from '@/lib/rate-limiting';
 import { Opportunity, Company, Contact, User, PipelineMetrics } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -45,98 +46,112 @@ export function OpportunitiesDashboard({ user, onViewChange, opportunities: prop
   const [selectedOwner, setSelectedOwner] = useState<string>('all');
   const [selectedStage, setSelectedStage] = useState<string>('all');
   const [selectedTimeframe, setSelectedTimeframe] = useState<string>('current-quarter');
+  
+  // Ref to track initialization state
+  const initializationRef = useRef(false);
+  const isInitializing = useRef(false);
+
+  // Debounced refresh function to prevent rate limiting
+  const debouncedRefresh = useCallback(
+    debounce(async () => {
+      if (isInitializing.current) return;
+      
+      try {
+        const fresh = await OpportunityService.getAllOpportunities();
+        console.log('OpportunitiesDashboard: Refreshed opportunities:', {
+          type: typeof fresh,
+          isArray: Array.isArray(fresh),
+          length: Array.isArray(fresh) ? fresh.length : 'N/A'
+        });
+        if (Array.isArray(fresh)) {
+          setOpportunities(fresh);
+        } else {
+          console.error('Refresh returned non-array data:', fresh);
+          setOpportunities([]);
+        }
+      } catch (error) {
+        console.error('Failed to refresh opportunities:', error);
+      }
+    }, 500),
+    []
+  );
 
   // Function to refresh opportunities data
-  const refreshOpportunities = async () => {
-    try {
-      const fresh = await OpportunityService.getAllOpportunities();
-      console.log('OpportunitiesDashboard: Refreshed opportunities:', {
-        type: typeof fresh,
-        isArray: Array.isArray(fresh),
-        length: Array.isArray(fresh) ? fresh.length : 'N/A'
-      });
-      if (Array.isArray(fresh)) {
-        setOpportunities(fresh);
-      } else {
-        console.error('Refresh returned non-array data:', fresh);
-        setOpportunities([]);
-      }
-    } catch (error) {
-      console.error('Failed to refresh opportunities:', error);
-    }
-  };
+  const refreshOpportunities = useCallback(async () => {
+    debouncedRefresh();
+  }, [debouncedRefresh]);
 
   // Initialize demo data or use prop data
   useEffect(() => {
+    // Prevent multiple simultaneous initializations
+    if (isInitializing.current || initializationRef.current) {
+      return;
+    }
+
     const initializeData = async () => {
       try {
+        isInitializing.current = true;
         setIsLoading(true);
         
         // If opportunities are provided as props, use them
-        if (propOpportunities && Array.isArray(propOpportunities)) {
+        if (propOpportunities && Array.isArray(propOpportunities) && propOpportunities.length > 0) {
           console.log('OpportunitiesDashboard: Using prop opportunities:', propOpportunities.length);
           setOpportunities(propOpportunities);
           
           // Still need to load companies and contacts from centralized service
           try {
-            await CompanyContactService.initializeSampleData();
-            const [companiesData, contactsData] = await Promise.all([
-              CompanyContactService.getAllCompanies(),
-              CompanyContactService.getAllContacts()
-            ]);
-            setCompanies(companiesData);
-            setContacts(contactsData);
+            if (!initializationRef.current) {
+              await CompanyContactService.initializeSampleData();
+              const [companiesData, contactsData] = await Promise.all([
+                CompanyContactService.getAllCompanies(),
+                CompanyContactService.getAllContacts()
+              ]);
+              setCompanies(companiesData);
+              setContacts(contactsData);
+              initializationRef.current = true;
+            }
           } catch (error) {
             console.error('Failed to load companies/contacts:', error);
           }
           
           setIsLoading(false);
+          isInitializing.current = false;
           return;
         }
         
-        console.log('OpportunitiesDashboard: Initializing opportunity data...');
-        
-        // Clear any corrupted data and force fresh initialization
-        try {
-          const currentData = localStorage.getItem('opportunities');
-          if (currentData) {
-            const parsed = JSON.parse(currentData);
-            if (!Array.isArray(parsed)) {
-              console.warn('Clearing corrupted opportunities data:', typeof parsed);
-              localStorage.removeItem('opportunities');
-            }
+        // Only initialize if we haven't already and no data exists
+        if (!initializationRef.current) {
+          console.log('OpportunitiesDashboard: Initializing opportunity data...');
+          
+          // Load all data from centralized services
+          await CompanyContactService.initializeSampleData();
+          const [stored, companiesData, contactsData] = await Promise.all([
+            OpportunityService.getAllOpportunities(),
+            CompanyContactService.getAllCompanies(),
+            CompanyContactService.getAllContacts()
+          ]);
+          
+          // Set companies and contacts
+          setCompanies(companiesData);
+          setContacts(contactsData);
+          
+          console.log('OpportunitiesDashboard: Received data from service:', {
+            type: typeof stored,
+            isArray: Array.isArray(stored),
+            length: Array.isArray(stored) ? stored.length : 'N/A',
+            firstItem: Array.isArray(stored) && stored.length > 0 ? stored[0]?.id : null
+          });
+          
+          // Validate and ensure we have an array
+          if (Array.isArray(stored)) {
+            setOpportunities(stored);
+            console.log('OpportunitiesDashboard: Successfully set opportunities array with', stored.length, 'items');
+          } else {
+            console.error('OpportunitiesDashboard: Service returned non-array data, setting empty array');
+            setOpportunities([]);
           }
-        } catch (error) {
-          console.warn('Clearing corrupted localStorage:', error);
-          localStorage.removeItem('opportunities');
-        }
-        
-        // Load all data from centralized services
-        await CompanyContactService.initializeSampleData();
-        const [stored, companiesData, contactsData] = await Promise.all([
-          OpportunityService.getAllOpportunities(),
-          CompanyContactService.getAllCompanies(),
-          CompanyContactService.getAllContacts()
-        ]);
-        
-        // Set companies and contacts
-        setCompanies(companiesData);
-        setContacts(contactsData);
-        
-        console.log('OpportunitiesDashboard: Received data from service:', {
-          type: typeof stored,
-          isArray: Array.isArray(stored),
-          length: Array.isArray(stored) ? stored.length : 'N/A',
-          firstItem: Array.isArray(stored) && stored.length > 0 ? stored[0]?.id : null
-        });
-        
-        // Validate and ensure we have an array
-        if (Array.isArray(stored)) {
-          setOpportunities(stored);
-          console.log('OpportunitiesDashboard: Successfully set opportunities array with', stored.length, 'items');
-        } else {
-          console.error('OpportunitiesDashboard: Service returned non-array data, setting empty array');
-          setOpportunities([]);
+          
+          initializationRef.current = true;
         }
       } catch (error) {
         console.error('OpportunitiesDashboard: Failed to initialize opportunity data:', error);
@@ -144,14 +159,15 @@ export function OpportunitiesDashboard({ user, onViewChange, opportunities: prop
         setOpportunities([]);
       } finally {
         setIsLoading(false);
+        isInitializing.current = false;
       }
     };
     
     initializeData();
-  }, [propOpportunities]); // Re-run when prop opportunities change
+  }, []); // Empty dependency array to run only once
 
-  // Ensure all data arrays are safe and handle any non-array values
-  const safeOpportunities = (() => {
+  // Memoized safe opportunities processing to prevent excessive re-calculations
+  const safeOpportunities = useMemo(() => {
     try {
       console.log('OpportunitiesDashboard: Processing opportunities data:', {
         type: typeof opportunities,
@@ -220,14 +236,14 @@ export function OpportunitiesDashboard({ user, onViewChange, opportunities: prop
       console.error('OpportunitiesDashboard: Error processing opportunities data:', error);
       return [];
     }
-  })();
+  }, [opportunities]); // Add dependency array for memoization
   
   const safeCompanies = companies;
   const safeContacts = contacts;
   const safeAllUsers = allUsers;
 
-  // Calculate filtered opportunities based on user role and filters
-  const filteredOpportunities = (() => {
+  // Memoized filtered opportunities calculation
+  const filteredOpportunities = useMemo(() => {
     try {
       // Ensure we start with a valid array - multiple levels of validation
       if (!Array.isArray(safeOpportunities)) {
@@ -289,10 +305,10 @@ export function OpportunitiesDashboard({ user, onViewChange, opportunities: prop
       console.error('OpportunitiesDashboard: Critical error in filteredOpportunities:', error);
       return [];
     }
-  })();
+  }, [safeOpportunities, user.role, selectedRegion, selectedOwner, selectedStage, user.id]); // Add dependency array for memoization
 
-  // Calculate metrics with safe array handling
-  const metrics = (() => {
+  // Memoized metrics calculation
+  const metrics = useMemo(() => {
     try {
       // Ensure we have a valid array for metrics calculation
       const validOpportunities = Array.isArray(filteredOpportunities) ? filteredOpportunities : [];
@@ -382,10 +398,10 @@ export function OpportunitiesDashboard({ user, onViewChange, opportunities: prop
         staleOpportunities: []
       };
     }
-  })();
+  }, [filteredOpportunities]); // Add dependency array for memoization
 
-  // Prepare chart data with safe array handling
-  const stageData = (() => {
+  // Memoized chart data preparation
+  const stageData = useMemo(() => {
     try {
       const validOpportunities = Array.isArray(filteredOpportunities) ? filteredOpportunities : [];
       

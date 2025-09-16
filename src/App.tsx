@@ -11,6 +11,7 @@ import { performanceMonitor } from './lib/performance-monitor';
 import { dataRecovery } from './lib/data-recovery';
 import { ensureDatabaseInitialized } from './lib/database';
 import { dataIntegration } from './lib/data-integration';
+import { databaseHealthChecker } from './lib/database-health-check';
 
 function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -29,6 +30,21 @@ function App() {
         console.log('🔧 Initializing FulQrun enterprise database...');
         await ensureDatabaseInitialized();
         await dataIntegration.initialize();
+        
+        // Run database health check after initialization
+        setTimeout(async () => {
+          try {
+            const healthResult = await databaseHealthChecker.performHealthCheck();
+            if (healthResult.status === 'critical') {
+              console.warn('⚠️ Critical database issues detected:', healthResult.errors);
+            } else if (healthResult.status === 'warning') {
+              console.info('⚠️ Database warnings:', healthResult.issues);
+            }
+          } catch (error) {
+            console.warn('Health check failed:', error);
+          }
+        }, 5000); // 5 second delay
+        
         console.log('✅ Enterprise database and data integration initialized');
       } catch (error) {
         console.error('❌ Database initialization failed:', error);

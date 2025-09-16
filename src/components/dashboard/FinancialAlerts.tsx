@@ -1,8 +1,9 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import { useKVCached } from '@/hooks/useKVWithRateLimit';
 import { Opportunity } from '@/lib/types';
 import { safeKVGet, safeKVSet } from '@/lib/kv-storage-manager';
+import { isRateLimited } from '@/lib/rate-limiting';
 
 interface FinancialAlertsProps {
   opportunities: Opportunity[];
@@ -58,12 +59,26 @@ export function FinancialAlerts({ opportunities }: FinancialAlertsProps) {
     }
   }, [setLastAlertCheck]);
 
+  const lastRateLimitCheck = useRef<number>(0);
+
   const checkForAlerts = useCallback(async () => {
     try {
       const now = Date.now();
       
+      // Add rate limiting check
+      if (isRateLimited('financial-alerts-check', 2)) { // Max 2 operations per minute
+        console.warn('Financial alerts check is rate limited');
+        return;
+      }
+      
       // Only check for alerts every 15 minutes to avoid KV storage overload
       if (now - lastAlertCheck < 900000) return;
+      
+      // Additional safeguard - prevent rapid successive calls
+      if (now - lastRateLimitCheck.current < 60000) { // 1 minute minimum between checks
+        return;
+      }
+      lastRateLimitCheck.current = now;
       
       // Ensure opportunities is an array before filtering
       const safeOpportunities = Array.isArray(opportunities) ? opportunities : [];
@@ -199,11 +214,11 @@ export function FinancialAlerts({ opportunities }: FinancialAlertsProps) {
     // Only run if we have opportunities
     if (!opportunities || opportunities.length === 0) return;
     
-    // Initial check after a longer delay to prevent startup KV conflicts
-    const initialTimeout = setTimeout(checkForAlerts, 30000);
+    // Initial check after a much longer delay to prevent startup KV conflicts
+    const initialTimeout = setTimeout(checkForAlerts, 120000); // 2 minutes delay
     
-    // Set up interval for ongoing checks - reduced frequency to prevent KV overload
-    const interval = setInterval(checkForAlerts, 900000); // Check every 15 minutes
+    // Set up interval for ongoing checks - much reduced frequency to prevent KV overload
+    const interval = setInterval(checkForAlerts, 1800000); // Check every 30 minutes instead of 15
     
     return () => {
       clearTimeout(initialTimeout);

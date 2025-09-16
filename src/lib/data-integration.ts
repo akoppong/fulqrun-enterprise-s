@@ -5,9 +5,8 @@
  * with enterprise-grade persistence guarantees
  */
 
-import { db } from '../database';
-import { performanceTracker } from '../analytics/performance-tracker';
-import { predictiveAnalytics } from '../analytics/predictive-analytics';
+import { db } from './database';
+import { performanceTracker } from './analytics/performance-tracker';
 
 export interface SyncResult {
   success: boolean;
