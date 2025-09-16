@@ -423,11 +423,11 @@ export function OpportunitiesDashboard({ user, onViewChange, opportunities: prop
       console.error('Error preparing stage data:', error);
       return {};
     }
-  })();
+  }, [filteredOpportunities]);
 
   const stageChartData = Object.values(stageData);
 
-  const meddpiccData = (() => {
+  const meddpiccData = useMemo(() => {
     try {
       const validOpportunities = Array.isArray(filteredOpportunities) ? filteredOpportunities : [];
       
@@ -451,7 +451,7 @@ export function OpportunitiesDashboard({ user, onViewChange, opportunities: prop
       console.error('Error preparing MEDDPICC data:', error);
       return [];
     }
-  })();
+  }, [filteredOpportunities]);
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
