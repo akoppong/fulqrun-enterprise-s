@@ -15,8 +15,8 @@ export interface Company {
   address?: string;
   revenue?: number;
   employees?: number;
-  region: string;
-  country: string;
+  region?: string;
+  country?: string;
   geography?: string; // Legacy field
   segment?: string;
   segmentId?: string;
@@ -106,13 +106,13 @@ export class EnhancedCompanyContactService {
     return {
       name: company.name,
       industry: company.industry || 'Other',
-      size: company.size || 'Medium',
+      size: company.size || 'Small',
       website: company.website,
       address: company.address,
       revenue: company.revenue,
       employees: company.employees,
-      region: company.region || company.geography || 'Unknown',
-      country: company.country || 'Unknown',
+      region: company.region || company.geography,
+      country: company.country,
       segment_id: company.segmentId,
       created_by: 'current-user',
     };
@@ -157,12 +157,35 @@ export class EnhancedCompanyContactService {
     await this.ensureInitialized();
 
     try {
+      // Validate required fields
+      if (!data.name || !data.name.trim()) {
+        throw new Error('Company name is required');
+      }
+
+      if (!data.industry) {
+        throw new Error('Company industry is required');
+      }
+
+      if (!data.size) {
+        throw new Error('Company size is required');
+      }
+
       const dbData = this.convertCompanyToDB(data);
+      console.log('Creating company with data:', dbData);
+      
       const result = await db.companies.create(dbData);
+      console.log('Company created successfully:', result);
+      
       return this.convertCompanyFromDB(result);
     } catch (error) {
       console.error('Failed to create company:', error);
-      throw error;
+      console.error('Input data:', data);
+      
+      if (error instanceof Error) {
+        throw new Error(`Failed to create company: ${error.message}`);
+      }
+      
+      throw new Error('Failed to create company: Unknown error');
     }
   }
 

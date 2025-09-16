@@ -90,11 +90,24 @@ export function CompanyForm({
   const isOpen = isControlled ? controlledOpen : internalOpen;
   const setIsOpen = isControlled ? (controlledOnOpenChange || (() => {})) : setInternalOpen;
 
-  const validateForm = (): boolean => {
+  const validateForm = async (): Promise<boolean> => {
     const newErrors: Partial<Record<keyof CompanyFormData, string>> = {};
 
     if (!formData.name.trim()) {
       newErrors.name = 'Company name is required';
+    } else {
+      // Check if company name already exists
+      try {
+        const existingCompanies = await CompanyContactService.searchCompanies(formData.name.trim());
+        const exactMatch = existingCompanies.find(
+          company => company.name.toLowerCase() === formData.name.trim().toLowerCase()
+        );
+        if (exactMatch) {
+          newErrors.name = 'A company with this name already exists';
+        }
+      } catch (error) {
+        console.warn('Could not check for duplicate company names:', error);
+      }
     }
 
     if (!formData.industry) {
@@ -138,7 +151,8 @@ export function CompanyForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm()) {
+    const isValid = await validateForm();
+    if (!isValid) {
       toast.error('Please fix the errors in the form');
       return;
     }
@@ -187,7 +201,26 @@ export function CompanyForm({
 
     } catch (error) {
       console.error('Error creating company:', error);
-      toast.error('Failed to create company. Please try again.');
+      
+      let errorMessage = 'Failed to create company. Please try again.';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('Validation errors')) {
+          errorMessage = 'Please check the form fields and try again.';
+        } else if (error.message.includes('name')) {
+          errorMessage = 'Company name is required and must be unique.';
+        } else if (error.message.includes('email')) {
+          errorMessage = 'Please enter a valid email format.';
+        } else if (error.message.includes('website')) {
+          errorMessage = 'Please enter a valid website URL.';
+        } else if (error.message.includes('size')) {
+          errorMessage = 'Please select a valid company size.';
+        } else if (error.message.includes('industry')) {
+          errorMessage = 'Please select a valid industry.';
+        }
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

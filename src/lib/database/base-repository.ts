@@ -27,7 +27,18 @@ export class DatabaseError extends Error {
     public originalError?: Error,
     public validationErrors?: ValidationError[]
   ) {
-    super(`Database ${operation} failed for table ${table}: ${originalError?.message || 'Unknown error'}`);
+    let message = `Database ${operation} failed for table ${table}`;
+    
+    if (validationErrors && validationErrors.length > 0) {
+      const errorMessages = validationErrors.map(err => `${err.field}: ${err.message}`).join(', ');
+      message += `: Validation errors: ${errorMessages}`;
+    } else if (originalError) {
+      message += `: ${originalError.message}`;
+    } else {
+      message += ': Unknown error';
+    }
+    
+    super(message);
     this.name = 'DatabaseError';
   }
 }
@@ -248,6 +259,8 @@ export abstract class BaseRepository<T extends Record<string, any>> {
       // Validate schema
       const schemaValidation = this.validateRecord(timestampedData);
       if (!schemaValidation.isValid) {
+        console.error('Schema validation failed:', schemaValidation.errors);
+        console.error('Data being validated:', timestampedData);
         throw new DatabaseError('create', this.tableName, undefined, schemaValidation.errors);
       }
 
@@ -259,11 +272,28 @@ export abstract class BaseRepository<T extends Record<string, any>> {
 
       // Store record
       const recordKey = this.getRecordKey(id);
-      await spark.kv.set(recordKey, timestampedData);
+      console.log('Storing record with key:', recordKey);
+      console.log('Record data:', timestampedData);
+      
+      try {
+        await spark.kv.set(recordKey, timestampedData);
+        console.log('KV storage successful');
+      } catch (kvError) {
+        console.error('KV storage failed:', kvError);
+        throw new DatabaseError('create', this.tableName, kvError as Error);
+      }
 
       // Update indexes
-      await this.updateIndexes(timestampedData);
+      console.log('Updating indexes for table:', this.tableName);
+      try {
+        await this.updateIndexes(timestampedData);
+        console.log('Index update successful');
+      } catch (indexError) {
+        console.error('Index update failed:', indexError);
+        throw new DatabaseError('create', this.tableName, indexError as Error);
+      }
 
+      console.log('Successfully created record with ID:', id);
       return timestampedData;
     } catch (error) {
       if (error instanceof DatabaseError) throw error;
