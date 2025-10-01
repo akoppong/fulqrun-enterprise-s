@@ -9,7 +9,38 @@ import { useState, useEffect } from 'react';
 import { UnifiedOpportunityForm } from '../unified/UnifiedOpportunityForm';
 import { RealtimeFinancialWidget } from './RealtimeFinancialWidget';
 import { FinancialSummary } from './FinancialSummary';
-import { OpportunityService } from '@/lib/opportunity-service';
+import { OpportunityService, Opportunity as ServiceOpportunity } from '@/lib/opportunity-service';
+
+// Convert service opportunity to UI opportunity type
+function convertServiceOpportunity(serviceOpp: ServiceOpportunity): Opportunity {
+  return {
+    ...serviceOpp,
+    contactId: serviceOpp.primaryContact || '',
+    ownerId: serviceOpp.assignedTo || serviceOpp.createdBy || '',
+    companyId: serviceOpp.companyId || '',
+    name: serviceOpp.name || serviceOpp.title,
+    peakScores: serviceOpp.peakScores || {
+      prospect: 0,
+      engage: 0,
+      acquire: 0,
+      keep: 0
+    }
+  } as Opportunity;
+}
+
+// Convert UI opportunity to service opportunity type
+function convertToServiceOpportunity(uiOpp: Opportunity): Partial<ServiceOpportunity> {
+  return {
+    ...uiOpp,
+    company: uiOpp.companyId,
+    primaryContact: uiOpp.contactId,
+    assignedTo: uiOpp.ownerId,
+    peakScores: uiOpp.peakScores as { prospect: number; engage: number; acquire: number; keep: number; },
+    lastActivity: typeof uiOpp.lastActivity === 'string' ? new Date(uiOpp.lastActivity) : uiOpp.lastActivity,
+    closeDate: typeof uiOpp.closeDate === 'string' ? new Date(uiOpp.closeDate) : uiOpp.closeDate,
+    createdDate: typeof uiOpp.createdDate === 'string' ? new Date(uiOpp.createdDate) : uiOpp.createdDate
+  };
+}
 
 interface PipelineViewProps {
   user?: User;
@@ -38,7 +69,7 @@ export function PipelineView({ user }: PipelineViewProps) {
           opportunities: allOpportunities.map(o => ({ id: o.id, title: o.title, stage: o.stage }))
         });
         
-        setOpportunities(allOpportunities);
+        setOpportunities(allOpportunities.map(convertServiceOpportunity));
       } catch (error) {
         console.error('PipelineView: Failed to load opportunities:', error);
         setOpportunities([]);
@@ -80,7 +111,7 @@ export function PipelineView({ user }: PipelineViewProps) {
       const allOpportunities = await OpportunityService.getAllOpportunities();
       console.log('PipelineView: Reinitialized with opportunities:', allOpportunities.length);
       
-      setOpportunities(allOpportunities);
+      setOpportunities(allOpportunities.map(convertServiceOpportunity));
     } catch (error) {
       console.error('PipelineView: Failed to reinitialize:', error);
     }
@@ -93,19 +124,21 @@ export function PipelineView({ user }: PipelineViewProps) {
 
   const handleSaveOpportunity = async (savedOpportunity: Opportunity) => {
     try {
+      const serviceOpportunity = convertToServiceOpportunity(savedOpportunity);
+      
       if (selectedOpportunity) {
         // Update existing
         console.log('PipelineView: Updating opportunity:', savedOpportunity.id);
-        await OpportunityService.updateOpportunity(selectedOpportunity.id, savedOpportunity);
+        await OpportunityService.updateOpportunity(selectedOpportunity.id, serviceOpportunity);
       } else {
         // Create new
         console.log('PipelineView: Creating new opportunity');
-        await OpportunityService.createOpportunity(savedOpportunity);
+        await OpportunityService.createOpportunity(serviceOpportunity);
       }
       
       // Reload opportunities from service
       const allOpportunities = await OpportunityService.getAllOpportunities();
-      setOpportunities(allOpportunities);
+      setOpportunities(allOpportunities.map(convertServiceOpportunity));
       
       setIsDialogOpen(false);
       console.log('PipelineView: Successfully saved opportunity');

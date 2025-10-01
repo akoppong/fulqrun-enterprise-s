@@ -46,12 +46,12 @@ import {
   TrendUp, 
   Clock, 
   Target, 
-  AlertTriangle,
+  Warning,
   CheckCircle,
-  DollarSign,
+  CurrencyDollar,
   Calendar,
   User,
-  BarChart
+  ChartBar
 } from '@phosphor-icons/react';
 import { UnifiedOpportunityForm } from '@/components/unified/UnifiedOpportunityForm';
 import { toast } from 'sonner';
@@ -82,9 +82,9 @@ export function EnhancedPipelineView() {
   // Calculate stage metrics
   useEffect(() => {
     const metrics: Record<string, StageMetrics> = {};
-    pipelineConfig.stages.forEach(stage => {
+    pipelineConfig?.stages.forEach(stage => {
       const stageValue = getStageValue(stage.id);
-      metrics[stage.id] = calculateStageMetrics(opportunities, dealMovements, stage.id);
+      metrics[stage.id] = calculateStageMetrics(opportunities || [], dealMovements || [], stage.id);
     });
     setStageMetrics(metrics);
   }, [opportunities, dealMovements, pipelineConfig]);
@@ -119,7 +119,7 @@ export function EnhancedPipelineView() {
 
         // Update opportunities
         setOpportunities(current => 
-          current.map(opp => opp.id === activeId ? updatedOpportunity : opp)
+          current?.map(opp => opp.id === activeId ? updatedOpportunity : opp) || []
         );
 
         // Record deal movement
@@ -128,18 +128,18 @@ export function EnhancedPipelineView() {
           opportunityId: activeId,
           fromStage: sourceStageValue,
           toStage: targetStageValue,
-          timestamp: new Date(),
+          timestamp: new Date().toISOString(),
           userId: 'current-user',
           automatedMove: false,
           probability: updatedOpportunity.probability,
           value: updatedOpportunity.value
         };
 
-        setDealMovements(current => [...current, movement]);
+        setDealMovements(current => [...(current || []), movement]);
 
         // Show success message
-        const sourceStageConfig = pipelineConfig.stages.find(s => getStageValue(s.id) === sourceStageValue);
-        const targetStageConfig = pipelineConfig.stages.find(s => getStageValue(s.id) === targetStageValue);
+        const sourceStageConfig = pipelineConfig?.stages.find(s => getStageValue(s.id) === sourceStageValue);
+        const targetStageConfig = pipelineConfig?.stages.find(s => getStageValue(s.id) === targetStageValue);
         
         toast.success(`Deal moved from ${sourceStageConfig?.name} to ${targetStageConfig?.name}`);
       }
@@ -149,7 +149,7 @@ export function EnhancedPipelineView() {
   };
 
   const getOpportunitiesByStage = (stageValue: string) => {
-    return opportunities.filter(opp => opp.stage === stageValue);
+    return opportunities?.filter(opp => opp.stage === stageValue) || [];
   };
 
   const getStageValue = (stageId: string): string => {
@@ -163,11 +163,11 @@ export function EnhancedPipelineView() {
   };
 
   const getTotalPipelineValue = () => {
-    return opportunities.reduce((sum, opp) => sum + opp.value, 0);
+    return opportunities?.reduce((sum, opp) => sum + opp.value, 0) || 0;
   };
 
   const getWeightedPipelineValue = () => {
-    return opportunities.reduce((sum, opp) => sum + (opp.value * opp.probability / 100), 0);
+    return opportunities?.reduce((sum, opp) => sum + (opp.value * opp.probability / 100), 0) || 0;
   };
 
   const handleCreateOpportunity = (stageValue?: string) => {
@@ -184,39 +184,41 @@ export function EnhancedPipelineView() {
     if (selectedOpportunity) {
       // Update existing
       setOpportunities(current => 
-        current.map(opp => 
+        current?.map(opp => 
           opp.id === selectedOpportunity.id 
             ? { ...opp, ...opportunityData, updatedAt: new Date().toISOString() }
             : opp
-        )
+        ) || []
       );
     } else {
       // Create new
-      const newOpportunity: Opportunity = {
-        id: `opp-${Date.now()}`,
-        companyId: 'company-1',
-        contactId: 'contact-1',
+            const newOpportunity: Opportunity = {
+        id: Math.random().toString(36).substr(2, 9),
+        companyId: opportunityData.company || '',
+        contactId: opportunityData.primaryContact || '',
         title: opportunityData.title || 'New Opportunity',
+        name: opportunityData.title || 'New Opportunity',
         description: opportunityData.description || '',
         value: opportunityData.value || 0,
-        stage: opportunityData.stage || 'prospect',
-        probability: opportunityData.probability || 25,
+        stage: 'prospect',
+        probability: opportunityData.probability || 0,
         expectedCloseDate: opportunityData.expectedCloseDate || new Date().toISOString(),
-        ownerId: 'user-1',
+        ownerId: opportunityData.assignedTo || '',
         meddpicc: opportunityData.meddpicc || {
-          metrics: '',
-          economicBuyer: '',
-          decisionCriteria: '',
-          decisionProcess: '',
-          paperProcess: '',
-          implicatePain: '',
-          champion: '',
+          metrics: 0,
+          economicBuyer: 0,
+          decisionCriteria: 0,
+          decisionProcess: 0,
+          paperProcess: 0,
+          identifyPain: 0,
+          champion: 0,
+          competition: 0,
           score: 0
         },
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
-      setOpportunities(current => [...current, newOpportunity]);
+      setOpportunities(current => [...(current || []), newOpportunity]);
     }
     setIsDialogOpen(false);
   };
@@ -279,7 +281,7 @@ export function EnhancedPipelineView() {
 
       {/* Pipeline Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {pipelineConfig.stages.map((stage) => {
+        {pipelineConfig?.stages.map((stage) => {
           const stageValue = getStageValue(stage.id);
           const stageOpportunities = getOpportunitiesByStage(stageValue);
           const stageTotal = stageOpportunities.reduce((sum, opp) => sum + opp.value, 0);
@@ -324,7 +326,7 @@ export function EnhancedPipelineView() {
         onDragEnd={handleDragEnd}
       >
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {pipelineConfig.stages.map((stage) => {
+          {pipelineConfig?.stages.map((stage) => {
             const stageValue = getStageValue(stage.id);
             const stageOpportunities = getOpportunitiesByStage(stageValue);
 
@@ -400,7 +402,7 @@ function StageColumn({
         </div>
         <p className="text-sm text-muted-foreground">{stage.description}</p>
         <div className="flex items-center gap-2">
-          <DollarSign size={16} className="text-primary" />
+          <CurrencyDollar size={16} className="text-primary" />
           <span className="font-medium text-primary">
             {formatCurrency(opportunities.reduce((sum, opp) => sum + opp.value, 0))}
           </span>
@@ -533,7 +535,7 @@ function DealCard({
             {opportunity.aiInsights && (
               <div className="flex items-center gap-1">
                 {opportunity.aiInsights.riskScore >= 70 ? (
-                  <AlertTriangle size={12} className="text-red-500" />
+                  <Warning size={12} className="text-red-500" />
                 ) : opportunity.aiInsights.riskScore >= 40 ? (
                   <Clock size={12} className="text-yellow-500" />
                 ) : (
