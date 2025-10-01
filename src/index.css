@@ -134,23 +134,20 @@ body {
   flex-direction: column;
   overflow: hidden;
   background: hsl(var(--background));
+  transition: all 0.3s ease-in-out;
 }
 
-/* Force proper width distribution - Ensure main content uses full space */
+/* Dynamic sidebar width support - No longer fixed width */
 .dashboard-main-container .sidebar-container {
-  width: 320px;
-  min-width: 320px;
-  max-width: 320px;
-  flex: 0 0 320px;
   flex-shrink: 0;
   flex-grow: 0;
+  transition: width 0.3s ease-in-out;
 }
 
+/* Content area adapts to sidebar width automatically */
 .dashboard-main-container .dashboard-content-area {
   flex: 1 1 auto;
   min-width: 0;
-  width: calc(100% - 320px);
-  max-width: calc(100% - 320px);
   overflow: hidden;
 }
 

@@ -1,54 +1,39 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { DashboardView } from './Dashboard';
 import { hasPermission } from '@/lib/rolePermissions';
 import { User } from '@/lib/types';
 import { 
-  Menu,
+  List,
   FunnelSimple, 
   Target, 
   AddressBook, 
   ChartLine,
-  Building2,
-  TrendingUp,
-  DollarSign,
+  Buildings,
+  TrendUp,
+  CurrencyDollar,
   GraduationCap,
-  Plugs,
   Brain,
-  Crosshair,
   GridNine,
-  Workflow,
-  Shield,
-  Star,
-  FloppyDisk,
-  TestTube,
-  ClipboardList,
-  MagicWand,
-  Calendar,
+  GitBranch,
   CaretDown,
   CaretRight,
-  X,
-  Users,
-  Settings,
-  Activity,
-  Database,
-  Lock,
-  FileText,
-  Crown,
-  ArrowsOutCardinal,
-  Eye
+  CaretLeft,
+  X
 } from '@phosphor-icons/react';
 
 interface SidebarProps {
   currentView: DashboardView;
   onViewChange: (view: DashboardView) => void;
   user: User;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
 interface NavSection {
@@ -71,7 +56,7 @@ interface NavItem {
   isBeta?: boolean;
 }
 
-export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
+export function Sidebar({ currentView, onViewChange, user, isCollapsed = false, onToggleCollapse }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     core: true,
@@ -80,6 +65,21 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
     admin: false,
     testing: false
   });
+
+  // Persist collapse state in localStorage
+  useEffect(() => {
+    const savedCollapsed = localStorage.getItem('sidebar-collapsed');
+    if (savedCollapsed && onToggleCollapse) {
+      const isStoredCollapsed = JSON.parse(savedCollapsed);
+      if (isStoredCollapsed !== isCollapsed) {
+        onToggleCollapse();
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('sidebar-collapsed', JSON.stringify(isCollapsed));
+  }, [isCollapsed]);
 
   const toggleSection = (sectionId: string) => {
     setExpandedSections(prev => ({
@@ -125,34 +125,6 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           action: 'read'
         },
         {
-          id: 'qualification-hub',
-          label: 'Qualification Hub',
-          icon: ClipboardList,
-          description: 'Complete MEDDPICC assessments',
-          permissionId: 'opportunities',
-          action: 'read',
-          isNew: true
-        },
-        {
-          id: 'pipeline-tracker',
-          label: 'Pipeline Tracker',
-          icon: Activity,
-          description: 'Track qualification across pipeline',
-          permissionId: 'opportunities',
-          action: 'read',
-          isNew: true
-        },
-        {
-          id: 'qualification-demo',
-          label: 'Qualification Demo',
-          icon: Eye,
-          description: 'Interactive qualification system demo',
-          permissionId: 'opportunities',
-          action: 'read',
-          isNew: true,
-          isBeta: true
-        },
-        {
           id: 'contacts',
           label: 'Contacts',
           icon: AddressBook,
@@ -163,19 +135,10 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
         {
           id: 'companies',
           label: 'Companies',
-          icon: Building2,
+          icon: Buildings,
           description: 'Company database',
           permissionId: 'companies',
           action: 'read'
-        },
-        {
-          id: 'segments',
-          label: 'Customer Segments',
-          icon: Building2,
-          description: 'Strategic segmentation',
-          permissionId: 'segments',
-          action: 'read',
-          isNew: true
         },
         {
           id: 'analytics',
@@ -184,401 +147,49 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
           description: 'Performance insights',
           permissionId: 'team-analytics',
           action: 'read'
-        },
-        {
-          id: 'enterprise-analytics',
-          label: 'Enterprise Analytics',
-          icon: Database,
-          description: 'Real-time insights & predictive analytics',
-          permissionId: 'team-analytics',
-          action: 'read',
-          isNew: true
-        },
-        {
-          id: 'data-persistence',
-          label: 'Data Persistence',
-          icon: Shield,
-          description: 'Normalized database with real-time sync',
-          permissionId: 'team-analytics',
-          action: 'read',
-          isNew: true
-        }
-      ]
-    },
-    {
-      id: 'testing-quick',
-      title: 'Experience & Testing',
-      icon: Crown,
-      defaultOpen: true,
-      items: [
-        {
-          id: 'role-testing',
-          label: 'Role-Based Views',
-          icon: Crown,
-          description: 'Experience different user dashboards',
-          permissionId: 'dashboard',
-          action: 'read',
-          isNew: true
-        },
-        {
-          id: 'opportunity-detail-test',
-          label: 'Opportunity Detail Test',
-          icon: Eye,
-          description: 'Test MEDDPICC integration and error handling',
-          permissionId: 'opportunities',
-          action: 'read',
-          isNew: true
-        },
-        {
-          id: 'opportunity-tabs-test',
-          label: 'Opportunity Tabs Test',
-          icon: Target,
-          description: 'Test all six opportunity detail tabs for consistency',
-          permissionId: 'opportunities',
-          action: 'read',
-          isNew: true
         }
       ]
     },
     {
       id: 'ai',
       title: 'AI-Powered Features',
-      icon: Brain,
+      icon: TrendUp,
       defaultOpen: true,
       items: [
         {
           id: 'ai-insights',
           label: 'AI Insights',
-          icon: Brain,
-          description: 'AI-powered analytics',
+          icon: TrendUp,
+          description: 'AI-driven sales insights',
           permissionId: 'ai-insights',
           action: 'read',
-          isNew: true,
           isAI: true
-        },
-        {
-          id: 'lead-scoring',
-          label: 'Lead Scoring',
-          icon: Star,
-          description: 'AI lead qualification',
-          permissionId: 'lead-scoring',
-          action: 'read',
-          isNew: true,
-          isAI: true
-        },
-        {
-          id: 'deal-risk',
-          label: 'Risk Assessment',
-          icon: Shield,
-          description: 'AI risk analysis',
-          permissionId: 'deal-risk',
-          action: 'read',
-          isNew: true,
-          isAI: true
-        }
-      ]
-    },
-    {
-      id: 'advanced',
-      title: 'Advanced Features',
-      icon: TrendingUp,
-      defaultOpen: false,
-      items: [
-        {
-          id: 'cstpv',
-          label: 'CSTPV Dashboard',
-          icon: TrendingUp,
-          description: 'AI-powered metrics',
-          permissionId: 'personal-kpis',
-          action: 'read',
-          isNew: true
         },
         {
           id: 'financial',
-          label: 'Financial',
-          icon: DollarSign,
-          description: 'Revenue & POS tracking',
-          permissionId: 'financial-reporting',
-          action: 'read',
-          isNew: true
+          label: 'Financial Management',
+          icon: CurrencyDollar,
+          description: 'Revenue tracking & forecasting',
+          permissionId: 'financial',
+          action: 'read'
         },
         {
-          id: 'kpi-targets',
-          label: 'KPI Targets',
-          icon: Crosshair,
-          description: 'Goal tracking & KPIs',
-          permissionId: 'personal-kpis',
-          action: 'read',
-          isNew: true
-        },
-        {
-          id: 'kpi-builder',
-          label: 'Dashboard Builder',
-          icon: GridNine,
-          description: 'Custom KPI dashboards',
-          permissionId: 'personal-kpis',
-          action: 'write',
-          isNew: true
-        },
-        {
-          id: 'kpi-gallery',
-          label: 'KPI Gallery',
-          icon: Star,
-          description: 'Personalized KPI cards',
-          permissionId: 'personal-kpis',
-          action: 'read',
-          isNew: true
-        },
-        {
-          id: 'kpi-manager',
-          label: 'KPI Manager',
-          icon: Settings,
-          description: 'Create & customize KPI cards',
-          permissionId: 'personal-kpis',
-          action: 'write',
-          isNew: true
-        },
-        {
-          id: 'pharma-kpi-templates',
-          label: 'Pharma KPI Templates',
-          icon: Activity,
-          description: 'Industry-specific pharmaceutical B2B templates',
-          permissionId: 'personal-kpis',
-          action: 'read',
-          isNew: true,
-          badge: 'NEW'
-        },
-        {
-          id: 'kpi-layout',
-          label: 'Custom KPI Layouts',
-          icon: GridNine,
-          description: 'Drag & drop KPI positioning',
-          permissionId: 'personal-kpis',
-          action: 'write',
-          isNew: true
-        },
-        {
-          id: 'advanced-analytics',
-          label: 'Advanced Analytics',
-          icon: TrendingUp,
-          description: 'KPI drill-down & detailed insights',
-          permissionId: 'team-analytics',
+          id: 'learning',
+          label: 'Learning',
+          icon: GraduationCap,
+          description: 'PEAK & MEDDPICC certification',
+          permissionId: 'learning',
           action: 'read',
           isNew: true
         },
         {
           id: 'workflows',
           label: 'Workflows',
-          icon: Workflow,
+          icon: GitBranch,
           description: 'Pipeline automation',
           permissionId: 'workflows',
           action: 'read',
           isNew: true
-        },
-        {
-          id: 'learning',
-          label: 'Learning',
-          icon: GraduationCap,
-          description: 'Certifications & training',
-          permissionId: 'learning',
-          action: 'read',
-          isNew: true
-        },
-        {
-          id: 'integrations',
-          label: 'Integrations',
-          icon: Plugs,
-          description: 'Connect external tools',
-          permissionId: 'integrations-view',
-          action: 'read',
-          isNew: true
-        }
-      ]
-    },
-    {
-      id: 'admin',
-      title: 'System Administration',
-      icon: Crown,
-      defaultOpen: false,
-      items: [
-        {
-          id: 'admin-users',
-          label: 'User Management',
-          icon: Users,
-          description: 'Manage users and roles',
-          permissionId: 'user-management',
-          action: 'read',
-          isNew: true
-        },
-        {
-          id: 'admin-system',
-          label: 'System Configuration',
-          icon: Settings,
-          description: 'System-wide settings',
-          permissionId: 'system-config',
-          action: 'read',
-          isNew: true
-        },
-        {
-          id: 'admin-security',
-          label: 'Security & Compliance',
-          icon: Lock,
-          description: 'Security policies',
-          permissionId: 'security-compliance',
-          action: 'read',
-          isNew: true
-        },
-        {
-          id: 'admin-monitoring',
-          label: 'System Monitoring',
-          icon: Activity,
-          description: 'Performance monitoring',
-          permissionId: 'system-monitoring',
-          action: 'read',
-          isNew: true
-        },
-        {
-          id: 'admin-data',
-          label: 'Data Management',
-          icon: Database,
-          description: 'Import/export data',
-          permissionId: 'data-management',
-          action: 'read',
-          isNew: true
-        },
-        {
-          id: 'admin-audit',
-          label: 'Audit Logs',
-          icon: FileText,
-          description: 'System audit trails',
-          permissionId: 'audit-logs',
-          action: 'read',
-          isNew: true
-        }
-      ]
-    },
-    {
-      id: 'testing',
-      title: 'Testing & Demos',
-      icon: TestTube,
-      defaultOpen: false,
-      items: [
-        {
-          id: 'opportunity-detail-test',
-          label: 'Opportunity Detail Test',
-          icon: Eye,
-          description: 'Test MEDDPICC integration and error handling',
-          permissionId: 'opportunities',
-          action: 'read',
-          isNew: true
-        },
-        {
-          id: 'enhanced-opportunity-testing',
-          label: 'Enhanced Opportunity Testing',
-          icon: Target,
-          description: 'Advanced opportunity detail view testing with performance monitoring',
-          permissionId: 'opportunities',
-          action: 'read',
-          isNew: true
-        },
-        {
-          id: 'opportunity-test-suite',
-          label: 'Legacy Test Suite',
-          icon: ClipboardList,
-          description: 'Original comprehensive opportunity testing suite',
-          permissionId: 'opportunities',
-          action: 'read',
-          isNew: true
-        },
-        {
-          id: 'role-testing',
-          label: 'Role-Based Dashboards',
-          icon: Crown,
-          description: 'Test different user role dashboards',
-          permissionId: 'dashboard',
-          isNew: true
-        },
-        {
-          id: 'autosave-interactive',
-          label: 'Interactive Demo',
-          icon: MagicWand,
-          description: 'Comprehensive auto-save testing',
-          permissionId: 'pipeline', // Basic permission for testing
-          isBeta: true
-        },
-        {
-          id: 'field-testing',
-          label: 'Field Type Lab',
-          icon: TestTube,
-          description: 'Comprehensive field validation testing',
-          permissionId: 'pipeline',
-          isBeta: true
-        },
-        {
-          id: 'comprehensive-testing',
-          label: 'Test Suite',
-          icon: Shield,
-          description: 'Advanced validation test suite',
-          permissionId: 'pipeline',
-          isBeta: true
-        },
-        {
-          id: 'comprehensive-testing-dashboard',
-          label: 'Comprehensive Testing',
-          icon: Shield,
-          description: 'Complete testing suite with error boundaries, performance monitoring, UI validation, and responsive testing',
-          permissionId: 'pipeline',
-          action: 'read',
-          isNew: true
-        },
-        {
-          id: 'responsive-testing',
-          label: 'Responsive Design Test',
-          icon: ArrowsOutCardinal,
-          description: 'Validate responsive behavior across screen sizes',
-          permissionId: 'pipeline',
-          action: 'read',
-          isNew: true
-        },
-        {
-          id: 'validation-demo',
-          label: 'Validation Demo',
-          icon: MagicWand,
-          description: 'Interactive validation testing',
-          permissionId: 'pipeline',
-          isBeta: true
-        },
-        {
-          id: 'date-validation',
-          label: 'Date Validation',
-          icon: Calendar,
-          description: 'Advanced date validation middleware',
-          permissionId: 'pipeline',
-          isBeta: true
-        },
-        {
-          id: 'autosave-demo',
-          label: 'Auto-Save Demo',
-          icon: FloppyDisk,
-          description: 'Form auto-save features',
-          permissionId: 'pipeline',
-          isBeta: true
-        },
-        {
-          id: 'autosave-test',
-          label: 'Auto-Save Tests',
-          icon: TestTube,
-          description: 'Test auto-save functionality',
-          permissionId: 'pipeline',
-          isBeta: true
-        },
-        {
-          id: 'autosave-manual',
-          label: 'Manual Testing',
-          icon: ClipboardList,
-          description: 'Step-by-step auto-save testing',
-          permissionId: 'pipeline',
-          isBeta: true
         }
       ]
     }
@@ -597,154 +208,252 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
   })).filter(section => section.items.length > 0);
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full sidebar-container">
-      {/* Header */}
-      <div className="p-4 lg:p-6 border-b bg-card flex-shrink-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 lg:w-10 lg:h-10 bg-primary rounded-lg flex items-center justify-center">
-              <Building2 size={16} className="lg:hidden text-primary-foreground" />
-              <Building2 size={20} className="hidden lg:block text-primary-foreground" />
-            </div>
-            <div className="hidden lg:block">
-              <h2 className="font-bold text-lg">FulQrun</h2>
-              <div className="flex items-center gap-2">
-                <p className="text-xs text-muted-foreground">Enterprise CRM</p>
-                <Badge className="text-xs bg-accent/20 text-accent-foreground">
-                  v2.0
-                </Badge>
-                <Badge className={`text-xs ${
-                  user.role === 'admin' ? 'bg-red-100 text-red-800' :
-                  user.role === 'manager' ? 'bg-blue-100 text-blue-800' :
-                  'bg-green-100 text-green-800'
-                }`}>
-                  {user.role}
-                </Badge>
+    <TooltipProvider>
+      <div className={cn(
+        "flex flex-col h-full sidebar-container transition-all duration-300 ease-in-out",
+        isCollapsed ? "w-16" : "w-80"
+      )}>
+        {/* Header */}
+        <div className="p-4 lg:p-6 border-b bg-card flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 lg:w-10 lg:h-10 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
+                <Buildings size={16} className="lg:hidden text-primary-foreground" />
+                <Buildings size={20} className="hidden lg:block text-primary-foreground" />
               </div>
+              {!isCollapsed && (
+                <div className="hidden lg:block">
+                  <h2 className="font-bold text-lg">FulQrun</h2>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs text-muted-foreground">Enterprise CRM</p>
+                    <Badge className="text-xs bg-accent/20 text-accent-foreground">
+                      v2.0
+                    </Badge>
+                    <Badge className={`text-xs ${
+                      user.role === 'admin' ? 'bg-red-100 text-red-800' :
+                      user.role === 'manager' ? 'bg-blue-100 text-blue-800' :
+                      'bg-green-100 text-green-800'
+                    }`}>
+                      {user.role}
+                    </Badge>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-          {/* Mobile close button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="lg:hidden"
-            onClick={() => setIsOpen(false)}
-          >
-            <X size={20} />
-          </Button>
-        </div>
-        <div className="lg:hidden mt-3">
-          <h2 className="font-bold text-base">FulQrun CRM</h2>
-          <p className="text-xs text-muted-foreground">Enterprise Sales Platform</p>
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <div className="sidebar-navigation-area" style={{ height: 'calc(100vh - 200px)' }}>
-        <ScrollArea className="h-full sidebar-scroll-area">
-          <div className="p-3 lg:p-4">
-            <nav className="space-y-2 lg:space-y-4 pb-8">
-          {filteredSections.map((section) => {
-            const SectionIcon = section.icon;
-            const isExpanded = expandedSections[section.id];
             
-            return (
-              <Collapsible
-                key={section.id}
-                open={isExpanded}
-                onOpenChange={() => toggleSection(section.id)}
-              >
-                <CollapsibleTrigger asChild>
+            {/* Desktop collapse button */}
+            {onToggleCollapse && (
+              <Tooltip>
+                <TooltipTrigger asChild>
                   <Button
                     variant="ghost"
-                    className="w-full justify-between h-auto p-3 font-medium text-sm hover:bg-muted/50"
+                    size="icon"
+                    className="hidden lg:flex w-8 h-8"
+                    onClick={onToggleCollapse}
                   >
-                    <div className="flex items-center gap-2">
-                      <SectionIcon size={18} className="text-muted-foreground" />
-                      <span>{section.title}</span>
-                      {section.items.some(item => item.isNew || item.isAI) && (
-                        <Badge className="text-xs h-4 px-1.5 bg-primary/10 text-primary">
-                          {section.items.filter(item => item.isNew || item.isAI).length}
-                        </Badge>
-                      )}
-                    </div>
-                    {isExpanded ? (
-                      <CaretDown size={16} className="text-muted-foreground" />
-                    ) : (
-                      <CaretRight size={16} className="text-muted-foreground" />
-                    )}
+                    <CaretLeft 
+                      size={16} 
+                      className={cn(
+                        "transition-transform duration-200",
+                        isCollapsed && "rotate-180"
+                      )} 
+                    />
                   </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="space-y-1 mt-1 ml-2">
-                  {section.items.map((item) => {
-                    const Icon = item.icon;
-                    const isActive = currentView === item.id;
-                    
-                    return (
-                      <Button
-                        key={item.id}
-                        variant={isActive ? 'default' : 'ghost'}
-                        className={cn(
-                          'w-full justify-start h-auto p-2.5 text-left',
-                          isActive && 'bg-primary text-primary-foreground shadow-sm',
-                          !isActive && 'hover:bg-muted/50'
-                        )}
-                        onClick={() => handleNavClick(item.id)}
-                      >
-                        <div className="flex items-center gap-3 w-full min-w-0">
-                          <Icon size={18} className={cn(
-                            isActive ? 'text-primary-foreground' : 'text-muted-foreground'
-                          )} />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-medium text-sm truncate">{item.label}</span>
-                              {item.isNew && (
-                                <Badge className="text-xs h-4 px-1.5 bg-green-100 text-green-800">
-                                  New
-                                </Badge>
-                              )}
-                              {item.isAI && (
-                                <Badge className="text-xs h-4 px-1.5 bg-purple-100 text-purple-800">
-                                  AI
-                                </Badge>
-                              )}
-                              {item.isBeta && (
-                                <Badge className="text-xs h-4 px-1.5 bg-orange-100 text-orange-800">
-                                  Beta
-                                </Badge>
-                              )}
-                            </div>
-                            <div className={cn(
-                              "text-xs leading-tight mt-0.5 truncate",
-                              isActive ? 'text-primary-foreground/80' : 'text-muted-foreground'
-                            )}>
-                              {item.description}
-                            </div>
-                          </div>
-                        </div>
-                      </Button>
-                    );
-                  })}
-                </CollapsibleContent>
-              </Collapsible>
-            );
-          })}
-        </nav>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  {isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                </TooltipContent>
+              </Tooltip>
+            )}
+            
+            {/* Mobile close button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden"
+              onClick={() => setIsOpen(false)}
+            >
+              <X size={20} />
+            </Button>
           </div>
-        </ScrollArea>
-      </div>
-
-      {/* Footer */}
-      <div className="p-4 border-t bg-muted/30 flex-shrink-0">
-        <div className="text-xs text-muted-foreground">
-          <div className="font-medium mb-1 flex items-center gap-2">
-            <Brain size={12} />
-            PEAK + AI-Powered
-          </div>
-          <div className="text-xs">Prospect → Engage → Acquire → Keep</div>
+          
+          {!isCollapsed && (
+            <div className="lg:hidden mt-3">
+              <h2 className="font-bold text-base">FulQrun CRM</h2>
+              <p className="text-xs text-muted-foreground">Enterprise Sales Platform</p>
+            </div>
+          )}
         </div>
+
+        {/* Navigation */}
+        <div className="sidebar-navigation-area" style={{ height: 'calc(100vh - 200px)' }}>
+          <ScrollArea className="h-full sidebar-scroll-area">
+            <div className={cn("p-3 lg:p-4", isCollapsed && "px-2")}>
+              <nav className="space-y-2 lg:space-y-4 pb-8">
+                {filteredSections.map((section) => {
+                  const SectionIcon = section.icon;
+                  const isExpanded = expandedSections[section.id];
+                  
+                  if (isCollapsed) {
+                    // Collapsed view - show only icons with tooltips
+                    return (
+                      <div key={section.id} className="space-y-1">
+                        {section.items.map((item) => {
+                          const Icon = item.icon;
+                          const isActive = currentView === item.id;
+                          
+                          return (
+                            <Tooltip key={item.id}>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant={isActive ? 'default' : 'ghost'}
+                                  size="icon"
+                                  className={cn(
+                                    'w-12 h-12 relative',
+                                    isActive && 'bg-primary text-primary-foreground shadow-sm',
+                                    !isActive && 'hover:bg-muted/50'
+                                  )}
+                                  onClick={() => handleNavClick(item.id)}
+                                >
+                                  <Icon size={20} className={cn(
+                                    isActive ? 'text-primary-foreground' : 'text-muted-foreground'
+                                  )} />
+                                  {(item.isNew || item.isAI || item.isBeta) && (
+                                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border-2 border-background" />
+                                  )}
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent side="right" className="max-w-xs">
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-medium">{item.label}</span>
+                                    {item.isNew && (
+                                      <Badge className="text-xs h-4 px-1.5 bg-green-100 text-green-800">
+                                        New
+                                      </Badge>
+                                    )}
+                                    {item.isAI && (
+                                      <Badge className="text-xs h-4 px-1.5 bg-purple-100 text-purple-800">
+                                        AI
+                                      </Badge>
+                                    )}
+                                    {item.isBeta && (
+                                      <Badge className="text-xs h-4 px-1.5 bg-orange-100 text-orange-800">
+                                        Beta
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">{item.description}</p>
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          );
+                        })}
+                      </div>
+                    );
+                  }
+                  
+                  // Expanded view - show full sections
+                  return (
+                    <Collapsible
+                      key={section.id}
+                      open={isExpanded}
+                      onOpenChange={() => toggleSection(section.id)}
+                    >
+                      <CollapsibleTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className="w-full justify-between h-auto p-3 font-medium text-sm hover:bg-muted/50"
+                        >
+                          <div className="flex items-center gap-2">
+                            <SectionIcon size={18} className="text-muted-foreground" />
+                            <span>{section.title}</span>
+                            {section.items.some(item => item.isNew || item.isAI) && (
+                              <Badge className="text-xs h-4 px-1.5 bg-primary/10 text-primary">
+                                {section.items.filter(item => item.isNew || item.isAI).length}
+                              </Badge>
+                            )}
+                          </div>
+                          {isExpanded ? (
+                            <CaretDown size={16} className="text-muted-foreground" />
+                          ) : (
+                            <CaretRight size={16} className="text-muted-foreground" />
+                          )}
+                        </Button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="space-y-1 mt-1 ml-2">
+                        {section.items.map((item) => {
+                          const Icon = item.icon;
+                          const isActive = currentView === item.id;
+                          
+                          return (
+                            <Button
+                              key={item.id}
+                              variant={isActive ? 'default' : 'ghost'}
+                              className={cn(
+                                'w-full justify-start h-auto p-2.5 text-left',
+                                isActive && 'bg-primary text-primary-foreground shadow-sm',
+                                !isActive && 'hover:bg-muted/50'
+                              )}
+                              onClick={() => handleNavClick(item.id)}
+                            >
+                              <div className="flex items-center gap-3 w-full min-w-0">
+                                <Icon size={18} className={cn(
+                                  isActive ? 'text-primary-foreground' : 'text-muted-foreground'
+                                )} />
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="font-medium text-sm truncate">{item.label}</span>
+                                    {item.isNew && (
+                                      <Badge className="text-xs h-4 px-1.5 bg-green-100 text-green-800">
+                                        New
+                                      </Badge>
+                                    )}
+                                    {item.isAI && (
+                                      <Badge className="text-xs h-4 px-1.5 bg-purple-100 text-purple-800">
+                                        AI
+                                      </Badge>
+                                    )}
+                                    {item.isBeta && (
+                                      <Badge className="text-xs h-4 px-1.5 bg-orange-100 text-orange-800">
+                                        Beta
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <div className={cn(
+                                    "text-xs leading-tight mt-0.5 truncate",
+                                    isActive ? 'text-primary-foreground/80' : 'text-muted-foreground'
+                                  )}>
+                                    {item.description}
+                                  </div>
+                                </div>
+                              </div>
+                            </Button>
+                          );
+                        })}
+                      </CollapsibleContent>
+                    </Collapsible>
+                  );
+                })}
+              </nav>
+            </div>
+          </ScrollArea>
+        </div>
+
+        {/* Footer */}
+        {!isCollapsed && (
+          <div className="p-4 border-t bg-muted/30 flex-shrink-0">
+            <div className="text-xs text-muted-foreground">
+              <div className="font-medium mb-1 flex items-center gap-2">
+                <Brain size={12} />
+                PEAK + AI-Powered
+              </div>
+              <div className="text-xs">Prospect → Engage → Acquire → Keep</div>
+            </div>
+          </div>
+        )}
       </div>
-    </div>
+    </TooltipProvider>
   );
 
   return (
@@ -757,7 +466,7 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
             size="icon"
             className="fixed top-4 left-4 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border shadow-lg lg:hidden"
           >
-            <Menu size={18} />
+            <List size={18} />
             <span className="sr-only">Open navigation menu</span>
           </Button>
         </SheetTrigger>
@@ -772,7 +481,10 @@ export function Sidebar({ currentView, onViewChange, user }: SidebarProps) {
       </Sheet>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex bg-card border-r flex-col sidebar-container">
+      <aside className={cn(
+        "hidden lg:flex bg-card border-r flex-col sidebar-container transition-all duration-300 ease-in-out",
+        isCollapsed ? "w-16" : "w-80"
+      )}>
         <SidebarContent />
       </aside>
     </>

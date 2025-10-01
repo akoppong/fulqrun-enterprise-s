@@ -126,6 +126,17 @@ export function PipelineView({ user }: PipelineViewProps) {
             <p className="text-muted-foreground">Loading pipeline data...</p>
           </div>
         </div>
+      ) : isDialogOpen ? (
+        // Show form as full page when creating/editing
+        <UnifiedOpportunityForm
+          isOpen={false}
+          onClose={() => setIsDialogOpen(false)}
+          onSave={handleSaveOpportunity}
+          editingOpportunity={selectedOpportunity}
+          user={user || { id: 'user-1', name: 'Default User', email: 'user@example.com', role: 'rep' }}
+          mode="page"
+          source="pipeline"
+        />
       ) : (
         <>
           <div className="flex items-center justify-between">
@@ -247,16 +258,6 @@ export function PipelineView({ user }: PipelineViewProps) {
           );
         })}
       </div>
-
-      <UnifiedOpportunityForm
-        isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
-        onSave={handleSaveOpportunity}
-        editingOpportunity={selectedOpportunity}
-        user={user || { id: 'user-1', name: 'Default User', email: 'user@example.com', role: 'rep' }}
-        mode="dialog"
-        source="pipeline"
-      />
         </>
       )}
     </div>

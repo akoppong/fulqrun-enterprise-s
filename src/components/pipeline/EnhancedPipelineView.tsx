@@ -243,6 +243,19 @@ export function EnhancedPipelineView() {
 
   return (
     <div className="space-y-6">
+      {isDialogOpen ? (
+        // Show form as full page when creating/editing
+        <UnifiedOpportunityForm
+          isOpen={false}
+          onClose={() => setIsDialogOpen(false)}
+          onSave={handleSaveOpportunity}
+          editingOpportunity={selectedOpportunity}
+          user={{ id: 'user-1', name: 'Default User', email: 'user@example.com', role: 'rep' }}
+          mode="page"
+          source="pipeline"
+        />
+      ) : (
+        <>
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold">Pipeline Management</h2>
@@ -342,16 +355,8 @@ export function EnhancedPipelineView() {
           ) : null}
         </DragOverlay>
       </DndContext>
-
-      <UnifiedOpportunityForm
-        isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
-        onSave={handleSaveOpportunity}
-        editingOpportunity={selectedOpportunity}
-        user={{ id: 'user-1', name: 'Default User', email: 'user@example.com', role: 'rep' }}
-        mode="dialog"
-        source="pipeline"
-      />
+        </>
+      )}
     </div>
   );
 }

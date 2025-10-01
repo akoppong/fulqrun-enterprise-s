@@ -3,6 +3,7 @@ import { ThemeProvider } from 'next-themes';
 import { User } from './lib/types';
 import { SimpleLoginForm } from './components/auth/SimpleLoginForm';
 import { Dashboard } from './components/dashboard/Dashboard';
+import { MinimalTest } from './components/MinimalTest';
 import { Toaster } from './components/ui/sonner';
 import { EnhancedErrorBoundary } from './components/ui/enhanced-error-boundary';
 import './lib/error-handlers'; // Initialize global error handlers
@@ -111,18 +112,17 @@ function App() {
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
         <div className="min-h-screen bg-background">
           {!currentUser ? (
-            <EnhancedErrorBoundary context="LoginForm" isolateComponent={true}>
+            <div className="p-8">
+              <h1 className="text-2xl font-bold mb-4">FulQrun CRM Login</h1>
               <SimpleLoginForm onLogin={handleLogin} />
-            </EnhancedErrorBoundary>
+            </div>
           ) : (
-            <EnhancedErrorBoundary context="Dashboard" isolateComponent={true}>
-              <Dashboard 
-                user={currentUser} 
-                originalUser={originalUser}
-                onLogout={handleLogout}
-                onRoleSwitch={handleRoleSwitch}
-              />
-            </EnhancedErrorBoundary>
+            <Dashboard 
+              user={currentUser} 
+              originalUser={originalUser}
+              onLogout={handleLogout}
+              onRoleSwitch={handleRoleSwitch}
+            />
           )}
           <Toaster />
         </div>

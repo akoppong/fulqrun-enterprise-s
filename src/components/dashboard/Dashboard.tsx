@@ -46,6 +46,7 @@ import { PipelineQualificationTracker } from '../opportunities/PipelineQualifica
 import { QualificationDemo } from '../opportunities/QualificationDemo';
 import { EnterpriseAnalyticsDashboard } from '../analytics/EnterpriseAnalyticsDashboard';
 import { DataPersistenceDemo } from '../data/DataPersistenceDemo';
+import { CollapsibleSidebarDemo } from './CollapsibleSidebarDemo';
 
 
 interface DashboardProps {
@@ -63,6 +64,7 @@ export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialV
   const [currentView, setCurrentView] = useState<DashboardView>(
     (initialView as DashboardView) || 'dashboard'
   );
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [opportunities, setOpportunities] = useKV<Opportunity[]>('opportunities', []);
   const [contacts, setContacts] = useKV<Contact[]>('contacts', []);
   const [companies, setCompanies] = useKV<Company[]>('companies', []);
@@ -375,6 +377,9 @@ export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialV
           />
         );
       
+      case 'collapsible-sidebar-demo':
+        return <CollapsibleSidebarDemo user={user} />;
+      
       default:
         return <PipelineView user={user} />;
     }
@@ -387,6 +392,8 @@ export function Dashboard({ user, originalUser, onLogout, onRoleSwitch, initialV
         currentView={currentView} 
         onViewChange={setCurrentView}
         user={user}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
       />
       
       {/* Main content area with improved mobile layout */}
