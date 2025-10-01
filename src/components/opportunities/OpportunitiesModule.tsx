@@ -68,7 +68,7 @@ export function OpportunitiesModule({ user, initialView = 'dashboard', initialDa
         if (safeOpportunities.length === 0) {
           console.log('OpportunitiesModule: Initializing sample data...');
           await OpportunityService.initializeSampleData();
-          const stored = OpportunityService.getAllOpportunities(); // Remove await since it's synchronous
+          const stored = await OpportunityService.getAllOpportunities(); // This should be awaited
           console.log('OpportunitiesModule: Setting opportunities:', {
             type: typeof stored,
             isArray: Array.isArray(stored),

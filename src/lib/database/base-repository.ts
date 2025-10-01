@@ -354,18 +354,29 @@ export abstract class BaseRepository<T extends Record<string, any>> {
 
       // If no indexed query, get all records (expensive!)
       if (recordIds.length === 0 && !options.where) {
-        const allKeys = await spark.kv.keys();
-        recordIds = allKeys
-          .filter(key => key.startsWith(this.storagePrefix + ':'))
-          .map(key => key.replace(this.storagePrefix + ':', ''));
+        try {
+          const allKeys = await spark.kv.keys();
+          recordIds = allKeys
+            .filter(key => key.startsWith(this.storagePrefix + ':'))
+            .map(key => key.replace(this.storagePrefix + ':', ''));
+        } catch (error) {
+          console.warn(`Failed to fetch KV keys for ${this.tableName}:`, error);
+          // Return empty result if we can't access the storage
+          return { data: [], total: 0 };
+        }
       }
 
       // Fetch records
       const allRecords: T[] = [];
       for (const id of recordIds) {
-        const record = await this.findById(id);
-        if (record) {
-          allRecords.push(record);
+        try {
+          const record = await this.findById(id);
+          if (record) {
+            allRecords.push(record);
+          }
+        } catch (error) {
+          console.warn(`Failed to fetch record ${id} from ${this.tableName}:`, error);
+          // Continue with other records
         }
       }
 

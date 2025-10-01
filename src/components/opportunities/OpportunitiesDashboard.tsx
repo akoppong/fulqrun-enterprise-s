@@ -377,7 +377,7 @@ export function OpportunitiesDashboard({ user, onViewChange, opportunities: prop
         })
         .slice(0, 5);
 
-      return {
+      const metricsResult = {
         totalValue,
         totalOpportunities: validOpportunities.length,
         averageDealSize: validOpportunities.length > 0 ? totalValue / validOpportunities.length : 0,
@@ -386,9 +386,11 @@ export function OpportunitiesDashboard({ user, onViewChange, opportunities: prop
         upcomingCloses,
         staleOpportunities
       };
+
+      return metricsResult;
     } catch (error) {
       console.error('Error calculating metrics:', error);
-      return {
+      const fallbackMetrics = {
         totalValue: 0,
         totalOpportunities: 0,
         averageDealSize: 0,
@@ -397,15 +399,16 @@ export function OpportunitiesDashboard({ user, onViewChange, opportunities: prop
         upcomingCloses: [],
         staleOpportunities: []
       };
+      return fallbackMetrics;
     }
-  }, [filteredOpportunities]); // Add dependency array for memoization
+  }, [filteredOpportunities]);
 
   // Memoized chart data preparation
   const stageData = useMemo(() => {
     try {
       const validOpportunities = Array.isArray(filteredOpportunities) ? filteredOpportunities : [];
       
-      return validOpportunities.reduce((acc, opp) => {
+      const stageResult = validOpportunities.reduce((acc, opp) => {
         try {
           const stage = opp.stage || 'unknown';
           if (!acc[stage]) {
@@ -419,6 +422,8 @@ export function OpportunitiesDashboard({ user, onViewChange, opportunities: prop
           return acc;
         }
       }, {} as Record<string, { stage: string; count: number; value: number }>);
+      
+      return stageResult;
     } catch (error) {
       console.error('Error preparing stage data:', error);
       return {};
@@ -431,7 +436,7 @@ export function OpportunitiesDashboard({ user, onViewChange, opportunities: prop
     try {
       const validOpportunities = Array.isArray(filteredOpportunities) ? filteredOpportunities : [];
       
-      return validOpportunities.map(opp => {
+      const meddpiccResults = validOpportunities.map(opp => {
         try {
           return {
             name: ((opp.title || opp.name || 'Untitled').substring(0, 20)) + '...',
@@ -447,6 +452,8 @@ export function OpportunitiesDashboard({ user, onViewChange, opportunities: prop
           };
         }
       }).filter(item => item.score > 0 || item.value > 0); // Only include meaningful data
+      
+      return meddpiccResults;
     } catch (error) {
       console.error('Error preparing MEDDPICC data:', error);
       return [];

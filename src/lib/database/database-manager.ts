@@ -87,8 +87,15 @@ export class DatabaseManager {
    */
   private async createSampleDataIfNeeded(): Promise<void> {
     try {
-      // Check if we already have data
-      const userCount = await this.users.count();
+      // Check if we already have data - with error handling
+      let userCount = 0;
+      try {
+        userCount = await this.users.count();
+      } catch (error) {
+        console.warn('Failed to count users, assuming no data exists:', error);
+        userCount = 0; // Assume no data if we can't count
+      }
+      
       if (userCount > 0) {
         console.log('Database already contains data, skipping sample data creation');
         return;

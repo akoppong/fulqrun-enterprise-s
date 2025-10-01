@@ -139,6 +139,75 @@ export class EnhancedCustomerSegmentsService {
   }
 
   /**
+   * Initialize default segments for backward compatibility
+   */
+  static initializeDefaultSegments(): CustomerSegment[] {
+    // Return default segments for immediate use while database initialization happens
+    const defaultSegments: CustomerSegment[] = [
+      {
+        id: 'strategic-partner',
+        name: 'Strategic Partner',
+        description: 'High-value enterprise clients with long-term potential',
+        criteria: { company_size: 'large', revenue_min: 10000000 },
+        isActive: true,
+        createdBy: 'system',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      {
+        id: 'growth-opportunity',
+        name: 'Growth Opportunity',
+        description: 'Mid-market companies with expansion potential',
+        criteria: { company_size: 'medium', revenue_min: 1000000 },
+        isActive: true,
+        createdBy: 'system',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      {
+        id: 'emerging-market',
+        name: 'Emerging Market',
+        description: 'Small companies and startups with high growth potential',
+        criteria: { company_size: 'small', revenue_max: 1000000 },
+        isActive: true,
+        createdBy: 'system',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+    ];
+
+    // Async create them in the database (fire and forget)
+    this.ensureDefaultSegmentsInDatabase(defaultSegments).catch(error => {
+      console.warn('Failed to ensure default segments in database:', error);
+    });
+
+    return defaultSegments;
+  }
+
+  /**
+   * Ensure default segments exist in database
+   */
+  private static async ensureDefaultSegmentsInDatabase(segments: CustomerSegment[]): Promise<void> {
+    await this.ensureInitialized();
+
+    for (const segment of segments) {
+      try {
+        const existing = await db.customerSegments.findByName(segment.name);
+        if (!existing) {
+          await db.customerSegments.create({
+            name: segment.name,
+            description: segment.description || '',
+            is_active: segment.isActive,
+            created_by: segment.createdBy
+          });
+        }
+      } catch (error) {
+        console.warn(`Failed to create default segment ${segment.name}:`, error);
+      }
+    }
+  }
+
+  /**
    * Get active customer segments
    */
   static async getActiveSegments(): Promise<CustomerSegment[]> {
